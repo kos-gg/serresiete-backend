@@ -74,7 +74,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents updates state to WAITING on successful processing`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner")
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
                 val event = Event("root", "id", eventData)
                 val eventWithVersion = EventWithVersion(1, event)
 
@@ -114,7 +114,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents sets state to FAILED on processing error`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner")
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
                 val event = Event("root", "id", eventData)
                 val eventWithVersion = EventWithVersion(1, event)
 
@@ -154,7 +154,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents sets state to FAILED on processing error and stops processing further events`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner")
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
                 val event = Event("root", "id", eventData)
 
                 val events = (1L..10L).map { EventWithVersion(it, event) }
@@ -195,7 +195,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents sets state to FAILED on processing error and stops processing further events when some events were processed`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner")
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
                 val event = Event("root", "id", eventData)
 
                 val events = (1L..10L).map { EventWithVersion(it, event) }
@@ -239,7 +239,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents retries to process the events even when in FAILED state`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner")
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
                 val event = Event("root", "id", eventData)
 
                 val events = (1L..10L).map { EventWithVersion(it, event) }
@@ -294,7 +294,8 @@ class EventSubscriptionTest {
 
                 val spiedService = spyk(viewsService)
 
-                val eventData = ViewToBeCreatedEvent(ViewsTestHelper.id, "name", true, listOf(), Game.LOL, "owner")
+                val eventData =
+                    ViewToBeCreatedEvent(ViewsTestHelper.id, "name", true, listOf(), Game.LOL, "owner", false)
                 val eventWithVersion = EventWithVersion(
                     1L,
                     Event(aggregateRoot, ViewsTestHelper.id, eventData)
@@ -318,7 +319,7 @@ class EventSubscriptionTest {
                     ViewCreatedEvent(
                         ViewsTestHelper.id,
                         ViewsTestHelper.name,
-                        ViewsTestHelper.owner, listOf(), true, Game.LOL
+                        ViewsTestHelper.owner, listOf(), true, Game.LOL, false
                     )
                 )
 
@@ -339,7 +340,7 @@ class EventSubscriptionTest {
                 val spiedService = spyk(viewsService)
 
                 val newName = "new-name"
-                val eventData = ViewToBeEditedEvent(ViewsTestHelper.id, newName, true, listOf(), Game.LOL)
+                val eventData = ViewToBeEditedEvent(ViewsTestHelper.id, newName, true, listOf(), Game.LOL, false)
                 val eventWithVersion = EventWithVersion(
                     1L,
                     Event(aggregateRoot, ViewsTestHelper.id, eventData)
@@ -359,7 +360,7 @@ class EventSubscriptionTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewEditedEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL)
+                    ViewEditedEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
                 )
 
                 assertView(viewsRepository, newName)
@@ -378,7 +379,7 @@ class EventSubscriptionTest {
 
                 val spiedService = spyk(viewsService)
                 val newName = "newName"
-                val eventData = ViewToBePatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL)
+                val eventData = ViewToBePatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
                 val eventWithVersion = EventWithVersion(
                     1L,
                     Event(aggregateRoot, ViewsTestHelper.id, eventData)
@@ -399,7 +400,7 @@ class EventSubscriptionTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewPatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL)
+                    ViewPatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
                 )
 
                 assertView(viewsRepository, newName)

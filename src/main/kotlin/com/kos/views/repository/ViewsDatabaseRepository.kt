@@ -1,6 +1,5 @@
 package com.kos.views.repository
 
-import com.kos.common.fold
 import com.kos.common.getOrThrow
 import com.kos.views.*
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +17,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 this[Views.owner] = it.owner
                 this[Views.published] = it.published
                 this[Views.game] = it.game.toString()
+                this[Views.featured] = it.featured
             }
             initialState.forEach { sv ->
                 CharactersView.batchInsert(sv.characterIds) {
@@ -35,6 +35,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         val owner = varchar("owner", 48)
         val published = bool("published")
         val game = text("game")
+        val featured = bool("featured")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -47,7 +48,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             row[Views.published],
             CharactersView.select { CharactersView.viewId.eq(row[Views.id]) }
                 .map { resultRowToCharacterView(it).first },
-            Game.fromString(row[Views.game]).getOrThrow()
+            Game.fromString(row[Views.game]).getOrThrow(),
+            row[Views.featured]
         )
     }
 
@@ -80,7 +82,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         name: String,
         owner: String,
         characterIds: List<Long>,
-        game: Game
+        game: Game,
+        featured: Boolean,
     ): SimpleView {
         newSuspendedTransaction(Dispatchers.IO, db) {
             Views.insert {
@@ -89,20 +92,28 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.owner] = owner
                 it[published] = true
                 it[Views.game] = game.toString()
+                it[Views.featured] = featured
             }
             CharactersView.batchInsert(characterIds) {
                 this[CharactersView.viewId] = id
                 this[CharactersView.characterId] = it
             }
         }
-        return SimpleView(id, name, owner, true, characterIds, game)
+        return SimpleView(id, name, owner, true, characterIds, game, featured)
     }
 
-    override suspend fun edit(id: String, name: String, published: Boolean, characters: List<Long>): ViewModified {
+    override suspend fun edit(
+        id: String,
+        name: String,
+        published: Boolean,
+        characters: List<Long>,
+        featured: Boolean
+    ): ViewModified {
         newSuspendedTransaction(Dispatchers.IO, db) {
             Views.update({ Views.id.eq(id) }) {
                 it[Views.name] = name
                 it[Views.published] = published
+                it[Views.featured] = featured
             }
             CharactersView.deleteWhere { viewId.eq(id) }
             CharactersView.batchInsert(characters) {
@@ -110,10 +121,16 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 this[CharactersView.characterId] = it
             }
         }
-        return ViewModified(id, name, published, characters)
+        return ViewModified(id, name, published, characters, featured)
     }
 
-    override suspend fun patch(id: String, name: String?, published: Boolean?, characters: List<Long>?): ViewPatched {
+    override suspend fun patch(
+        id: String,
+        name: String?,
+        published: Boolean?,
+        characters: List<Long>?,
+        featured: Boolean?
+    ): ViewPatched {
         newSuspendedTransaction(Dispatchers.IO, db) {
             name?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.name] = it } }
             published?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.published] = it } }
@@ -124,8 +141,9 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                     this[CharactersView.characterId] = cid
                 }
             }
+            featured?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.featured] = it } }
         }
-        return ViewPatched(id, name, published, characters)
+        return ViewPatched(id, name, published, characters, featured)
     }
 
     override suspend fun delete(id: String): ViewDeleted {
@@ -133,14 +151,18 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return ViewDeleted(id)
     }
 
-    override suspend fun getViews(game: Game?): List<SimpleView> {
+    override suspend fun getViews(game: Game?, featured: Boolean): List<SimpleView> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
-            val filteredQuery = game.fold(
-                { baseQuery },
-                { baseQuery.adjustWhere { Views.game eq it.toString() } }
-            )
-            filteredQuery.map { resultRowToSimpleView(it) }
+
+            val featuredCondition: Op<Boolean>? = if (featured) Views.featured eq true else null
+            val gameCondition: Op<Boolean>? = game?.let { Views.game eq it.toString() }
+
+            baseQuery.adjustWhere {
+                Op.TRUE
+                    .andIfNotNull(featuredCondition)
+                    .andIfNotNull(gameCondition)
+            }.map { resultRowToSimpleView(it) }
         }
     }
 

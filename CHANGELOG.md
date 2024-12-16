@@ -1,4 +1,9 @@
 # Changelog
+## [4.2.1] 12-12-2024
+
+### Added
+- **Featured Filter for Get Views Endpoint**: Added a new filter to the Get Views endpoint, enabling the retrieval of featured views from all games or a specific game. This enhancement allows users to quickly access highlighted views.
+
 ## [4.2.0] 15-11-2024
 
 ### Added

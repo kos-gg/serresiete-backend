@@ -4,12 +4,12 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.characters.CharactersService
+import com.kos.clients.domain.Data
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
-import com.kos.clients.domain.Data
 import com.kos.views.repository.ViewsRepository
 import java.util.*
 
@@ -22,7 +22,7 @@ class ViewsService(
 ) {
 
     suspend fun getOwnViews(owner: String): List<SimpleView> = viewsRepository.getOwnViews(owner)
-    suspend fun getViews(game: Game?): List<SimpleView> = viewsRepository.getViews(game)
+    suspend fun getViews(game: Game?, featured: Boolean): List<SimpleView> = viewsRepository.getViews(game, featured)
     suspend fun get(id: String): View? {
         return when (val simpleView = viewsRepository.get(id)) {
             null -> null
@@ -35,7 +35,8 @@ class ViewsService(
                     simpleView.characterIds.mapNotNull {
                         charactersService.get(it, simpleView.game)
                     },
-                    simpleView.game
+                    simpleView.game,
+                    simpleView.featured
                 )
             }
         }
@@ -60,7 +61,8 @@ class ViewsService(
                     request.published,
                     request.characters,
                     request.game,
-                    owner
+                    owner,
+                    request.featured
                 )
             )
             eventStore.save(event)
@@ -80,7 +82,8 @@ class ViewsService(
                 viewToBeCreatedEvent.name,
                 viewToBeCreatedEvent.owner,
                 characterIds,
-                viewToBeCreatedEvent.game
+                viewToBeCreatedEvent.game,
+                viewToBeCreatedEvent.featured
             )
             val event = Event(
                 aggregateRoot,
@@ -104,7 +107,8 @@ class ViewsService(
                     request.name,
                     request.published,
                     request.characters,
-                    request.game
+                    request.game,
+                    request.featured
                 )
             )
             eventStore.save(event)
@@ -124,7 +128,8 @@ class ViewsService(
                     viewToBeEditedEvent.id,
                     viewToBeEditedEvent.name,
                     viewToBeEditedEvent.published,
-                    characters
+                    characters,
+                    viewToBeEditedEvent.featured
                 )
             val event = Event(
                 aggregateRoot,
@@ -151,7 +156,8 @@ class ViewsService(
                     request.name,
                     request.published,
                     request.characters,
-                    request.game
+                    request.game,
+                    request.featured
                 )
             )
 
@@ -172,12 +178,13 @@ class ViewsService(
                 viewToBePatchedEvent.id,
                 viewToBePatchedEvent.name,
                 viewToBePatchedEvent.published,
-                charactersToInsert
+                charactersToInsert,
+                viewToBePatchedEvent.featured
             )
             val event = Event(
                 aggregateRoot,
                 operationId,
-                ViewPatchedEvent.fromViewPatched(operationId,viewToBePatchedEvent.game, patchedView)
+                ViewPatchedEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
             )
             eventStore.save(event)
         }

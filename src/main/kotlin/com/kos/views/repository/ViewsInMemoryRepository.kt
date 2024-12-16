@@ -17,22 +17,35 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         name: String,
         owner: String,
         characterIds: List<Long>,
-        game: Game
+        game: Game,
+        featured: Boolean
     ): SimpleView {
-        val simpleView = SimpleView(id, name, owner, true, characterIds, game)
+        val simpleView = SimpleView(id, name, owner, true, characterIds, game, featured)
         views.add(simpleView)
         return simpleView
     }
 
-    override suspend fun edit(id: String, name: String, published: Boolean, characters: List<Long>): ViewModified {
+    override suspend fun edit(
+        id: String,
+        name: String,
+        published: Boolean,
+        characters: List<Long>,
+        featured: Boolean
+    ): ViewModified {
         val index = views.indexOfFirst { it.id == id }
         val oldView = views[index]
         views.removeAt(index)
-        views.add(index, SimpleView(id, name, oldView.owner, published, characters, oldView.game))
-        return ViewModified(id, name, published, characters)
+        views.add(index, SimpleView(id, name, oldView.owner, published, characters, oldView.game, featured))
+        return ViewModified(id, name, published, characters, featured)
     }
 
-    override suspend fun patch(id: String, name: String?, published: Boolean?, characters: List<Long>?): ViewPatched {
+    override suspend fun patch(
+        id: String,
+        name: String?,
+        published: Boolean?,
+        characters: List<Long>?,
+        featured: Boolean?
+    ): ViewPatched {
         val index = views.indexOfFirst { it.id == id }
         val oldView = views[index]
         views.removeAt(index)
@@ -42,13 +55,14 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             oldView.owner,
             published ?: oldView.published,
             characters ?: oldView.characterIds,
-            oldView.game
+            oldView.game,
+            featured ?: oldView.featured
         )
         views.add(
             index,
             simpleView
         )
-        return ViewPatched(id, name, published, characters)
+        return ViewPatched(id, name, published, characters, featured)
     }
 
     override suspend fun delete(id: String): ViewDeleted {
@@ -57,12 +71,13 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         return ViewDeleted(id)
     }
 
-    override suspend fun getViews(game: Game?): List<SimpleView> {
+    override suspend fun getViews(game: Game?, featured: Boolean): List<SimpleView> {
         val allViews = views.toList()
+        val maybeFeaturedViews = if (featured) allViews.filter { it.featured } else allViews
 
         return game.fold(
-            { allViews },
-            { views.filter { it.game == game } }
+            { maybeFeaturedViews },
+            { maybeFeaturedViews.filter { it.game == game } }
         )
     }
 

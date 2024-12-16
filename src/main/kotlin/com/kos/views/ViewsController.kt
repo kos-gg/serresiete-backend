@@ -11,18 +11,27 @@ class ViewsController(
     private val viewsService: ViewsService,
 ) {
 
-    suspend fun getViews(client: String?, activities: Set<Activity>, game: Game?): Either<ControllerError, List<SimpleView>> {
+    suspend fun getViews(
+        client: String?,
+        activities: Set<Activity>,
+        game: Game?,
+        featured: Boolean
+    ): Either<ControllerError, List<SimpleView>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.getAnyViews)) Either.Right(viewsService.getViews(game))
+                if (activities.contains(Activities.getAnyViews)) Either.Right(viewsService.getViews(game, featured))
                 else if (activities.contains(Activities.getOwnViews)) Either.Right(viewsService.getOwnViews(client))
                 else Either.Left(NotEnoughPermissions(client))
             }
         }
     }
 
-    suspend fun getView(client: String?, id: String, activities: Set<Activity>): Either<ControllerError, View> {
+    suspend fun getView(
+        client: String?,
+        id: String,
+        activities: Set<Activity>
+    ): Either<ControllerError, View> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
@@ -81,7 +90,11 @@ class ViewsController(
         }
     }
 
-    suspend fun createView(client: String?, request: ViewRequest, activities: Set<Activity>): Either<ControllerError, Operation> {
+    suspend fun createView(
+        client: String?,
+        request: ViewRequest,
+        activities: Set<Activity>
+    ): Either<ControllerError, Operation> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
@@ -116,7 +129,12 @@ class ViewsController(
         }
     }
 
-    suspend fun patchView(client: String?, request: ViewPatchRequest, id: String, activities: Set<Activity>): Either<ControllerError, Operation> {
+    suspend fun patchView(
+        client: String?,
+        request: ViewPatchRequest,
+        id: String,
+        activities: Set<Activity>
+    ): Either<ControllerError, Operation> {
         //TODO: We can propagate view fields to those who are optional from patch, or we can keep it like this to display which fields we modified
         return when (client) {
             null -> Either.Left(NotAuthorized)
