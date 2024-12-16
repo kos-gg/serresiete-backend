@@ -36,7 +36,7 @@ class EventSubscriptionControllerTest {
             val eventSubscriptionController = createController(defaultSubscriptionState)
             assertEquals(
                 defaultSubscriptionState,
-                eventSubscriptionController.getEventSubscriptions("owner", setOf(Activities.getQueueStatus)).getOrNull()
+                eventSubscriptionController.getEventSubscriptions("owner", setOf(Activities.getEventSubscriptions)).getOrNull()
             )
         }
     }

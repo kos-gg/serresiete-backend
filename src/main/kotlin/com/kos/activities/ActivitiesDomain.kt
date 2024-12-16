@@ -1,7 +1,5 @@
 package com.kos.activities
 
-import kotlinx.serialization.Serializable
-
 object Activities {
     const val deleteActivityFromRole = "delete activity from role"
     const val addActivityToRole= "add activity to role"
@@ -37,9 +35,6 @@ object Activities {
     const val getTask = "get task"
     const val getTasks = "get tasks"
     const val patchCredentials = "patch credentials"
-    const val getQueueStatus = "get queue status"
+    const val getEventSubscriptions = "get event subscriptions"
 }
 typealias Activity = String
-
-@Serializable
-data class ActivityRequest(val activity: Activity)

@@ -15,7 +15,7 @@ class EventSubscriptionController(private val eventSubscriptionService: EventSub
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.getQueueStatus)) Either.Right(eventSubscriptionService.getEventSubscriptions())
+                if (activities.contains(Activities.getEventSubscriptions)) Either.Right(eventSubscriptionService.getEventSubscriptions())
                 else Either.Left(NotEnoughPermissions(client))
             }
         }
