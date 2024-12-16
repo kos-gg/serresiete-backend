@@ -60,9 +60,15 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
     override suspend fun getViews(game: Game?, page: Int?, limit: Int?): List<SimpleView> {
         val allViews = views.toList()
 
-        return game.fold(
-            { allViews },
-            { views.filter { it.game == game } }
+        val filteredQuery =
+            game.fold(
+                { allViews },
+                { views.filter { it.game == game } }
+            )
+
+        return limit.fold(
+            { filteredQuery },
+            { filteredQuery.drop(((page ?: 1) - 1) * it).take(it) }
         )
     }
 

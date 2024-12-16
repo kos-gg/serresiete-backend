@@ -133,7 +133,6 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return ViewDeleted(id)
     }
 
-    // offset (page * limit), limit (limit)
     override suspend fun getViews(game: Game?, page: Int?, limit: Int?): List<SimpleView> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
@@ -142,28 +141,13 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 { baseQuery },
                 { baseQuery.adjustWhere { Views.game eq it.toString() } }
             )
-            filteredQuery
-                .map { resultRowToSimpleView(it) }
+
+            limit.fold(
+                { filteredQuery },
+                { filteredQuery.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
+            ).map { resultRowToSimpleView(it) }
         }
     }
-
-//    override suspend fun getViews(game: Game?, page: Int?, limit: Int?): List<SimpleView> {
-//        return newSuspendedTransaction(Dispatchers.IO, db) {
-//            val baseQuery = Views.selectAll()
-//
-//            val filteredQuery = game.fold(
-//                { baseQuery },
-//                { baseQuery.adjustWhere { Views.game eq it.toString() } }
-//            )
-//
-//            val paginatedQuery = filteredQuery
-//                .let { query ->
-//                    limit?.let { query.limit(it, offset = ((page ?: 1) - 1) * it) } ?: query
-//                }
-//
-//            paginatedQuery.map { resultRowToSimpleView(it) }
-//        }
-//    }
 
     override suspend fun state(): List<SimpleView> {
         return newSuspendedTransaction(Dispatchers.IO, db) { Views.selectAll().map { resultRowToSimpleView(it) } }
