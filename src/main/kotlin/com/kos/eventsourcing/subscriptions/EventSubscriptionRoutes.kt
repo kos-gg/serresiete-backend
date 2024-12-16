@@ -14,7 +14,7 @@ fun Route.subscriptionsRouting(eventSubscriptionController: EventSubscriptionCon
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
 
-                eventSubscriptionController.getEventSubscritpions(
+                eventSubscriptionController.getEventSubscriptions(
                     userWithActivities?.name,
                     userWithActivities?.activities.orEmpty()
                 ).fold({

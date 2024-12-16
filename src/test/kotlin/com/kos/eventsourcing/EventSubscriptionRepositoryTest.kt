@@ -91,7 +91,7 @@ abstract class SubscriptionRepositoryTest {
             )
 
             val repoWithState = repository.withState(subscriptions)
-            assertTrue { repoWithState.getEventSubscritpions().containsKey("testSubscription") }
+            assertTrue { repoWithState.getEventSubscriptions().containsKey("testSubscription") }
         }
     }
 }
