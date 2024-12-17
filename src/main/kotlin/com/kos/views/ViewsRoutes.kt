@@ -36,7 +36,7 @@ fun Route.viewsRouting(
                     val featured: Boolean =
                         call.request.queryParameters["featured"]?.toBoolean() ?: false
 
-                    val page = call.request.queryParameters["pagination"]?.toInt()
+                    val page = call.request.queryParameters["page"]?.toInt()
                     val limit = call.request.queryParameters["limit"]?.toInt()
 
                     viewsController.getViews(

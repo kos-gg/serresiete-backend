@@ -59,7 +59,7 @@ abstract class ViewsRepositoryTest {
     }
 
     @Test
-    fun `i can get views returns empty since the pagination and limit goes beyond actual rows in database`() {
+    fun `i can get views returns empty since the pagination and limit goes beyond actual rows in repository`() {
         runBlocking {
             val pagination = 2
             val limit = 5

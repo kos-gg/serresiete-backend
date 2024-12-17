@@ -115,7 +115,7 @@ class ViewsControllerTest {
     }
 
     @Test
-    fun `i can get views returns empty since the pagination and limit goes beyond actual rows in database`() {
+    fun `i can get views returns empty since given pagination and limit`() {
         runBlocking {
             val limit = 10
             val pagination = 2
