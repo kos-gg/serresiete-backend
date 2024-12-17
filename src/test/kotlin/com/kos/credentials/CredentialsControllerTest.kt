@@ -54,7 +54,7 @@ class CredentialsControllerTest {
 
             val controller = createController(basicCredentialsWithRolesInitialState)
             val expected = CredentialsWithRoles(user, listOf(Role.USER))
-            controller.getCredential("owner", setOf(Activities.getAnyCredential), user)
+            controller.getCredential("owner", setOf(Activities.getAnyCredentialsRoles), user)
                 .onLeft { fail(it.toString()) }
                 .onRight { assertEquals(expected, it) }
         }
