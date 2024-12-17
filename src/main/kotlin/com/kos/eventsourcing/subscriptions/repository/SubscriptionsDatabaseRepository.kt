@@ -40,6 +40,12 @@ class SubscriptionsDatabaseRepository(private val db: Database) : SubscriptionsR
         }
     }
 
+    override suspend fun getEventSubscriptions(): Map<String, SubscriptionState> {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            Subscriptions.selectAll().associate { resultRowToSubscription(it) }
+        }
+    }
+
     override suspend fun state(): Map<String, SubscriptionState> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             Subscriptions.selectAll().associate { resultRowToSubscription(it) }

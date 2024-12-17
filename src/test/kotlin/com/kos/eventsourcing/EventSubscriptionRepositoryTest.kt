@@ -15,6 +15,7 @@ import org.junit.jupiter.api.TestInstance
 import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 
 abstract class SubscriptionRepositoryTest {
@@ -34,12 +35,14 @@ abstract class SubscriptionRepositoryTest {
                 )
             )
             val newStateTime = OffsetDateTime.now()
-            repoWithState.setState("testSubscription", SubscriptionState(
-                SubscriptionStatus.RUNNING,
-                3,
-                newStateTime,
-                null
-            ))
+            repoWithState.setState(
+                "testSubscription", SubscriptionState(
+                    SubscriptionStatus.RUNNING,
+                    3,
+                    newStateTime,
+                    null
+                )
+            )
 
             val state = repoWithState.state()["testSubscription"]
             state?.let {
@@ -72,6 +75,23 @@ abstract class SubscriptionRepositoryTest {
                 assertEquals(stateTime, it.time)
                 assertEquals(null, it.lastError)
             }
+        }
+    }
+
+    @Test
+    fun `I can get the state of a subscriptions`() {
+        runBlocking {
+            val subscriptions = mapOf(
+                "testSubscription" to SubscriptionState(
+                    SubscriptionStatus.WAITING,
+                    0,
+                    OffsetDateTime.now(),
+                    null
+                )
+            )
+
+            val repoWithState = repository.withState(subscriptions)
+            assertTrue { repoWithState.getEventSubscriptions().containsKey("testSubscription") }
         }
     }
 }
