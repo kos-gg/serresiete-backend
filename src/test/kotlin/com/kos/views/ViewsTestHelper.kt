@@ -18,6 +18,16 @@ object ViewsTestHelper {
         basicSimpleLolView.copy(id = "2"),
         basicSimpleWowView.copy(id = "3", featured = true)
     )
+    val gigaSimpleGameViews =
+        basicSimpleGameViews +
+                listOf(
+                    basicSimpleLolView.copy(id = "4", featured = false),
+                    basicSimpleLolView.copy(id = "5", featured = true),
+                    basicSimpleWowView.copy(id = "6", featured = true),
+                    basicSimpleWowView.copy(id = "7", featured = false),
+                    basicSimpleWowView.copy(id = "8", game = Game.WOW_HC, featured = false),
+                    basicSimpleWowView.copy(id = "9", game = Game.WOW_HC, featured = true)
+                )
 }
 
 fun View.toSimple() =
