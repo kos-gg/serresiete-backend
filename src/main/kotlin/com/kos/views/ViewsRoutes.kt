@@ -21,17 +21,20 @@ fun Route.viewsRouting(
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 either {
-                    val gameTypeParameter = "game"
+                    val gameParameter = "game"
                     val game: Game? =
-                        call.request.queryParameters[gameTypeParameter].recoverToEither(
+                        call.request.queryParameters[gameParameter].recoverToEither(
                             {
                                 InvalidQueryParameter(
-                                    gameTypeParameter,
+                                    gameParameter,
                                     it,
                                     Game.entries.map { games -> games.toString() })
                             },
                             { Game.fromString(it) }
                         ).bind()
+
+                    val featured: Boolean =
+                        call.request.queryParameters["featured"]?.toBoolean() ?: false
 
                     val page = call.request.queryParameters["pagination"]?.toInt()
                     val limit = call.request.queryParameters["limit"]?.toInt()
@@ -40,6 +43,7 @@ fun Route.viewsRouting(
                         userWithActivities?.name,
                         userWithActivities?.activities.orEmpty(),
                         game,
+                        featured,
                         page,
                         limit
                     ).bind()

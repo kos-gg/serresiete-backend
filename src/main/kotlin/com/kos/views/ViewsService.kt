@@ -22,9 +22,7 @@ class ViewsService(
 ) {
 
     suspend fun getOwnViews(owner: String): List<SimpleView> = viewsRepository.getOwnViews(owner)
-    suspend fun getViews(game: Game?, page: Int?, limit: Int?): List<SimpleView> =
-        viewsRepository.getViews(game, page, limit)
-
+    suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): List<SimpleView> = viewsRepository.getViews(game, featured, page, limit)
     suspend fun get(id: String): View? {
         return when (val simpleView = viewsRepository.get(id)) {
             null -> null
@@ -37,7 +35,8 @@ class ViewsService(
                     simpleView.characterIds.mapNotNull {
                         charactersService.get(it, simpleView.game)
                     },
-                    simpleView.game
+                    simpleView.game,
+                    simpleView.featured
                 )
             }
         }
@@ -62,7 +61,8 @@ class ViewsService(
                     request.published,
                     request.characters,
                     request.game,
-                    owner
+                    owner,
+                    request.featured
                 )
             )
             eventStore.save(event)
@@ -82,7 +82,8 @@ class ViewsService(
                 viewToBeCreatedEvent.name,
                 viewToBeCreatedEvent.owner,
                 characterIds,
-                viewToBeCreatedEvent.game
+                viewToBeCreatedEvent.game,
+                viewToBeCreatedEvent.featured
             )
             val event = Event(
                 aggregateRoot,
@@ -106,7 +107,8 @@ class ViewsService(
                     request.name,
                     request.published,
                     request.characters,
-                    request.game
+                    request.game,
+                    request.featured
                 )
             )
             eventStore.save(event)
@@ -126,7 +128,8 @@ class ViewsService(
                     viewToBeEditedEvent.id,
                     viewToBeEditedEvent.name,
                     viewToBeEditedEvent.published,
-                    characters
+                    characters,
+                    viewToBeEditedEvent.featured
                 )
             val event = Event(
                 aggregateRoot,
@@ -153,7 +156,8 @@ class ViewsService(
                     request.name,
                     request.published,
                     request.characters,
-                    request.game
+                    request.game,
+                    request.featured
                 )
             )
 
@@ -174,7 +178,8 @@ class ViewsService(
                 viewToBePatchedEvent.id,
                 viewToBePatchedEvent.name,
                 viewToBePatchedEvent.published,
-                charactersToInsert
+                charactersToInsert,
+                viewToBePatchedEvent.featured
             )
             val event = Event(
                 aggregateRoot,

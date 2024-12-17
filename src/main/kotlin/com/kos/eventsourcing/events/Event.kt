@@ -53,7 +53,8 @@ data class ViewToBeCreatedEvent(
     val published: Boolean,
     val characters: List<CharacterCreateRequest>,
     val game: Game,
-    val owner: String
+    val owner: String,
+    val featured: Boolean
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_TO_BE_CREATED
 }
@@ -64,7 +65,8 @@ data class ViewToBeEditedEvent(
     val name: String,
     val published: Boolean,
     val characters: List<CharacterCreateRequest>,
-    val game: Game
+    val game: Game,
+    val featured: Boolean
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_TO_BE_EDITED
 }
@@ -75,7 +77,8 @@ data class ViewToBePatchedEvent(
     val name: String?,
     val published: Boolean?,
     val characters: List<CharacterCreateRequest>?,
-    val game: Game
+    val game: Game,
+    val featured: Boolean?
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_TO_BE_PATCHED
 }
@@ -87,7 +90,8 @@ data class ViewCreatedEvent(
     val owner: String,
     val characters: List<Long>,
     val published: Boolean,
-    val game: Game
+    val game: Game,
+    val featured: Boolean
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_CREATED
 
@@ -98,7 +102,8 @@ data class ViewCreatedEvent(
             simpleView.owner,
             simpleView.characterIds,
             simpleView.published,
-            simpleView.game
+            simpleView.game,
+            simpleView.featured
         )
     }
 }
@@ -109,7 +114,8 @@ data class ViewEditedEvent(
     val name: String,
     val characters: List<Long>,
     val published: Boolean,
-    val game: Game
+    val game: Game,
+    val featured: Boolean
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_EDITED
 
@@ -119,7 +125,8 @@ data class ViewEditedEvent(
             viewModified.name,
             viewModified.characters,
             viewModified.published,
-            game
+            game,
+            viewModified.featured
         )
     }
 }
@@ -130,7 +137,8 @@ data class ViewPatchedEvent(
     val name: String?,
     val characters: List<Long>?,
     val published: Boolean?,
-    val game: Game
+    val game: Game,
+    val featured: Boolean?
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_PATCHED
 
@@ -140,7 +148,8 @@ data class ViewPatchedEvent(
             viewPatched.name,
             viewPatched.characters,
             viewPatched.published,
-            game
+            game,
+            viewPatched.featured
         )
     }
 }

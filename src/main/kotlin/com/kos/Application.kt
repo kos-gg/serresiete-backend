@@ -8,6 +8,11 @@ import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.characters.CharactersService
 import com.kos.characters.repository.CharactersDatabaseRepository
+import com.kos.clients.blizzard.BlizzardHttpAuthClient
+import com.kos.clients.blizzard.BlizzardHttpClient
+import com.kos.clients.domain.BlizzardCredentials
+import com.kos.clients.raiderio.RaiderIoHTTPClient
+import com.kos.clients.riot.RiotHTTPClient
 import com.kos.common.DatabaseFactory
 import com.kos.common.JWTConfig
 import com.kos.common.RetryConfig
@@ -19,12 +24,9 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
+import com.kos.eventsourcing.subscriptions.EventSubscriptionController
+import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
-import com.kos.clients.blizzard.BlizzardHttpAuthClient
-import com.kos.clients.blizzard.BlizzardHttpClient
-import com.kos.clients.domain.BlizzardCredentials
-import com.kos.clients.raiderio.RaiderIoHTTPClient
-import com.kos.clients.riot.RiotHTTPClient
 import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
@@ -125,6 +127,9 @@ fun Application.module() {
 
     val subscriptionsRetryConfig = RetryConfig(10, 100)
     val subscriptionsRepository = SubscriptionsDatabaseRepository(db)
+    val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
+    val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)
+
     val viewsEventSubscription = EventSubscription(
         "views",
         eventStore,
@@ -166,7 +171,8 @@ fun Application.module() {
         credentialsController,
         rolesController,
         viewsController,
-        tasksController
+        tasksController,
+        eventSubscriptionController
     )
     configureSerialization()
     configureLogging()

@@ -54,7 +54,7 @@ class CredentialsControllerTest {
 
             val controller = createController(basicCredentialsWithRolesInitialState)
             val expected = CredentialsWithRoles(user, listOf(Role.USER))
-            controller.getCredential("owner", setOf(Activities.getAnyCredential), user)
+            controller.getCredential("owner", setOf(Activities.getAnyCredentialsRoles), user)
                 .onLeft { fail(it.toString()) }
                 .onRight { assertEquals(expected, it) }
         }
@@ -64,7 +64,12 @@ class CredentialsControllerTest {
     fun `i can patch a credential`() {
         runBlocking {
             val controller = createController(basicCredentialsWithRolesInitialState)
-            controller.patchCredential("owner", setOf(Activities.patchCredentials), user, PatchCredentialRequest("new-password", null))
+            controller.patchCredential(
+                "owner",
+                setOf(Activities.patchCredentials),
+                user,
+                PatchCredentialRequest("new-password", null)
+            )
                 .onLeft { fail(it.toString()) }
         }
     }
@@ -132,6 +137,46 @@ class CredentialsControllerTest {
             controller.deleteCredential("owner", setOf(Activities.deleteCredentials), "owner")
                 .onRight { fail("expected failure") }
                 .onLeft { assertTrue(it is CantDeleteYourself) }
+        }
+    }
+
+    @Test
+    fun `i can get any credential with get any credentials roles activity`() {
+        runBlocking {
+            val credentialsState = CredentialsRepositoryState(
+                listOf(basicCredentials.copy(userName = "owner"), basicCredentials),
+                mapOf("owner" to listOf(Role.ADMIN))
+            )
+
+            val expected = CredentialsWithRoles("owner", listOf(Role.ADMIN))
+
+            val controller = createController(credentialsState)
+
+            controller.getCredential("admin", setOf(Activities.getAnyCredentialsRoles), "owner")
+                .onRight { assertEquals(expected, it) }
+                .onLeft { fail(it.toString()) }
+        }
+    }
+
+    @Test
+    fun `i can get only my credential with get own credentials roles activity`() {
+        runBlocking {
+            val credentialsState = CredentialsRepositoryState(
+                listOf(basicCredentials.copy(userName = "owner"), basicCredentials),
+                mapOf("owner" to listOf(Role.ADMIN), user to listOf(Role.USER))
+            )
+
+            val expected = CredentialsWithRoles("user", listOf(Role.USER))
+
+            val controller = createController(credentialsState)
+
+            controller.getCredential("user", setOf(Activities.getOwnCredentialsRoles), "owner")
+                .onRight { fail() }
+                .onLeft { assertTrue(it is NotEnoughPermissions) }
+
+            controller.getCredential("user", setOf(Activities.getOwnCredentialsRoles), "user")
+                .onRight { assertEquals(it, expected) }
+                .onLeft { fail(it.toString()) }
         }
     }
 
