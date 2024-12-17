@@ -110,9 +110,9 @@ class ViewsServiceTest {
         }
 
         @Test
-        fun `i can get views returns empty since the pagination and limit goes beyond actual rows in database`() {
+        fun `i can get views returns empty since the page and limit goes beyond actual rows in database`() {
             runBlocking {
-                val pagination = 2
+                val page = 2
                 val limit = 10
 
                 val (_, viewsService) = createService(
@@ -123,7 +123,7 @@ class ViewsServiceTest {
                 )
                 assertEquals(
                     0,
-                    viewsService.getViews(Game.WOW, false, pagination, limit).size
+                    viewsService.getViews(Game.WOW, false, page, limit).size
                 )
             }
         }

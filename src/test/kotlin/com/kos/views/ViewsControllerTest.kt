@@ -115,10 +115,10 @@ class ViewsControllerTest {
     }
 
     @Test
-    fun `i can get views returns empty since given pagination and limit`() {
+    fun `i can get views returns empty since given page and limit`() {
         runBlocking {
             val limit = 10
-            val pagination = 2
+            val page = 2
 
             val controller = createController(
                 emptyCredentialsState,
@@ -128,7 +128,7 @@ class ViewsControllerTest {
             )
             assertEquals(
                 0,
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, pagination, limit)
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, page, limit)
                     .getOrNull()?.size
             )
         }

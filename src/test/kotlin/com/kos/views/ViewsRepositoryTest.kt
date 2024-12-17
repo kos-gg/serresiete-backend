@@ -59,14 +59,14 @@ abstract class ViewsRepositoryTest {
     }
 
     @Test
-    fun `i can get views returns empty since the pagination and limit goes beyond actual rows in repository`() {
+    fun `i can get views returns empty since the page and limit goes beyond actual rows in repository`() {
         runBlocking {
-            val pagination = 2
+            val page = 2
             val limit = 5
             val repositoryWithState = repository.withState(gigaSimpleGameViews)
             assertEquals(
                 gigaSimpleGameViews.takeLast(4),
-                repositoryWithState.getViews(null, false, pagination, limit)
+                repositoryWithState.getViews(null, false, page, limit)
             )
         }
     }
