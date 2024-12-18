@@ -11,6 +11,7 @@ import io.ktor.server.response.*
 import org.slf4j.LoggerFactory
 
 sealed interface ControllerError
+data object CantFeatureView : ControllerError
 data object NotAuthorized : ControllerError
 data class NotEnoughPermissions(val user: String) : ControllerError
 data class CantDeleteYourself(val user: String, val userToRemove: String) : ControllerError
@@ -79,6 +80,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is DatabaseError -> respondLogging(error.toString()) //TODO: improve
         is HttpError -> TODO()
         is CantDeleteYourself -> respond(BadRequest, "can't delete your credentials")
+        is CantFeatureView -> respond(Unauthorized, "not enought permissions to feature a view")
         UserWithoutRoles -> TODO()
     }
 }
