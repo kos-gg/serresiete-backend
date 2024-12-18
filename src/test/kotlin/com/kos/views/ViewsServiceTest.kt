@@ -607,14 +607,18 @@ class ViewsServiceTest {
                 )
 
                 val result = viewsService.delete(owner, basicSimpleWowView)
-                assertOperation(result, EventType.VIEW_TO_BE_CREATED)
+                assertOperation(result, EventType.VIEW_DELETED)
                 assertEventStoredCorrectly(
                     eventStore,
-                    aggregateRoot,
-                    name,
-                    published,
-                    listOf(),
-                    Game.WOW
+                    ViewDeletedEvent(
+                        basicSimpleWowView.id,
+                        basicSimpleWowView.name,
+                        basicSimpleWowView.owner,
+                        basicSimpleWowView.characterIds,
+                        basicSimpleWowView.published,
+                        basicSimpleWowView.game,
+                        basicSimpleWowView.featured
+                    )
                 )
             }
         }

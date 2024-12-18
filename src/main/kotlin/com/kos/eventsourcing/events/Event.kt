@@ -165,7 +165,8 @@ data class ViewDeletedEvent(
     val owner: String,
     val characters: List<Long>,
     val published: Boolean,
-    val game: Game
+    val game: Game,
+    val featured: Boolean
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_DELETED
 }

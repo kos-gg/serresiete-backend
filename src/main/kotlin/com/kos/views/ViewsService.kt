@@ -191,11 +191,10 @@ class ViewsService(
     }
 
     suspend fun delete(owner: String, viewToDelete: SimpleView): Operation {
-        val operationId = UUID.randomUUID().toString()
         val aggregateRoot = "/credentials/$owner"
         val event = Event(
             aggregateRoot,
-            operationId,
+            viewToDelete.id,
             ViewDeletedEvent(
                 viewToDelete.id,
                 viewToDelete.name,
@@ -203,6 +202,7 @@ class ViewsService(
                 viewToDelete.characterIds,
                 viewToDelete.published,
                 viewToDelete.game,
+                viewToDelete.featured
             )
         )
 
