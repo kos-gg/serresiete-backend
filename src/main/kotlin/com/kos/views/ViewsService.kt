@@ -3,6 +3,7 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import com.kos.characters.CharacterCreateRequest
 import com.kos.characters.CharactersService
 import com.kos.clients.domain.Data
 import com.kos.common.*
@@ -46,10 +47,8 @@ class ViewsService(
 
     suspend fun create(owner: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
-            val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
-            ensure(viewsRepository.getOwnViews(owner).size < ownerMaxViews) { TooMuchViews }
-            val ownerMaxCharacters = getMaxNumberOfCharactersByRole(owner).bind()
-            ensure(request.characters.size <= ownerMaxCharacters) { TooMuchCharacters }
+            ensureNumberOfViews(owner).bind()
+            ensureNumberOfCharacters(owner, request.characters).bind()
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
@@ -94,11 +93,11 @@ class ViewsService(
         }
     }
 
-    suspend fun edit(client: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
+    suspend fun edit(owner: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
-            val ownerMaxCharacters = getMaxNumberOfCharactersByRole(client).bind()
-            ensure(request.characters.size <= ownerMaxCharacters) { TooMuchCharacters }
-            val aggregateRoot = "/credentials/$client"
+            ensureNumberOfCharacters(owner, request.characters).bind()
+
+            val aggregateRoot = "/credentials/$owner"
             val event = Event(
                 aggregateRoot,
                 id,
@@ -141,13 +140,11 @@ class ViewsService(
 
     }
 
-    suspend fun patch(client: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
+    suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
         return either {
-            val ownerMaxCharacters = getMaxNumberOfCharactersByRole(client).bind()
-            request.characters?.let { charactersToInsert ->
-                ensure(charactersToInsert.size <= ownerMaxCharacters) { TooMuchCharacters }
-            }
-            val aggregateRoot = "/credentials/$client"
+            ensureNumberOfCharacters(owner, request.characters).bind()
+
+            val aggregateRoot = "/credentials/$owner"
             val event = Event(
                 aggregateRoot,
                 id,
@@ -212,4 +209,23 @@ class ViewsService(
             null -> Either.Left(UserWithoutRoles)
             else -> Either.Right(maxNumberOfCharacters)
         }
+
+    private suspend fun ensureNumberOfViews(owner: String): Either<ControllerError, Unit> {
+        return either {
+            val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
+            ensure(viewsRepository.getOwnViews(owner).size < ownerMaxViews) { TooMuchViews }
+        }
+    }
+
+    private suspend fun ensureNumberOfCharacters(
+        owner: String,
+        characters: List<CharacterCreateRequest>?
+    ): Either<ControllerError, Unit> {
+        return either {
+            val ownerMaxCharacters = getMaxNumberOfCharactersByRole(owner).bind()
+            characters?.let { charactersToInsert ->
+                ensure(charactersToInsert.size <= ownerMaxCharacters) { TooMuchCharacters }
+            }
+        }
+    }
 }
