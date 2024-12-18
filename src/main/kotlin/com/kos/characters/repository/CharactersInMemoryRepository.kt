@@ -6,9 +6,14 @@ import com.kos.common.InMemoryRepository
 import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.views.Game
+import com.kos.views.repository.ViewsInMemoryRepository
+import com.kos.views.repository.ViewsRepository
 import java.time.OffsetDateTime
 
-class CharactersInMemoryRepository(private val dataCacheRepository: DataCacheInMemoryRepository = DataCacheInMemoryRepository()) :
+class CharactersInMemoryRepository(
+    private val dataCacheRepository: DataCacheInMemoryRepository = DataCacheInMemoryRepository(),
+    private val viewsRepository: ViewsInMemoryRepository = ViewsInMemoryRepository()
+) :
     CharactersRepository,
     InMemoryRepository {
     private val wowCharacters: MutableList<WowCharacter> = mutableListOf()
@@ -222,6 +227,29 @@ class CharactersInMemoryRepository(private val dataCacheRepository: DataCacheInM
                     val newestCachedRecord = dataCacheRepository.get(character.id).maxByOrNull { it.inserted }
                     newestCachedRecord == null || newestCachedRecord.inserted.isBefore(now.minusMinutes(olderThanMinutes))
                 }
+            }
+        }
+    }
+
+    override suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> {
+        return viewsRepository.getViews(game, false)
+            .filter { id in it.characterIds }
+            .map { it.id }
+    }
+
+    override suspend fun delete(id: Long, game: Game) {
+        when (game) {
+            Game.WOW -> {
+                val index = wowCharacters.indexOfFirst { it.id == id }
+                wowCharacters.removeAt(index)
+            }
+            Game.LOL -> {
+                val index = lolCharacters.indexOfFirst { it.id == id }
+                lolCharacters.removeAt(index)
+            }
+            Game.WOW_HC -> {
+                val index = wowHardcoreCharacters.indexOfFirst { it.id == id }
+                wowHardcoreCharacters.removeAt(index)
             }
         }
     }

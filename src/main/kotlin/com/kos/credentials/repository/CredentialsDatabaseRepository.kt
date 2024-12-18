@@ -26,7 +26,7 @@ class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepos
         return this
     }
 
-    object Users : Table() {
+    object Users : Table("users") {
         val userName = varchar("user_name", 48)
         val password = varchar("password", 128)
 
@@ -44,7 +44,7 @@ class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepos
 
     override suspend fun getCredentials(userName: String): Credentials? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Users.select { Users.userName.eq(userName) }.map { resultRowToUser(it) }.singleOrNull()
+            Users.selectAll().where { Users.userName.eq(userName) }.map { resultRowToUser(it) }.singleOrNull()
         }
     }
 
@@ -79,7 +79,7 @@ class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepos
 
     override suspend fun getUserRoles(userName: String): List<Role> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            CredentialsRoles.select { CredentialsRoles.userName.eq(userName) }
+            CredentialsRoles.selectAll().where { CredentialsRoles.userName.eq(userName) }
                 .map { resultRowToCredentialsRoles(it).role }
         }
     }

@@ -158,10 +158,18 @@ fun Application.module() {
         subscriptionsRetryConfig
     ) { EventSubscription.syncWowHardcoreCharactersProcessor(it, charactersService, dataCacheService) }
 
+    val charactersEventSubscription = EventSubscription(
+        "characters",
+        eventStore,
+        subscriptionsRepository,
+        subscriptionsRetryConfig
+    ) { EventSubscription.charactersProcessor(it, charactersService) }
+
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)
     launchSubscription(syncWowEventSubscription)
     launchSubscription(syncWowHardcoreEventSubscription)
+    launchSubscription(charactersEventSubscription)
 
     configureAuthentication(credentialsService, jwtConfig)
     configureCors()

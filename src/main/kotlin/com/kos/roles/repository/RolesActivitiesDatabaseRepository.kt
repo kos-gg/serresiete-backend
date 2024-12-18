@@ -44,7 +44,7 @@ class RolesActivitiesDatabaseRepository(private val db: Database) : RolesActivit
 
     override suspend fun getActivitiesFromRole(role: Role): Set<Activity> {
         return transaction {
-            RoleActivities.select { RoleActivities.role eq role.toString() }.map {
+            RoleActivities.selectAll().where { RoleActivities.role eq role.toString() }.map {
                 it[RoleActivities.activity]
             }.toSet()
         }

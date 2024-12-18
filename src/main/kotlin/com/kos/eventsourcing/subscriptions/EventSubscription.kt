@@ -93,6 +93,8 @@ class EventSubscription(
             LoggerFactory.getLogger("eventSubscription.syncWowCharactersProcessor")
         private val syncWowHardcoreCharactersProcessorLogger =
             LoggerFactory.getLogger("eventSubscription.syncWowHardcoreCharactersProcessor")
+        private val charactersProcessorLogger =
+            LoggerFactory.getLogger("eventSubscription.charactersProcessor")
 
         suspend fun viewsProcessor(
             eventWithVersion: EventWithVersion,
@@ -372,6 +374,38 @@ class EventSubscription(
 
                 else -> {
                     syncLolCharactersProcessorLogger.debug(
+                        "skipping event v{} ({})",
+                        eventWithVersion.version,
+                        eventWithVersion.event.eventData.eventType
+                    )
+                    Either.Right(Unit)
+                }
+            }
+        }
+
+        suspend fun charactersProcessor(
+            eventWithVersion: EventWithVersion,
+            charactersService: CharactersService
+        ): Either<ControllerError, Unit> {
+            return when (eventWithVersion.event.eventData.eventType) {
+                EventType.VIEW_DELETED -> {
+                    val payload = eventWithVersion.event.eventData as ViewDeletedEvent
+                    Either.Right(payload.characters.map { it to charactersService.getViewsFromCharacter(it, payload.game) }.forEach {
+                        if (it.second.isEmpty()) {
+                            charactersProcessorLogger.debug("Deleting character ${it.first}")
+                            charactersService.delete(it.first, payload.game)
+                        }
+                        else charactersProcessorLogger.debug(
+                            "Not deleting character {} because it's still in {}",
+                            it.first,
+                            it.second
+                        )
+
+                    })
+                }
+
+                else -> {
+                    charactersProcessorLogger.debug(
                         "skipping event v{} ({})",
                         eventWithVersion.version,
                         eventWithVersion.event.eventData.eventType

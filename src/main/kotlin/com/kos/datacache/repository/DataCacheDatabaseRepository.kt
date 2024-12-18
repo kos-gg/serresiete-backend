@@ -23,14 +23,13 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
         return this
     }
 
-    object DataCaches : Table() {
+    object DataCaches : Table("data_cache") {
         val characterId = long("character_id")
         val data = text("data")
         val inserted = text("inserted")
         val game = text("game")
 
         override val primaryKey = PrimaryKey(characterId)
-        override val tableName = "data_cache"
     }
 
     private fun resultRowToDataCache(row: ResultRow) = DataCache(
@@ -54,7 +53,7 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
 
     override suspend fun get(characterId: Long): List<DataCache> =
         newSuspendedTransaction(Dispatchers.IO, db) {
-            DataCaches.select { DataCaches.characterId.eq(characterId) }.map { resultRowToDataCache(it) }
+            DataCaches.selectAll().where { DataCaches.characterId.eq(characterId) }.map { resultRowToDataCache(it) }
         }
 
     override suspend fun deleteExpiredRecord(ttl: Long): Int {

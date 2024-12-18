@@ -13,12 +13,11 @@ class SubscriptionsDatabaseRepository(private val db: Database) : SubscriptionsR
         ignoreUnknownKeys = true
     }
 
-    object Subscriptions : Table() {
+    object Subscriptions : Table("subscriptions") {
         val name = varchar("name", 128)
         val state = text("state")
 
         override val primaryKey = PrimaryKey(name)
-        override val tableName = "subscriptions"
     }
 
     private fun resultRowToSubscriptionState(row: ResultRow): SubscriptionState =
@@ -29,7 +28,7 @@ class SubscriptionsDatabaseRepository(private val db: Database) : SubscriptionsR
 
     override suspend fun getState(name: String): SubscriptionState? =
         newSuspendedTransaction(Dispatchers.IO, db) {
-            Subscriptions.select { Subscriptions.name.eq(name) }.map { resultRowToSubscriptionState(it) }.singleOrNull()
+            Subscriptions.selectAll().where { Subscriptions.name.eq(name) }.map { resultRowToSubscriptionState(it) }.singleOrNull()
         }
 
     override suspend fun setState(subscriptionName: String, subscriptionState: SubscriptionState) {

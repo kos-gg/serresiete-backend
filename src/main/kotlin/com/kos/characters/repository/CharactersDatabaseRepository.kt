@@ -5,8 +5,10 @@ import com.kos.characters.*
 import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.views.Game
+import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -230,15 +232,15 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
     override suspend fun get(id: Long, game: Game): Character? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             when (game) {
-                Game.WOW -> WowCharacters.select { WowCharacters.id.eq(id) }.singleOrNull()?.let {
+                Game.WOW -> WowCharacters.selectAll().where { WowCharacters.id.eq(id) }.singleOrNull()?.let {
                     resultRowToWowCharacter(it)
                 }
 
-                Game.LOL -> LolCharacters.select { LolCharacters.id.eq(id) }.singleOrNull()?.let {
+                Game.LOL -> LolCharacters.selectAll().where { LolCharacters.id.eq(id) }.singleOrNull()?.let {
                     resultRowToLolCharacter(it)
                 }
 
-                Game.WOW_HC -> WowHardcoreCharacters.select { WowHardcoreCharacters.id.eq(id) }.singleOrNull()?.let {
+                Game.WOW_HC -> WowHardcoreCharacters.selectAll().where { WowHardcoreCharacters.id.eq(id) }.singleOrNull()?.let {
                     resultRowToWowHardcoreCharacter(it)
                 }
             }
@@ -250,7 +252,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
             when (game) {
                 Game.WOW -> {
                     request as WowCharacterRequest
-                    WowCharacters.select {
+                    WowCharacters.selectAll().where {
                         WowCharacters.name.eq(request.name)
                             .and(WowCharacters.realm.eq(request.realm))
                             .and(WowCharacters.region.eq(request.region))
@@ -259,7 +261,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
 
                 Game.LOL -> {
                     request as LolCharacterRequest
-                    LolCharacters.select {
+                    LolCharacters.selectAll().where {
                         LolCharacters.tag.eq(request.tag)
                             .and(LolCharacters.name.eq(request.name))
                     }.map { resultRowToLolCharacter(it) }
@@ -267,7 +269,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
 
                 Game.WOW_HC -> {
                     request as WowCharacterRequest
-                    WowHardcoreCharacters.select {
+                    WowHardcoreCharacters.selectAll().where {
                         WowHardcoreCharacters.name.eq(request.name)
                             .and(WowHardcoreCharacters.realm.eq(request.realm))
                             .and(WowHardcoreCharacters.region.eq(request.region))
@@ -282,7 +284,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
             when (game) {
                 Game.WOW -> {
                     character as WowCharacterRequest
-                    WowCharacters.select {
+                    WowCharacters.selectAll().where {
                         WowCharacters.name.eq(character.name)
                             .and(WowCharacters.realm.eq(character.realm))
                             .and(WowCharacters.region.eq(character.region))
@@ -291,7 +293,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
 
                 Game.LOL -> {
                     character as LolCharacterEnrichedRequest
-                    LolCharacters.select {
+                    LolCharacters.selectAll().where {
                         LolCharacters.puuid.eq(character.puuid)
                             .and(LolCharacters.summonerId.eq(character.summonerId))
                     }.map { resultRowToLolCharacter(it) }
@@ -299,7 +301,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
 
                 Game.WOW_HC -> {
                     character as WowCharacterRequest
-                    WowHardcoreCharacters.select {
+                    WowHardcoreCharacters.selectAll().where {
                         WowHardcoreCharacters.name.eq(character.name)
                             .and(WowHardcoreCharacters.realm.eq(character.realm))
                             .and(WowHardcoreCharacters.region.eq(character.region))
@@ -325,11 +327,10 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 Game.WOW -> WowCharacters.selectAll().map { resultRowToWowCharacter(it) }
                 Game.LOL -> {
                     val subQuery = DataCacheDatabaseRepository.DataCaches
-                        .slice(
+                        .select(
                             DataCacheDatabaseRepository.DataCaches.characterId,
                             DataCacheDatabaseRepository.DataCaches.inserted.max().alias("inserted")
                         )
-                        .selectAll()
                         .groupBy(DataCacheDatabaseRepository.DataCaches.characterId)
 
                     val subQueryAliased = subQuery.alias("dc")
@@ -340,7 +341,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                             subQueryAliased,
                             { id },
                             { subQueryAliased[DataCacheDatabaseRepository.DataCaches.characterId] })
-                        .select {
+                        .selectAll().where {
                             (subQueryAliased[DataCacheDatabaseRepository.DataCaches.inserted].isNull()) or
                                     (subQueryAliased[DataCacheDatabaseRepository.DataCaches.inserted] lessEq thirtyMinutesAgo)
                         }
@@ -348,6 +349,25 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 }
 
                 Game.WOW_HC -> WowHardcoreCharacters.selectAll().map { resultRowToWowHardcoreCharacter(it) }
+            }
+        }
+    }
+
+    override suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            ViewsDatabaseRepository.CharactersView.selectAll().where { ViewsDatabaseRepository.CharactersView.characterId.eq(id) }
+                .map {
+                    it[ViewsDatabaseRepository.CharactersView.viewId]
+                }
+        }
+    }
+
+    override suspend fun delete(id: Long, game: Game) {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            when (game) {
+                Game.WOW -> WowCharacters.deleteWhere { WowCharacters.id.eq(id) }
+                Game.LOL -> LolCharacters.deleteWhere { LolCharacters.id.eq(id) }
+                Game.WOW_HC -> WowHardcoreCharacters.deleteWhere { WowHardcoreCharacters.id.eq(id) }
             }
         }
     }
