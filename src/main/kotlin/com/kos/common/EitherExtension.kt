@@ -16,3 +16,8 @@ fun <A, B> Either<A, B>.getOrThrow(exception: Throwable): B =
         is Either.Right -> this.value
         is Either.Left -> throw exception
     }
+
+fun <A : Throwable, B> Either<A, B>.getOrThrow(): B = when (this) {
+    is Either.Right -> this.value
+    is Either.Left -> throw this.value
+}

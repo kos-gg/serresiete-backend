@@ -1,0 +1,1 @@
+insert into roles_activities values('user', 'get own credentials roles');

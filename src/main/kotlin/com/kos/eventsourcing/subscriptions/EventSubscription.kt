@@ -24,7 +24,6 @@ enum class SubscriptionStatus {
     FAILED
 }
 
-
 @Serializable
 data class SubscriptionState(
     val status: SubscriptionStatus,

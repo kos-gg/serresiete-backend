@@ -131,7 +131,7 @@ class DataCacheServiceTest {
         runBlocking {
 
             val newMatchIds = listOf("match1", "match2", "match3", "match4", "match5")
-            val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5))
+            val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
             `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
@@ -178,7 +178,7 @@ class DataCacheServiceTest {
     fun `caching lol data behaves smart, retrieves only necessary matches, and inserts only the requested matches`() {
         runBlocking {
             val requestedMatchIds = listOf("match3", "match4", "match5", "match6", "match7")
-            val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5))
+            val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
             `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))

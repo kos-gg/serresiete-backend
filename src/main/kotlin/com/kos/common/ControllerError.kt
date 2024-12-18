@@ -1,6 +1,5 @@
 package com.kos.common
 
-import com.kos.characters.WowCharacter
 import com.kos.characters.WowCharacterRequest
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -22,13 +21,13 @@ class InvalidQueryParameter(param: String, value: String, allowed: List<String>?
     val message: String = allowed._fold({ baseMessage }, { "$baseMessage\nallowed values: $it" })
 }
 
-class InvalidTaskType(val type: String)
-class InvalidGameType(val type: String)
+class InvalidTaskType(val type: String) : IllegalArgumentException("Invalid task type: $type")
+class InvalidGameType(val type: String) : IllegalArgumentException("Invalid game type: $type")
 interface HttpError : ControllerError {
     fun error(): String
 }
 
-class NonHardcoreCharacter(private val wowCharacter: WowCharacterRequest): HttpError {
+class NonHardcoreCharacter(private val wowCharacter: WowCharacterRequest) : HttpError {
     override fun error(): String = "${wowCharacter.realm} is not hardcore"
 }
 
@@ -53,7 +52,7 @@ data object UserWithoutRoles : ControllerError
 interface DatabaseError : ControllerError
 data class InsertError(val message: String) : DatabaseError
 
-interface AuthError: ControllerError {
+interface AuthError : ControllerError {
     val message: String
 }
 

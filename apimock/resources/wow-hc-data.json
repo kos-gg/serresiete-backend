@@ -1,0 +1,643 @@
+{
+    "viewName": "wow-hardcore-view-example",
+    "data": [
+        {
+            "type": "com.kos.clients.domain.HardcoreData",
+            "id": 30758927,
+            "name": "Kumii",
+            "level": 60,
+            "isDead": false,
+            "isSelfFound": false,
+            "averageItemLevel": 59,
+            "equippedItemLevel": 57,
+            "characterClass": "Hunter",
+            "race": "Night Elf",
+            "gender": "Female",
+            "realm": "Stitches",
+            "region": "eu",
+            "guild": "I CANT RELEASE",
+            "experience": 0,
+            "items": [
+                {
+                    "id": 18421,
+                    "slot": "Head",
+                    "quality": "RARE",
+                    "name": "Backwood Helm",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_helmet_19.jpg"
+                },
+                {
+                    "id": 15411,
+                    "slot": "Neck",
+                    "quality": "RARE",
+                    "name": "Mark of Fordring",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_talisman_07.jpg"
+                },
+                {
+                    "id": 13358,
+                    "slot": "Shoulders",
+                    "quality": "RARE",
+                    "name": "Wyrmtongue Shoulders",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_24.jpg"
+                },
+                {
+                    "id": 859,
+                    "slot": "Shirt",
+                    "quality": "COMMON",
+                    "name": "Fine Cloth Shirt",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_02.jpg"
+                },
+                {
+                    "id": 15787,
+                    "slot": "Chest",
+                    "quality": "UNCOMMON",
+                    "name": "Willow Band Hauberk",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_chain_16.jpg"
+                },
+                {
+                    "id": 18393,
+                    "slot": "Waist",
+                    "quality": "RARE",
+                    "name": "Warpwood Binding",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_34.jpg"
+                },
+                {
+                    "id": 15062,
+                    "slot": "Legs",
+                    "quality": "RARE",
+                    "name": "Devilsaur Leggings",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_wolf.jpg"
+                },
+                {
+                    "id": 16675,
+                    "slot": "Feet",
+                    "quality": "RARE",
+                    "name": "Beaststalker's Boots",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_plate_07.jpg"
+                },
+                {
+                    "id": 16710,
+                    "slot": "Wrist",
+                    "quality": "RARE",
+                    "name": "Shadowcraft Bracers",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg"
+                },
+                {
+                    "id": 15063,
+                    "slot": "Hands",
+                    "quality": "RARE",
+                    "name": "Devilsaur Gauntlets",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_26.jpg"
+                },
+                {
+                    "id": 13217,
+                    "slot": "Ring 1",
+                    "quality": "UNCOMMON",
+                    "name": "Band of the Penitent",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_30.jpg"
+                },
+                {
+                    "id": 9533,
+                    "slot": "Ring 2",
+                    "quality": "RARE",
+                    "name": "Masons Fraternity Ring",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_03.jpg"
+                },
+                {
+                    "id": 2820,
+                    "slot": "Trinket 1",
+                    "quality": "UNCOMMON",
+                    "name": "Nifty Stopwatch",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_pocketwatch_01.jpg"
+                },
+                {
+                    "id": 11122,
+                    "slot": "Trinket 2",
+                    "quality": "UNCOMMON",
+                    "name": "Carrot on a Stick",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_food_54.jpg"
+                },
+                {
+                    "id": 10518,
+                    "slot": "Back",
+                    "quality": "UNCOMMON",
+                    "name": "Parachute Cloak",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_11.jpg"
+                },
+                {
+                    "id": 18725,
+                    "slot": "Main Hand",
+                    "quality": "RARE",
+                    "name": "Peacemaker",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_spear_07.jpg"
+                },
+                {
+                    "id": 18738,
+                    "slot": "Ranged",
+                    "quality": "RARE",
+                    "name": "Carapace Spine Crossbow",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_crossbow_04.jpg"
+                }
+            ],
+            "faction": "Alliance",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/stitches/15/30758927-avatar.jpg",
+            "stats": {
+                "health": 3323,
+                "resource": {
+                    "type": "Mana",
+                    "value": 2775
+                },
+                "strength": 52,
+                "agility": 269,
+                "intellect": 89,
+                "stamina": 179,
+                "meleeCrit": 11.9641,
+                "attackPower": 627,
+                "mainHandStats": {
+                    "minDamage": 289.27142,
+                    "maxDamage": 358.27142,
+                    "speed": 3.4,
+                    "dps": 95.22688
+                },
+                "offHandStats": {
+                    "minDamage": 45.357147,
+                    "maxDamage": 45.357147,
+                    "speed": 2.0,
+                    "dps": 22.678574
+                },
+                "spellPower": 0.0,
+                "spellPenetration": 0.0,
+                "spellCrit": 5.0685,
+                "manaRegen": 77.0,
+                "manaRegenCombat": 77.0,
+                "armor": 2122,
+                "dodge": 10.5413,
+                "parry": 6.3999996,
+                "block": 0.0,
+                "rangedCrit": 17.084099,
+                "spirit": 79,
+                "defense": 285,
+                "resistances": {
+                    "fire": 0,
+                    "holy": 0,
+                    "shadow": 0,
+                    "nature": 10,
+                    "arcane": 0
+                }
+            },
+            "specializations": {
+                "wowHeadEmbeddedTalents": "2000000000000000-05251030513051-3320200410300000",
+                "specializations": [
+                    {
+                        "name": "Beast Mastery",
+                        "points": 2,
+                        "talents": [
+                            {
+                                "id": 1382,
+                                "rank": 2
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Marksmanship",
+                        "points": 31,
+                        "talents": [
+                            {
+                                "id": 1342,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1344,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1343,
+                                "rank": 2
+                            },
+                            {
+                                "id": 1352,
+                                "rank": 3
+                            },
+                            {
+                                "id": 1349,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1345,
+                                "rank": 1
+                            },
+                            {
+                                "id": 1347,
+                                "rank": 3
+                            },
+                            {
+                                "id": 1353,
+                                "rank": 1
+                            },
+                            {
+                                "id": 1362,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1361,
+                                "rank": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Survival",
+                        "points": 18,
+                        "talents": [
+                            {
+                                "id": 1623,
+                                "rank": 3
+                            },
+                            {
+                                "id": 1301,
+                                "rank": 3
+                            },
+                            {
+                                "id": 1311,
+                                "rank": 2
+                            },
+                            {
+                                "id": 1621,
+                                "rank": 2
+                            },
+                            {
+                                "id": 1308,
+                                "rank": 1
+                            },
+                            {
+                                "id": 1622,
+                                "rank": 4
+                            },
+                            {
+                                "id": 1310,
+                                "rank": 3
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "com.kos.clients.domain.HardcoreData",
+            "id": 31793578,
+            "name": "Rosaura",
+            "level": 40,
+            "isDead": false,
+            "isSelfFound": false,
+            "averageItemLevel": 27,
+            "equippedItemLevel": 27,
+            "characterClass": "Paladin",
+            "race": "Human",
+            "gender": "Female",
+            "realm": "Stitches",
+            "region": "eu",
+            "guild": "I CANT RELEASE",
+            "experience": 7581,
+            "items": [
+                {
+                    "id": 3836,
+                    "slot": "Head",
+                    "quality": "UNCOMMON",
+                    "name": "Green Iron Helm",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_helmet_03.jpg"
+                },
+                {
+                    "id": 15698,
+                    "slot": "Shoulders",
+                    "quality": "UNCOMMON",
+                    "name": "Wrangling Spaulders",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_14.jpg"
+                },
+                {
+                    "id": 2575,
+                    "slot": "Shirt",
+                    "quality": "COMMON",
+                    "name": "Red Linen Shirt",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_red_01.jpg"
+                },
+                {
+                    "id": 7418,
+                    "slot": "Chest",
+                    "quality": "UNCOMMON",
+                    "name": "Phalanx Breastplate of the Bear",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_plate01.jpg"
+                },
+                {
+                    "id": 6742,
+                    "slot": "Waist",
+                    "quality": "RARE",
+                    "name": "Stonefist Girdle",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_35.jpg"
+                },
+                {
+                    "id": 15561,
+                    "slot": "Legs",
+                    "quality": "UNCOMMON",
+                    "name": "Pillager's Leggings of the Bear",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_03.jpg"
+                },
+                {
+                    "id": 7417,
+                    "slot": "Feet",
+                    "quality": "UNCOMMON",
+                    "name": "Phalanx Boots of the Bear",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_01.jpg"
+                },
+                {
+                    "id": 9865,
+                    "slot": "Wrist",
+                    "quality": "UNCOMMON",
+                    "name": "Renegade Bracers of the Bear",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg"
+                },
+                {
+                    "id": 9868,
+                    "slot": "Hands",
+                    "quality": "UNCOMMON",
+                    "name": "Renegade Gauntlets of the Bear",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_28.jpg"
+                },
+                {
+                    "id": 6749,
+                    "slot": "Ring 1",
+                    "quality": "UNCOMMON",
+                    "name": "Tiger Band",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_13.jpg"
+                },
+                {
+                    "id": 2933,
+                    "slot": "Ring 2",
+                    "quality": "RARE",
+                    "name": "Seal of Wrynn",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_05.jpg"
+                },
+                {
+                    "id": 6901,
+                    "slot": "Back",
+                    "quality": "RARE",
+                    "name": "Glowing Thresher Cape",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_monsterscales_03.jpg"
+                },
+                {
+                    "id": 6687,
+                    "slot": "Main Hand",
+                    "quality": "RARE",
+                    "name": "Corpsemaker",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_halbard_01.jpg"
+                }
+            ],
+            "faction": "Alliance",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/stitches/170/31793578-avatar.jpg",
+            "stats": {
+                "health": 2021,
+                "resource": {
+                    "type": "Mana",
+                    "value": 1577
+                },
+                "strength": 152,
+                "agility": 51,
+                "intellect": 58,
+                "stamina": 158,
+                "meleeCrit": 9.279099,
+                "attackPower": 489,
+                "mainHandStats": {
+                    "minDamage": 220.72859,
+                    "maxDamage": 264.72858,
+                    "speed": 3.8,
+                    "dps": 63.875942
+                },
+                "offHandStats": {
+                    "minDamage": 35.357147,
+                    "maxDamage": 35.357147,
+                    "speed": 2.0,
+                    "dps": 17.678574
+                },
+                "spellPower": 0.0,
+                "spellPenetration": 0.0,
+                "spellCrit": 4.9268,
+                "manaRegen": 70.0,
+                "manaRegenCombat": 70.0,
+                "armor": 1468,
+                "dodge": 4.2391,
+                "parry": 9.76,
+                "block": 4.76,
+                "rangedCrit": 0.0,
+                "spirit": 66,
+                "defense": 194,
+                "resistances": {
+                    "fire": 0,
+                    "holy": 0,
+                    "shadow": 0,
+                    "nature": 0,
+                    "arcane": 0
+                }
+            },
+            "specializations": {
+                "wowHeadEmbeddedTalents": "05500100000000--050050512020000",
+                "specializations": [
+                    {
+                        "name": "Holy",
+                        "points": 11,
+                        "talents": [
+                            {
+                                "id": 1449,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1432,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1435,
+                                "rank": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Retribution",
+                        "points": 20,
+                        "talents": [
+                            {
+                                "id": 1407,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1403,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1481,
+                                "rank": 1
+                            },
+                            {
+                                "id": 1634,
+                                "rank": 2
+                            },
+                            {
+                                "id": 1411,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1405,
+                                "rank": 2
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "com.kos.clients.domain.HardcoreData",
+            "id": 30141039,
+            "name": "Grimlita",
+            "level": 12,
+            "isDead": false,
+            "isSelfFound": false,
+            "averageItemLevel": 5,
+            "equippedItemLevel": 5,
+            "characterClass": "Priest",
+            "race": "Dwarf",
+            "gender": "Female",
+            "realm": "Stitches",
+            "region": "eu",
+            "guild": null,
+            "experience": 3703,
+            "items": [
+                {
+                    "id": 2575,
+                    "slot": "Shirt",
+                    "quality": "COMMON",
+                    "name": "Red Linen Shirt",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_red_01.jpg"
+                },
+                {
+                    "id": 2578,
+                    "slot": "Chest",
+                    "quality": "UNCOMMON",
+                    "name": "Barbaric Linen Vest",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_fur.jpg"
+                },
+                {
+                    "id": 4663,
+                    "slot": "Waist",
+                    "quality": "COMMON",
+                    "name": "Journeyman's Belt",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_04.jpg"
+                },
+                {
+                    "id": 4309,
+                    "slot": "Legs",
+                    "quality": "UNCOMMON",
+                    "name": "Handstitched Linen Britches",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_07.jpg"
+                },
+                {
+                    "id": 51,
+                    "slot": "Feet",
+                    "quality": "COMMON",
+                    "name": "Neophyte's Boots",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_04.jpg"
+                },
+                {
+                    "id": 3373,
+                    "slot": "Wrist",
+                    "quality": "POOR",
+                    "name": "Patchwork Bracers",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg"
+                },
+                {
+                    "id": 719,
+                    "slot": "Hands",
+                    "quality": "COMMON",
+                    "name": "Rabbit Handler Gloves",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_06.jpg"
+                },
+                {
+                    "id": 2580,
+                    "slot": "Back",
+                    "quality": "COMMON",
+                    "name": "Reinforced Linen Cape",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_07.jpg"
+                },
+                {
+                    "id": 1009,
+                    "slot": "Main Hand",
+                    "quality": "UNCOMMON",
+                    "name": "Compact Hammer",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_hammer_08.jpg"
+                },
+                {
+                    "id": 11287,
+                    "slot": "Ranged",
+                    "quality": "UNCOMMON",
+                    "name": "Lesser Magic Wand",
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_staff_02.jpg"
+                }
+            ],
+            "faction": "Alliance",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/stitches/111/30141039-avatar.jpg",
+            "stats": {
+                "health": 307,
+                "resource": {
+                    "type": "Mana",
+                    "value": 524
+                },
+                "strength": 24,
+                "agility": 19,
+                "intellect": 38,
+                "stamina": 33,
+                "meleeCrit": 3.6530004,
+                "attackPower": 14,
+                "mainHandStats": {
+                    "minDamage": 13.3,
+                    "maxDamage": 23.3,
+                    "speed": 2.3,
+                    "dps": 7.9565215
+                },
+                "offHandStats": {
+                    "minDamage": 1.5,
+                    "maxDamage": 1.5,
+                    "speed": 2.0,
+                    "dps": 0.75
+                },
+                "spellPower": 0.0,
+                "spellPenetration": 0.0,
+                "spellCrit": 4.79,
+                "manaRegen": 50.0,
+                "manaRegenCombat": 50.0,
+                "armor": 120,
+                "dodge": 4.493,
+                "parry": 0.0,
+                "block": 0.0,
+                "rangedCrit": 4.653,
+                "spirit": 40,
+                "defense": 56,
+                "resistances": {
+                    "fire": 0,
+                    "holy": 0,
+                    "shadow": 0,
+                    "nature": 0,
+                    "arcane": 0
+                }
+            },
+            "specializations": {
+                "wowHeadEmbeddedTalents": "030000000000000--",
+                "specializations": [
+                    {
+                        "name": "Discipline",
+                        "points": 3,
+                        "talents": [
+                            {
+                                "id": 345,
+                                "rank": 3
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

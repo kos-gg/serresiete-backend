@@ -36,7 +36,8 @@ data class SimpleView(
     val owner: String,
     val published: Boolean,
     val characterIds: List<Long>,
-    val game: Game
+    val game: Game,
+    val featured: Boolean
 )
 
 @Serializable
@@ -46,7 +47,8 @@ data class View(
     val owner: String,
     val published: Boolean,
     val characters: List<Character>,
-    val game: Game
+    val game: Game,
+    val featured: Boolean
 )
 
 //TODO: We need to decode/encode the character request based on Game.
@@ -57,6 +59,7 @@ data class ViewRequest(
     val published: Boolean,
     val characters: List<CharacterCreateRequest>,
     val game: Game,
+    val featured: Boolean
 )
 
 @Serializable
@@ -64,7 +67,8 @@ data class ViewPatchRequest(
     val name: String? = null,
     val published: Boolean? = null,
     val characters: List<CharacterCreateRequest>? = null,
-    val game: Game
+    val game: Game,
+    val featured: Boolean? = null
 )
 
 @Serializable
@@ -73,13 +77,25 @@ sealed interface ViewResult {
 }
 
 @Serializable
-data class ViewModified(val viewId: String, val name: String, val published: Boolean, val characters: List<Long>) :
+data class ViewModified(
+    val viewId: String,
+    val name: String,
+    val published: Boolean,
+    val characters: List<Long>,
+    val featured: Boolean
+) :
     ViewResult {
     override val isSuccess: Boolean = true
 }
 
 @Serializable
-data class ViewPatched(val viewId: String, val name: String?, val published: Boolean?, val characters: List<Long>?) :
+data class ViewPatched(
+    val viewId: String,
+    val name: String?,
+    val published: Boolean?,
+    val characters: List<Long>?,
+    val featured: Boolean?
+) :
     ViewResult {
     override val isSuccess: Boolean = true
 }

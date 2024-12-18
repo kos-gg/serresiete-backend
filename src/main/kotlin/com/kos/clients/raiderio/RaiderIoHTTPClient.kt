@@ -3,11 +3,8 @@ package com.kos.clients.raiderio
 import arrow.core.Either
 import com.kos.characters.WowCharacter
 import com.kos.characters.WowCharacterRequest
+import com.kos.clients.domain.*
 import com.kos.common.*
-import com.kos.clients.domain.RaiderIoCutoff
-import com.kos.clients.domain.RaiderIoProfile
-import com.kos.clients.domain.RaiderIoProtocol
-import com.kos.clients.domain.RaiderIoResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -19,6 +16,7 @@ import java.net.URI
 
 data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogger("RaiderioClient") {
     private val baseURI = URI("https://raider.io/api/v1")
+    private val classicBaseURI = URI("https://era.raider.io/api/v1")
     private val partialProfileUri = "/characters/profile"
     private val json = Json {
         ignoreUnknownKeys = true
@@ -83,5 +81,30 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
         }
         val jsonString = response.body<String>()
         return RaiderIoProtocol.parseCutoffJson(jsonString)
+    }
+
+    override suspend fun wowheadEmbeddedCalculator(wowCharacter: WowCharacter): Either<HttpError, RaiderioWowHeadEmbeddedResponse> {
+        logger.debug("getting wowhead calculator")
+        val partialUri = "/characters/profile"
+        val response = client.get(classicBaseURI.toString() + partialUri) {
+            headers {
+                append(HttpHeaders.Accept, "*/*")
+            }
+            url {
+                parameters.append("region", wowCharacter.region)
+                parameters.append("realm", wowCharacter.realm)
+                parameters.append("name", wowCharacter.name)
+                parameters.append("fields", "talents")
+            }
+        }
+        val jsonString = response.body<String>()
+        return try {
+            Either.Right(json.decodeFromString<RaiderioWowHeadEmbeddedResponse>(jsonString))
+        } catch (e: SerializationException) {
+            Either.Left(JsonParseError(jsonString, e.stackTraceToString()))
+        } catch (e: IllegalArgumentException) {
+            val error = json.decodeFromString<RaiderIoError>(jsonString)
+            Either.Left(error)
+        }
     }
 }

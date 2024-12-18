@@ -1,6 +1,8 @@
 package com.kos.datacache.repository
 
+import com.kos.common.getOrThrow
 import com.kos.datacache.DataCache
+import com.kos.views.Game
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -10,11 +12,12 @@ import java.time.OffsetDateTime
 class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepository {
 
     override suspend fun withState(initialState: List<DataCache>): DataCacheDatabaseRepository {
-        newSuspendedTransaction(Dispatchers.IO, db)  {
+        newSuspendedTransaction(Dispatchers.IO, db) {
             DataCaches.batchInsert(initialState) {
                 this[DataCaches.characterId] = it.characterId
                 this[DataCaches.data] = it.data
                 this[DataCaches.inserted] = it.inserted.toString()
+                this[DataCaches.game] = it.game.toString()
             }
         }
         return this
@@ -24,6 +27,7 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
         val characterId = long("character_id")
         val data = text("data")
         val inserted = text("inserted")
+        val game = text("game")
 
         override val primaryKey = PrimaryKey(characterId)
         override val tableName = "data_cache"
@@ -33,6 +37,7 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
         row[DataCaches.characterId],
         row[DataCaches.data],
         OffsetDateTime.parse(row[DataCaches.inserted]),
+        Game.fromString(row[DataCaches.game]).getOrThrow()
     )
 
     override suspend fun insert(data: List<DataCache>): Boolean {
@@ -41,6 +46,7 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
                 this[DataCaches.characterId] = it.characterId
                 this[DataCaches.data] = it.data
                 this[DataCaches.inserted] = it.inserted.toString()
+                this[DataCaches.game] = it.game.toString()
             }
         }
         return true
@@ -57,5 +63,6 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
         }
     }
 
-    override suspend fun state(): List<DataCache> = newSuspendedTransaction(Dispatchers.IO, db) { DataCaches.selectAll().map { resultRowToDataCache(it) } }
+    override suspend fun state(): List<DataCache> =
+        newSuspendedTransaction(Dispatchers.IO, db) { DataCaches.selectAll().map { resultRowToDataCache(it) } }
 }

@@ -84,7 +84,8 @@ data class CharactersService(
                                     ).bind()
                                 val realm: GetWowRealmResponse =
                                     blizzardClient.getRealm(initialRequest.region, characterResponse.realm.id).bind()
-                                ensure(realm.category == "Hardcore") { NonHardcoreCharacter(initialRequest) }
+                                //TODO: Anniversary can be also non hardcore. Try to find another way to decide if its hardcore or not
+                                ensure(realm.category == "Hardcore" || realm.category == "Anniversary") { NonHardcoreCharacter(initialRequest) }
                                 initialRequest
                             }
                         }

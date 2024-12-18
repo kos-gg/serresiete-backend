@@ -10,5 +10,5 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
     suspend fun edit(id: String, name: String, published: Boolean, characters: List<Long>): ViewModified
     suspend fun patch(id: String, name: String?, published: Boolean?, characters: List<Long>?): ViewPatched
     suspend fun delete(id: String): Unit
-    suspend fun getViews(game: Game?): List<SimpleView>
+    suspend fun getViews(game: Game?, featured: Boolean): List<SimpleView>
 }

@@ -1,82 +1,61 @@
 [
   {
-    "id": "7cad4485-897f-4fb1-a729-fa6787e7ea93",
-    "name": "los que te den",
-    "owner": "kakoshi",
+    "id": "f7431c36-06b7-4307-88ff-24f45163b75a",
+    "name": "Onlyfangs",
+    "owner": "weewee",
     "published": true,
     "characterIds": [
-      15,
-      13,
-      14,
-      12,
-      11,
-      8,
-      9
+      4,
+      5
     ],
-    "game": "WOW"
-  },
-  {
-    "id": "d4509c99-2f27-4f41-815a-60f7335f6fc9",
-    "name": "12p",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      48
-    ],
-    "game": "LOL"
-  },
-  {
-    "id": "5f51f45c-a032-4a6e-bc49-dab4eeb707f7",
-    "name": "Los Tryhards",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      10,
-      6,
-      1,
-      2,
-      3,
-      4
-    ],
-    "game": "WOW"
-  },
-  {
-    "id": "f94848f0-8084-4f21-b60e-9be8b740c7b3",
-    "name": "LEC",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      64,
-      65,
-      66,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      75,
-      76,
-      49,
-      50,
-      51,
-      52,
-      53,
-      54,
-      55,
-      56,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      63
-    ],
-    "game": "LOL"
-  },
+    "game": "WOW_HC"
+  } , {
+  "id": "wow-hardcore-view",
+  "name": "Bob",
+  "owner": "weewee",
+  "published": true,
+  "characterIds": [
+    4,
+    5
+  ],
+  "game": "WOW_HC"
+}, {
+  "id": "f94848f0-8084-4f21-b60e-9be8b740c7b3",
+  "name": "LEC",
+  "owner": "kakoshi",
+  "published": true,
+  "characterIds": [
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63
+  ],
+  "game": "LOL"
+},
   {
     "id": "e916cb64-7833-4eea-8f47-24cc6111ba1b",
     "name": "Copa Ocicas 2024",
@@ -113,8 +92,33 @@
     "game": "LOL"
   },
   {
+    "id": "d4509c99-2f27-4f41-815a-60f7335f6fc9",
+    "name": "12p",
+    "owner": "kakoshi",
+    "published": true,
+    "characterIds": [
+      87,
+      48
+    ],
+    "game": "LOL"
+  },
+  {
+    "id": "7559515b-59ec-4988-a7a2-bac23a17fe4e",
+    "name": "LOS RATONES",
+    "owner": "kakoshi",
+    "published": true,
+    "characterIds": [
+      101,
+      102,
+      103,
+      104,
+      105
+    ],
+    "game": "LOL"
+  },
+  {
     "id": "bb59c623-8783-4b3d-bbf8-2f55ddb5f43c",
-    "name": "GTP",
+    "name": "GTP Washed up",
     "owner": "kakoshi",
     "published": true,
     "characterIds": [
@@ -129,5 +133,16 @@
       31
     ],
     "game": "LOL"
+  } ,
+  {
+    "id": "1",
+    "name": "Boris",
+    "owner": "weewee",
+    "published": true,
+    "characterIds": [
+      4,
+      5
+    ],
+    "game": "BORIS"
   }
 ]

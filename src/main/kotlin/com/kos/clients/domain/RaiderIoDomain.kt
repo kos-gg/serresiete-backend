@@ -4,12 +4,15 @@ import arrow.core.Either
 import arrow.core.traverse
 import com.kos.characters.Spec
 import com.kos.common.JsonParseError
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.*
 
 @Serializable
 data class RaiderIoCutoff(val totalPopulation: Int)
@@ -163,6 +166,33 @@ data class RaiderIoProfile(
 data class RaiderIoResponse(
     val profile: RaiderIoProfile,
     val specs: List<MythicPlusRankWithSpecName>
+)
+
+
+object CodeExtractorSerializer : KSerializer<String> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CodeExtractor", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): String {
+        require(decoder is JsonDecoder)
+        val jsonObject = decoder.decodeJsonElement().jsonObject
+        return jsonObject["code"]!!.jsonPrimitive.content
+    }
+
+    override fun serialize(encoder: Encoder, value: String) {
+        encoder.encodeString(value)
+    }
+}
+
+@Serializable
+data class TalentLoadout(
+    @Serializable(with = CodeExtractorSerializer::class)
+    val wowheadCalculator: String
+)
+
+
+@Serializable
+data class RaiderioWowHeadEmbeddedResponse(
+    val talentLoadout: TalentLoadout
 )
 
 @Serializable

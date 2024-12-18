@@ -5,7 +5,6 @@ import com.kos.common.InvalidQueryParameter
 import com.kos.common.recoverToEither
 import com.kos.common.respondWithHandledError
 import com.kos.plugins.UserWithActivities
-import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -22,14 +21,27 @@ fun Route.viewsRouting(
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 either {
-                    val gameTypeParameter = "game"
+                    val gameParameter = "game"
                     val game: Game? =
-                        call.request.queryParameters[gameTypeParameter].recoverToEither(
-                            { InvalidQueryParameter(gameTypeParameter, it, Game.entries.map { games -> games.toString() }) },
+                        call.request.queryParameters[gameParameter].recoverToEither(
+                            {
+                                InvalidQueryParameter(
+                                    gameParameter,
+                                    it,
+                                    Game.entries.map { games -> games.toString() })
+                            },
                             { Game.fromString(it) }
                         ).bind()
 
-                    viewsController.getViews(userWithActivities?.name, userWithActivities?.activities.orEmpty(), game).bind()
+                    val featured: Boolean =
+                        call.request.queryParameters["featured"]?.toBoolean() ?: false
+
+                    viewsController.getViews(
+                        userWithActivities?.name,
+                        userWithActivities?.activities.orEmpty(),
+                        game,
+                        featured
+                    ).bind()
                 }.fold({
                     call.respondWithHandledError(it)
                 }, {

@@ -12,6 +12,11 @@ import com.kos.characters.LolCharacterRequest
 import com.kos.characters.WowCharacterRequest
 import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.domain.GetPUUIDResponse
+import com.kos.clients.domain.GetSummonerResponse
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.RetryConfig
 import com.kos.common.TooMuchCharacters
 import com.kos.common.TooMuchViews
@@ -32,11 +37,6 @@ import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
 import com.kos.roles.Role
 import com.kos.views.ViewsTestHelper.basicSimpleGameViews
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
@@ -115,7 +115,24 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL))
+                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL, false))
+            }
+        }
+
+        @Test
+        fun `i can get views returns only wow featured views`() {
+            runBlocking {
+                val (_, viewsService) = createService(
+                    basicSimpleGameViews,
+                    emptyCharactersState,
+                    listOf(),
+                    emptyCredentialsInitialState
+                )
+
+                assertEquals(
+                    listOf(basicSimpleWowView.copy(id = "3", featured = true)),
+                    viewsService.getViews(Game.WOW, true)
+                )
             }
         }
     }
@@ -135,7 +152,7 @@ class ViewsServiceTest {
 
                 viewsService.create(
                     owner,
-                    ViewRequest(name, published, listOf(), Game.WOW)
+                    ViewRequest(name, published, listOf(), Game.WOW, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_CREATED)
                 }.onLeft {
@@ -148,7 +165,7 @@ class ViewsServiceTest {
                     name,
                     published,
                     listOf(),
-                    Game.WOW
+                    Game.WOW, false
                 )
             }
         }
@@ -165,7 +182,7 @@ class ViewsServiceTest {
 
                 viewsService.create(
                     owner,
-                    ViewRequest(name, published, listOf(), Game.LOL)
+                    ViewRequest(name, published, listOf(), Game.LOL, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_CREATED)
                 }.onLeft {
@@ -178,7 +195,8 @@ class ViewsServiceTest {
                     name,
                     published,
                     listOf(),
-                    Game.LOL
+                    Game.LOL,
+                    false
                 )
             }
         }
@@ -197,7 +215,7 @@ class ViewsServiceTest {
 
                 viewsService.create(
                     owner,
-                    ViewRequest(name, published, charactersRequest, Game.LOL)
+                    ViewRequest(name, published, charactersRequest, Game.LOL, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_CREATED)
                 }.onLeft {
@@ -210,7 +228,7 @@ class ViewsServiceTest {
                     name,
                     published,
                     charactersRequest,
-                    Game.LOL
+                    Game.LOL, false
                 )
 
             }
@@ -228,7 +246,7 @@ class ViewsServiceTest {
 
                 viewsService.create(
                     owner,
-                    ViewRequest(name, published, listOf(), Game.WOW)
+                    ViewRequest(name, published, listOf(), Game.WOW, false)
                 ).onRight {
                     fail()
                 }.onLeft {
@@ -251,7 +269,7 @@ class ViewsServiceTest {
 
                 val charactersRequest = (1..11).map { LolCharacterRequest(it.toString(), it.toString()) }
 
-                viewsService.create(owner, ViewRequest(name, published, charactersRequest, Game.WOW)).onRight {
+                viewsService.create(owner, ViewRequest(name, published, charactersRequest, Game.WOW, false)).onRight {
                     fail()
                 }.onLeft {
                     assertTrue(it is TooMuchCharacters)
@@ -265,7 +283,7 @@ class ViewsServiceTest {
         fun `admins can create a huge amount of views and an event gets stored`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    (1..100).map { SimpleView(it.toStr(), it.toStr(), owner, true, listOf(), Game.WOW) },
+                    (1..100).map { SimpleView(it.toStr(), it.toStr(), owner, true, listOf(), Game.WOW, false) },
                     emptyCharactersState,
                     listOf(),
                     CredentialsRepositoryState(
@@ -276,7 +294,7 @@ class ViewsServiceTest {
 
                 viewsService.create(
                     owner,
-                    ViewRequest(name, published, listOf(), Game.WOW)
+                    ViewRequest(name, published, listOf(), Game.WOW, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_CREATED)
                 }.onLeft {
@@ -289,7 +307,7 @@ class ViewsServiceTest {
                     name,
                     published,
                     listOf(),
-                    Game.WOW
+                    Game.WOW, false
                 )
             }
         }
@@ -306,7 +324,7 @@ class ViewsServiceTest {
 
                 viewsService.create(
                     owner,
-                    ViewRequest(name, published, listOf(), Game.WOW)
+                    ViewRequest(name, published, listOf(), Game.WOW, false)
                 ).onRight {
                     fail()
                 }.onLeft {
@@ -329,10 +347,13 @@ class ViewsServiceTest {
 
                 createViewFromEventAndAssert(
                     viewsService,
-                    ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner)
+                    ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false)
                 )
 
-                assertEventStoredCorrectly(eventStore, ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL))
+                assertEventStoredCorrectly(
+                    eventStore,
+                    ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL, false)
+                )
             }
         }
 
@@ -369,14 +390,17 @@ class ViewsServiceTest {
                 viewsService.edit(
                     owner,
                     id,
-                    ViewRequest(newName, published, listOf(), Game.LOL)
+                    ViewRequest(newName, published, listOf(), Game.LOL, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_EDITED)
                 }.onLeft {
                     fail(it.toStr())
                 }
 
-                assertEventStoredCorrectly(eventStore, ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL))
+                assertEventStoredCorrectly(
+                    eventStore,
+                    ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false)
+                )
             }
         }
 
@@ -393,7 +417,7 @@ class ViewsServiceTest {
 
                 viewsService.edit(
                     owner, id,
-                    ViewRequest(name, published, charactersRequest, Game.LOL)
+                    ViewRequest(name, published, charactersRequest, Game.LOL, false)
                 ).onRight {
                     fail()
                 }.onLeft {
@@ -424,7 +448,7 @@ class ViewsServiceTest {
                 viewsService.edit(
                     owner,
                     id,
-                    ViewRequest(name, published, charactersRequest, Game.WOW)
+                    ViewRequest(name, published, charactersRequest, Game.WOW, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_EDITED)
                 }.onLeft {
@@ -433,7 +457,7 @@ class ViewsServiceTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewToBeEditedEvent(id, name, published, charactersRequest, Game.WOW)
+                    ViewToBeEditedEvent(id, name, published, charactersRequest, Game.WOW, false)
                 )
 
             }
@@ -453,14 +477,17 @@ class ViewsServiceTest {
                 viewsService.editView(
                     id,
                     aggregateRoot,
-                    ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL)
+                    ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_EDITED)
                 }.onLeft {
                     fail(it.toStr())
                 }
 
-                assertEventStoredCorrectly(eventStore, ViewEditedEvent(id, newName, listOf(), published, Game.LOL))
+                assertEventStoredCorrectly(
+                    eventStore,
+                    ViewEditedEvent(id, newName, listOf(), published, Game.LOL, false)
+                )
             }
         }
 
@@ -491,7 +518,14 @@ class ViewsServiceTest {
                 viewsService.editView(
                     id,
                     aggregateRoot,
-                    ViewToBeEditedEvent(id, name, published, listOf(request1, request2, request3, request4), Game.WOW)
+                    ViewToBeEditedEvent(
+                        id,
+                        name,
+                        published,
+                        listOf(request1, request2, request3, request4),
+                        Game.WOW,
+                        false
+                    )
                 ).onRight {
                     assertOperation(it, EventType.VIEW_EDITED)
                 }.onLeft {
@@ -500,7 +534,7 @@ class ViewsServiceTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW)
+                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW, false)
                 )
             }
         }
@@ -544,7 +578,7 @@ class ViewsServiceTest {
                 viewsService.editView(
                     id,
                     aggregateRoot,
-                    ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL)
+                    ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_EDITED)
                 }.onLeft {
@@ -553,7 +587,7 @@ class ViewsServiceTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL)
+                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL, false)
                 )
             }
         }
@@ -603,14 +637,17 @@ class ViewsServiceTest {
                 viewsService.patch(
                     owner,
                     id,
-                    ViewPatchRequest(patchedName, null, null, Game.WOW)
+                    ViewPatchRequest(patchedName, null, null, Game.WOW, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_PATCHED)
                 }.onLeft {
                     fail(it.toStr())
                 }
 
-                assertEventStoredCorrectly(eventStore, ViewToBePatchedEvent(id, patchedName, null, null, Game.WOW))
+                assertEventStoredCorrectly(
+                    eventStore,
+                    ViewToBePatchedEvent(id, patchedName, null, null, Game.WOW, false)
+                )
             }
         }
 
@@ -631,7 +668,7 @@ class ViewsServiceTest {
                 viewsService.patch(
                     owner,
                     id,
-                    ViewPatchRequest(null, null, charactersRequest, Game.WOW)
+                    ViewPatchRequest(null, null, charactersRequest, Game.WOW, false)
                 ).onRight {
                     fail()
                 }.onLeft {
@@ -662,7 +699,7 @@ class ViewsServiceTest {
                 viewsService.patch(
                     owner,
                     id,
-                    ViewPatchRequest(null, null, characterRequests, Game.WOW)
+                    ViewPatchRequest(null, null, characterRequests, Game.WOW, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_PATCHED)
                 }.onLeft {
@@ -672,7 +709,7 @@ class ViewsServiceTest {
                 val expectedEvent = Event(
                     aggregateRoot,
                     id,
-                    ViewToBePatchedEvent(id, null, null, characterRequests, Game.WOW)
+                    ViewToBePatchedEvent(id, null, null, characterRequests, Game.WOW, false)
                 )
 
                 val events = eventStore.getEvents(null).toList()
@@ -718,7 +755,7 @@ class ViewsServiceTest {
                 viewsService.patchView(
                     id,
                     aggregateRoot,
-                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL)
+                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_PATCHED)
                 }.onLeft {
@@ -727,7 +764,7 @@ class ViewsServiceTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL)
+                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL, false)
                 )
             }
         }
@@ -759,7 +796,7 @@ class ViewsServiceTest {
                 viewsService.patchView(
                     id,
                     aggregateRoot,
-                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW)
+                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_PATCHED)
                 }.onLeft {
@@ -768,7 +805,7 @@ class ViewsServiceTest {
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW)
+                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW, false)
                 )
             }
         }
@@ -784,7 +821,7 @@ class ViewsServiceTest {
                 val view = View(
                     simpleView.id, simpleView.name, simpleView.owner, simpleView.published, listOf(
                         basicLolCharacter
-                    ), simpleView.game
+                    ), simpleView.game, simpleView.featured
                 )
                 val moreRecentDataCache =
                     anotherLolDataCache.copy(characterId = 1, inserted = OffsetDateTime.now().plusHours(2))
@@ -824,7 +861,8 @@ class ViewsServiceTest {
 
         val credentialsService = CredentialsService(credentialsRepository)
         val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
-        val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+        val dataCacheService =
+            DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
         val service =
             ViewsService(
                 viewsRepository,
@@ -849,7 +887,8 @@ class ViewsServiceTest {
         viewName: String,
         published: Boolean,
         characters: List<CharacterCreateRequest>,
-        game: Game
+        game: Game,
+        featured: Boolean,
     ) {
         val events = eventStore.getEvents(null).toList()
         assertEquals(1, events.size)
@@ -864,6 +903,7 @@ class ViewsServiceTest {
         assertEquals(characters, data.characters)
         assertEquals(game, data.game)
         assertEquals(owner, data.owner)
+        assertEquals(featured, data.featured)
     }
 
     private suspend fun assertEventStoredCorrectly(eventStore: EventStore, eventData: EventData) {

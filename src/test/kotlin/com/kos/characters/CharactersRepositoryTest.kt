@@ -13,7 +13,6 @@ import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersRepository
 import com.kos.characters.repository.CharactersState
 import com.kos.datacache.DataCache
-import com.kos.datacache.DataCacheInMemoryRepositoryTest
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
@@ -26,7 +25,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import java.time.OffsetDateTime
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 abstract class CharactersRepositoryTestCommon {
 
@@ -45,7 +47,8 @@ abstract class CharactersRepositoryTestCommon {
     fun `given an empty repository i can insert wow hardcore characters`() {
         runBlocking {
             val expected = listOf(basicWowCharacter)
-            repository.insert(listOf(basicWowRequest), Game.WOW_HC).fold({ fail(it.message) }) { assertEquals(expected, it) }
+            repository.insert(listOf(basicWowRequest), Game.WOW_HC)
+                .fold({ fail(it.message) }) { assertEquals(expected, it) }
         }
     }
 
@@ -93,7 +96,13 @@ abstract class CharactersRepositoryTestCommon {
     fun `given a repository with characters of multiple types, I can retrieve them one by one`() {
         runBlocking {
             val repo =
-                repository.withState(CharactersState(listOf(basicWowCharacter), listOf(basicWowCharacter), listOf(basicLolCharacter)))
+                repository.withState(
+                    CharactersState(
+                        listOf(basicWowCharacter),
+                        listOf(basicWowCharacter),
+                        listOf(basicLolCharacter)
+                    )
+                )
             assertEquals(basicWowCharacter, repo.get(basicWowCharacter.id, Game.WOW))
             assertEquals(basicWowCharacter, repo.get(basicWowCharacter.id, Game.WOW_HC))
             assertEquals(basicLolCharacter, repo.get(basicLolCharacter.id, Game.LOL))
@@ -103,7 +112,13 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given a repository of characters i can retrieve a character by a character request`() {
         runBlocking {
-            val repo = repository.withState(CharactersState(listOf(basicWowCharacter), listOf(basicWowCharacter), gigaLolCharacterList))
+            val repo = repository.withState(
+                CharactersState(
+                    listOf(basicWowCharacter),
+                    listOf(basicWowCharacter),
+                    gigaLolCharacterList
+                )
+            )
 
             val wowCharacterRequest: CharacterCreateRequest =
                 WowCharacterRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
@@ -119,7 +134,13 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given a repository of characters i can retrieve a character by a character insert`() {
         runBlocking {
-            val repo = repository.withState(CharactersState(listOf(basicWowCharacter),listOf(basicWowCharacter),  gigaLolCharacterList))
+            val repo = repository.withState(
+                CharactersState(
+                    listOf(basicWowCharacter),
+                    listOf(basicWowCharacter),
+                    gigaLolCharacterList
+                )
+            )
 
             val wowCharacterRequest: CharacterInsertRequest =
                 WowCharacterRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
@@ -167,7 +188,8 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given a repository with wow characters, I can insert more`() {
         runBlocking {
-            val repositoryWithState = repository.withState(CharactersState(listOf(basicWowCharacter), listOf(), listOf()))
+            val repositoryWithState =
+                repository.withState(CharactersState(listOf(basicWowCharacter), listOf(), listOf()))
             val inserted = repositoryWithState.insert(listOf(basicWowRequest2), Game.WOW)
             inserted
                 .onRight { characters -> assertEquals(listOf<Long>(2), characters.map { it.id }) }
@@ -178,7 +200,8 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given a repository with lol characters, I can insert more`() {
         runBlocking {
-            val repositoryWithState = repository.withState(CharactersState(listOf(),listOf(), listOf(basicLolCharacter)))
+            val repositoryWithState =
+                repository.withState(CharactersState(listOf(), listOf(), listOf(basicLolCharacter)))
             val request =
                 basicLolCharacterEnrichedRequest.copy(puuid = "different-puuid", summonerId = "different-summoner-id")
             val inserted = repositoryWithState.insert(listOf(request), Game.LOL)
@@ -202,7 +225,7 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given a repository with a lol character, i can update it`() {
         runBlocking {
-            val repoWithState = repository.withState(CharactersState(listOf(), listOf(),listOf(basicLolCharacter)))
+            val repoWithState = repository.withState(CharactersState(listOf(), listOf(), listOf(basicLolCharacter)))
             val updatedName = "Marcnute"
             val updatedTag = "EUW"
             val updatedSummonerIconId = 10
@@ -299,8 +322,8 @@ abstract class CharactersRepositoryTestCommon {
 
             dataCacheRepository.withState(
                 listOf(
-                    DataCache(1, "", OffsetDateTime.now()),
-                    DataCache(2, "", OffsetDateTime.now().minusMinutes(31))
+                    DataCache(1, "", OffsetDateTime.now(), Game.LOL),
+                    DataCache(2, "", OffsetDateTime.now().minusMinutes(31), Game.LOL)
                 )
             )
             val res = repoWithState.getCharactersToSync(Game.LOL, 30)
@@ -333,9 +356,9 @@ abstract class CharactersRepositoryTestCommon {
 
             dataCacheRepository.withState(
                 listOf(
-                    DataCache(1, "", OffsetDateTime.now().minusMinutes(31)),
-                    DataCache(2, "", OffsetDateTime.now().minusMinutes(31)),
-                    DataCache(3, "", OffsetDateTime.now().minusMinutes(31))
+                    DataCache(1, "", OffsetDateTime.now().minusMinutes(31), Game.LOL),
+                    DataCache(2, "", OffsetDateTime.now().minusMinutes(31), Game.LOL),
+                    DataCache(3, "", OffsetDateTime.now().minusMinutes(31), Game.LOL)
                 )
             )
             val res = repoWithState.getCharactersToSync(Game.LOL, 30)
@@ -385,8 +408,8 @@ abstract class CharactersRepositoryTestCommon {
 
             dataCacheRepository.withState(
                 listOf(
-                    DataCache(1, "", OffsetDateTime.now().minusMinutes(31)),
-                    DataCache(1, "", OffsetDateTime.now())
+                    DataCache(1, "", OffsetDateTime.now().minusMinutes(31), Game.LOL),
+                    DataCache(1, "", OffsetDateTime.now(), Game.LOL)
                 )
             )
             val res = repoWithState.getCharactersToSync(Game.LOL, 30)

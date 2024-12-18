@@ -1,5 +1,6 @@
 package com.kos.datacache
 
+import com.kos.views.Game
 import java.time.OffsetDateTime
 
 object TestHelper {
@@ -223,8 +224,8 @@ object TestHelper {
         }"""
 
     private val now = OffsetDateTime.now()
-    val outdatedDataCache = DataCache(1, wowData, now.minusHours(25))
-    val wowDataCache = DataCache(1, wowData, now)
-    val lolDataCache = DataCache(2, lolData, now)
-    val anotherLolDataCache = DataCache(3, anotherLolData, now)
+    val outdatedDataCache = DataCache(1, wowData, now.minusHours(25), Game.WOW)
+    val wowDataCache = DataCache(1, wowData, now, Game.WOW)
+    val lolDataCache = DataCache(2, lolData, now, Game.LOL)
+    val anotherLolDataCache = DataCache(3, anotherLolData, now, Game.LOL)
 }

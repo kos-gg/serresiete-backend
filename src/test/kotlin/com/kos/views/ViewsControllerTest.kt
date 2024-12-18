@@ -9,6 +9,9 @@ import com.kos.characters.CharactersTestHelper.basicWowRequest2
 import com.kos.characters.CharactersTestHelper.emptyCharactersState
 import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
@@ -27,9 +30,6 @@ import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
 import com.kos.roles.Role
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
@@ -95,6 +95,24 @@ class ViewsControllerTest {
     }
 
     @Test
+    fun `i can get views returns only wow featured views`() {
+        runBlocking {
+            val featuredView = basicSimpleWowView.copy(featured = true)
+
+            val controller = createController(
+                emptyCredentialsState,
+                listOf(basicSimpleWowView, featuredView),
+                emptyCharactersState,
+                listOf()
+            )
+            assertEquals(
+                listOf(featuredView),
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true).getOrNull()
+            )
+        }
+    }
+
+    @Test
     fun `i can get views returns only owner views`() {
         runBlocking {
             val controller = createController(
@@ -105,7 +123,7 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView),
-                controller.getViews("owner", setOf(Activities.getOwnViews), null).getOrNull()
+                controller.getViews("owner", setOf(Activities.getOwnViews), null, false).getOrNull()
             )
         }
     }
@@ -122,7 +140,7 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView, notOwnerView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), null).getOrNull()
+                controller.getViews("owner", setOf(Activities.getAnyViews), null, false).getOrNull()
             )
         }
     }
@@ -180,7 +198,7 @@ class ViewsControllerTest {
             val res =
                 controller.createView(
                     "owner",
-                    ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW),
+                    ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW, false),
                     setOf(Activities.createViews)
                 )
                     .getOrNull()
@@ -207,7 +225,7 @@ class ViewsControllerTest {
             assertIs<TooMuchViews>(
                 controller.createView(
                     "owner",
-                    ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW),
+                    ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW, false),
                     setOf(Activities.createViews)
                 ).getLeftOrNull()
             )
@@ -221,7 +239,7 @@ class ViewsControllerTest {
                 emptyCredentialsState,
                 listOf(basicSimpleWowView.copy(characterIds = listOf(1))),
                 CharactersState(listOf(basicWowCharacter), listOf(), listOf()),
-                listOf(DataCache(basicWowCharacter.id, raiderIoDataString, OffsetDateTime.now()))
+                listOf(DataCache(basicWowCharacter.id, raiderIoDataString, OffsetDateTime.now(), Game.WOW))
             )
 
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
@@ -312,7 +330,7 @@ class ViewsControllerTest {
 
             `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
 
-            val viewRequest = ViewRequest("new-name", false, characters = listOf(basicWowRequest2), Game.WOW)
+            val viewRequest = ViewRequest("new-name", false, characters = listOf(basicWowRequest2), Game.WOW, false)
 
             controller.editView("owner", viewRequest, basicSimpleWowView.id, setOf(Activities.editAnyView))
                 .onRight {

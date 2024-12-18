@@ -29,8 +29,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
 
     private fun resultRowToTask(row: ResultRow) = Task(
         row[Tasks.id],
-        TaskType.fromString(row[Tasks.type])
-            .getOrThrow(IllegalArgumentException("Unknown task: ${row[Tasks.type]}")), //TODO: Are we hapy with this?
+        TaskType.fromString(row[Tasks.type]).getOrThrow(),
         json.decodeFromString(row[Tasks.taskStatus]),
         OffsetDateTime.parse(row[Tasks.inserted])
     )
