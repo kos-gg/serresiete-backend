@@ -92,6 +92,43 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `i can get views returns only one view since the limit is 1`() {
+            runBlocking {
+                val limit = 1
+
+                val (_, viewsService) = createService(
+                    basicSimpleGameViews,
+                    emptyCharactersState,
+                    listOf(),
+                    emptyCredentialsInitialState
+                )
+                assertEquals(
+                    limit,
+                    viewsService.getViews(Game.WOW, false, null, limit).size
+                )
+            }
+        }
+
+        @Test
+        fun `i can get views returns empty since the page and limit goes beyond actual rows in database`() {
+            runBlocking {
+                val page = 2
+                val limit = 10
+
+                val (_, viewsService) = createService(
+                    basicSimpleGameViews,
+                    emptyCharactersState,
+                    listOf(),
+                    emptyCredentialsInitialState
+                )
+                assertEquals(
+                    0,
+                    viewsService.getViews(Game.WOW, false, page, limit).size
+                )
+            }
+        }
+
+        @Test
         fun `i can get a simple view`() {
             runBlocking {
                 val (_, viewsService) = createService(
@@ -115,7 +152,7 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL, false))
+                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL, false, null, null))
             }
         }
 
@@ -131,7 +168,7 @@ class ViewsServiceTest {
 
                 assertEquals(
                     listOf(basicSimpleWowView.copy(id = "3", featured = true)),
-                    viewsService.getViews(Game.WOW, true)
+                    viewsService.getViews(Game.WOW, true, null, null)
                 )
             }
         }

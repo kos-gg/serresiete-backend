@@ -1,5 +1,6 @@
 package com.kos.views.repository
 
+import com.kos.common.fold
 import com.kos.common.getOrThrow
 import com.kos.views.*
 import kotlinx.coroutines.Dispatchers
@@ -151,9 +152,10 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return ViewDeleted(id)
     }
 
-    override suspend fun getViews(game: Game?, featured: Boolean): List<SimpleView> {
+    override suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): List<SimpleView> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
+
 
             val featuredCondition: Op<Boolean>? = if (featured) Views.featured eq true else null
             val gameCondition: Op<Boolean>? = game?.let { Views.game eq it.toString() }
@@ -163,6 +165,16 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                     .andIfNotNull(featuredCondition)
                     .andIfNotNull(gameCondition)
             }.map { resultRowToSimpleView(it) }
+
+
+            val filteredQuery = game.fold(
+                { baseQuery },
+                { baseQuery.adjustWhere { Views.game eq it.toString() } }
+            )
+            limit.fold(
+                { filteredQuery },
+                { filteredQuery.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
+            ).map { resultRowToSimpleView(it) }
         }
     }
 

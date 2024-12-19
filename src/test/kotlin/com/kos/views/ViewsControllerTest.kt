@@ -32,6 +32,7 @@ import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
+import com.kos.views.ViewsTestHelper.basicSimpleGameViews
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
 import com.kos.views.ViewsTestHelper.owner
@@ -95,6 +96,45 @@ class ViewsControllerTest {
     }
 
     @Test
+    fun `i can get views returns only one view since the limit is 1`() {
+        runBlocking {
+            val limit = 1
+
+            val controller = createController(
+                emptyCredentialsState,
+                basicSimpleGameViews,
+                emptyCharactersState,
+                listOf()
+            )
+            assertEquals(
+                limit,
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, limit)
+                    .getOrNull()?.size
+            )
+        }
+    }
+
+    @Test
+    fun `i can get views returns empty since given page and limit`() {
+        runBlocking {
+            val limit = 10
+            val page = 2
+
+            val controller = createController(
+                emptyCredentialsState,
+                basicSimpleGameViews,
+                emptyCharactersState,
+                listOf()
+            )
+            assertEquals(
+                0,
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, page, limit)
+                    .getOrNull()?.size
+            )
+        }
+    }
+
+    @Test
     fun `i can get views returns only wow featured views`() {
         runBlocking {
             val featuredView = basicSimpleWowView.copy(featured = true)
@@ -107,7 +147,7 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(featuredView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true).getOrNull()
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, null).getOrNull()
             )
         }
     }
@@ -123,7 +163,7 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView),
-                controller.getViews("owner", setOf(Activities.getOwnViews), null, false).getOrNull()
+                controller.getViews("owner", setOf(Activities.getOwnViews), null, false, null, null).getOrNull()
             )
         }
     }
@@ -140,7 +180,7 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView, notOwnerView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), null, false).getOrNull()
+                controller.getViews("owner", setOf(Activities.getAnyViews), null, false, null, null).getOrNull()
             )
         }
     }
