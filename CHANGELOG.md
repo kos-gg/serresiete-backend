@@ -1,5 +1,8 @@
 # Changelog
 
+## [4.2.3] 17-12-2024
+- **Limit and pagination added for Get Views Endpoint**:
+
 ## [4.2.2] 15-12-2024
 
 ### Added

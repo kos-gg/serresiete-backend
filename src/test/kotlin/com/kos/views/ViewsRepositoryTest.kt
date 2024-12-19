@@ -5,6 +5,7 @@ import com.kos.views.ViewsTestHelper.basicSimpleLolView
 import com.kos.views.ViewsTestHelper.basicSimpleLolViews
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
 import com.kos.views.ViewsTestHelper.featured
+import com.kos.views.ViewsTestHelper.gigaSimpleGameViews
 import com.kos.views.ViewsTestHelper.id
 import com.kos.views.ViewsTestHelper.name
 import com.kos.views.ViewsTestHelper.owner
@@ -30,7 +31,7 @@ abstract class ViewsRepositoryTest {
     fun `given a repository with views i can retrieve the views of a game`() {
         runBlocking {
             val repositoryWithState = repository.withState(basicSimpleGameViews)
-            assertEquals(basicSimpleLolViews, repositoryWithState.getViews(Game.LOL, featured))
+            assertEquals(basicSimpleLolViews, repositoryWithState.getViews(Game.LOL, featured, null, null))
         }
     }
 
@@ -40,10 +41,36 @@ abstract class ViewsRepositoryTest {
             val repositoryWithState = repository.withState(basicSimpleGameViews)
             assertEquals(
                 listOf(basicSimpleWowView.copy(id = "3", featured = true)),
-                repositoryWithState.getViews(Game.WOW, true)
+                repositoryWithState.getViews(Game.WOW, true, null, null)
             )
         }
     }
+
+    @Test
+    fun `i can get views returns only one view since the limit is 1`() {
+        runBlocking {
+            val limit = 1
+            val repositoryWithState = repository.withState(gigaSimpleGameViews)
+            assertEquals(
+                listOf(basicSimpleLolView),
+                repositoryWithState.getViews(Game.LOL, false, null, limit)
+            )
+        }
+    }
+
+    @Test
+    fun `i can get views returns empty since the page and limit goes beyond actual rows in repository`() {
+        runBlocking {
+            val page = 2
+            val limit = 5
+            val repositoryWithState = repository.withState(gigaSimpleGameViews)
+            assertEquals(
+                gigaSimpleGameViews.takeLast(4),
+                repositoryWithState.getViews(null, false, page, limit)
+            )
+        }
+    }
+
 
     @Test
     fun `i can get views returns all featured views`() {
@@ -54,7 +81,7 @@ abstract class ViewsRepositoryTest {
             val repositoryWithState = repository.withState(basicSimpleGameViews.plus(featuredLolView))
             assertEquals(
                 listOf(featuredWowView, featuredLolView),
-                repositoryWithState.getViews(null, true)
+                repositoryWithState.getViews(null, true, null, null)
             )
         }
     }
