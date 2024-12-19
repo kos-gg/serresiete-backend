@@ -36,11 +36,16 @@ fun Route.viewsRouting(
                     val featured: Boolean =
                         call.request.queryParameters["featured"]?.toBoolean() ?: false
 
+                    val page = call.request.queryParameters["page"]?.toInt()
+                    val limit = call.request.queryParameters["limit"]?.toInt()
+
                     viewsController.getViews(
                         userWithActivities?.name,
                         userWithActivities?.activities.orEmpty(),
                         game,
-                        featured
+                        featured,
+                        page,
+                        limit
                     ).bind()
                 }.fold({
                     call.respondWithHandledError(it)

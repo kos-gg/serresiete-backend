@@ -15,12 +15,14 @@ class ViewsController(
         client: String?,
         activities: Set<Activity>,
         game: Game?,
-        featured: Boolean
+        featured: Boolean,
+        page: Int?,
+        limit: Int?
     ): Either<ControllerError, List<SimpleView>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.getAnyViews)) Either.Right(viewsService.getViews(game, featured))
+                if (activities.contains(Activities.getAnyViews)) Either.Right(viewsService.getViews(game, featured, page, limit))
                 else if (activities.contains(Activities.getOwnViews)) Either.Right(viewsService.getOwnViews(client))
                 else Either.Left(NotEnoughPermissions(client))
             }
