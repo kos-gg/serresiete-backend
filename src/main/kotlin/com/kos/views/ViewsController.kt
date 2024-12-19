@@ -101,7 +101,7 @@ class ViewsController(
                 if (activities.contains(Activities.createViews)) {
                     if (request.featured && !activities.contains(Activities.featureView))
                         Either.Left(CantFeatureView)
-                    when (val res = viewsService.create(client, request)) {
+                    else when (val res = viewsService.create(client, request)) {
                         is Either.Right -> Either.Right(res.value)
                         is Either.Left -> res
                     }
@@ -121,10 +121,10 @@ class ViewsController(
             else -> when (val maybeView = viewsService.get(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
-                    if (hasEditPermission(maybeView, client, activities)) {
-                        if (request.featured && !activities.contains(Activities.featureView))
+                    if (canEditView(maybeView, client, activities)) {
+                        if (maybeView.featured != request.featured && !activities.contains(Activities.featureView))
                             Either.Left(CantFeatureView)
-                        viewsService.edit(client, maybeView.id, request)
+                        else viewsService.edit(client, maybeView.id, request)
                     } else
                         Either.Left(NotEnoughPermissions(client))
                 }
@@ -144,10 +144,10 @@ class ViewsController(
             else -> when (val maybeView = viewsService.get(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
-                    if (hasEditPermission(maybeView, client, activities)) {
-                        if (request.featured == true && !activities.contains(Activities.featureView))
+                    if (canEditView(maybeView, client, activities)) {
+                        if (request.featured != null && !activities.contains(Activities.featureView))
                             Either.Left(CantFeatureView)
-                        viewsService.patch(client, maybeView.id, request)
+                        else viewsService.patch(client, maybeView.id, request)
                     } else
                         Either.Left(NotEnoughPermissions(client))
                 }
@@ -165,7 +165,7 @@ class ViewsController(
             else -> when (val maybeView = viewsService.get(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
-                    if (hasDeletePermission(maybeView, client, activities)) {
+                    if (canDeleteView(maybeView, client, activities)) {
                         Either.Right(viewsService.delete(maybeView.id))
                     } else
                         Either.Left(NotEnoughPermissions(client))
@@ -174,14 +174,14 @@ class ViewsController(
         }
     }
 
-    private fun hasDeletePermission(
+    private fun canDeleteView(
         maybeView: View,
         client: String?,
         activities: Set<Activity>
     ) = ((maybeView.owner == client && activities.contains(Activities.deleteOwnView))
             || activities.contains(Activities.deleteAnyView))
 
-    private fun hasEditPermission(
+    private fun canEditView(
         maybeView: View,
         client: String?,
         activities: Set<Activity>

@@ -7,6 +7,7 @@ import com.kos.characters.CharactersTestHelper.basicLolCharacter
 import com.kos.characters.CharactersTestHelper.basicWowCharacter
 import com.kos.characters.CharactersTestHelper.basicWowRequest2
 import com.kos.characters.CharactersTestHelper.emptyCharactersState
+import com.kos.characters.CharactersTestHelper.lolCreateCharacterRequest
 import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersState
 import com.kos.clients.blizzard.BlizzardClient
@@ -185,27 +186,56 @@ class ViewsControllerTest {
     @Test
     fun `i can create views`() {
         runBlocking {
+            val user = "owner"
 
             val controller = createController(
                 CredentialsRepositoryState(
-                    listOf(basicCredentials.copy(userName = "owner")),
+                    listOf(basicCredentials.copy(userName = user)),
                     mapOf(owner to listOf(Role.USER))
                 ),
                 listOf(),
                 emptyCharactersState,
                 listOf()
             )
-            val res =
-                controller.createView(
-                    "owner",
-                    ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW, false),
-                    setOf(Activities.createViews)
-                )
-                    .getOrNull()
 
-            assertTrue(res?.id?.isNotEmpty())
-            assertEquals("/credentials/owner", res?.aggregateRoot)
-            assertEquals(EventType.VIEW_TO_BE_CREATED, res?.type)
+            controller.createView(
+                user,
+                ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW, false),
+                setOf(Activities.createViews)
+            ).onRight {
+                assertTrue(it.id.isNotEmpty())
+                assertEquals("/credentials/$user", it.aggregateRoot)
+                assertEquals(EventType.VIEW_TO_BE_CREATED, it.type)
+            }
+                .onLeft { fail(it.toStr()) }
+        }
+    }
+
+    @Test
+    fun `i can't create views`() {
+        runBlocking {
+            val user = "owner"
+
+            val controller = createController(
+                CredentialsRepositoryState(
+                    listOf(basicCredentials.copy(userName = user)),
+                    mapOf(owner to listOf(Role.USER))
+                ),
+                listOf(),
+                emptyCharactersState,
+                listOf()
+            )
+            controller.createView(
+                user,
+                ViewRequest(basicSimpleWowView.name, true, listOf(), Game.WOW, true),
+                setOf(Activities.createViews)
+            )
+                .onRight {
+                    fail("function behaved correctly when we were expecting failure")
+                }
+                .onLeft {
+                    assertTrue(it is CantFeatureView)
+                }
         }
     }
 
@@ -337,6 +367,130 @@ class ViewsControllerTest {
                     assertTrue(it.id.isNotEmpty())
                     assertEquals("/credentials/owner", it.aggregateRoot)
                     assertEquals(EventType.VIEW_TO_BE_EDITED, it.type)
+                }
+                .onLeft { fail(it.toStr()) }
+        }
+    }
+
+    @Test
+    fun `i can't edit wow data`() {
+        runBlocking {
+            val credentialsState = CredentialsRepositoryState(
+                listOf(basicCredentials.copy(userName = "owner")),
+                mapOf(Pair("owner", listOf(Role.USER)))
+            )
+
+            val controller = createController(
+                credentialsState,
+                listOf(basicSimpleWowView),
+                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                listOf(lolDataCache)
+            )
+
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
+
+            val viewRequest = ViewRequest("new-name", false, characters = listOf(basicWowRequest2), Game.WOW, true)
+
+            controller.editView("owner", viewRequest, basicSimpleWowView.id, setOf(Activities.editAnyView))
+                .onRight {
+                    fail("function behaved correctly when we were expecting failure")
+                }
+                .onLeft {
+                    assertTrue(it is CantFeatureView)
+                }
+        }
+    }
+
+    @Test
+    fun `i can patch a view`() {
+        runBlocking {
+            val user = "owner"
+
+            val credentialsState = CredentialsRepositoryState(
+                listOf(basicCredentials.copy(userName = user)),
+                mapOf(Pair("owner", listOf(Role.USER)))
+            )
+
+            val controller = createController(
+                credentialsState,
+                listOf(basicSimpleWowView),
+                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                listOf(lolDataCache)
+            )
+
+            val viewPatchRequest =
+                ViewPatchRequest("new-name", false, characters = listOf(lolCreateCharacterRequest), Game.LOL, null)
+
+            controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
+                .onRight {
+                    assertTrue(it.id.isNotEmpty())
+                    assertEquals("/credentials/$user", it.aggregateRoot)
+                    assertEquals(EventType.VIEW_TO_BE_PATCHED, it.type)
+                }
+                .onLeft { fail(it.toStr()) }
+        }
+    }
+
+    @Test
+    fun `i can't patch a view because user can't feature a view`() {
+        runBlocking {
+            val user = "owner"
+
+            val credentialsState = CredentialsRepositoryState(
+                listOf(basicCredentials.copy(userName = user)),
+                mapOf(Pair("owner", listOf(Role.USER)))
+            )
+
+            val controller = createController(
+                credentialsState,
+                listOf(basicSimpleWowView),
+                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                listOf(lolDataCache)
+            )
+
+            val viewPatchRequest =
+                ViewPatchRequest("new-name", false, characters = listOf(lolCreateCharacterRequest), Game.LOL, true)
+
+            controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
+                .onRight {
+                    fail("function behaved correctly when we were expecting failure")
+                }
+                .onLeft {
+                    assertTrue(it is CantFeatureView)
+                }
+        }
+    }
+
+    @Test
+    fun `i can patch a view because user can feature a view`() {
+        runBlocking {
+            val user = "owner"
+
+            val credentialsState = CredentialsRepositoryState(
+                listOf(basicCredentials.copy(userName = user)),
+                mapOf(Pair("owner", listOf(Role.ADMIN)))
+            )
+
+            val controller = createController(
+                credentialsState,
+                listOf(basicSimpleWowView),
+                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                listOf(lolDataCache)
+            )
+
+            val viewPatchRequest =
+                ViewPatchRequest("new-name", false, characters = listOf(lolCreateCharacterRequest), Game.LOL, true)
+
+            controller.patchView(
+                user,
+                viewPatchRequest,
+                basicSimpleLolView.id,
+                setOf(Activities.editOwnView, Activities.featureView)
+            )
+                .onRight {
+                    assertTrue(it.id.isNotEmpty())
+                    assertEquals("/credentials/$user", it.aggregateRoot)
+                    assertEquals(EventType.VIEW_TO_BE_PATCHED, it.type)
                 }
                 .onLeft { fail(it.toStr()) }
         }

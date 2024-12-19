@@ -80,7 +80,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is DatabaseError -> respondLogging(error.toString()) //TODO: improve
         is HttpError -> TODO()
         is CantDeleteYourself -> respond(BadRequest, "can't delete your credentials")
-        is CantFeatureView -> respond(Unauthorized, "not enought permissions to feature a view")
+        is CantFeatureView -> respond(Unauthorized, "not enough permissions to feature a view")
         UserWithoutRoles -> TODO()
     }
 }

@@ -47,8 +47,9 @@ class ViewsService(
 
     suspend fun create(owner: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
-            ensureNumberOfViews(owner).bind()
-            ensureNumberOfCharacters(owner, request.characters).bind()
+            ensureMaxNumberOfViews(owner).bind()
+            ensureMaxNumberOfCharacters(owner, request.characters).bind()
+
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
@@ -95,7 +96,7 @@ class ViewsService(
 
     suspend fun edit(owner: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
-            ensureNumberOfCharacters(owner, request.characters).bind()
+            ensureMaxNumberOfCharacters(owner, request.characters).bind()
 
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
@@ -142,7 +143,7 @@ class ViewsService(
 
     suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
         return either {
-            ensureNumberOfCharacters(owner, request.characters).bind()
+            ensureMaxNumberOfCharacters(owner, request.characters).bind()
 
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
@@ -210,14 +211,14 @@ class ViewsService(
             else -> Either.Right(maxNumberOfCharacters)
         }
 
-    private suspend fun ensureNumberOfViews(owner: String): Either<ControllerError, Unit> {
+    private suspend fun ensureMaxNumberOfViews(owner: String): Either<ControllerError, Unit> {
         return either {
             val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
             ensure(viewsRepository.getOwnViews(owner).size < ownerMaxViews) { TooMuchViews }
         }
     }
 
-    private suspend fun ensureNumberOfCharacters(
+    private suspend fun ensureMaxNumberOfCharacters(
         owner: String,
         characters: List<CharacterCreateRequest>?
     ): Either<ControllerError, Unit> {
