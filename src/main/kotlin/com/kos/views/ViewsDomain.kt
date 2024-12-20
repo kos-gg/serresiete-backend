@@ -30,6 +30,10 @@ enum class Game {
 }
 
 @Serializable
+data class Metadata(val totalCount: Int)
+
+
+@Serializable
 data class SimpleView(
     val id: String,
     val name: String,
