@@ -87,6 +87,22 @@ abstract class ViewsRepositoryTest {
     }
 
     @Test
+    fun `i can get views returns only featured views if featured parameter is true`() {
+        runBlocking {
+            val notFeaturedLolView = basicSimpleLolView.copy(id = "4", featured = false)
+            val featuredWowView = basicSimpleWowView.copy(id = "3", featured = true)
+            val notFeaturedWowView = basicSimpleWowView.copy(id = "5", featured = false)
+
+            val repositoryWithState =
+                repository.withState(listOf(featuredWowView, notFeaturedLolView, notFeaturedWowView))
+            assertEquals(
+                listOf(featuredWowView),
+                repositoryWithState.getViews(Game.WOW, true, null, null)
+            )
+        }
+    }
+
+    @Test
     fun `given a repository with views i can retrieve them`() {
         runBlocking {
             val repositoryWithState = repository.withState(listOf(basicSimpleWowView))
