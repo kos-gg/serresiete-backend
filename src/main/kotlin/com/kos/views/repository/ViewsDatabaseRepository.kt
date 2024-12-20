@@ -152,7 +152,12 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return ViewDeleted(id)
     }
 
-    override suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): List<SimpleView> {
+    override suspend fun getViews(
+        game: Game?,
+        featured: Boolean,
+        page: Int?,
+        limit: Int?,
+    ): Pair<ViewMetadata, List<SimpleView>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
 
@@ -165,15 +170,19 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                     .andIfNotNull(gameCondition)
             }.map { resultRowToSimpleView(it) }
 
+            val totalRows = baseQuery.count().toInt()
+
             val filteredQuery = game.fold(
                 { baseQuery },
                 { baseQuery.adjustWhere { Views.game eq it.toString() } }
             )
 
-            limit.fold(
+            val views = limit.fold(
                 { filteredQuery },
                 { filteredQuery.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
             ).map { resultRowToSimpleView(it) }
+
+            Pair(ViewMetadata(totalRows), views)
         }
     }
 

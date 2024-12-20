@@ -38,6 +38,7 @@ fun Route.viewsRouting(
 
                     val page = call.request.queryParameters["page"]?.toInt()
                     val limit = call.request.queryParameters["limit"]?.toInt()
+                    val includeMetadata = call.request.queryParameters["include"] == "metadata"
 
                     viewsController.getViews(
                         userWithActivities?.name,
@@ -45,12 +46,13 @@ fun Route.viewsRouting(
                         game,
                         featured,
                         page,
-                        limit
+                        limit,
+                        includeMetadata
                     ).bind()
                 }.fold({
                     call.respondWithHandledError(it)
                 }, {
-                    call.respond(OK, Pair(Metadata(1), it))
+                    call.respond(OK, it)
                 })
             }
         }

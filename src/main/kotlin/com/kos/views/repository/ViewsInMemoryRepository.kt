@@ -71,7 +71,12 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         return ViewDeleted(id)
     }
 
-    override suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): List<SimpleView> {
+    override suspend fun getViews(
+        game: Game?,
+        featured: Boolean,
+        page: Int?,
+        limit: Int?
+    ): Pair<ViewMetadata, List<SimpleView>> {
         val allViews = views.toList()
         val maybeFeaturedViews = if (featured) allViews.filter { it.featured } else allViews
 
@@ -80,10 +85,12 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             { maybeFeaturedViews.filter { it.game == game } }
         )
 
-        return limit.fold(
+        val views = limit.fold(
             { filteredQuery },
             { filteredQuery.drop(((page ?: 1) - 1) * it).take(it) }
         )
+
+        return Pair(ViewMetadata(allViews.count()), views)
     }
 
     override suspend fun state(): List<SimpleView> {
