@@ -150,7 +150,7 @@ abstract class ViewsRepositoryTest {
     fun `given a repository with a view i can delete it`() {
         runBlocking {
             val repo = repository.withState(listOf(basicSimpleWowView))
-            val delete = repo.delete(id)
+            repo.delete(id)
             val finalState = repo.state()
             assertEquals(finalState, listOf())
         }

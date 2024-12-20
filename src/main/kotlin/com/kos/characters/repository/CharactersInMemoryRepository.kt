@@ -232,7 +232,7 @@ class CharactersInMemoryRepository(
     }
 
     override suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> {
-        return viewsRepository.getViews(game, false)
+        return viewsRepository.getViews(game, false, null, null)
             .filter { id in it.characterIds }
             .map { it.id }
     }

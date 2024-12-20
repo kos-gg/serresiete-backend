@@ -5,6 +5,7 @@ import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.characters.CharactersService
 import com.kos.characters.CharactersTestHelper
+import com.kos.characters.WowCharacter
 import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersState
 import com.kos.clients.blizzard.BlizzardClient
@@ -460,6 +461,54 @@ class EventSubscriptionTest {
             assertEquals(ViewsTestHelper.owner, insertedView.owner)
             assertEquals(listOf(), insertedView.characterIds)
             assertTrue(insertedView.published)
+        }
+    }
+
+    @Nested
+    inner class BehaviorOfCharactersProcessor {
+        private val aggregateRoot = "/credentials/owner"
+
+        @Test
+        fun `charactersProcessor deletes characters that are not present on any view when a view has been deleted`() {
+            runBlocking {
+                val charactersFromDeletedView: List<Long> = listOf(1, 2, 3)
+                val expectedRemainingCharacters: List<Long> = listOf(1, 4, 5)
+                val wowHardcoreRemainingView =
+                    SimpleView("1", "wowHcView", "owner", true, expectedRemainingCharacters, Game.WOW_HC, true)
+                val viewsRepository = ViewsInMemoryRepository().withState(
+                    listOf(wowHardcoreRemainingView)
+                )
+                val wowHardcoreCharacters =
+                    (1..5).map { WowCharacter(it.toLong(), it.toString(), it.toString(), it.toString()) }
+                val charactersRepository = CharactersInMemoryRepository(viewsRepository = viewsRepository).withState(
+                    CharactersState(
+                        wowCharacters = listOf(),
+                        lolCharacters = listOf(),
+                        wowHardcoreCharacters = wowHardcoreCharacters
+                    )
+                )
+                val service = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+
+                val eventData =
+                    ViewDeletedEvent(
+                        "deleted",
+                        "name",
+                        "owner",
+                        charactersFromDeletedView,
+                        true,
+                        Game.WOW_HC,
+                        false
+                    )
+
+                val eventWithVersion = EventWithVersion(
+                    1L,
+                    Event(aggregateRoot, ViewsTestHelper.id, eventData)
+                )
+
+                EventSubscription.charactersProcessor(eventWithVersion, service)
+                assertEquals(expectedRemainingCharacters, charactersRepository.state().wowHardcoreCharacters.map { it.id })
+
+            }
         }
     }
 
