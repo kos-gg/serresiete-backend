@@ -31,7 +31,7 @@ abstract class ViewsRepositoryTest {
     fun `given a repository with views i can retrieve the views of a game`() {
         runBlocking {
             val repositoryWithState = repository.withState(basicSimpleGameViews)
-            assertEquals(basicSimpleLolViews, repositoryWithState.getViews(Game.LOL, featured, null, null))
+            assertEquals(basicSimpleLolViews, repositoryWithState.getViews(Game.LOL, featured, null, null).second)
         }
     }
 
@@ -41,7 +41,7 @@ abstract class ViewsRepositoryTest {
             val repositoryWithState = repository.withState(basicSimpleGameViews)
             assertEquals(
                 listOf(basicSimpleWowView.copy(id = "3", featured = true)),
-                repositoryWithState.getViews(Game.WOW, true, null, null)
+                repositoryWithState.getViews(Game.WOW, true, null, null).second
             )
         }
     }
@@ -51,10 +51,11 @@ abstract class ViewsRepositoryTest {
         runBlocking {
             val limit = 1
             val repositoryWithState = repository.withState(gigaSimpleGameViews)
-            assertEquals(
-                listOf(basicSimpleLolView),
-                repositoryWithState.getViews(Game.LOL, false, null, limit)
-            )
+
+            val views = repositoryWithState.getViews(Game.LOL, false, null, limit)
+
+            assertEquals(listOf(basicSimpleLolView), views.second)
+            assertEquals(gigaSimpleGameViews.size, views.first.totalCount)
         }
     }
 
@@ -66,7 +67,7 @@ abstract class ViewsRepositoryTest {
             val repositoryWithState = repository.withState(gigaSimpleGameViews)
             assertEquals(
                 gigaSimpleGameViews.takeLast(4),
-                repositoryWithState.getViews(null, false, page, limit)
+                repositoryWithState.getViews(null, false, page, limit).second
             )
         }
     }
@@ -81,7 +82,7 @@ abstract class ViewsRepositoryTest {
             val repositoryWithState = repository.withState(basicSimpleGameViews.plus(featuredLolView))
             assertEquals(
                 listOf(featuredWowView, featuredLolView),
-                repositoryWithState.getViews(null, true, null, null)
+                repositoryWithState.getViews(null, true, null, null).second
             )
         }
     }

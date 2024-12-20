@@ -108,8 +108,8 @@ class ViewsControllerTest {
             )
             assertEquals(
                 limit,
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, limit)
-                    .getOrNull()?.size
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, limit, false)
+                    .getOrNull()?.second?.size
             )
         }
     }
@@ -128,8 +128,8 @@ class ViewsControllerTest {
             )
             assertEquals(
                 0,
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, page, limit)
-                    .getOrNull()?.size
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, page, limit, false)
+                    .getOrNull()?.second?.size
             )
         }
     }
@@ -147,7 +147,8 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(featuredView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, null).getOrNull()
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, null, false)
+                    .getOrNull()?.second
             )
         }
     }
@@ -163,7 +164,8 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView),
-                controller.getViews("owner", setOf(Activities.getOwnViews), null, false, null, null).getOrNull()
+                controller.getViews("owner", setOf(Activities.getOwnViews), null, false, null, null, false)
+                    .getOrNull()?.second
             )
         }
     }
@@ -180,7 +182,8 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView, notOwnerView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), null, false, null, null).getOrNull()
+                controller.getViews("owner", setOf(Activities.getAnyViews), null, false, null, null, false)
+                    .getOrNull()?.second
             )
         }
     }

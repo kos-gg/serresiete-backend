@@ -160,22 +160,17 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
     ): Pair<ViewMetadata, List<SimpleView>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
+            val totalRows = baseQuery.count().toInt()
 
             val featuredCondition = if (featured) Views.featured eq true else null
             val gameCondition = game?.let { Views.game eq it.toString() }
 
-            baseQuery.adjustWhere {
-                Op.TRUE
-                    .andIfNotNull(featuredCondition)
-                    .andIfNotNull(gameCondition)
-            }.map { resultRowToSimpleView(it) }
-
-            val totalRows = baseQuery.count().toInt()
-
-            val filteredQuery = game.fold(
-                { baseQuery },
-                { baseQuery.adjustWhere { Views.game eq it.toString() } }
-            )
+            val filteredQuery =
+                baseQuery.adjustWhere {
+                    Op.TRUE
+                        .andIfNotNull(featuredCondition)
+                        .andIfNotNull(gameCondition)
+                }
 
             val views = limit.fold(
                 { filteredQuery },
