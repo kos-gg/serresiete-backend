@@ -160,6 +160,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
     ): Pair<ViewMetadata, List<SimpleView>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
+            //TODO: we must find a way to retrieve the count in a single query
             val totalRows = baseQuery.count().toInt()
 
             val featuredCondition = if (featured) Views.featured eq true else null
