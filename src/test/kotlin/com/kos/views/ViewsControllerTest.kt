@@ -154,6 +154,29 @@ class ViewsControllerTest {
     }
 
     @Test
+    fun `i can get views returns featured views with metadata`() {
+        runBlocking {
+            val views = listOf(basicSimpleWowView, basicSimpleWowView.copy(featured = true))
+
+            val controller = createController(
+                emptyCredentialsState,
+                views,
+                emptyCharactersState,
+                listOf()
+            )
+
+            val featuredViews =
+                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, null, true)
+                    .getOrNull()
+
+            assertEquals(
+                views.size,
+                featuredViews?.first?.totalCount
+            )
+        }
+    }
+
+    @Test
     fun `i can get views returns only owner views`() {
         runBlocking {
             val controller = createController(
