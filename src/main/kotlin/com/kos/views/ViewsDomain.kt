@@ -5,6 +5,8 @@ import com.kos.characters.Character
 import com.kos.characters.CharacterCreateRequest
 import com.kos.clients.domain.Data
 import com.kos.common.InvalidGameType
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -30,7 +32,7 @@ enum class Game {
 }
 
 @Serializable
-data class GetViewsResponse(val metadata: ViewMetadata, val records: List<SimpleView>)
+data class GetViewsResponse(val metadata: ViewMetadata? = null, val records: List<SimpleView>)
 
 @Serializable
 data class ViewMetadata(val totalCount: Int?)

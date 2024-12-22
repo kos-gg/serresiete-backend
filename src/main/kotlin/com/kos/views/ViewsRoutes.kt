@@ -52,7 +52,7 @@ fun Route.viewsRouting(
                 }.fold({
                     call.respondWithHandledError(it)
                 }, {
-                    call.respond(OK, it)
+                    call.respond(OK, GetViewsResponse(it.first, it.second))
                 })
             }
         }
