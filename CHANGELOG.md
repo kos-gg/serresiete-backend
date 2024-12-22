@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.3.0] - 22-12-2024
+
+### Added
+- **Metadata in Get Views Endpoint**: Introduced support for including metadata in the `Get Views` endpoint. By using the `include` parameter with the value `metadata`, users can now receive additional information, such as the total number of views. This is especially useful for users implementing pagination.
+
+### Fixed
+- **Featured Views Query Parameter**: Resolved an issue where the `featured` query parameter in the `Get Views` endpoint was not functioning as intended.
+
 ## [4.2.3] 17-12-2024
 - **Limit and pagination added for Get Views Endpoint**:
 

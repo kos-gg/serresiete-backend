@@ -17,13 +17,32 @@ class ViewsController(
         game: Game?,
         featured: Boolean,
         page: Int?,
-        limit: Int?
-    ): Either<ControllerError, List<SimpleView>> {
+        limit: Int?,
+        includeMetadata: Boolean
+    ): Either<ControllerError, Pair<ViewMetadata?, List<SimpleView>>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.getAnyViews)) Either.Right(viewsService.getViews(game, featured, page, limit))
-                else if (activities.contains(Activities.getOwnViews)) Either.Right(viewsService.getOwnViews(client))
+                if (activities.contains(Activities.getAnyViews)) {
+                    val anyViews = viewsService.getViews(
+                        game,
+                        featured,
+                        page,
+                        limit
+                    )
+                    Either.Right(
+                        when (includeMetadata) {
+                            false -> Pair(null, anyViews.second)
+                            true -> anyViews
+                        }
+                    )
+                } else if (activities.contains(Activities.getOwnViews))
+                    Either.Right(
+                        Pair(
+                            null,
+                            viewsService.getOwnViews(client)
+                        )
+                    )
                 else Either.Left(NotEnoughPermissions(client))
             }
         }

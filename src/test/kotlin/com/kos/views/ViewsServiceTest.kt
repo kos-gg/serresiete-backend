@@ -104,7 +104,7 @@ class ViewsServiceTest {
                 )
                 assertEquals(
                     limit,
-                    viewsService.getViews(Game.WOW, false, null, limit).size
+                    viewsService.getViews(Game.WOW, false, null, limit).second.size
                 )
             }
         }
@@ -123,7 +123,7 @@ class ViewsServiceTest {
                 )
                 assertEquals(
                     0,
-                    viewsService.getViews(Game.WOW, false, page, limit).size
+                    viewsService.getViews(Game.WOW, false, page, limit).second.size
                 )
             }
         }
@@ -152,7 +152,7 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL, false, null, null))
+                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL, false, null, null).second)
             }
         }
 
@@ -168,7 +168,7 @@ class ViewsServiceTest {
 
                 assertEquals(
                     listOf(basicSimpleWowView.copy(id = "3", featured = true)),
-                    viewsService.getViews(Game.WOW, true, null, null)
+                    viewsService.getViews(Game.WOW, true, null, null).second
                 )
             }
         }
