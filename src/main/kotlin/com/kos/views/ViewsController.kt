@@ -17,13 +17,32 @@ class ViewsController(
         game: Game?,
         featured: Boolean,
         page: Int?,
-        limit: Int?
-    ): Either<ControllerError, List<SimpleView>> {
+        limit: Int?,
+        includeMetadata: Boolean
+    ): Either<ControllerError, Pair<ViewMetadata?, List<SimpleView>>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.getAnyViews)) Either.Right(viewsService.getViews(game, featured, page, limit))
-                else if (activities.contains(Activities.getOwnViews)) Either.Right(viewsService.getOwnViews(client))
+                if (activities.contains(Activities.getAnyViews)) {
+                    val anyViews = viewsService.getViews(
+                        game,
+                        featured,
+                        page,
+                        limit
+                    )
+                    Either.Right(
+                        when (includeMetadata) {
+                            false -> Pair(null, anyViews.second)
+                            true -> anyViews
+                        }
+                    )
+                } else if (activities.contains(Activities.getOwnViews))
+                    Either.Right(
+                        Pair(
+                            null,
+                            viewsService.getOwnViews(client)
+                        )
+                    )
                 else Either.Left(NotEnoughPermissions(client))
             }
         }
@@ -101,7 +120,9 @@ class ViewsController(
             null -> Either.Left(NotAuthorized)
             else -> {
                 if (activities.contains(Activities.createViews)) {
-                    when (val res = viewsService.create(client, request)) {
+                    if (request.featured && !activities.contains(Activities.featureView))
+                        Either.Left(CantFeatureView)
+                    else when (val res = viewsService.create(client, request)) {
                         is Either.Right -> Either.Right(res.value)
                         is Either.Left -> res
                     }
@@ -121,11 +142,12 @@ class ViewsController(
             else -> when (val maybeView = viewsService.get(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
-                    if ((maybeView.owner == client && activities.contains(Activities.editOwnView))
-                        || activities.contains(Activities.editAnyView)
-                    ) {
-                        viewsService.edit(client, maybeView.id, request)
-                    } else Either.Left(NotEnoughPermissions(client))
+                    if (canEditView(maybeView, client, activities)) {
+                        if (maybeView.featured != request.featured && !activities.contains(Activities.featureView))
+                            Either.Left(CantFeatureView)
+                        else viewsService.edit(client, maybeView.id, request)
+                    } else
+                        Either.Left(NotEnoughPermissions(client))
                 }
             }
         }
@@ -143,11 +165,12 @@ class ViewsController(
             else -> when (val maybeView = viewsService.get(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
-                    if ((maybeView.owner == client && activities.contains(Activities.editOwnView))
-                        || activities.contains(Activities.editAnyView)
-                    ) {
-                        viewsService.patch(client, maybeView.id, request)
-                    } else Either.Left(NotEnoughPermissions(client))
+                    if (canEditView(maybeView, client, activities)) {
+                        if (request.featured != null && !activities.contains(Activities.featureView))
+                            Either.Left(CantFeatureView)
+                        else viewsService.patch(client, maybeView.id, request)
+                    } else
+                        Either.Left(NotEnoughPermissions(client))
                 }
             }
         }
@@ -163,14 +186,27 @@ class ViewsController(
             else -> when (val maybeView = viewsService.getSimple(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
-                    if ((maybeView.owner == client && activities.contains(Activities.deleteOwnView))
-                        || activities.contains(Activities.deleteAnyView)
-                    ) {
+                    if (canDeleteView(maybeView, client, activities)) {
                         Either.Right(viewsService.delete(client, maybeView))
-                    } else Either.Left(NotEnoughPermissions(client))
+                    } else
+                        Either.Left(NotEnoughPermissions(client))
                 }
             }
         }
     }
+
+    private fun canDeleteView(
+        maybeView: View,
+        client: String?,
+        activities: Set<Activity>
+    ) = ((maybeView.owner == client && activities.contains(Activities.deleteOwnView))
+            || activities.contains(Activities.deleteAnyView))
+
+    private fun canEditView(
+        maybeView: View,
+        client: String?,
+        activities: Set<Activity>
+    ) = ((maybeView.owner == client && activities.contains(Activities.editOwnView))
+            || activities.contains(Activities.editAnyView))
 
 }

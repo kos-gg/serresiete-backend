@@ -151,29 +151,33 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         newSuspendedTransaction(Dispatchers.IO, db) { Views.deleteWhere { Views.id.eq(id) } }
     }
 
-    override suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): List<SimpleView> {
+    override suspend fun getViews(
+        game: Game?,
+        featured: Boolean,
+        page: Int?,
+        limit: Int?,
+    ): Pair<ViewMetadata, List<SimpleView>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Views.selectAll()
+            //TODO: we must find a way to retrieve the count in a single query
+            val totalRows = baseQuery.count().toInt()
 
+            val featuredCondition = if (featured) Views.featured eq true else null
+            val gameCondition = game?.let { Views.game eq it.toString() }
 
-            val featuredCondition: Op<Boolean>? = if (featured) Views.featured eq true else null
-            val gameCondition: Op<Boolean>? = game?.let { Views.game eq it.toString() }
+            val filteredQuery =
+                baseQuery.adjustWhere {
+                    Op.TRUE
+                        .andIfNotNull(featuredCondition)
+                        .andIfNotNull(gameCondition)
+                }
 
-            baseQuery.adjustWhere {
-                Op.TRUE
-                    .andIfNotNull(featuredCondition)
-                    .andIfNotNull(gameCondition)
-            }.map { resultRowToSimpleView(it) }
-
-
-            val filteredQuery = game.fold(
-                { baseQuery },
-                { baseQuery.adjustWhere { Views.game eq it.toString() } }
-            )
-            limit.fold(
+            val views = limit.fold(
                 { filteredQuery },
                 { filteredQuery.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
             ).map { resultRowToSimpleView(it) }
+
+            Pair(ViewMetadata(totalRows), views)
         }
     }
 

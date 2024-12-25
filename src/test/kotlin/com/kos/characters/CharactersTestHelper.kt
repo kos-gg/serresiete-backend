@@ -44,4 +44,5 @@ object CharactersTestHelper {
     val gigaLolCharacterList = List(7) { index ->
         LolCharacter(index.toLong(), "sanxei$index", "euw$index", index.toString(), index, index.toString(), 400)
     }
+    val lolCreateCharacterRequest = LolCharacterRequest("sanxei", "EUW")
 }
