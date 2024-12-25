@@ -233,6 +233,7 @@ class CharactersInMemoryRepository(
 
     override suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> {
         return viewsRepository.getViews(game, false, null, null)
+            .second
             .filter { id in it.characterIds }
             .map { it.id }
     }
@@ -243,10 +244,12 @@ class CharactersInMemoryRepository(
                 val index = wowCharacters.indexOfFirst { it.id == id }
                 wowCharacters.removeAt(index)
             }
+
             Game.LOL -> {
                 val index = lolCharacters.indexOfFirst { it.id == id }
                 lolCharacters.removeAt(index)
             }
+
             Game.WOW_HC -> {
                 val index = wowHardcoreCharacters.indexOfFirst { it.id == id }
                 wowHardcoreCharacters.removeAt(index)

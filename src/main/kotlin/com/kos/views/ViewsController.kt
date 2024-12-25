@@ -196,7 +196,7 @@ class ViewsController(
     }
 
     private fun canDeleteView(
-        maybeView: View,
+        maybeView: SimpleView,
         client: String?,
         activities: Set<Activity>
     ) = ((maybeView.owner == client && activities.contains(Activities.deleteOwnView))
