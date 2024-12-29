@@ -1,7 +1,9 @@
 package com.kos.datacache.repository
 
 import com.kos.common.InMemoryRepository
+import com.kos.common.collect
 import com.kos.datacache.DataCache
+import com.kos.views.Game
 import java.time.OffsetDateTime
 
 class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
@@ -10,13 +12,29 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
     override suspend fun insert(data: List<DataCache>): Boolean = cachedData.addAll(data)
 
     override suspend fun get(characterId: Long): List<DataCache> = cachedData.filter { it.characterId == characterId }
-    override suspend fun deleteExpiredRecord(ttl: Long): Int {
+    override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, clearAll: Boolean): Int {
         val currentTime = OffsetDateTime.now()
-        val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime }
+        return if (clearAll) {
+            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && it.game == game }
+            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && it.game == game }
+            deletedRecords
+        } else {
+            val idsToRetain = cachedData
+                .filter { it.inserted.plusHours(ttl) < currentTime && it.game == game }
+                .groupBy { it.characterId }
+                .map {
+                    it.key to it.value.size
+                }.collect(
+                    filter = { it.second == 1 },
+                    map = { it.first }
+                )
 
-        cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime }
+            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && it.game == game }
+            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && it.game == game && !idsToRetain.contains(it.characterId) }
+            deletedRecords
+        }
 
-        return deletedRecords
+
     }
 
     override suspend fun state(): List<DataCache> = cachedData

@@ -48,8 +48,17 @@ abstract class DataCacheRepositoryTestCommon {
     open fun `giver a repository with an expired record i can clear it`() {
         runBlocking {
             val repositoryWithState = repository.withState(listOf(wowDataCache, outdatedDataCache))
-            assertEquals(1, repositoryWithState.deleteExpiredRecord(24))
+            assertEquals(1, repositoryWithState.deleteExpiredRecord(24, null, true))
             assertEquals(listOf(wowDataCache), repositoryWithState.state())
+        }
+    }
+
+    @Test
+    open fun `given a repository with an expired record i can clear it unless it's the last record`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(listOf(outdatedDataCache))
+            assertEquals(0, repositoryWithState.deleteExpiredRecord(24, null, false))
+            assertEquals(listOf(outdatedDataCache), repositoryWithState.state())
         }
     }
 }

@@ -165,7 +165,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             val featuredCondition = if (featured) Views.featured eq true else null
             val gameCondition = game?.let { Views.game eq it.toString() }
 
-            val filteredQuery =
+            val queryWithWhere =
                 baseQuery.adjustWhere {
                     Op.TRUE
                         .andIfNotNull(featuredCondition)
@@ -173,8 +173,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 }
 
             val views = limit.fold(
-                { filteredQuery },
-                { filteredQuery.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
+                { queryWithWhere },
+                { queryWithWhere.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
             ).map { resultRowToSimpleView(it) }
 
             Pair(ViewMetadata(totalRows), views)
