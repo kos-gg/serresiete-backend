@@ -13,28 +13,32 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
 
     override suspend fun get(characterId: Long): List<DataCache> = cachedData.filter { it.characterId == characterId }
     override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, clearAll: Boolean): Int {
+        fun Game?.matches(other: Game): Boolean = this == null || this == other
+
         val currentTime = OffsetDateTime.now()
         return if (clearAll) {
-            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && it.game == game }
-            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && it.game == game }
+            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
+            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
             deletedRecords
         } else {
             val idsToRetain = cachedData
-                .filter { it.inserted.plusHours(ttl) < currentTime && it.game == game }
+                .filter { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
                 .groupBy { it.characterId }
-                .map {
-                    it.key to it.value.size
-                }.collect(
-                    filter = { it.second == 1 },
-                    map = { it.first }
-                )
+                .filter { it.value.size == 1 }
+                .keys
 
-            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && it.game == game }
-            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && it.game == game && !idsToRetain.contains(it.characterId) }
+            val deletedRecords = cachedData.count {
+                it.inserted.plusHours(ttl) < currentTime
+                        && game.matches(it.game)
+                        && it.characterId !in idsToRetain
+            }
+            cachedData.removeAll {
+                it.inserted.plusHours(ttl) < currentTime
+                        && game.matches(it.game) &&
+                        it.characterId !in idsToRetain
+            }
             deletedRecords
         }
-
-
     }
 
     override suspend fun state(): List<DataCache> = cachedData
