@@ -30,7 +30,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return this
     }
 
-    object Views : Table() {
+    object Views : Table("views") {
         val id = varchar("id", 48)
         val name = varchar("name", 128)
         val owner = varchar("owner", 48)
@@ -47,18 +47,18 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             row[Views.name],
             row[Views.owner],
             row[Views.published],
-            CharactersView.select { CharactersView.viewId.eq(row[Views.id]) }
+            CharactersView.selectAll().where { CharactersView.viewId.eq(row[Views.id]) }
                 .map { resultRowToCharacterView(it).first },
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured]
         )
     }
 
-    object CharactersView : Table() {
+    object CharactersView : Table("characters_view") {
         val characterId = long("character_id")
-        val viewId = varchar("view_id", 48)
-
-        override val tableName = "characters_view"
+        val viewId = varchar("view_id", 48).references(
+            Views.id, onDelete = ReferenceOption.CASCADE
+        )
     }
 
     private fun resultRowToCharacterView(row: ResultRow): Pair<Long, String> = Pair(
@@ -68,13 +68,13 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
 
     override suspend fun getOwnViews(owner: String): List<SimpleView> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Views.select { Views.owner.eq(owner) }.map { resultRowToSimpleView(it) }
+            Views.selectAll().where { Views.owner.eq(owner) }.map { resultRowToSimpleView(it) }
         }
     }
 
     override suspend fun get(id: String): SimpleView? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Views.select { Views.id.eq(id) }.map { resultRowToSimpleView(it) }
+            Views.selectAll().where { Views.id.eq(id) }.map { resultRowToSimpleView(it) }
         }.singleOrNull()
     }
 
@@ -147,9 +147,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return ViewPatched(id, name, published, characters, featured)
     }
 
-    override suspend fun delete(id: String): ViewDeleted {
+    override suspend fun delete(id: String): Unit {
         newSuspendedTransaction(Dispatchers.IO, db) { Views.deleteWhere { Views.id.eq(id) } }
-        return ViewDeleted(id)
     }
 
     override suspend fun getViews(

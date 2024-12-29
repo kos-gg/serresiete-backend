@@ -23,12 +23,13 @@ class EventStoreDatabase(private val db: Database) : EventStore {
                 subclass(ViewCreatedEvent::class, ViewCreatedEvent.serializer())
                 subclass(ViewEditedEvent::class, ViewEditedEvent.serializer())
                 subclass(ViewPatchedEvent::class, ViewPatchedEvent.serializer())
+                subclass(ViewDeletedEvent::class, ViewDeletedEvent.serializer())
             }
         }
         ignoreUnknownKeys = true
     }
 
-    object Events : Table() {
+    object Events : Table("events") {
         val version = long("version")
         val aggregateRoot = varchar("aggregate_root", 128)
         val operationId = varchar("operation_id", 128)
@@ -36,7 +37,6 @@ class EventStoreDatabase(private val db: Database) : EventStore {
         val data = text("data")
 
         override val primaryKey = PrimaryKey(version)
-        override val tableName = "events"
     }
 
     private fun resultRowToEventWithVersion(row: ResultRow): EventWithVersion =
@@ -71,7 +71,7 @@ class EventStoreDatabase(private val db: Database) : EventStore {
             version._fold(
                 left = { Events.selectAll().map { resultRowToEventWithVersion(it) }.asSequence() },
                 right = {
-                    Events.select { Events.version greater it }.orderBy(Events.version)
+                    Events.selectAll().where { Events.version greater it }.orderBy(Events.version)
                         .map { resultRowToEventWithVersion(it) }.asSequence()
                 })
         }

@@ -29,7 +29,7 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
         return this
     }
 
-    object Authorizations : Table() {
+    object Authorizations : Table("authorizations") {
         val userName = varchar("user_name", 48)
         val token = text("token")
         val lastUsed = text("last_used")
@@ -76,7 +76,7 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
 
     override suspend fun getAuthorization(token: String): Authorization? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Authorizations.select { Authorizations.token eq token }.map { resultRowToAuthorization(it) }.singleOrNull()
+            Authorizations.selectAll().where { Authorizations.token eq token }.map { resultRowToAuthorization(it) }.singleOrNull()
         }
     }
 

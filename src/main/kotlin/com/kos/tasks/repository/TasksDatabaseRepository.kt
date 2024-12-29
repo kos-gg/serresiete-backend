@@ -18,7 +18,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
         ignoreUnknownKeys = true
     }
 
-    object Tasks : Table() {
+    object Tasks : Table("tasks") {
         val id = text("id")
         val type = text("type")
         val taskStatus = text("status")
@@ -58,7 +58,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
 
     override suspend fun getTask(id: String): Task? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Tasks.select { Tasks.id.eq(id) }.map { resultRowToTask(it) }.singleOrNull()
+            Tasks.selectAll().where { Tasks.id.eq(id) }.map { resultRowToTask(it) }.singleOrNull()
         }
     }
 
@@ -70,7 +70,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
 
     override suspend fun getLastExecution(taskType: TaskType): Task? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Tasks.select { Tasks.type.eq(taskType.toString()) }
+            Tasks.selectAll().where { Tasks.type.eq(taskType.toString()) }
                 .orderBy(Tasks.inserted, SortOrder.DESC)
                 .limit(1)
                 .map { resultRowToTask(it) }.firstOrNull()

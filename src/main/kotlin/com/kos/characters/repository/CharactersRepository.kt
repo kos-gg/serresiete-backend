@@ -22,4 +22,6 @@ interface CharactersRepository : WithState<CharactersState, CharactersRepository
     suspend fun get(game: Game): List<Character>
     suspend fun getCharactersToSync(game: Game, olderThanMinutes: Long): List<Character>
     suspend fun get(character: CharacterInsertRequest, game: Game): Character?
+    suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String>
+    suspend fun delete(id: Long, game: Game): Unit
 }

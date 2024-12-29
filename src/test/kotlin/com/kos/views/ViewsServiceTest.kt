@@ -636,14 +636,27 @@ class ViewsServiceTest {
         fun `i can delete a view`() {
             runBlocking {
 
-                val (_, viewsService) = createService(
+                val (eventStore, viewsService) = createService(
                     listOf(basicSimpleWowView),
                     emptyCharactersState,
                     listOf(),
                     emptyCredentialsInitialState
                 )
 
-                assertEquals(viewsService.delete("1"), ViewDeleted("1"))
+                val result = viewsService.delete(owner, basicSimpleWowView)
+                assertOperation(result, EventType.VIEW_DELETED)
+                assertEventStoredCorrectly(
+                    eventStore,
+                    ViewDeletedEvent(
+                        basicSimpleWowView.id,
+                        basicSimpleWowView.name,
+                        basicSimpleWowView.owner,
+                        basicSimpleWowView.characterIds,
+                        basicSimpleWowView.published,
+                        basicSimpleWowView.game,
+                        basicSimpleWowView.featured
+                    )
+                )
             }
         }
     }

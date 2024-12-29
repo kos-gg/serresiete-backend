@@ -180,14 +180,14 @@ class ViewsController(
         client: String?,
         id: String,
         activities: Set<Activity>
-    ): Either<ControllerError, ViewDeleted> {
+    ): Either<ControllerError, Operation> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
-            else -> when (val maybeView = viewsService.get(id)) {
+            else -> when (val maybeView = viewsService.getSimple(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
                     if (canDeleteView(maybeView, client, activities)) {
-                        Either.Right(viewsService.delete(maybeView.id))
+                        Either.Right(viewsService.delete(client, maybeView))
                     } else
                         Either.Left(NotEnoughPermissions(client))
                 }
@@ -196,7 +196,7 @@ class ViewsController(
     }
 
     private fun canDeleteView(
-        maybeView: View,
+        maybeView: SimpleView,
         client: String?,
         activities: Set<Activity>
     ) = ((maybeView.owner == client && activities.contains(Activities.deleteOwnView))

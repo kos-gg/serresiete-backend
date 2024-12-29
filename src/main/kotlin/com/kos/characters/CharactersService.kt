@@ -187,4 +187,7 @@ data class CharactersService(
     suspend fun get(game: Game): List<Character> = charactersRepository.get(game)
     suspend fun getCharactersToSync(game: Game, olderThanMinutes: Long) =
         charactersRepository.getCharactersToSync(game, olderThanMinutes)
+
+    suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> = charactersRepository.getViewsFromCharacter(id, game)
+    suspend fun delete(id: Long, game: Game): Unit = charactersRepository.delete(id, game)
 }

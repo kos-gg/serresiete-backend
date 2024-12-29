@@ -31,6 +31,6 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
         featured: Boolean?
     ): ViewPatched
 
-    suspend fun delete(id: String): ViewDeleted
+    suspend fun delete(id: String): Unit
     suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): Pair<ViewMetadata, List<SimpleView>>
 }

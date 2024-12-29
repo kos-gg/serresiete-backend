@@ -17,6 +17,10 @@ import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.views.Game
+import com.kos.views.ViewsTestHelper.basicSimpleWowView
+import com.kos.views.repository.ViewsDatabaseRepository
+import com.kos.views.repository.ViewsInMemoryRepository
+import com.kos.views.repository.ViewsRepository
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
@@ -34,6 +38,7 @@ abstract class CharactersRepositoryTestCommon {
 
     abstract val repository: CharactersRepository
     abstract val dataCacheRepository: DataCacheRepository
+    abstract val viewsRepository: ViewsRepository
 
     @Test
     fun `given an empty repository i can insert wow characters`() {
@@ -418,12 +423,30 @@ abstract class CharactersRepositoryTestCommon {
         }
     }
 
+    @Test
+    fun `given a repository with a character, I can delete it`() {
+        runBlocking {
+            repository.withState(CharactersState(listOf(basicWowCharacter), listOf(), listOf()))
+            repository.delete(basicWowCharacter.id, Game.WOW)
+            assertEquals(listOf(), repository.state().wowCharacters)
+        }
+    }
 
+    @Test
+    fun `given a repository with character present i views, I can retrieve those views`() {
+        runBlocking {
+            repository.withState(CharactersState(listOf(basicWowCharacter), listOf(), listOf()))
+            viewsRepository.withState(listOf(basicSimpleWowView.copy(characterIds = listOf(basicWowCharacter.id))))
+            val views = repository.getViewsFromCharacter(basicWowCharacter.id, Game.WOW)
+            assertEquals(listOf(basicSimpleWowView.id),views)
+        }
+    }
 }
 
 class CharactersInMemoryRepositoryTest : CharactersRepositoryTestCommon() {
     override val dataCacheRepository = DataCacheInMemoryRepository()
-    override val repository = CharactersInMemoryRepository(dataCacheRepository)
+    override val viewsRepository = ViewsInMemoryRepository()
+    override val repository = CharactersInMemoryRepository(dataCacheRepository, viewsRepository)
 
     @BeforeEach
     fun beforeEach() {
@@ -445,6 +468,7 @@ class CharactersDatabaseRepositoryTest : CharactersRepositoryTestCommon() {
 
     override val repository = CharactersDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
     override val dataCacheRepository = DataCacheDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
+    override val viewsRepository = ViewsDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
 
     @BeforeEach
     fun beforeEach() {

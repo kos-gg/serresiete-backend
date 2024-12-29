@@ -65,10 +65,9 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         return ViewPatched(id, name, published, characters, featured)
     }
 
-    override suspend fun delete(id: String): ViewDeleted {
+    override suspend fun delete(id: String): Unit {
         val index = views.indexOfFirst { it.id == id }
         views.removeAt(index)
-        return ViewDeleted(id)
     }
 
     override suspend fun getViews(
