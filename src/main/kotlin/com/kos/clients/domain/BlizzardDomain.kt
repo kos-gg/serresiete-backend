@@ -60,6 +60,11 @@ object DescriptionListSerializer : ListFieldSerializer<String>(
     extractElement = { it.requireString("description") }
 )
 
+object DisplayStringListSerializer : ListFieldSerializer<String>(
+    elementSerializer = DisplayableStringExtractorSerializer,
+    extractElement = { it.requireString("display_string") }
+)
+
 object NestedDisplayableStringListSerializer : ListFieldSerializer<String>(
     elementSerializer = NestedDisplayableStringExtractorSerializer,
     extractElement = { it.requireNestedString("display", "display_string") }
@@ -298,6 +303,8 @@ data class WowItemQuality(val type: String)
 data class WowEquippedItemResponse(
     val item: WowItemId,
     val slot: WowItemSlot,
+    @Serializable(with = DisplayStringListSerializer::class)
+    val enchantments: List<String> = listOf(),
     val quality: WowItemQuality,
     val name: String,
 )
@@ -376,6 +383,7 @@ data class WowItem(
     val durability: String?,
     val weaponStats: WowWeaponDisplayableStats?,
     val icon: String?,
+    val enchantments: List<String>
 )
 
 @Serializable
@@ -567,7 +575,8 @@ data class HardcoreData(
                     item.previewItem.sellPrice?.let { WowPrice.apply(it) },
                     item.previewItem.durability,
                     item.previewItem.weapon?.let { WowWeaponDisplayableStats.apply(it)},
-                    icon?.assets?.find { it.key == "icon" }?.value
+                    icon?.assets?.find { it.key == "icon" }?.value,
+                    equipped.enchantments
                 )
             },
             characterResponse.faction,

@@ -115,6 +115,7 @@ data class RiotStatus(
     val message: String
 )
 
+@Serializable
 data class RiotError(val status: RiotStatus) : HttpError {
     override fun error(): String = "${status.statusCode} ${status.message}"
 }

@@ -381,7 +381,8 @@ object BlizzardMockHelper {
                 item = WowItemId(id = 18421),
                 slot = WowItemSlot(name = "Head"),
                 quality = WowItemQuality(type = "RARE"),
-                name = "Backwood Helm"
+                name = "Backwood Helm",
+                enchantments = listOf()
             )
         )
     )
