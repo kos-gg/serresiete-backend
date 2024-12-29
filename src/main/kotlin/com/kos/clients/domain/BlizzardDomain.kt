@@ -4,13 +4,14 @@ import com.kos.common.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
-
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 data class BlizzardCredentials(val client: String, val secret: String)
 
@@ -109,6 +110,33 @@ object WowPriceSerializer : KSerializer<WowPriceResponse> {
     }
 }
 
+object LocalDateTimeFromTimestampSerializer : KSerializer<LocalDateTime> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.LONG)
+
+    override fun serialize(encoder: Encoder, value: LocalDateTime) {
+        encoder.encodeLong(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+    }
+
+    override fun deserialize(decoder: Decoder): LocalDateTime {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(decoder.decodeLong()), ZoneId.systemDefault())
+    }
+}
+
+object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
+    private val formatter = DateTimeFormatter.ISO_DATE_TIME
+
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: LocalDateTime) {
+        encoder.encodeString(value.format(formatter))
+    }
+
+    override fun deserialize(decoder: Decoder): LocalDateTime {
+        return LocalDateTime.parse(decoder.decodeString(), formatter)
+    }
+}
 
 @Serializable
 data class Realm(val name: String, val id: Long)
@@ -138,7 +166,10 @@ data class GetWowCharacterResponse(
     val realm: Realm,
     @Serializable(with = NameExtractorSerializer::class)
     val guild: String? = null,
-    val experience: Int
+    val experience: Int,
+    @SerialName("last_login_timestamp")
+    @Serializable(with = LocalDateTimeFromTimestampSerializer::class)
+    val lastLogin: LocalDateTime
 )
 
 @Serializable
@@ -531,7 +562,9 @@ data class HardcoreData(
     val faction: String,
     val avatar: String?,
     val stats: WowStats,
-    val specializations: WowTalents
+    val specializations: WowTalents,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val lastLogin: LocalDateTime
 ) : Data {
     companion object {
         fun apply(
@@ -574,7 +607,7 @@ data class HardcoreData(
                     item.previewItem.spells,
                     item.previewItem.sellPrice?.let { WowPrice.apply(it) },
                     item.previewItem.durability,
-                    item.previewItem.weapon?.let { WowWeaponDisplayableStats.apply(it)},
+                    item.previewItem.weapon?.let { WowWeaponDisplayableStats.apply(it) },
                     icon?.assets?.find { it.key == "icon" }?.value,
                     equipped.enchantments
                 )
@@ -587,7 +620,8 @@ data class HardcoreData(
                 specializations = specializationsResponse.specializationGroups.firstOrNull()?.specializations?.map { specialization ->
                     WowSpecialization.apply(specialization)
                 }.orEmpty()
-            )
+            ),
+            characterResponse.lastLogin
         )
     }
 }
