@@ -31,7 +31,7 @@ object BlizzardMockHelper {
                 Realm("Stitches", 5220),
                 "PERO LA QUERIA TANTO",
                 0,
-                LocalDateTime.now()
+                1703019625000
             )
         )
     }
@@ -81,7 +81,7 @@ object BlizzardMockHelper {
                 Realm("Stitches", 5220),
                 "PERO LA QUERIA TANTO",
                 0,
-                LocalDateTime.now()
+                1703019625000
             )
         )
     }
@@ -103,7 +103,7 @@ object BlizzardMockHelper {
         realm = Realm("Stitches", 5220),
         guild = "I CANT RELEASE",
         experience = 0,
-        lastLogin = LocalDateTime.of(2023, 12, 19, 22,0, 25)
+        lastLogin = 1703019625000
     )
 
     val getWowCharacterResponseString = """

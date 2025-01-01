@@ -10,6 +10,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -110,34 +111,6 @@ object WowPriceSerializer : KSerializer<WowPriceResponse> {
     }
 }
 
-object LocalDateTimeFromTimestampSerializer : KSerializer<LocalDateTime> {
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.LONG)
-
-    override fun serialize(encoder: Encoder, value: LocalDateTime) {
-        encoder.encodeLong(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-    }
-
-    override fun deserialize(decoder: Decoder): LocalDateTime {
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(decoder.decodeLong()), ZoneId.systemDefault())
-    }
-}
-
-object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
-    private val formatter = DateTimeFormatter.ISO_DATE_TIME
-
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: LocalDateTime) {
-        encoder.encodeString(value.format(formatter))
-    }
-
-    override fun deserialize(decoder: Decoder): LocalDateTime {
-        return LocalDateTime.parse(decoder.decodeString(), formatter)
-    }
-}
-
 @Serializable
 data class Realm(val name: String, val id: Long)
 
@@ -168,8 +141,7 @@ data class GetWowCharacterResponse(
     val guild: String? = null,
     val experience: Int,
     @SerialName("last_login_timestamp")
-    @Serializable(with = LocalDateTimeFromTimestampSerializer::class)
-    val lastLogin: LocalDateTime
+    val lastLogin: Long
 )
 
 @Serializable
@@ -563,8 +535,8 @@ data class HardcoreData(
     val avatar: String?,
     val stats: WowStats,
     val specializations: WowTalents,
-    @Serializable(with = LocalDateTimeSerializer::class)
-    val lastLogin: LocalDateTime
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val lastLogin: OffsetDateTime
 ) : Data {
     companion object {
         fun apply(
@@ -621,7 +593,7 @@ data class HardcoreData(
                     WowSpecialization.apply(specialization)
                 }.orEmpty()
             ),
-            characterResponse.lastLogin
+            OffsetDateTime.ofInstant(Instant.ofEpochMilli(characterResponse.lastLogin), ZoneId.systemDefault())
         )
     }
 }
