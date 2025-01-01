@@ -5,7 +5,6 @@ import com.kos.characters.WowCharacter
 import com.kos.characters.WowCharacterRequest
 import com.kos.clients.domain.*
 import com.kos.common.HttpError
-import java.time.LocalDateTime
 import kotlin.random.Random
 
 object BlizzardMockHelper {
