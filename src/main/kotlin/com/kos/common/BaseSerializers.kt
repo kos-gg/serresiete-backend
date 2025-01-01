@@ -1,7 +1,6 @@
 package com.kos.common
 
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -9,9 +8,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 open class SingleFieldSerializer<T>(
     private val fieldName: String,
