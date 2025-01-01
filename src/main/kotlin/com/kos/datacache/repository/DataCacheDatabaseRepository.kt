@@ -5,7 +5,9 @@ import com.kos.datacache.DataCache
 import com.kos.views.Game
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.OffsetDateTime
 
@@ -56,9 +58,30 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
             DataCaches.selectAll().where { DataCaches.characterId.eq(characterId) }.map { resultRowToDataCache(it) }
         }
 
-    override suspend fun deleteExpiredRecord(ttl: Long): Int {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            DataCaches.deleteWhere { inserted.less(OffsetDateTime.now().minusHours(ttl).toString()) }
+    override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
+        val gameCondition = game?.let { DataCaches.game eq it.toString() }
+        val expiredCondition = DataCaches.inserted.less(OffsetDateTime.now().minusHours(ttl).toString())
+
+        val where =
+            Op.TRUE
+                .andIfNotNull(gameCondition)
+                .and(expiredCondition)
+
+        return if (keepLastRecord) newSuspendedTransaction(Dispatchers.IO, db) {
+            val idsToRetain = DataCaches.select(DataCaches.characterId)
+                .where(where)
+                .groupBy(DataCaches.characterId)
+                .having { DataCaches.characterId.count() eq 1 }
+                .map { it[DataCaches.characterId] }
+
+            DataCaches.deleteWhere {
+                where.and(characterId notInList idsToRetain)
+            }
+
+        } else {
+            newSuspendedTransaction(Dispatchers.IO, db) {
+                DataCaches.deleteWhere { where }
+            }
         }
     }
 
