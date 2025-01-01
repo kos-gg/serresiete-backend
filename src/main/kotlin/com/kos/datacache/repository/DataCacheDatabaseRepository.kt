@@ -3,7 +3,6 @@ package com.kos.datacache.repository
 import com.kos.common.getOrThrow
 import com.kos.datacache.DataCache
 import com.kos.views.Game
-import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -59,8 +58,8 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
             DataCaches.selectAll().where { DataCaches.characterId.eq(characterId) }.map { resultRowToDataCache(it) }
         }
 
-    override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, clearAll: Boolean): Int {
-        val gameCondition = game?.let { ViewsDatabaseRepository.Views.game eq it.toString() }
+    override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
+        val gameCondition = game?.let { DataCaches.game eq it.toString() }
         val expiredCondition = DataCaches.inserted.less(OffsetDateTime.now().minusHours(ttl).toString())
 
         val where =
@@ -68,19 +67,20 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
                 .andIfNotNull(gameCondition)
                 .and(expiredCondition)
 
-        return if (clearAll) newSuspendedTransaction(Dispatchers.IO, db) {
-            DataCaches.deleteWhere { where }
+        return if (keepLastRecord) newSuspendedTransaction(Dispatchers.IO, db) {
+            val idsToRetain = DataCaches.select(DataCaches.characterId)
+                .where(where)
+                .groupBy(DataCaches.characterId)
+                .having { DataCaches.characterId.count() eq 1 }
+                .map { it[DataCaches.characterId] }
+
+            DataCaches.deleteWhere {
+                where.and(characterId notInList idsToRetain)
+            }
+
         } else {
             newSuspendedTransaction(Dispatchers.IO, db) {
-                val idsToRetain = DataCaches.select(DataCaches.characterId)
-                    .where(where)
-                    .groupBy(DataCaches.characterId)
-                    .having { DataCaches.characterId.count() eq 1 }
-                    .map { it[DataCaches.characterId] }
-
-                DataCaches.deleteWhere {
-                    where.and(characterId notInList idsToRetain)
-                }
+                DataCaches.deleteWhere { where }
             }
         }
     }

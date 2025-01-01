@@ -1,7 +1,6 @@
 package com.kos.datacache.repository
 
 import com.kos.common.InMemoryRepository
-import com.kos.common.collect
 import com.kos.datacache.DataCache
 import com.kos.views.Game
 import java.time.OffsetDateTime
@@ -12,15 +11,11 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
     override suspend fun insert(data: List<DataCache>): Boolean = cachedData.addAll(data)
 
     override suspend fun get(characterId: Long): List<DataCache> = cachedData.filter { it.characterId == characterId }
-    override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, clearAll: Boolean): Int {
+    override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
         fun Game?.matches(other: Game): Boolean = this == null || this == other
 
         val currentTime = OffsetDateTime.now()
-        return if (clearAll) {
-            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
-            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
-            deletedRecords
-        } else {
+        return if (keepLastRecord) {
             val idsToRetain = cachedData
                 .filter { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
                 .groupBy { it.characterId }
@@ -37,6 +32,10 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
                         && game.matches(it.game) &&
                         it.characterId !in idsToRetain
             }
+            deletedRecords
+        } else {
+            val deletedRecords = cachedData.count { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
+            cachedData.removeAll { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
             deletedRecords
         }
     }

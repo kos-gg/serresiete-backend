@@ -365,6 +365,6 @@ data class DataCacheService(
         }
 
 
-    suspend fun clear(game: Game?, clearAll: Boolean): Int =
-        dataCacheRepository.deleteExpiredRecord(ttl, game, clearAll)
+    suspend fun clear(game: Game?, keepLastRecord: Boolean): Int =
+        dataCacheRepository.deleteExpiredRecord(ttl, game, keepLastRecord)
 }
