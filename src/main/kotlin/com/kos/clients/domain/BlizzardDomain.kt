@@ -10,7 +10,9 @@ import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
-
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 data class BlizzardCredentials(val client: String, val secret: String)
 
@@ -109,7 +111,6 @@ object WowPriceSerializer : KSerializer<WowPriceResponse> {
     }
 }
 
-
 @Serializable
 data class Realm(val name: String, val id: Long)
 
@@ -138,7 +139,9 @@ data class GetWowCharacterResponse(
     val realm: Realm,
     @Serializable(with = NameExtractorSerializer::class)
     val guild: String? = null,
-    val experience: Int
+    val experience: Int,
+    @SerialName("last_login_timestamp")
+    val lastLogin: Long
 )
 
 @Serializable
@@ -531,7 +534,9 @@ data class HardcoreData(
     val faction: String,
     val avatar: String?,
     val stats: WowStats,
-    val specializations: WowTalents
+    val specializations: WowTalents,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val lastLogin: OffsetDateTime
 ) : Data {
     companion object {
         fun apply(
@@ -574,7 +579,7 @@ data class HardcoreData(
                     item.previewItem.spells,
                     item.previewItem.sellPrice?.let { WowPrice.apply(it) },
                     item.previewItem.durability,
-                    item.previewItem.weapon?.let { WowWeaponDisplayableStats.apply(it)},
+                    item.previewItem.weapon?.let { WowWeaponDisplayableStats.apply(it) },
                     icon?.assets?.find { it.key == "icon" }?.value,
                     equipped.enchantments
                 )
@@ -587,7 +592,8 @@ data class HardcoreData(
                 specializations = specializationsResponse.specializationGroups.firstOrNull()?.specializations?.map { specialization ->
                     WowSpecialization.apply(specialization)
                 }.orEmpty()
-            )
+            ),
+            OffsetDateTime.ofInstant(Instant.ofEpochMilli(characterResponse.lastLogin), ZoneId.systemDefault())
         )
     }
 }

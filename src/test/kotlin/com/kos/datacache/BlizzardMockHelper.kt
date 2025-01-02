@@ -3,8 +3,8 @@ package com.kos.datacache
 import arrow.core.Either
 import com.kos.characters.WowCharacter
 import com.kos.characters.WowCharacterRequest
-import com.kos.common.HttpError
 import com.kos.clients.domain.*
+import com.kos.common.HttpError
 import kotlin.random.Random
 
 object BlizzardMockHelper {
@@ -30,6 +30,7 @@ object BlizzardMockHelper {
                 Realm("Stitches", 5220),
                 "PERO LA QUERIA TANTO",
                 0,
+                1703019625000
             )
         )
     }
@@ -78,7 +79,8 @@ object BlizzardMockHelper {
                 "Female",
                 Realm("Stitches", 5220),
                 "PERO LA QUERIA TANTO",
-                0
+                0,
+                1703019625000
             )
         )
     }
@@ -99,7 +101,8 @@ object BlizzardMockHelper {
         gender = "Female",
         realm = Realm("Stitches", 5220),
         guild = "I CANT RELEASE",
-        experience = 0
+        experience = 0,
+        lastLogin = 1703019625000
     )
 
     val getWowCharacterResponseString = """
