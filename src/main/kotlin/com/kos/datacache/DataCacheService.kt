@@ -257,7 +257,9 @@ data class DataCacheService(
                                         null
                                     }
                                 }
-
+//quan doni 404 marcar com mort
+                            //si el troba mirar si tenen el mateix blizzardId
+                            //hauriem d'actualitzar el registre mes nou del data cache i marcarlo com a mort en cas de si no el troba
                             val characterResponse: GetWowCharacterResponse =
                                 retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
                                     blizzardClient.getCharacterProfile(

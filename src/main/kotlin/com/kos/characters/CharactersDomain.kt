@@ -16,7 +16,6 @@ sealed interface CharacterCreateRequest {
     fun same(other: Character): Boolean
 }
 
-
 sealed interface CharacterInsertRequest {
     val name: String
     fun toCharacter(id: Long): Character

@@ -120,6 +120,7 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")
                 val namespace = "profile-classic1x"
                 fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
+                    //   fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse, CharacterProfileNotFoundError) {
                     json.decodeFromString<GetWowCharacterResponse>(it)
                 }.bind()
             }

@@ -7,7 +7,6 @@ import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
-import com.kos.views.repository.ViewsRepository
 import java.time.OffsetDateTime
 
 class CharactersInMemoryRepository(
@@ -142,7 +141,8 @@ class CharactersInMemoryRepository(
                         id,
                         character.name,
                         character.region,
-                        character.realm
+                        character.realm,
+                        null
                     )
                     wowCharacters.add(index, c)
                     Either.Right(1)
@@ -159,7 +159,8 @@ class CharactersInMemoryRepository(
                         id,
                         character.name,
                         character.region,
-                        character.realm
+                        character.realm,
+                        character.blizzardId
                     )
                     wowHardcoreCharacters.add(index, c)
                     Either.Right(1)

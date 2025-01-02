@@ -30,6 +30,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 this[WowHardcoreCharacters.name] = it.name
                 this[WowHardcoreCharacters.region] = it.region
                 this[WowHardcoreCharacters.realm] = it.realm
+                this[WowHardcoreCharacters.blizzard_id] = it
             }
             LolCharacters.batchInsert(initialState.lolCharacters) {
                 this[LolCharacters.id] = it.id
@@ -61,7 +62,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowCharacters.id],
         row[WowCharacters.name],
         row[WowCharacters.region],
-        row[WowCharacters.realm]
+        row[WowCharacters.realm],
+        row[WowCharacters.],
     )
 
     object WowHardcoreCharacters : Table("wow_hardcore_characters") {
@@ -69,6 +71,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
+        val blizzardId = text("blizzard_id")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -77,7 +80,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowHardcoreCharacters.id],
         row[WowHardcoreCharacters.name],
         row[WowHardcoreCharacters.region],
-        row[WowHardcoreCharacters.realm]
+        row[WowHardcoreCharacters.realm],
+        row[WowHardcoreCharacters.blizzardId]
     )
 
 
