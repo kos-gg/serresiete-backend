@@ -86,7 +86,7 @@ data class CharactersService(
                                         initialRequest
                                     )
                                 }
-                                WowCharacterRequest(
+                                WowCharacterEnrichedRequest(
                                     initialRequest.name,
                                     initialRequest.region,
                                     initialRequest.realm,

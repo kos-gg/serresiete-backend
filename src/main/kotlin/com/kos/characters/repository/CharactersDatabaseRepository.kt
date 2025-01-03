@@ -30,7 +30,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 this[WowHardcoreCharacters.name] = it.name
                 this[WowHardcoreCharacters.region] = it.region
                 this[WowHardcoreCharacters.realm] = it.realm
-                this[WowHardcoreCharacters.blizzard_id] = it
+                this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: 0
             }
             LolCharacters.batchInsert(initialState.lolCharacters) {
                 this[LolCharacters.id] = it.id
@@ -54,7 +54,6 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
-
         override val primaryKey = PrimaryKey(id)
     }
 
@@ -63,7 +62,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowCharacters.name],
         row[WowCharacters.region],
         row[WowCharacters.realm],
-        row[WowCharacters.],
+        null
     )
 
     object WowHardcoreCharacters : Table("wow_hardcore_characters") {
@@ -71,7 +70,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
-        val blizzardId = text("blizzard_id")
+        val blizzardId = long("blizzard_id")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -114,7 +113,15 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val charsToInsert: List<Character> = characters.map {
                 when (it) {
-                    is WowCharacterRequest -> WowCharacter(selectNextId(), it.name, it.region, it.realm)
+                    is WowCharacterRequest -> WowCharacter(selectNextId(), it.name, it.region, it.realm, null)
+                    is WowCharacterEnrichedRequest -> WowCharacter(
+                        selectNextId(),
+                        it.name,
+                        it.region,
+                        it.realm,
+                        it.blizzardId
+                    )
+
                     is LolCharacterEnrichedRequest -> LolCharacter(
                         selectNextId(),
                         it.name,
@@ -244,9 +251,10 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                     resultRowToLolCharacter(it)
                 }
 
-                Game.WOW_HC -> WowHardcoreCharacters.selectAll().where { WowHardcoreCharacters.id.eq(id) }.singleOrNull()?.let {
-                    resultRowToWowHardcoreCharacter(it)
-                }
+                Game.WOW_HC -> WowHardcoreCharacters.selectAll().where { WowHardcoreCharacters.id.eq(id) }
+                    .singleOrNull()?.let {
+                        resultRowToWowHardcoreCharacter(it)
+                    }
             }
         }
     }
@@ -359,7 +367,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
 
     override suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            ViewsDatabaseRepository.CharactersView.selectAll().where { ViewsDatabaseRepository.CharactersView.characterId.eq(id) }
+            ViewsDatabaseRepository.CharactersView.selectAll()
+                .where { ViewsDatabaseRepository.CharactersView.characterId.eq(id) }
                 .map {
                     it[ViewsDatabaseRepository.CharactersView.viewId]
                 }

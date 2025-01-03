@@ -47,7 +47,7 @@ class CharactersInMemoryRepository(
                             acc + character
                         }
 
-                        is LolCharacterEnrichedRequest -> {
+                        is LolCharacterEnrichedRequest, is WowCharacterEnrichedRequest -> {
                             this.wowCharacters.clear()
                             this.wowCharacters.addAll(wowInitialCharacters)
                             return Either.Left(InsertError("Error inserting character $it"))
@@ -60,7 +60,7 @@ class CharactersInMemoryRepository(
             Game.LOL -> {
                 val inserted = characters.fold(listOf<Character>()) { acc, it ->
                     when (it) {
-                        is WowCharacterRequest -> {
+                        is WowCharacterRequest, is WowCharacterEnrichedRequest -> {
                             this.lolCharacters.clear()
                             this.lolCharacters.addAll(lolInitialCharacters)
                             return Either.Left(InsertError("Error inserting chracter $it"))
@@ -84,7 +84,7 @@ class CharactersInMemoryRepository(
             Game.WOW_HC -> {
                 val inserted = characters.fold(listOf<Character>()) { acc, it ->
                     when (it) {
-                        is WowCharacterRequest -> {
+                        is WowCharacterEnrichedRequest -> {
                             if (this.wowHardcoreCharacters.any { character -> it.same(character) }) {
                                 this.wowHardcoreCharacters.clear()
                                 this.wowHardcoreCharacters.addAll(wowHardcoreInitialCharacters)
@@ -95,7 +95,7 @@ class CharactersInMemoryRepository(
                             acc + character
                         }
 
-                        is LolCharacterEnrichedRequest -> {
+                        is LolCharacterEnrichedRequest, is WowCharacterRequest -> {
                             this.wowHardcoreCharacters.clear()
                             this.wowHardcoreCharacters.addAll(wowInitialCharacters)
                             return Either.Left(InsertError("Error inserting character $it"))
@@ -152,7 +152,7 @@ class CharactersInMemoryRepository(
             }
 
             Game.WOW_HC -> when (character) {
-                is WowCharacterRequest -> {
+                is WowCharacterEnrichedRequest -> {
                     val index = wowHardcoreCharacters.indexOfFirst { it.id == id }
                     wowHardcoreCharacters.removeAt(index)
                     val c = WowCharacter(
