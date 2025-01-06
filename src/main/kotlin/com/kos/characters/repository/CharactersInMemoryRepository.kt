@@ -152,15 +152,16 @@ class CharactersInMemoryRepository(
             }
 
             Game.WOW_HC -> when (character) {
-                is WowCharacterEnrichedRequest -> {
+                is WowCharacterRequest -> {
                     val index = wowHardcoreCharacters.indexOfFirst { it.id == id }
+                    val actualInsertedCharacter = wowHardcoreCharacters[index]
                     wowHardcoreCharacters.removeAt(index)
                     val c = WowCharacter(
                         id,
                         character.name,
                         character.region,
                         character.realm,
-                        character.blizzardId
+                        actualInsertedCharacter.blizzardId
                     )
                     wowHardcoreCharacters.add(index, c)
                     Either.Right(1)
@@ -215,7 +216,6 @@ class CharactersInMemoryRepository(
             Game.WOW_HC -> wowHardcoreCharacters.find { character.same(it) }
         }
     }
-
 
     override suspend fun getCharactersToSync(game: Game, olderThanMinutes: Long): List<Character> {
         val now = OffsetDateTime.now()

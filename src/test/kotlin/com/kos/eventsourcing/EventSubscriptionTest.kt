@@ -479,7 +479,7 @@ class EventSubscriptionTest {
                     listOf(wowHardcoreRemainingView)
                 )
                 val wowHardcoreCharacters =
-                    (1..5).map { WowCharacter(it.toLong(), it.toString(), it.toString(), it.toString()) }
+                    (1..5).map { WowCharacter(it.toLong(), it.toString(), it.toString(), it.toString(), it.toLong()) }
                 val charactersRepository = CharactersInMemoryRepository(viewsRepository = viewsRepository).withState(
                     CharactersState(
                         wowCharacters = listOf(),

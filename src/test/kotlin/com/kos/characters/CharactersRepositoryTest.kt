@@ -4,6 +4,8 @@ import com.kos.characters.CharactersTestHelper.basicLolCharacter
 import com.kos.characters.CharactersTestHelper.basicLolCharacterEnrichedRequest
 import com.kos.characters.CharactersTestHelper.basicWowCharacter
 import com.kos.characters.CharactersTestHelper.basicWowCharacter2
+import com.kos.characters.CharactersTestHelper.basicWowEnrichedRequest
+import com.kos.characters.CharactersTestHelper.basicWowHardcoreCharacter
 import com.kos.characters.CharactersTestHelper.basicWowRequest
 import com.kos.characters.CharactersTestHelper.basicWowRequest2
 import com.kos.characters.CharactersTestHelper.emptyCharactersState
@@ -51,8 +53,8 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given an empty repository i can insert wow hardcore characters`() {
         runBlocking {
-            val expected = listOf(basicWowCharacter)
-            repository.insert(listOf(basicWowRequest), Game.WOW_HC)
+            val expected = listOf(basicWowHardcoreCharacter)
+            repository.insert(listOf(basicWowEnrichedRequest), Game.WOW_HC)
                 .fold({ fail(it.message) }) { assertEquals(expected, it) }
         }
     }
@@ -104,12 +106,12 @@ abstract class CharactersRepositoryTestCommon {
                 repository.withState(
                     CharactersState(
                         listOf(basicWowCharacter),
-                        listOf(basicWowCharacter),
+                        listOf(basicWowHardcoreCharacter),
                         listOf(basicLolCharacter)
                     )
                 )
             assertEquals(basicWowCharacter, repo.get(basicWowCharacter.id, Game.WOW))
-            assertEquals(basicWowCharacter, repo.get(basicWowCharacter.id, Game.WOW_HC))
+            assertEquals(basicWowHardcoreCharacter, repo.get(basicWowHardcoreCharacter.id, Game.WOW_HC))
             assertEquals(basicLolCharacter, repo.get(basicLolCharacter.id, Game.LOL))
         }
     }
@@ -120,7 +122,7 @@ abstract class CharactersRepositoryTestCommon {
             val repo = repository.withState(
                 CharactersState(
                     listOf(basicWowCharacter),
-                    listOf(basicWowCharacter),
+                    listOf(basicWowHardcoreCharacter),
                     gigaLolCharacterList
                 )
             )
@@ -128,7 +130,7 @@ abstract class CharactersRepositoryTestCommon {
             val wowCharacterRequest: CharacterCreateRequest =
                 WowCharacterRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
             assertEquals(basicWowCharacter, repo.get(wowCharacterRequest, Game.WOW))
-            assertEquals(basicWowCharacter, repo.get(wowCharacterRequest, Game.WOW_HC))
+            assertEquals(basicWowHardcoreCharacter, repo.get(wowCharacterRequest, Game.WOW_HC))
 
             val lolCharacter = gigaLolCharacterList[3]
             val lolCharacterRequest = LolCharacterRequest(lolCharacter.name, lolCharacter.tag)
@@ -142,7 +144,7 @@ abstract class CharactersRepositoryTestCommon {
             val repo = repository.withState(
                 CharactersState(
                     listOf(basicWowCharacter),
-                    listOf(basicWowCharacter),
+                    listOf(basicWowHardcoreCharacter),
                     gigaLolCharacterList
                 )
             )
@@ -150,7 +152,7 @@ abstract class CharactersRepositoryTestCommon {
             val wowCharacterRequest: CharacterInsertRequest =
                 WowCharacterRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
             assertEquals(basicWowCharacter, repo.get(wowCharacterRequest, Game.WOW))
-            assertEquals(basicWowCharacter, repo.get(wowCharacterRequest, Game.WOW_HC))
+            assertEquals(basicWowHardcoreCharacter, repo.get(wowCharacterRequest, Game.WOW_HC))
 
             val lolCharacter = gigaLolCharacterList[3]
             val lolCharacterRequest = LolCharacterEnrichedRequest(
@@ -171,12 +173,12 @@ abstract class CharactersRepositoryTestCommon {
             val repo = repository.withState(
                 CharactersState(
                     listOf(basicWowCharacter, basicWowCharacter2),
-                    listOf(basicWowCharacter2),
+                    listOf(basicWowHardcoreCharacter),
                     listOf(basicLolCharacter)
                 )
             )
             assertEquals(listOf(basicWowCharacter, basicWowCharacter2), repo.get(Game.WOW))
-            assertEquals(listOf(basicWowCharacter2), repo.get(Game.WOW_HC))
+            assertEquals(listOf(basicWowHardcoreCharacter), repo.get(Game.WOW_HC))
             assertEquals(listOf(basicLolCharacter), repo.get(Game.LOL))
         }
     }
@@ -283,7 +285,7 @@ abstract class CharactersRepositoryTestCommon {
     @Test
     fun `given a repository with a wow hardcore character, i can update it`() {
         runBlocking {
-            val repoWithState = repository.withState(CharactersState(listOf(), listOf(basicWowCharacter), listOf()))
+            val repoWithState = repository.withState(CharactersState(listOf(), listOf(basicWowHardcoreCharacter), listOf()))
             val updatedName = "camilo"
             val updatedRegion = "eu"
             val updatedRealm = "stitches"

@@ -54,6 +54,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
+
         override val primaryKey = PrimaryKey(id)
     }
 
@@ -113,7 +114,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val charsToInsert: List<Character> = characters.map {
                 when (it) {
-                    is WowCharacterRequest -> WowCharacter(selectNextId(), it.name, it.region, it.realm, null)
+                    is WowCharacterRequest -> WowCharacter(selectNextId(), it.name, it.region, it.realm, 0)
                     is WowCharacterEnrichedRequest -> WowCharacter(
                         selectNextId(),
                         it.name,
@@ -171,6 +172,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                                     this[WowHardcoreCharacters.name] = it.name
                                     this[WowHardcoreCharacters.region] = it.region
                                     this[WowHardcoreCharacters.realm] = it.realm
+                                    this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: 0
                                 }
 
                                 else -> throw IllegalArgumentException()
