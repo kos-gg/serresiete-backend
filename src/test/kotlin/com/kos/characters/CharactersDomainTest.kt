@@ -1,9 +1,8 @@
 package com.kos.characters
 
-import com.kos.characters.CharactersTestHelper.basicWowCharacter
 import com.kos.characters.CharactersTestHelper.basicLolCharacter
 import com.kos.characters.CharactersTestHelper.basicLolCharacterEnrichedRequest
-import com.kos.characters.CharactersTestHelper.gigaLolCharacterList
+import com.kos.characters.CharactersTestHelper.basicWowCharacter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -80,16 +79,6 @@ class CharactersDomainTest {
     }
 
     @Test
-    fun `toCharacter should create a Character with the correct properties for wow`() {
-        val wowCharacterRequest = WowCharacterRequest("Gandalf", "Middle Earth", "Rivendell")
-        val character = wowCharacterRequest.toCharacter(1L)
-        assertEquals(1L, character.id)
-        assertEquals("Gandalf", character.name)
-        assertEquals("Middle Earth", character.region)
-        assertEquals("Rivendell", character.realm)
-    }
-
-    @Test
     fun `toCharacter should create a Character with the correct properties for lol`() {
         val lolCharacterRequest = basicLolCharacterEnrichedRequest
         val character = lolCharacterRequest.toCharacter(1L)
@@ -113,7 +102,7 @@ class CharactersDomainTest {
     @Test
     fun `same should return true for lol characters that share same puuid or summonerId regardless of other fields`() {
         val lolCharacterRequest = basicLolCharacterEnrichedRequest
-        val character = lolCharacterRequest.toCharacter(1L).copy(name="diff name", tag="diff tag")
+        val character = lolCharacterRequest.toCharacter(1L).copy(name = "diff name", tag = "diff tag")
         val result = lolCharacterRequest.same(character)
         assertTrue(result)
     }
@@ -143,4 +132,58 @@ class CharactersDomainTest {
         assertFalse(diffPuuid)
         assertFalse(diffSummonerId)
     }
+
+    @Test
+    fun `same should return true for wow characters with identical Blizzard IDs`() {
+        val enrichedRequest = createWowCharacterEnrichedRequest(
+            name = "Arthas",
+            region = "Northrend",
+            realm = "Icecrown",
+            blizzardId = 12345L
+        )
+        val character = enrichedRequest.toCharacter(1L)
+        val result = enrichedRequest.same(character)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `same should return false for wow characters with different Blizzard IDs`() {
+        val enrichedRequest = createWowCharacterEnrichedRequest(
+            name = "Thrall",
+            region = "Azeroth",
+            realm = "Orgrimmar",
+            blizzardId = 67890L
+        )
+        val character = enrichedRequest.toCharacter(2L)
+        val result = enrichedRequest.same(character.copy(blizzardId = 99999L))
+        assertFalse(result)
+    }
+
+    @Test
+    fun `toCharacter should create a WowCharacter with the correct properties for WowCharacterEnrichedRequest`() {
+        val characterName = "Sylvanas"
+        val characterRegion = "Eastern Kingdoms"
+        val characterRealm = "Silvermoon"
+
+        val enrichedRequest = createWowCharacterEnrichedRequest(
+            name = "Sylvanas",
+            region = "Eastern Kingdoms",
+            realm = "Silvermoon",
+            blizzardId = 54321L
+        )
+        val character = enrichedRequest.toCharacter(1L)
+
+        assertEquals(1L, character.id)
+        assertEquals(characterName, character.name)
+        assertEquals(characterRegion, character.region)
+        assertEquals(characterRealm, character.realm)
+        assertEquals(54321L, character.blizzardId)
+    }
+
+    private fun createWowCharacterEnrichedRequest(
+        name: String = "DefaultName",
+        region: String = "DefaultRegion",
+        realm: String = "DefaultRealm",
+        blizzardId: Long? = 12345L
+    ) = WowCharacterEnrichedRequest(name, region, realm, blizzardId)
 }

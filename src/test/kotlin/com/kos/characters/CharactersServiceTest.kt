@@ -15,7 +15,6 @@ import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.NonHardcoreCharacter
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
@@ -60,8 +59,12 @@ class CharactersServiceTest {
                 WowCharacterRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
             val request2 = WowCharacterRequest("kakarøna", basicWowCharacter.region, basicWowCharacter.realm)
 
-            `when`(blizzardClient.getCharacterProfile(request1.region, request1.realm, request1.name)).thenReturn(BlizzardMockHelper.getCharacterProfile(request1))
-            `when`(blizzardClient.getCharacterProfile(request2.region, request2.realm, request2.name)).thenReturn(BlizzardMockHelper.getCharacterProfile(request2))
+            `when`(blizzardClient.getCharacterProfile(request1.region, request1.realm, request1.name)).thenReturn(
+                BlizzardMockHelper.getCharacterProfile(request1)
+            )
+            `when`(blizzardClient.getCharacterProfile(request2.region, request2.realm, request2.name)).thenReturn(
+                BlizzardMockHelper.getCharacterProfile(request2)
+            )
             `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
             `when`(blizzardClient.getRealm(request2.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
 
@@ -72,7 +75,6 @@ class CharactersServiceTest {
             val expected: List<Long> = listOf(1, 2)
 
             charactersService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { assertEquals(expected, it) }
-
         }
     }
 
@@ -82,7 +84,9 @@ class CharactersServiceTest {
             val request1 =
                 WowCharacterRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
 
-            `when`(blizzardClient.getCharacterProfile(request1.region, request1.realm, request1.name)).thenReturn(BlizzardMockHelper.getCharacterProfile(request1))
+            `when`(blizzardClient.getCharacterProfile(request1.region, request1.realm, request1.name)).thenReturn(
+                BlizzardMockHelper.getCharacterProfile(request1)
+            )
             `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm))
 
             val charactersRepository = CharactersInMemoryRepository()
@@ -91,8 +95,8 @@ class CharactersServiceTest {
             val request = listOf(request1)
             val expected: List<Long> = listOf()
 
-            charactersService.createAndReturnIds(request, Game.WOW_HC).fold({ fail(it.message) }) { assertEquals(expected, it) }
-
+            charactersService.createAndReturnIds(request, Game.WOW_HC)
+                .fold({ fail(it.message) }) { assertEquals(expected, it) }
         }
     }
 
@@ -112,7 +116,6 @@ class CharactersServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1)
             charactersService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
-
         }
     }
 
@@ -154,7 +157,7 @@ class CharactersServiceTest {
     fun `it should skip inserting same league character even if he changed his name`() {
         runBlocking {
 
-            val state = CharactersState(listOf(),listOf(), listOf(basicLolCharacter))
+            val state = CharactersState(listOf(), listOf(), listOf(basicLolCharacter))
             val request = LolCharacterRequest("R7 Disney Girl", "EUW")
 
             `when`(riotClient.getPUUIDByRiotId("R7 Disney Girl", "EUW")).thenReturn(Either.Right(basicGetPuuidResponse))
@@ -165,7 +168,6 @@ class CharactersServiceTest {
 
             val createAndReturnIds = charactersService.createAndReturnIds(listOf(request), Game.LOL)
             createAndReturnIds.fold({ fail() }) { assertEquals(listOf(), it) }
-
         }
     }
 
