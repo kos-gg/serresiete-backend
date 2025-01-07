@@ -152,6 +152,7 @@ class CharactersInMemoryRepository(
             }
 
             Game.WOW_HC -> when (character) {
+                //TODO: use enriched, no need to actualInsertedCharacter
                 is WowCharacterRequest -> {
                     val index = wowHardcoreCharacters.indexOfFirst { it.id == id }
                     val actualInsertedCharacter = wowHardcoreCharacters[index]

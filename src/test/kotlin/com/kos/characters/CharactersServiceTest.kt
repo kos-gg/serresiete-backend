@@ -48,7 +48,6 @@ class CharactersServiceTest {
             val expected: List<Long> = listOf(1, 2)
 
             charactersService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
-
         }
     }
 

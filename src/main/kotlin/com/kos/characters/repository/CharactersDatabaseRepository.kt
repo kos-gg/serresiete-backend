@@ -30,7 +30,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 this[WowHardcoreCharacters.name] = it.name
                 this[WowHardcoreCharacters.region] = it.region
                 this[WowHardcoreCharacters.realm] = it.realm
-                this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: 0
+                //TODO: at some point this should stop being nullable
+                this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: -1
             }
             LolCharacters.batchInsert(initialState.lolCharacters) {
                 this[LolCharacters.id] = it.id
@@ -63,6 +64,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowCharacters.name],
         row[WowCharacters.region],
         row[WowCharacters.realm],
+        //TODO: at some point this should stop being nullable
         null
     )
 
@@ -83,7 +85,6 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowHardcoreCharacters.realm],
         row[WowHardcoreCharacters.blizzardId]
     )
-
 
     object LolCharacters : Table("lol_characters") {
         val id = long("id")
@@ -172,7 +173,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                                     this[WowHardcoreCharacters.name] = it.name
                                     this[WowHardcoreCharacters.region] = it.region
                                     this[WowHardcoreCharacters.realm] = it.realm
-                                    this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: 0
+                                    //TODO: at some point this should stop being nullable
+                                    this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: -1
                                 }
 
                                 else -> throw IllegalArgumentException()

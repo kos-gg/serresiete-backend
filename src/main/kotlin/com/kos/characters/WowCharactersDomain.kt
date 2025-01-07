@@ -17,17 +17,6 @@ data class WowCharacterRequest(override val name: String, val region: String, va
     }
 }
 
-@Serializable
-data class WowCharacter(
-    override val id: Long,
-    override val name: String,
-    val region: String,
-    val realm: String,
-    val blizzardId: Long?
-) : Character {
-    fun specsWithName(`class`: String): List<Spec> = classes.find { it.`class` == `class` }?.specs.orEmpty()
-}
-
 data class WowCharacterEnrichedRequest(
     override val name: String,
     val region: String,
@@ -37,12 +26,24 @@ data class WowCharacterEnrichedRequest(
     override fun toCharacter(id: Long): WowCharacter {
         return WowCharacter(id, name, region, realm, blizzardId)
     }
+
     override fun same(other: Character): Boolean {
         return when (other) {
             is WowCharacter -> this.blizzardId == other.blizzardId
             else -> false
         }
     }
+}
+
+@Serializable
+data class WowCharacter(
+    override val id: Long,
+    override val name: String,
+    val region: String,
+    val realm: String,
+    val blizzardId: Long?
+) : Character {
+    fun specsWithName(`class`: String): List<Spec> = classes.find { it.`class` == `class` }?.specs.orEmpty()
 }
 
 val classes: List<Class> = listOf(
