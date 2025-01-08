@@ -30,10 +30,14 @@ app.get('/api/views', (req, res) => {
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) return res.status(500).json({ error: 'Failed to read file' });
 
-        const views = JSON.parse(data);
+        const parsedData = JSON.parse(data);
+        const { records, metadata } = parsedData;
 
-        if (game) return res.json(views.filter(view => view.game === game.toUpperCase()));
-        return res.json(views);
+        if (game) {
+            const filteredRecords = records.filter(view => view.game === game.toUpperCase());
+            return res.json({ metadata, records: filteredRecords });
+        }
+        return res.json(parsedData);
     });
 });
 

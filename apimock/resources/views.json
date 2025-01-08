@@ -1,148 +1,54 @@
-[
-  {
-    "id": "f7431c36-06b7-4307-88ff-24f45163b75a",
-    "name": "Onlyfangs",
-    "owner": "weewee",
-    "published": true,
-    "characterIds": [
-      4,
-      5
-    ],
-    "game": "WOW_HC"
-  } , {
-  "id": "wow-hardcore-view",
-  "name": "Bob",
-  "owner": "weewee",
-  "published": true,
-  "characterIds": [
-    4,
-    5
-  ],
-  "game": "WOW_HC"
-}, {
-  "id": "f94848f0-8084-4f21-b60e-9be8b740c7b3",
-  "name": "LEC",
-  "owner": "kakoshi",
-  "published": true,
-  "characterIds": [
-    64,
-    65,
-    66,
-    67,
-    68,
-    69,
-    70,
-    71,
-    72,
-    73,
-    74,
-    75,
-    76,
-    49,
-    50,
-    51,
-    52,
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60,
-    61,
-    62,
-    63
-  ],
-  "game": "LOL"
-},
-  {
-    "id": "e916cb64-7833-4eea-8f47-24cc6111ba1b",
-    "name": "Copa Ocicas 2024",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      82,
-      38,
-      39,
-      40,
-      41,
-      42,
-      43,
-      44,
-      45,
-      46,
-      47,
-      37,
-      33,
-      34,
-      35,
-      36,
-      25,
-      27,
-      32,
-      30,
-      31,
-      29,
-      77,
-      78,
-      80,
-      81
-    ],
-    "game": "LOL"
+{
+  "metadata": {
+    "totalCount": 8
   },
-  {
-    "id": "d4509c99-2f27-4f41-815a-60f7335f6fc9",
-    "name": "12p",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      87,
-      48
-    ],
-    "game": "LOL"
-  },
-  {
-    "id": "7559515b-59ec-4988-a7a2-bac23a17fe4e",
-    "name": "LOS RATONES",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      101,
-      102,
-      103,
-      104,
-      105
-    ],
-    "game": "LOL"
-  },
-  {
-    "id": "bb59c623-8783-4b3d-bbf8-2f55ddb5f43c",
-    "name": "GTP Washed up",
-    "owner": "kakoshi",
-    "published": true,
-    "characterIds": [
-      83,
-      32,
-      25,
-      26,
-      27,
-      28,
-      29,
-      30,
-      31
-    ],
-    "game": "LOL"
-  } ,
-  {
-    "id": "1",
-    "name": "Boris",
-    "owner": "weewee",
-    "published": true,
-    "characterIds": [
-      4,
-      5
-    ],
-    "game": "BORIS"
-  }
-]
+  "records": [
+    {
+      "id": "f1960e55-772c-4fc3-991c-32fb7987fb2a",
+      "name": "wow-hardcore-view-example",
+      "owner": "eric",
+      "published": true,
+      "characterIds": [
+        111,
+        103,
+        104,
+        105,
+        108,
+        109,
+        110
+      ],
+      "game": "WOW_HC",
+      "featured": false
+    },
+    {
+      "id": "4aec2617-403e-46dd-9456-ee2350ca5df9",
+      "name": "Onlyfangs 2",
+      "owner": "eric",
+      "published": true,
+      "characterIds": [],
+      "game": "LOL",
+      "featured": false
+    },
+    {
+      "id": "685567f7-e991-4674-baf4-086f26944bee",
+      "name": "Onlyfangs 2",
+      "owner": "eric",
+      "published": true,
+      "characterIds": [],
+      "game": "WOW_HC",
+      "featured": false
+    },
+    {
+      "id": "cf73f057-b784-4c65-88fa-7d9ec77a732a",
+      "name": "Onlyfangs 2",
+      "owner": "eric",
+      "published": true,
+      "characterIds": [
+        117,
+        118
+      ],
+      "game": "WOW_HC",
+      "featured": false
+    }
+  ]
+}
