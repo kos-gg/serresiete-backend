@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "totalCount": 8
+    "totalCount": 4
   },
   "records": [
     {
@@ -22,7 +22,7 @@
     },
     {
       "id": "4aec2617-403e-46dd-9456-ee2350ca5df9",
-      "name": "Onlyfangs 2",
+      "name": "Onlyfangs LOL",
       "owner": "eric",
       "published": true,
       "characterIds": [],
@@ -31,16 +31,16 @@
     },
     {
       "id": "685567f7-e991-4674-baf4-086f26944bee",
-      "name": "Onlyfangs 2",
+      "name": "Onlyfangs WOW",
       "owner": "eric",
       "published": true,
       "characterIds": [],
-      "game": "WOW_HC",
+      "game": "WOW",
       "featured": false
     },
     {
       "id": "cf73f057-b784-4c65-88fa-7d9ec77a732a",
-      "name": "Onlyfangs 2",
+      "name": "Onlyfangs HC",
       "owner": "eric",
       "published": true,
       "characterIds": [
