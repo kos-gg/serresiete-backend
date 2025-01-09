@@ -28,6 +28,10 @@ interface HttpError : ControllerError {
     fun error(): String
 }
 
+class NotFoundHardcoreCharacter(private val name: String) : HttpError {
+    override fun error(): String = "$name not found in Blizzard Api"
+}
+
 class NonHardcoreCharacter(private val wowCharacter: WowCharacterRequest) : HttpError {
     override fun error(): String = "${wowCharacter.realm} is not hardcore"
 }

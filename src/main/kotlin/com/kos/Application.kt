@@ -104,7 +104,7 @@ fun Application.module() {
     val dataCacheRepository = DataCacheDatabaseRepository(db)
     val dataCacheRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
-        DataCacheService(dataCacheRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient, dataCacheRetryConfig)
+        DataCacheService(dataCacheRepository, charactersRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient, dataCacheRetryConfig)
     val viewsService =
         ViewsService(
             viewsRepository,

@@ -71,7 +71,7 @@ class ViewsControllerTest {
         val credentialsRepositoryWithState = credentialsRepository.withState(credentialsState)
 
         val dataCacheService =
-            DataCacheService(dataCacheRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
+            DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
         val charactersService =
             CharactersService(charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)

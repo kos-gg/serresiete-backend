@@ -3,6 +3,16 @@ package com.kos.datacache
 import arrow.core.Either
 import com.kos.characters.CharactersTestHelper.basicLolCharacter
 import com.kos.characters.CharactersTestHelper.basicWowCharacter
+import com.kos.characters.CharactersTestHelper.basicWowHardcoreCharacter
+import com.kos.characters.repository.CharactersInMemoryRepository
+import com.kos.characters.repository.CharactersState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.domain.Metadata
+import com.kos.clients.domain.QueueType
+import com.kos.clients.domain.RaiderIoData
+import com.kos.clients.domain.RiotData
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
 import com.kos.common.RetryConfig
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
@@ -10,12 +20,9 @@ import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.*
-import com.kos.clients.domain.Metadata
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
 import com.kos.views.Game
+import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
+import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.mockito.Mockito.*
@@ -40,8 +47,8 @@ class DataCacheServiceTest {
                     wowDataCache.copy(characterId = 3, data = wowDataCache.data.replace(""""id": 1""", """"id": 3"""))
                 )
             )
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            val data = service.getData(listOf(1, 3), oldFirst = true)
+
+            val data = createService(repo).getData(listOf(1, 3), oldFirst = true)
             assertTrue(data.isRight { it.size == 2 })
             assertEquals(listOf<Long>(1, 3), data.map {
                 it.map { d ->
@@ -58,8 +65,7 @@ class DataCacheServiceTest {
             val repo = DataCacheInMemoryRepository().withState(
                 listOf(lolDataCache)
             )
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            val data = service.getData(listOf(2), oldFirst = true)
+            val data = createService(repo).getData(listOf(2), oldFirst = true)
 
             assertTrue(data.isRight { it.size == 1 })
             assertEquals(listOf(basicLolCharacter.name), data.map {
@@ -80,8 +86,7 @@ class DataCacheServiceTest {
                     wowDataCache.copy(data = wowDataCache.data.replace(""""score": 0.0""", """"score": 1.0""")),
                 )
             )
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            val data = service.getData(listOf(1), oldFirst = true)
+            val data = createService(repo).getData(listOf(1), oldFirst = true)
             assertTrue(data.isRight { it.size == 1 })
             assertEquals(listOf(0.0), data.map {
                 it.map { d ->
@@ -101,9 +106,8 @@ class DataCacheServiceTest {
             )
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
             val repo = DataCacheInMemoryRepository().withState(listOf(wowDataCache))
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
             assertEquals(listOf(wowDataCache), repo.state())
-            service.cache(listOf(basicWowCharacter, basicWowCharacter.copy(id = 2)), Game.WOW)
+            createService(repo).cache(listOf(basicWowCharacter, basicWowCharacter.copy(id = 2)), Game.WOW)
             assertEquals(3, repo.state().size)
         }
     }
@@ -120,8 +124,7 @@ class DataCacheServiceTest {
             )
             `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))
             val repo = DataCacheInMemoryRepository()
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            service.cache(listOf(basicLolCharacter), Game.LOL)
+            createService(repo).cache(listOf(basicLolCharacter), Game.LOL)
             assertEquals(1, repo.state().size)
         }
     }
@@ -142,9 +145,7 @@ class DataCacheServiceTest {
             `when`(riotClient.getMatchById(anyString())).thenReturn(Either.Right(RiotMockHelper.match))
 
             val repo = DataCacheInMemoryRepository().withState(listOf(dataCache))
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolCharacter), Game.LOL)
 
             verify(riotClient, times(0)).getMatchById("match1")
             verify(riotClient, times(0)).getMatchById("match2")
@@ -166,9 +167,7 @@ class DataCacheServiceTest {
                 .thenReturn(jsonParseError)
 
             val repo = DataCacheInMemoryRepository()
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolCharacter), Game.LOL)
 
             assertEquals(listOf(jsonParseError.value), errors)
         }
@@ -224,9 +223,7 @@ class DataCacheServiceTest {
             )
 
             val repo = DataCacheInMemoryRepository().withState(listOf(dataCache))
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolCharacter), Game.LOL)
 
             verify(riotClient, times(0)).getMatchById("match3")
 
@@ -235,7 +232,7 @@ class DataCacheServiceTest {
             verify(riotClient, times(1)).getMatchById("match6")
             verify(riotClient, times(1)).getMatchById("match7")
 
-            val insertedValue = service.get(1).maxBy { it.inserted }
+            val insertedValue = createService(repo).get(1).maxBy { it.inserted }
             requestedMatchIds.forEach {
                 assertTrue(insertedValue.data.contains(""""id":"$it""""), "${insertedValue.data} should contain id:$it")
             }
@@ -311,9 +308,7 @@ class DataCacheServiceTest {
             )
 
             val repo = DataCacheInMemoryRepository()
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter, basicLolCharacter.copy(id = 2)), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolCharacter, basicLolCharacter.copy(id = 2)), Game.LOL)
 
             verify(riotClient, times(1)).getMatchById("match3")
             verify(riotClient, times(1)).getMatchById("match4")
@@ -323,6 +318,28 @@ class DataCacheServiceTest {
 
             assertEquals(listOf(), errors)
         }
+    }
+
+    private suspend fun createService(dataCacheRepository: DataCacheInMemoryRepository): DataCacheService {
+        val viewsRepository = ViewsInMemoryRepository()
+            .withState(listOf(basicSimpleWowHardcoreView.copy(characterIds = listOf(1))))
+        val charactersRepository = CharactersInMemoryRepository(dataCacheRepository, viewsRepository)
+            .withState(
+                CharactersState(
+                    listOf(),
+                    listOf(basicWowHardcoreCharacter, basicWowHardcoreCharacter.copy(id = 2, blizzardId = 123)),
+                    listOf()
+                )
+            )
+
+        return DataCacheService(
+            dataCacheRepository,
+            charactersRepository,
+            raiderIoClient,
+            riotClient,
+            blizzardClient,
+            retryConfig
+        )
     }
 
 }

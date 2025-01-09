@@ -386,6 +386,9 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 Game.LOL -> LolCharacters.deleteWhere { LolCharacters.id.eq(id) }
                 Game.WOW_HC -> WowHardcoreCharacters.deleteWhere { WowHardcoreCharacters.id.eq(id) }
             }
+
+            //TODO: this operation will be removed upon having parent character table implemented
+            ViewsDatabaseRepository.CharactersView.deleteWhere { characterId.eq(id) }
         }
     }
 

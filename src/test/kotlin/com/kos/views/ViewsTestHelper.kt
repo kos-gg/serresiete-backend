@@ -8,6 +8,7 @@ object ViewsTestHelper {
     val published = true
     val featured = false
     val basicSimpleWowView = SimpleView(id, name, owner, published, listOf(), Game.WOW, featured)
+    val basicSimpleWowHardcoreView = SimpleView(id, name, owner, published, listOf(), Game.WOW_HC, featured)
     val basicSimpleLolView = SimpleView(id, name, owner, published, listOf(), Game.LOL, featured)
     val basicSimpleLolViews = listOf(
         basicSimpleLolView,

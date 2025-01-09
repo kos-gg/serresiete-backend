@@ -257,6 +257,9 @@ class CharactersInMemoryRepository(
                 wowHardcoreCharacters.removeAt(index)
             }
         }
+
+        //TODO: this operation will be removed upon having parent character table implemented
+        viewsRepository.deleteCharacterFromViews(id)
     }
 
     override suspend fun state(): CharactersState {
