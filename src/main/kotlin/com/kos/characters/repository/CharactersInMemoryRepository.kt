@@ -7,7 +7,6 @@ import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
-import com.kos.views.repository.ViewsRepository
 import java.time.OffsetDateTime
 
 class CharactersInMemoryRepository(
@@ -48,7 +47,7 @@ class CharactersInMemoryRepository(
                             acc + character
                         }
 
-                        is LolCharacterEnrichedRequest -> {
+                        is LolCharacterEnrichedRequest, is WowCharacterEnrichedRequest -> {
                             this.wowCharacters.clear()
                             this.wowCharacters.addAll(wowInitialCharacters)
                             return Either.Left(InsertError("Error inserting character $it"))
@@ -61,7 +60,7 @@ class CharactersInMemoryRepository(
             Game.LOL -> {
                 val inserted = characters.fold(listOf<Character>()) { acc, it ->
                     when (it) {
-                        is WowCharacterRequest -> {
+                        is WowCharacterRequest, is WowCharacterEnrichedRequest -> {
                             this.lolCharacters.clear()
                             this.lolCharacters.addAll(lolInitialCharacters)
                             return Either.Left(InsertError("Error inserting chracter $it"))
@@ -85,7 +84,7 @@ class CharactersInMemoryRepository(
             Game.WOW_HC -> {
                 val inserted = characters.fold(listOf<Character>()) { acc, it ->
                     when (it) {
-                        is WowCharacterRequest -> {
+                        is WowCharacterEnrichedRequest -> {
                             if (this.wowHardcoreCharacters.any { character -> it.same(character) }) {
                                 this.wowHardcoreCharacters.clear()
                                 this.wowHardcoreCharacters.addAll(wowHardcoreInitialCharacters)
@@ -96,7 +95,7 @@ class CharactersInMemoryRepository(
                             acc + character
                         }
 
-                        is LolCharacterEnrichedRequest -> {
+                        is LolCharacterEnrichedRequest, is WowCharacterRequest -> {
                             this.wowHardcoreCharacters.clear()
                             this.wowHardcoreCharacters.addAll(wowInitialCharacters)
                             return Either.Left(InsertError("Error inserting character $it"))
@@ -142,7 +141,8 @@ class CharactersInMemoryRepository(
                         id,
                         character.name,
                         character.region,
-                        character.realm
+                        character.realm,
+                        null
                     )
                     wowCharacters.add(index, c)
                     Either.Right(1)
@@ -152,14 +152,17 @@ class CharactersInMemoryRepository(
             }
 
             Game.WOW_HC -> when (character) {
+                //TODO: use enriched, no need to actualInsertedCharacter
                 is WowCharacterRequest -> {
                     val index = wowHardcoreCharacters.indexOfFirst { it.id == id }
+                    val actualInsertedCharacter = wowHardcoreCharacters[index]
                     wowHardcoreCharacters.removeAt(index)
                     val c = WowCharacter(
                         id,
                         character.name,
                         character.region,
-                        character.realm
+                        character.realm,
+                        actualInsertedCharacter.blizzardId
                     )
                     wowHardcoreCharacters.add(index, c)
                     Either.Right(1)
@@ -215,7 +218,6 @@ class CharactersInMemoryRepository(
         }
     }
 
-
     override suspend fun getCharactersToSync(game: Game, olderThanMinutes: Long): List<Character> {
         val now = OffsetDateTime.now()
 
@@ -255,6 +257,9 @@ class CharactersInMemoryRepository(
                 wowHardcoreCharacters.removeAt(index)
             }
         }
+
+        //TODO: this operation will be removed upon having parent character table implemented
+        viewsRepository.deleteCharacterFromViews(id)
     }
 
     override suspend fun state(): CharactersState {

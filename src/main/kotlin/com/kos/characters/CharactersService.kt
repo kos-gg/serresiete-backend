@@ -4,15 +4,11 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.characters.repository.CharactersRepository
-import com.kos.common.InsertError
-import com.kos.common.WithLogger
-import com.kos.common.collect
-import com.kos.common.split
-import com.kos.common.*
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRealmResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.common.*
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -85,8 +81,17 @@ data class CharactersService(
                                 val realm: GetWowRealmResponse =
                                     blizzardClient.getRealm(initialRequest.region, characterResponse.realm.id).bind()
                                 //TODO: Anniversary can be also non hardcore. Try to find another way to decide if its hardcore or not
-                                ensure(realm.category == "Hardcore" || realm.category == "Anniversary") { NonHardcoreCharacter(initialRequest) }
-                                initialRequest
+                                ensure(realm.category == "Hardcore" || realm.category == "Anniversary") {
+                                    NonHardcoreCharacter(
+                                        initialRequest
+                                    )
+                                }
+                                WowCharacterEnrichedRequest(
+                                    initialRequest.name,
+                                    initialRequest.region,
+                                    initialRequest.realm,
+                                    characterResponse.id
+                                )
                             }
                         }
                     }.awaitAll().split()
@@ -188,6 +193,8 @@ data class CharactersService(
     suspend fun getCharactersToSync(game: Game, olderThanMinutes: Long) =
         charactersRepository.getCharactersToSync(game, olderThanMinutes)
 
-    suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> = charactersRepository.getViewsFromCharacter(id, game)
+    suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> =
+        charactersRepository.getViewsFromCharacter(id, game)
+
     suspend fun delete(id: Long, game: Game): Unit = charactersRepository.delete(id, game)
 }

@@ -427,7 +427,7 @@ class EventSubscriptionTest {
             val credentialsService = CredentialsService(credentialsRepository)
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
             val dataCacheService =
-                DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+                DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val service =
                 ViewsService(
                     viewsRepository,
@@ -479,7 +479,7 @@ class EventSubscriptionTest {
                     listOf(wowHardcoreRemainingView)
                 )
                 val wowHardcoreCharacters =
-                    (1..5).map { WowCharacter(it.toLong(), it.toString(), it.toString(), it.toString()) }
+                    (1..5).map { WowCharacter(it.toLong(), it.toString(), it.toString(), it.toString(), it.toLong()) }
                 val charactersRepository = CharactersInMemoryRepository(viewsRepository = viewsRepository).withState(
                     CharactersState(
                         wowCharacters = listOf(),

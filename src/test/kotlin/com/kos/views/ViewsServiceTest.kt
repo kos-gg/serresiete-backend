@@ -903,7 +903,14 @@ class ViewsServiceTest {
         val credentialsService = CredentialsService(credentialsRepository)
         val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
         val dataCacheService =
-            DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+            DataCacheService(
+                dataCacheRepository,
+                charactersRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig
+            )
         val service =
             ViewsService(
                 viewsRepository,

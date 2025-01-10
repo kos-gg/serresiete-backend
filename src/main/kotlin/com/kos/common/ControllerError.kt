@@ -24,14 +24,22 @@ class InvalidQueryParameter(param: String, value: String, allowed: List<String>?
 
 class InvalidTaskType(val type: String) : IllegalArgumentException("Invalid task type: $type")
 class InvalidGameType(val type: String) : IllegalArgumentException("Invalid game type: $type")
+
 interface HttpError : ControllerError {
     fun error(): String
+}
+
+class WowHardcoreCharacterIsDead(private val character: String, private val characterId: Long) : HttpError {
+    override fun error(): String = "Character with name [$character] and id [$characterId] could not be sync because it is dead"
+}
+
+class NotFoundHardcoreCharacter(private val name: String) : HttpError {
+    override fun error(): String = "$name not found in Blizzard Api"
 }
 
 class NonHardcoreCharacter(private val wowCharacter: WowCharacterRequest) : HttpError {
     override fun error(): String = "${wowCharacter.realm} is not hardcore"
 }
-
 
 data class JsonParseError(val json: String, val path: String, val error: String? = null) : HttpError {
     override fun error(): String = "ParsedJson: ${json}\nPath: $path Error: $error"

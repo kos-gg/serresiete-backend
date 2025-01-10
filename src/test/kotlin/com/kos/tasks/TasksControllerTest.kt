@@ -68,7 +68,7 @@ class TasksControllerTest {
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
-        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
+        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
         val charactersService = CharactersService(charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))

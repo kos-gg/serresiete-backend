@@ -30,6 +30,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 this[WowHardcoreCharacters.name] = it.name
                 this[WowHardcoreCharacters.region] = it.region
                 this[WowHardcoreCharacters.realm] = it.realm
+                //TODO: at some point this should stop being nullable
+                this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: -1
             }
             LolCharacters.batchInsert(initialState.lolCharacters) {
                 this[LolCharacters.id] = it.id
@@ -61,7 +63,9 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowCharacters.id],
         row[WowCharacters.name],
         row[WowCharacters.region],
-        row[WowCharacters.realm]
+        row[WowCharacters.realm],
+        //TODO: at some point this should stop being nullable
+        null
     )
 
     object WowHardcoreCharacters : Table("wow_hardcore_characters") {
@@ -69,6 +73,7 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
+        val blizzardId = long("blizzard_id")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -77,9 +82,9 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         row[WowHardcoreCharacters.id],
         row[WowHardcoreCharacters.name],
         row[WowHardcoreCharacters.region],
-        row[WowHardcoreCharacters.realm]
+        row[WowHardcoreCharacters.realm],
+        row[WowHardcoreCharacters.blizzardId]
     )
-
 
     object LolCharacters : Table("lol_characters") {
         val id = long("id")
@@ -110,7 +115,15 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val charsToInsert: List<Character> = characters.map {
                 when (it) {
-                    is WowCharacterRequest -> WowCharacter(selectNextId(), it.name, it.region, it.realm)
+                    is WowCharacterRequest -> WowCharacter(selectNextId(), it.name, it.region, it.realm, 0)
+                    is WowCharacterEnrichedRequest -> WowCharacter(
+                        selectNextId(),
+                        it.name,
+                        it.region,
+                        it.realm,
+                        it.blizzardId
+                    )
+
                     is LolCharacterEnrichedRequest -> LolCharacter(
                         selectNextId(),
                         it.name,
@@ -160,6 +173,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                                     this[WowHardcoreCharacters.name] = it.name
                                     this[WowHardcoreCharacters.region] = it.region
                                     this[WowHardcoreCharacters.realm] = it.realm
+                                    //TODO: at some point this should stop being nullable
+                                    this[WowHardcoreCharacters.blizzardId] = it.blizzardId ?: -1
                                 }
 
                                 else -> throw IllegalArgumentException()
@@ -240,9 +255,10 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                     resultRowToLolCharacter(it)
                 }
 
-                Game.WOW_HC -> WowHardcoreCharacters.selectAll().where { WowHardcoreCharacters.id.eq(id) }.singleOrNull()?.let {
-                    resultRowToWowHardcoreCharacter(it)
-                }
+                Game.WOW_HC -> WowHardcoreCharacters.selectAll().where { WowHardcoreCharacters.id.eq(id) }
+                    .singleOrNull()?.let {
+                        resultRowToWowHardcoreCharacter(it)
+                    }
             }
         }
     }
@@ -355,7 +371,8 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
 
     override suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            ViewsDatabaseRepository.CharactersView.selectAll().where { ViewsDatabaseRepository.CharactersView.characterId.eq(id) }
+            ViewsDatabaseRepository.CharactersView.selectAll()
+                .where { ViewsDatabaseRepository.CharactersView.characterId.eq(id) }
                 .map {
                     it[ViewsDatabaseRepository.CharactersView.viewId]
                 }
@@ -369,6 +386,9 @@ class CharactersDatabaseRepository(private val db: Database) : CharactersReposit
                 Game.LOL -> LolCharacters.deleteWhere { LolCharacters.id.eq(id) }
                 Game.WOW_HC -> WowHardcoreCharacters.deleteWhere { WowHardcoreCharacters.id.eq(id) }
             }
+
+            //TODO: this operation will be removed upon having parent character table implemented
+            ViewsDatabaseRepository.CharactersView.deleteWhere { characterId.eq(id) }
         }
     }
 

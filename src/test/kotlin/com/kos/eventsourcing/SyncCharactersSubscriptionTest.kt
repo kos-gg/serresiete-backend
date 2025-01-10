@@ -50,7 +50,7 @@ class SyncCharactersSubscriptionTest {
         val charactersService =
             CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
         val dataCacheService =
-            DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+            DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
         return Triple(charactersService, spyk(dataCacheService), dataCacheRepository)
     }
 

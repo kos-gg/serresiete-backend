@@ -104,4 +104,13 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
     override fun clear() {
         views.clear()
     }
+
+    //TODO: this operation will be removed upon having parent character table implemented
+    fun deleteCharacterFromViews(characterId: Long) {
+        val viewsWithoutDeletedCharacter =
+            views.map { view -> view.copy(characterIds = view.characterIds.filterNot { it == characterId }) }
+
+        views.clear()
+        views.addAll(viewsWithoutDeletedCharacter)
+    }
 }

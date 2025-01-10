@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.3.1] 10-01-2026
+
+### Added
+- **WoW Classic Characters Differentiation**: Characters of WoW Classic with the same name, server, and region are now uniquely identified using the internal Blizzard identifier.
+    - This ensures accurate handling and distinction of characters sharing similar attributes.
+
+### Fixed
+- **WoW Hardcore Characters Death Flagging**:
+    - **Non-Existent Characters**: Hardcore characters that do not exist are now flagged as dead.
+    - **API Removal Handling**: Characters returning a `404` from the Blizzard API are flagged as dead, reflecting their removal from the Blizzard database.
+    - **Repository Cleanup**: Characters returning a `404` are removed from the characters repository if no record exists for them in the cache.
+        - This prevents stale or invalid entries from persisting in the database.
+
 ## [4.3.0] - 22-12-2024
 
 ### Added

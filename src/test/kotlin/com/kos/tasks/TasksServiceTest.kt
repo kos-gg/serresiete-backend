@@ -10,18 +10,18 @@ import com.kos.characters.CharactersTestHelper.basicLolCharacter
 import com.kos.characters.CharactersTestHelper.basicWowCharacter
 import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersState
-import com.kos.common.RetryConfig
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.domain.QueueType
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
+import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.QueueType
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
@@ -46,8 +46,15 @@ class TasksServiceTest {
     fun `token cleanup task should cleanup tokens`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                charactersRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig
+            )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -86,8 +93,16 @@ class TasksServiceTest {
     fun `tasks cleanup task should cleanup old tasks`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                charactersRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig
+            )
+
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -123,9 +138,16 @@ class TasksServiceTest {
     fun `data cache wow task should cache wow characters`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository =
                 CharactersInMemoryRepository().withState(CharactersState(listOf(basicWowCharacter), listOf(), listOf()))
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                charactersRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig
+            )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -161,9 +183,17 @@ class TasksServiceTest {
     fun `data cache lol task should cache lol characters`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository =
                 CharactersInMemoryRepository().withState(CharactersState(listOf(), listOf(), listOf(basicLolCharacter)))
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -205,9 +235,17 @@ class TasksServiceTest {
     fun `update lol characters task should update lol characters correctly`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository =
                 CharactersInMemoryRepository().withState(CharactersState(listOf(), listOf(), listOf(basicLolCharacter)))
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -242,8 +280,16 @@ class TasksServiceTest {
     fun `run task with correct parameters should run token cleanup task`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -275,8 +321,16 @@ class TasksServiceTest {
     fun `run task with correct parameters should run wow data cache task`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -310,8 +364,16 @@ class TasksServiceTest {
     fun `run task with correct parameters should run lol data cache task`() {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -346,8 +408,16 @@ class TasksServiceTest {
             val task = task(now)
 
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -374,8 +444,16 @@ class TasksServiceTest {
             val task = task(now).copy(id = knownId)
 
             val dataCacheRepository = DataCacheInMemoryRepository()
-            val dataCacheService = DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val charactersRepository = CharactersInMemoryRepository()
+            val dataCacheService =
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()

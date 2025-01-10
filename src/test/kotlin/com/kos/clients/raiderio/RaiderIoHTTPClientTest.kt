@@ -20,7 +20,7 @@ class RaiderIoHTTPClientTest {
     fun `test get() method with successful response`() {
         runBlocking {
             val result: Either<HttpError, RaiderIoResponse> = raiderIoClient.get(
-                WowCharacter(1, "region", "realm", "name")
+                WowCharacter(1, "region", "realm", "name", null)
             )
             assertEquals(Either.Right(raiderioProfileResponse), result)
         }
