@@ -7,24 +7,25 @@ import com.kos.characters.CharactersTestHelper.basicWowHardcoreCharacter
 import com.kos.characters.repository.CharactersInMemoryRepository
 import com.kos.characters.repository.CharactersState
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.Metadata
-import com.kos.clients.domain.QueueType
-import com.kos.clients.domain.RaiderIoData
-import com.kos.clients.domain.RiotData
+import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
+import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
+import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.mockito.Mockito.*
 import java.time.OffsetDateTime
 import kotlin.test.Test
@@ -36,6 +37,89 @@ class DataCacheServiceTest {
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
+    @Test
+    fun `the wow hardcore cache service deletes the wow hardcore character if not found in the datacache repository `() {
+        runBlocking {
+            val expectedNotFoundHardcoreCharacter = NotFoundHardcoreCharacter(basicWowHardcoreCharacter.name)
+
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreCharacter.region,
+                    basicWowHardcoreCharacter.realm,
+                    basicWowHardcoreCharacter.name
+                )
+            ).thenReturn(Either.Left(expectedNotFoundHardcoreCharacter))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf())
+            val viewsRepository = ViewsInMemoryRepository()
+                .withState(listOf(basicSimpleWowHardcoreView.copy(characterIds = listOf(1))))
+            val charactersRepository = CharactersInMemoryRepository(dataCacheRepository, viewsRepository)
+                .withState(
+                    CharactersState(
+                        listOf(),
+                        listOf(basicWowHardcoreCharacter, basicWowHardcoreCharacter.copy(id = 2, blizzardId = 123)),
+                        listOf()
+                    )
+                )
+
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                charactersRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig
+            )
+
+            val cacheResult = dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreCharacter
+                ), Game.WOW_HC
+            )
+            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
+            assertNull(charactersRepository.get(1, Game.WOW_HC))
+        }
+    }
+
+    @Test
+    fun `the wow hardcore cache service marks a character as dead if not found in blizzard api`() {
+        runBlocking {
+            val expectedNotFoundHardcoreCharacter = NotFoundHardcoreCharacter(basicWowHardcoreCharacter.name)
+
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreCharacter.region,
+                    basicWowHardcoreCharacter.realm,
+                    basicWowHardcoreCharacter.name
+                )
+            ).thenReturn(Either.Left(expectedNotFoundHardcoreCharacter))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf(
+                    wowHardcoreDataCache
+                )
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+
+            val cacheResult = dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreCharacter
+                ), Game.WOW_HC
+            )
+            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
+            dataCacheRepository.get(basicWowCharacter.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertTrue(expectedHardcoreData.isDead)
+            }
+            assertEquals(2, dataCacheRepository.state().size)
+        }
+    }
 
     @Test
     fun `i can get wow data`() {
