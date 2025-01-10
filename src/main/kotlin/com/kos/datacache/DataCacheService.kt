@@ -154,7 +154,8 @@ data class DataCacheService(
                     try {
                         json.decodeFromString<RiotData>(it.data)
                     } catch (e: Throwable) {
-                        logger.debug("Couldn't deserialize character ${lolCharacter.id} while trying to obtain newest cached record.\n${e.message}")
+                        logger.debug("Couldn't deserialize character ${lolCharacter.id} " +
+                                "while trying to obtain newest cached record.\n${e.message}")
                         null
                     }
                 }
@@ -255,105 +256,17 @@ data class DataCacheService(
                                     try {
                                         json.decodeFromString<HardcoreData>(it.data)
                                     } catch (e: Throwable) {
-                                        logger.debug("Couldn't deserialize character ${wowCharacter.id} while trying to obtain newest cached record.\n${e.message}")
+                                        logger.debug("Couldn't deserialize character ${wowCharacter.id} " +
+                                                "while trying to obtain newest cached record.\n${e.message}")
                                         null
                                     }
                                 }
-                            val characterResponse: GetWowCharacterResponse =
-                                retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
-                                    blizzardClient.getCharacterProfile(
-                                        wowCharacter.region,
-                                        wowCharacter.realm,
-                                        wowCharacter.name
-                                    )
-                                }.onLeft { error ->
-                                    when (error) {
-                                        is NotFoundHardcoreCharacter -> {
-                                            handleNotFoundHardcoreCharacter(newestCharacterDataCacheEntry, wowCharacter)
-                                        }
-                                    }
-                                }.bind()
 
-                            val mediaResponse = retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
-                                blizzardClient.getCharacterMedia(
-                                    wowCharacter.region,
-                                    wowCharacter.realm,
-                                    wowCharacter.name
-                                )
-                            }.bind()
-                            val equipmentResponse =
-                                retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
-                                    blizzardClient.getCharacterEquipment(
-                                        wowCharacter.region,
-                                        wowCharacter.realm,
-                                        wowCharacter.name
-                                    )
-                                }.bind()
-
-                            val existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>> =
-                                newestCharacterDataCacheEntry._fold(
-                                    left = { equipmentResponse.equippedItems.map { Either.Right(it) } },
-                                    right = { record ->
-                                        equipmentResponse.equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemResponse>>()) { acc, itemResponse ->
-                                            when (val maybeItem = record.items.find { itemResponse.item.id == it.id }) {
-                                                null -> acc + Either.Right(itemResponse)
-                                                else -> acc + Either.Left(maybeItem)
-                                            }
-
-                                        }
-                                    }).split()
-
-                            val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
-                                existentItemsAndItemsToRequest.second.map {
-                                    either {
-                                        Triple(
-                                            it,
-                                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
-                                                blizzardClient.getItem(wowCharacter.region, it.item.id)
-                                            }.bind(),
-                                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
-                                                blizzardClient.getItemMedia(
-                                                    wowCharacter.region,
-                                                    it.item.id,
-                                                )
-                                            }.getOrNull()
-                                        )
-                                    }
-                                }.bindAll()
-
-                            val stats: GetWowCharacterStatsResponse =
-                                retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
-                                    blizzardClient.getCharacterStats(
-                                        wowCharacter.region,
-                                        wowCharacter.realm,
-                                        wowCharacter.name
-                                    )
-                                }.bind()
-
-                            val specializations: GetWowSpecializationsResponse =
-                                retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
-                                    blizzardClient.getCharacterSpecializations(
-                                        wowCharacter.region,
-                                        wowCharacter.realm,
-                                        wowCharacter.name
-                                    )
-                                }.bind()
-
-                            val wowHeadEmbeddedResponse: RaiderioWowHeadEmbeddedResponse? =
-                                retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
-                                    raiderIoClient.wowheadEmbeddedCalculator(wowCharacter)
-                                }.getOrNull()
-
-                            wowCharacter.id to HardcoreData.apply(
-                                wowCharacter.region,
-                                characterResponse,
-                                mediaResponse,
-                                existentItemsAndItemsToRequest.first,
-                                newItemsWithIcons,
-                                stats,
-                                specializations,
-                                wowHeadEmbeddedResponse
-                            )
+                            if (newestCharacterDataCacheEntry?.isDead != true) {
+                                syncWowHardcoreCharacter(wowCharacter, newestCharacterDataCacheEntry).bind()
+                            } else {
+                                raise(WowHardcoreCharacterIsDead(wowCharacter.name, wowCharacter.id))
+                            }
                         }
                     }
                 }.awaitAll().split()
@@ -371,6 +284,115 @@ data class DataCacheService(
 
             errorsAndData.first
         }
+
+    private suspend fun syncWowHardcoreCharacter(
+        wowCharacter: WowCharacter,
+        newestCharacterDataCacheEntry: HardcoreData?
+    ): Either<HttpError, Pair<Long, HardcoreData>> {
+        return either {
+            val characterResponse: GetWowCharacterResponse =
+                retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
+                    blizzardClient.getCharacterProfile(
+                        wowCharacter.region,
+                        wowCharacter.realm,
+                        wowCharacter.name
+                    )
+                }.onLeft { error ->
+                    when (error) {
+                        is NotFoundHardcoreCharacter -> {
+                            handleNotFoundHardcoreCharacter(
+                                newestCharacterDataCacheEntry,
+                                wowCharacter
+                            )
+                        }
+                    }
+                }.bind()
+
+            val mediaResponse =
+                retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
+                    blizzardClient.getCharacterMedia(
+                        wowCharacter.region,
+                        wowCharacter.realm,
+                        wowCharacter.name
+                    )
+                }.bind()
+
+            val equipmentResponse =
+                retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
+                    blizzardClient.getCharacterEquipment(
+                        wowCharacter.region,
+                        wowCharacter.realm,
+                        wowCharacter.name
+                    )
+                }.bind()
+
+            val existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>> =
+                newestCharacterDataCacheEntry._fold(
+                    left = { equipmentResponse.equippedItems.map { Either.Right(it) } },
+                    right = { record ->
+                        equipmentResponse.equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemResponse>>()) { acc, itemResponse ->
+                            when (val maybeItem =
+                                record.items.find { itemResponse.item.id == it.id }) {
+                                null -> acc + Either.Right(itemResponse)
+                                else -> acc + Either.Left(maybeItem)
+                            }
+
+                        }
+                    }).split()
+
+            val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
+                existentItemsAndItemsToRequest.second.map {
+                    either {
+                        Triple(
+                            it,
+                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
+                                blizzardClient.getItem(wowCharacter.region, it.item.id)
+                            }.bind(),
+                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
+                                blizzardClient.getItemMedia(
+                                    wowCharacter.region,
+                                    it.item.id,
+                                )
+                            }.getOrNull()
+                        )
+                    }
+                }.bindAll()
+
+            val stats: GetWowCharacterStatsResponse =
+                retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
+                    blizzardClient.getCharacterStats(
+                        wowCharacter.region,
+                        wowCharacter.realm,
+                        wowCharacter.name
+                    )
+                }.bind()
+
+            val specializations: GetWowSpecializationsResponse =
+                retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
+                    blizzardClient.getCharacterSpecializations(
+                        wowCharacter.region,
+                        wowCharacter.realm,
+                        wowCharacter.name
+                    )
+                }.bind()
+
+            val wowHeadEmbeddedResponse: RaiderioWowHeadEmbeddedResponse? =
+                retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
+                    raiderIoClient.wowheadEmbeddedCalculator(wowCharacter)
+                }.getOrNull()
+
+            wowCharacter.id to HardcoreData.apply(
+                wowCharacter.region,
+                characterResponse,
+                mediaResponse,
+                existentItemsAndItemsToRequest.first,
+                newItemsWithIcons,
+                stats,
+                specializations,
+                wowHeadEmbeddedResponse
+            )
+        }
+    }
 
     private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: HardcoreData?,

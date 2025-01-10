@@ -13,6 +13,7 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
 import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
+import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.smartSyncDataCache
@@ -41,6 +42,31 @@ class DataCacheServiceTest {
     private val json = Json {
         ignoreUnknownKeys = true
     }
+
+    @Test
+    fun `the wow hardcore cache service retrieves a dead character and this character is not processed `() {
+        runBlocking {
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf(
+                    wowHardcoreDataCache.copy(
+                        data = wowHardcoreDataCache.data.replace(
+                            """"isDead": false""",
+                            """"isDead": true"""
+                        )
+                    )
+                )
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+            val cacheResult = dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreCharacter
+                ), Game.WOW_HC
+            )
+            assertTrue(cacheResult[0] is WowHardcoreCharacterIsDead)
+        }
+    }
+
 
     @Test
     fun `the wow hardcore cache service deletes the wow hardcore character if not found in the datacache repository `() {
