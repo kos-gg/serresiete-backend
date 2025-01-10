@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.3.1] 15-12-2024
+## [4.3.1] 10-01-2026
 
 ### Added
 - **WoW Classic Characters Differentiation**: Characters of WoW Classic with the same name, server, and region are now uniquely identified using the internal Blizzard identifier.
