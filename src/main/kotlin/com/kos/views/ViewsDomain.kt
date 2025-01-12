@@ -1,12 +1,10 @@
 package com.kos.views
 
 import arrow.core.Either
-import com.kos.characters.Character
-import com.kos.characters.CharacterCreateRequest
+import com.kos.entities.Entity
+import com.kos.entities.CreateEntityRequest
 import com.kos.clients.domain.Data
 import com.kos.common.InvalidGameType
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -43,7 +41,7 @@ data class SimpleView(
     val name: String,
     val owner: String,
     val published: Boolean,
-    val characterIds: List<Long>,
+    val entitiesIds: List<Long>,
     val game: Game,
     val featured: Boolean
 )
@@ -54,18 +52,18 @@ data class View(
     val name: String,
     val owner: String,
     val published: Boolean,
-    val characters: List<Character>,
+    val entities: List<Entity>,
     val game: Game,
     val featured: Boolean
 )
 
-//TODO: We need to decode/encode the character request based on Game.
+//TODO: We need to decode/encode the entity request based on Game.
 //TODO: Right now we are using the type discriminator and that's cringe as fuck.
 @Serializable
 data class ViewRequest(
     val name: String,
     val published: Boolean,
-    val characters: List<CharacterCreateRequest>,
+    val entities: List<CreateEntityRequest>,
     val game: Game,
     val featured: Boolean
 )
@@ -74,7 +72,7 @@ data class ViewRequest(
 data class ViewPatchRequest(
     val name: String? = null,
     val published: Boolean? = null,
-    val characters: List<CharacterCreateRequest>? = null,
+    val entities: List<CreateEntityRequest>? = null,
     val game: Game,
     val featured: Boolean? = null
 )
@@ -89,7 +87,7 @@ data class ViewModified(
     val viewId: String,
     val name: String,
     val published: Boolean,
-    val characters: List<Long>,
+    val entities: List<Long>,
     val featured: Boolean
 ) :
     ViewResult {
@@ -101,7 +99,7 @@ data class ViewPatched(
     val viewId: String,
     val name: String?,
     val published: Boolean?,
-    val characters: List<Long>?,
+    val entities: List<Long>?,
     val featured: Boolean?
 ) :
     ViewResult {

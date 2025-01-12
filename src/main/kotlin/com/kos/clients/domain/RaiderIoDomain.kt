@@ -2,7 +2,7 @@ package com.kos.clients.domain
 
 import arrow.core.Either
 import arrow.core.traverse
-import com.kos.characters.Spec
+import com.kos.entities.Spec
 import com.kos.common.JsonParseError
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName

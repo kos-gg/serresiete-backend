@@ -6,8 +6,8 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
-import com.kos.characters.CharactersService
-import com.kos.characters.repository.CharactersDatabaseRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
@@ -97,18 +97,18 @@ fun Application.module() {
     val authService = AuthService(authRepository, credentialsService, rolesService, jwtConfig)
     val authController = AuthController(authService)
 
-    val charactersRepository = CharactersDatabaseRepository(db)
-    val charactersService = CharactersService(charactersRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient)
+    val entitiesRepository = EntitiesDatabaseRepository(db)
+    val entitiesService = EntitiesService(entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient)
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
     val dataCacheRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
-        DataCacheService(dataCacheRepository, charactersRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient, dataCacheRetryConfig)
+        DataCacheService(dataCacheRepository, entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient, dataCacheRetryConfig)
     val viewsService =
         ViewsService(
             viewsRepository,
-            charactersService,
+            entitiesService,
             dataCacheService,
             credentialsService,
             eventStore
@@ -118,7 +118,7 @@ fun Application.module() {
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
     val tasksService =
-        TasksService(tasksRepository, dataCacheService, charactersService, authService)
+        TasksService(tasksRepository, dataCacheService, entitiesService, authService)
     val tasksLauncher =
         TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
     val tasksController = TasksController(tasksService)
@@ -142,34 +142,34 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncLolCharactersProcessor(it, charactersService, dataCacheService) }
+    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService) }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowCharactersProcessor(it, charactersService, dataCacheService) }
+    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService) }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreCharactersProcessor(it, charactersService, dataCacheService) }
+    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService) }
 
-    val charactersEventSubscription = EventSubscription(
-        "characters",
+    val entitiesEventSubscription = EventSubscription(
+        "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.charactersProcessor(it, charactersService) }
+    ) { EventSubscription.entitiesProcessor(it, entitiesService) }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)
     launchSubscription(syncWowEventSubscription)
     launchSubscription(syncWowHardcoreEventSubscription)
-    launchSubscription(charactersEventSubscription)
+    launchSubscription(entitiesEventSubscription)
 
     configureAuthentication(credentialsService, jwtConfig)
     configureCors()

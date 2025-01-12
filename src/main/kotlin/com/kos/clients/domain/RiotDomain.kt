@@ -1,6 +1,6 @@
 package com.kos.clients.domain
 
-import com.kos.characters.LolCharacter
+import com.kos.entities.LolEntity
 import com.kos.common.HttpError
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -168,14 +168,14 @@ data class RiotData(
     companion object {
 
         fun apply(
-            lolCharacter: LolCharacter,
+            lolEntity: LolEntity,
             leagues: List<LeagueMatchData>
         ): RiotData =
             RiotData(
-                lolCharacter.summonerIcon,
-                lolCharacter.summonerLevel,
-                lolCharacter.name,
-                lolCharacter.tag,
+                lolEntity.summonerIcon,
+                lolEntity.summonerLevel,
+                lolEntity.name,
+                lolEntity.tag,
                 leagues.associate { leagueMatchData ->
                     val leagueEntryResponse = leagueMatchData.leagueEntry
                     val retrievedMatches = leagueMatchData.matchResponses
@@ -183,7 +183,7 @@ data class RiotData(
                     val gamesPlayed = leagueEntryResponse.wins + leagueEntryResponse.losses
                     val playerMatches: List<MatchProfile> =
                         retrievedMatches.flatMap { getMatchResponse ->
-                            getMatchResponse.info.participants.filter { it.puuid == lolCharacter.puuid }.map {
+                            getMatchResponse.info.participants.filter { it.puuid == lolEntity.puuid }.map {
                                 MatchProfile(
                                     getMatchResponse.metadata.matchId,
                                     it.championId,

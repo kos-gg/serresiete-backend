@@ -1,14 +1,14 @@
-package com.kos.characters
+package com.kos.entities
 
-import com.kos.characters.CharactersTestHelper.basicLolCharacter
-import com.kos.characters.CharactersTestHelper.basicLolCharacterEnrichedRequest
-import com.kos.characters.CharactersTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicLolEntityEnrichedRequest
+import com.kos.entities.EntitiesTestHelper.basicWowCharacter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class CharactersDomainTest {
+class EntitiesDomainTest {
 
     @Test
     fun `i can find every wow spec`() {
@@ -80,90 +80,90 @@ class CharactersDomainTest {
 
     @Test
     fun `toCharacter should create a Character with the correct properties for lol`() {
-        val lolCharacterRequest = basicLolCharacterEnrichedRequest
-        val character = lolCharacterRequest.toCharacter(1L)
-        assertEquals(1L, character.id)
-        assertEquals(basicLolCharacter.name, character.name)
-        assertEquals(basicLolCharacter.tag, character.tag)
-        assertEquals(basicLolCharacter.puuid, character.puuid)
-        assertEquals(basicLolCharacter.summonerId, character.summonerId)
-        assertEquals(basicLolCharacter.summonerIcon, character.summonerIcon)
-        assertEquals(basicLolCharacter.summonerLevel, character.summonerLevel)
+        val lolCharacterRequest = basicLolEntityEnrichedRequest
+        val entity = lolCharacterRequest.toEntity(1L)
+        assertEquals(1L, entity.id)
+        assertEquals(basicLolEntity.name, entity.name)
+        assertEquals(basicLolEntity.tag, entity.tag)
+        assertEquals(basicLolEntity.puuid, entity.puuid)
+        assertEquals(basicLolEntity.summonerId, entity.summonerId)
+        assertEquals(basicLolEntity.summonerIcon, entity.summonerIcon)
+        assertEquals(basicLolEntity.summonerLevel, entity.summonerLevel)
     }
 
     @Test
-    fun `same should return true for identical lol characters`() {
-        val lolCharacterRequest = basicLolCharacterEnrichedRequest
-        val character = lolCharacterRequest.toCharacter(1L)
-        val result = lolCharacterRequest.same(character)
+    fun `same should return true for identical lol entities`() {
+        val lolCharacterRequest = basicLolEntityEnrichedRequest
+        val entity = lolCharacterRequest.toEntity(1L)
+        val result = lolCharacterRequest.same(entity)
         assertTrue(result)
     }
 
     @Test
-    fun `same should return true for lol characters that share same puuid or summonerId regardless of other fields`() {
-        val lolCharacterRequest = basicLolCharacterEnrichedRequest
-        val character = lolCharacterRequest.toCharacter(1L).copy(name = "diff name", tag = "diff tag")
-        val result = lolCharacterRequest.same(character)
+    fun `same should return true for lol entities that share same puuid or summonerId regardless of other fields`() {
+        val lolCharacterRequest = basicLolEntityEnrichedRequest
+        val entity = lolCharacterRequest.toEntity(1L).copy(name = "diff name", tag = "diff tag")
+        val result = lolCharacterRequest.same(entity)
         assertTrue(result)
     }
 
     @Test
-    fun `same should return true for identical wow characters`() {
-        val wowCharacterRequest = WowCharacterRequest("Aragorn", "Middle Earth", "Gondor")
-        val character = wowCharacterRequest.toCharacter(2L)
-        val result = wowCharacterRequest.same(character)
+    fun `same should return true for identical wow entities`() {
+        val wowCharacterRequest = WowEntityRequest("Aragorn", "Middle Earth", "Gondor")
+        val entity = wowCharacterRequest.toEntity(2L)
+        val result = wowCharacterRequest.same(entity)
         assertTrue(result)
     }
 
     @Test
-    fun `same should return false for wow characters with different properties`() {
-        val wowCharacterRequest = WowCharacterRequest("Legolas", "Middle Earth", "Lothlorien")
-        val character = wowCharacterRequest.toCharacter(3L)
-        val result = wowCharacterRequest.same(character.copy(name = "DifferentName"))
+    fun `same should return false for wow entities with different properties`() {
+        val wowCharacterRequest = WowEntityRequest("Legolas", "Middle Earth", "Lothlorien")
+        val entity = wowCharacterRequest.toEntity(3L)
+        val result = wowCharacterRequest.same(entity.copy(name = "DifferentName"))
         assertFalse(result)
     }
 
     @Test
-    fun `same should return false for lol characters with different properties`() {
-        val lolCharacterRequest = basicLolCharacterEnrichedRequest
-        val character = lolCharacterRequest.toCharacter(1L)
-        val diffPuuid = lolCharacterRequest.same(character.copy(puuid = "diff-puuid"))
-        val diffSummonerId = lolCharacterRequest.same(character.copy(summonerId = "diff-summonerId"))
+    fun `same should return false for lol entities with different properties`() {
+        val lolCharacterRequest = basicLolEntityEnrichedRequest
+        val entity = lolCharacterRequest.toEntity(1L)
+        val diffPuuid = lolCharacterRequest.same(entity.copy(puuid = "diff-puuid"))
+        val diffSummonerId = lolCharacterRequest.same(entity.copy(summonerId = "diff-summonerId"))
         assertFalse(diffPuuid)
         assertFalse(diffSummonerId)
     }
 
     @Test
-    fun `same should return true for wow characters with identical Blizzard IDs`() {
+    fun `same should return true for wow entities with identical Blizzard IDs`() {
         val enrichedRequest = createWowCharacterEnrichedRequest(
             name = "Arthas",
             region = "Northrend",
             realm = "Icecrown",
             blizzardId = 12345L
         )
-        val character = enrichedRequest.toCharacter(1L)
-        val result = enrichedRequest.same(character)
+        val entity = enrichedRequest.toEntity(1L)
+        val result = enrichedRequest.same(entity)
         assertTrue(result)
     }
 
     @Test
-    fun `same should return false for wow characters with different Blizzard IDs`() {
+    fun `same should return false for wow entities with different Blizzard IDs`() {
         val enrichedRequest = createWowCharacterEnrichedRequest(
             name = "Thrall",
             region = "Azeroth",
             realm = "Orgrimmar",
             blizzardId = 67890L
         )
-        val character = enrichedRequest.toCharacter(2L)
-        val result = enrichedRequest.same(character.copy(blizzardId = 99999L))
+        val entity = enrichedRequest.toEntity(2L)
+        val result = enrichedRequest.same(entity.copy(blizzardId = 99999L))
         assertFalse(result)
     }
 
     @Test
     fun `toCharacter should create a WowCharacter with the correct properties for WowCharacterEnrichedRequest`() {
-        val characterName = "Sylvanas"
-        val characterRegion = "Eastern Kingdoms"
-        val characterRealm = "Silvermoon"
+        val entityName = "Sylvanas"
+        val entityRegion = "Eastern Kingdoms"
+        val entityRealm = "Silvermoon"
 
         val enrichedRequest = createWowCharacterEnrichedRequest(
             name = "Sylvanas",
@@ -171,13 +171,13 @@ class CharactersDomainTest {
             realm = "Silvermoon",
             blizzardId = 54321L
         )
-        val character = enrichedRequest.toCharacter(1L)
+        val entity = enrichedRequest.toEntity(1L)
 
-        assertEquals(1L, character.id)
-        assertEquals(characterName, character.name)
-        assertEquals(characterRegion, character.region)
-        assertEquals(characterRealm, character.realm)
-        assertEquals(54321L, character.blizzardId)
+        assertEquals(1L, entity.id)
+        assertEquals(entityName, entity.name)
+        assertEquals(entityRegion, entity.region)
+        assertEquals(entityRealm, entity.realm)
+        assertEquals(54321L, entity.blizzardId)
     }
 
     private fun createWowCharacterEnrichedRequest(
@@ -185,5 +185,5 @@ class CharactersDomainTest {
         region: String = "DefaultRegion",
         realm: String = "DefaultRealm",
         blizzardId: Long? = 12345L
-    ) = WowCharacterEnrichedRequest(name, region, realm, blizzardId)
+    ) = WowEnrichedEntityRequest(name, region, realm, blizzardId)
 }

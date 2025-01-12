@@ -133,7 +133,7 @@ abstract class ViewsRepositoryTest {
             val res = repository.create(id, name, owner, listOf(), Game.WOW, false)
             assertEquals(owner, res.owner)
             assertEquals(name, res.name)
-            assertEquals(listOf(), res.characterIds)
+            assertEquals(listOf(), res.entitiesIds)
             assertEquals(id, res.id)
             assertEquals(Game.WOW, res.game)
             assert(repository.state().size == 1)
@@ -148,7 +148,7 @@ abstract class ViewsRepositoryTest {
             val res = repo.edit(id, "name2", published, listOf(1), featured)
             val finalState = repo.state()
             assertEquals(ViewModified(id, "name2", published, listOf(1), featured), res)
-            assertEquals(finalState, listOf(basicSimpleWowView.copy(name = "name2", characterIds = listOf(1))))
+            assertEquals(finalState, listOf(basicSimpleWowView.copy(name = "name2", entitiesIds = listOf(1))))
         }
     }
 
@@ -159,7 +159,7 @@ abstract class ViewsRepositoryTest {
             val edit = repositoryWithState.edit(id, "name", published, listOf(1, 2, 3, 4), featured)
             val finalState = repositoryWithState.state()
             assertEquals(ViewModified(id, "name", published, listOf(1, 2, 3, 4), featured), edit)
-            assertEquals(finalState, listOf(basicSimpleWowView.copy(characterIds = listOf(1, 2, 3, 4))))
+            assertEquals(finalState, listOf(basicSimpleWowView.copy(entitiesIds = listOf(1, 2, 3, 4))))
         }
     }
 
@@ -184,7 +184,7 @@ abstract class ViewsRepositoryTest {
             assertEquals(expectedPatchedView, patch)
             assertEquals(basicSimpleWowView.id, patchedView.id)
             assertEquals(basicSimpleWowView.published, patchedView.published)
-            assertEquals(basicSimpleWowView.characterIds, patchedView.characterIds)
+            assertEquals(basicSimpleWowView.entitiesIds, patchedView.entitiesIds)
             assertEquals(true, patchedView.featured)
             assertEquals(patchedName, patchedView.name)
         }
@@ -202,7 +202,7 @@ abstract class ViewsRepositoryTest {
             assertEquals(ViewPatched(basicSimpleWowView.id, patchedName, patchedPublish, characters, featured), patch)
             assertEquals(basicSimpleWowView.id, patchedView.id)
             assertEquals(patchedPublish, patchedView.published)
-            assertEquals(characters, patchedView.characterIds)
+            assertEquals(characters, patchedView.entitiesIds)
             assertEquals(patchedName, patchedView.name)
         }
     }

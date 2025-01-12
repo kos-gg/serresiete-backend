@@ -1,7 +1,7 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.characters.CharactersTestHelper.basicLolCharacter
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.common.HttpError
 import com.kos.clients.domain.*
 
@@ -41,7 +41,7 @@ object RiotMockHelper {
                 listOf(
                     MatchParticipant(
                         1,
-                        basicLolCharacter.puuid,
+                        basicLolEntity.puuid,
                         1,
                         1,
                         1,

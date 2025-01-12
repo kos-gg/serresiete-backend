@@ -1,9 +1,9 @@
-package com.kos.characters
+package com.kos.entities
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LolCharacter(
+data class LolEntity(
     override val id: Long,
     override val name: String,
     val tag: String,
@@ -11,23 +11,23 @@ data class LolCharacter(
     val summonerIcon: Int,
     val summonerId: String,
     val summonerLevel: Int
-) : Character
+) : Entity
 
 @Serializable
-data class LolCharacterRequest(
+data class LolEntityRequest(
     override val name: String,
     val tag: String
-) : CharacterCreateRequest {
+) : CreateEntityRequest {
 
-    override fun same(other: Character): Boolean {
+    override fun same(other: Entity): Boolean {
         return when (other) {
-            is LolCharacter -> this.name == other.name && this.tag == other.tag
+            is LolEntity -> this.name == other.name && this.tag == other.tag
             else -> false
         }
     }
 }
 
-data class LolCharacterEnrichedRequest(
+data class LolEnrichedEntityRequest(
     override val name: String,
     val tag: String,
     val puuid: String,
@@ -35,9 +35,9 @@ data class LolCharacterEnrichedRequest(
     val summonerId: String,
     val summonerLevel: Int
 
-) : CharacterInsertRequest {
-    override fun toCharacter(id: Long): LolCharacter {
-        return LolCharacter(
+) : InsertEntityRequest {
+    override fun toEntity(id: Long): LolEntity {
+        return LolEntity(
             id,
             this.name,
             this.tag,
@@ -48,9 +48,9 @@ data class LolCharacterEnrichedRequest(
         )
     }
 
-    override fun same(other: Character): Boolean {
+    override fun same(other: Entity): Boolean {
         return when (other) {
-            is LolCharacter -> this.puuid == other.puuid && this.summonerId == other.summonerId
+            is LolEntity -> this.puuid == other.puuid && this.summonerId == other.summonerId
             else -> false
         }
     }

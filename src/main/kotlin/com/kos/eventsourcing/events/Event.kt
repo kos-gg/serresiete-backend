@@ -1,6 +1,6 @@
 package com.kos.eventsourcing.events
 
-import com.kos.characters.CharacterCreateRequest
+import com.kos.entities.CreateEntityRequest
 import com.kos.views.Game
 import com.kos.views.SimpleView
 import com.kos.views.ViewModified
@@ -55,7 +55,7 @@ data class ViewToBeCreatedEvent(
     val id: String,
     val name: String,
     val published: Boolean,
-    val characters: List<CharacterCreateRequest>,
+    val entities: List<CreateEntityRequest>,
     val game: Game,
     val owner: String,
     val featured: Boolean
@@ -68,7 +68,7 @@ data class ViewToBeEditedEvent(
     val id: String,
     val name: String,
     val published: Boolean,
-    val characters: List<CharacterCreateRequest>,
+    val entities: List<CreateEntityRequest>,
     val game: Game,
     val featured: Boolean
 ) : EventData {
@@ -80,7 +80,7 @@ data class ViewToBePatchedEvent(
     val id: String,
     val name: String?,
     val published: Boolean?,
-    val characters: List<CharacterCreateRequest>?,
+    val entities: List<CreateEntityRequest>?,
     val game: Game,
     val featured: Boolean?
 ) : EventData {
@@ -92,7 +92,7 @@ data class ViewCreatedEvent(
     val id: String,
     val name: String,
     val owner: String,
-    val characters: List<Long>,
+    val entities: List<Long>,
     val published: Boolean,
     val game: Game,
     val featured: Boolean
@@ -104,7 +104,7 @@ data class ViewCreatedEvent(
             simpleView.id,
             simpleView.name,
             simpleView.owner,
-            simpleView.characterIds,
+            simpleView.entitiesIds,
             simpleView.published,
             simpleView.game,
             simpleView.featured
@@ -116,7 +116,7 @@ data class ViewCreatedEvent(
 data class ViewEditedEvent(
     val id: String,
     val name: String,
-    val characters: List<Long>,
+    val entities: List<Long>,
     val published: Boolean,
     val game: Game,
     val featured: Boolean
@@ -127,7 +127,7 @@ data class ViewEditedEvent(
         fun fromViewModified(id: String, game: Game, viewModified: ViewModified) = ViewEditedEvent(
             id,
             viewModified.name,
-            viewModified.characters,
+            viewModified.entities,
             viewModified.published,
             game,
             viewModified.featured
@@ -139,7 +139,7 @@ data class ViewEditedEvent(
 data class ViewPatchedEvent(
     val id: String,
     val name: String?,
-    val characters: List<Long>?,
+    val entities: List<Long>?,
     val published: Boolean?,
     val game: Game,
     val featured: Boolean?
@@ -150,7 +150,7 @@ data class ViewPatchedEvent(
         fun fromViewPatched(id: String, game: Game, viewPatched: ViewPatched) = ViewPatchedEvent(
             id,
             viewPatched.name,
-            viewPatched.characters,
+            viewPatched.entities,
             viewPatched.published,
             game,
             viewPatched.featured
@@ -163,7 +163,7 @@ data class ViewDeletedEvent(
     val id: String,
     val name: String,
     val owner: String,
-    val characters: List<Long>,
+    val entities: List<Long>,
     val published: Boolean,
     val game: Game,
     val featured: Boolean
