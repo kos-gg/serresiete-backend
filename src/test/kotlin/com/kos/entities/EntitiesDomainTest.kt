@@ -2,7 +2,7 @@ package com.kos.entities
 
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntityEnrichedRequest
-import com.kos.entities.EntitiesTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -12,19 +12,19 @@ class EntitiesDomainTest {
 
     @Test
     fun `i can find every wow spec`() {
-        val warriorSpecs = basicWowCharacter.specsWithName("Warrior").map { it.name }.toSet()
-        val paladinSpecs = basicWowCharacter.specsWithName("Paladin").map { it.name }.toSet()
-        val hunterSpecs = basicWowCharacter.specsWithName("Hunter").map { it.name }.toSet()
-        val rogueSpecs = basicWowCharacter.specsWithName("Rogue").map { it.name }.toSet()
-        val priestSpecs = basicWowCharacter.specsWithName("Priest").map { it.name }.toSet()
-        val shamanSpecs = basicWowCharacter.specsWithName("Shaman").map { it.name }.toSet()
-        val mageSpecs = basicWowCharacter.specsWithName("Mage").map { it.name }.toSet()
-        val warlockSpecs = basicWowCharacter.specsWithName("Warlock").map { it.name }.toSet()
-        val monkSpecs = basicWowCharacter.specsWithName("Monk").map { it.name }.toSet()
-        val druidSpecs = basicWowCharacter.specsWithName("Druid").map { it.name }.toSet()
-        val demonHunterSpecs = basicWowCharacter.specsWithName("Demon Hunter").map { it.name }.toSet()
-        val deathKnightSpecs = basicWowCharacter.specsWithName("Death Knight").map { it.name }.toSet()
-        val evokerSpecs = basicWowCharacter.specsWithName("Evoker").map { it.name }.toSet()
+        val warriorSpecs = basicWowEntity.specsWithName("Warrior").map { it.name }.toSet()
+        val paladinSpecs = basicWowEntity.specsWithName("Paladin").map { it.name }.toSet()
+        val hunterSpecs = basicWowEntity.specsWithName("Hunter").map { it.name }.toSet()
+        val rogueSpecs = basicWowEntity.specsWithName("Rogue").map { it.name }.toSet()
+        val priestSpecs = basicWowEntity.specsWithName("Priest").map { it.name }.toSet()
+        val shamanSpecs = basicWowEntity.specsWithName("Shaman").map { it.name }.toSet()
+        val mageSpecs = basicWowEntity.specsWithName("Mage").map { it.name }.toSet()
+        val warlockSpecs = basicWowEntity.specsWithName("Warlock").map { it.name }.toSet()
+        val monkSpecs = basicWowEntity.specsWithName("Monk").map { it.name }.toSet()
+        val druidSpecs = basicWowEntity.specsWithName("Druid").map { it.name }.toSet()
+        val demonHunterSpecs = basicWowEntity.specsWithName("Demon Hunter").map { it.name }.toSet()
+        val deathKnightSpecs = basicWowEntity.specsWithName("Death Knight").map { it.name }.toSet()
+        val evokerSpecs = basicWowEntity.specsWithName("Evoker").map { it.name }.toSet()
 
         val expectedWarriorSpecs = setOf("Protection Warrior", "Arms", "Fury")
         val expectedPaladinSpecs = setOf("Protection Paladin", "Retribution", "Holy Paladin")

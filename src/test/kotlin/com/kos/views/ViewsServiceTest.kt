@@ -5,7 +5,7 @@ import com.kos.entities.CreateEntityRequest
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
-import com.kos.entities.EntitiesTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.LolEntityRequest
@@ -544,7 +544,7 @@ class ViewsServiceTest {
                 val (eventStore, viewsService) = createService(
                     listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
                     EntitiesState(
-                        listOf(basicWowCharacter, basicWowEntity2),
+                        listOf(basicWowEntity, basicWowEntity2),
                         listOf(),
                         listOf()
                     ),

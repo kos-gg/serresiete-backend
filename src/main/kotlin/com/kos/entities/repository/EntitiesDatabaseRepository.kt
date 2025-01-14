@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.entities.*
 import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
+import com.kos.entities.repository.EntitiesDatabaseRepository.WowEntities.references
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +20,16 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
 
     override suspend fun withState(initialState: EntitiesState): EntitiesDatabaseRepository {
         newSuspendedTransaction(Dispatchers.IO, db) {
+            Entities.batchInsert(initialState.lolEntities) {
+                this[Entities.id] = it.id
+            }
+            Entities.batchInsert(initialState.wowEntities) {
+                this[Entities.id] = it.id
+            }
+            Entities.batchInsert(initialState.wowHardcoreEntities) {
+                this[Entities.id] = it.id
+            }
+
             WowEntities.batchInsert(initialState.wowEntities) {
                 this[WowEntities.id] = it.id
                 this[WowEntities.name] = it.name
@@ -50,8 +61,14 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         return this
     }
 
-    object WowEntities : Table("wow_entities") {
+    object Entities : Table("entities") {
         val id = long("id")
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
+    object WowEntities : Table("wow_entities") {
+        val id = long("id").references(Entities.id, onDelete = ReferenceOption.CASCADE)
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
@@ -69,7 +86,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     )
 
     object WowHardcoreEntities : Table("wow_hardcore_entities") {
-        val id = long("id")
+        val id = long("id").references(Entities.id, onDelete = ReferenceOption.CASCADE)
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
@@ -87,7 +104,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     )
 
     object LolEntities : Table("lol_entities") {
-        val id = long("id")
+        val id = long("id").references(Entities.id, onDelete = ReferenceOption.CASCADE)
         val name = text("name")
         val tag = text("tag")
         val puuid = text("puuid")
@@ -113,11 +130,12 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         game: Game
     ): Either<InsertError, List<Entity>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
+            val nextId = selectNextId()
             val charsToInsert: List<Entity> = entities.map {
                 when (it) {
-                    is WowEntityRequest -> WowEntity(selectNextId(), it.name, it.region, it.realm, 0)
+                    is WowEntityRequest -> WowEntity(nextId, it.name, it.region, it.realm, 0)
                     is WowEnrichedEntityRequest -> WowEntity(
-                        selectNextId(),
+                        nextId,
                         it.name,
                         it.region,
                         it.realm,
@@ -125,7 +143,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                     )
 
                     is LolEnrichedEntityRequest -> LolEntity(
-                        selectNextId(),
+                        nextId,
                         it.name,
                         it.tag,
                         it.puuid,
@@ -137,6 +155,10 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
             }
             transaction {
                 try {
+                    Entities.batchInsert(charsToInsert) {
+                        this[Entities.id] = it.id
+                    }
+
                     val insertedEntities = when (game) {
                         Game.WOW -> WowEntities.batchInsert(charsToInsert) {
                             when (it) {

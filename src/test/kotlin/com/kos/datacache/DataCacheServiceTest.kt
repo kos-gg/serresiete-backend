@@ -2,7 +2,7 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
@@ -139,7 +139,7 @@ class DataCacheServiceTest {
                 ), Game.WOW_HC
             )
             assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
-            dataCacheRepository.get(basicWowCharacter.id).maxByOrNull { it.inserted }?.let {
+            dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
                 val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
@@ -210,14 +210,14 @@ class DataCacheServiceTest {
     @Test
     fun `i can cache wow data`() {
         runBlocking {
-            `when`(raiderIoClient.get(basicWowCharacter)).thenReturn(RaiderIoMockHelper.get(basicWowCharacter))
-            `when`(raiderIoClient.get(basicWowCharacter.copy(id = 2))).thenReturn(
-                RaiderIoMockHelper.get(basicWowCharacter.copy(id = 2))
+            `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
+            `when`(raiderIoClient.get(basicWowEntity.copy(id = 2))).thenReturn(
+                RaiderIoMockHelper.get(basicWowEntity.copy(id = 2))
             )
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
             val repo = DataCacheInMemoryRepository().withState(listOf(wowDataCache))
             assertEquals(listOf(wowDataCache), repo.state())
-            createService(repo).cache(listOf(basicWowCharacter, basicWowCharacter.copy(id = 2)), Game.WOW)
+            createService(repo).cache(listOf(basicWowEntity, basicWowEntity.copy(id = 2)), Game.WOW)
             assertEquals(3, repo.state().size)
         }
     }

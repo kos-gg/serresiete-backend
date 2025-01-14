@@ -5,7 +5,7 @@ import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
 import com.kos.entities.EntitiesTestHelper.basicGetPuuidResponse
 import com.kos.entities.EntitiesTestHelper.basicGetSummonerResponse
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.gigaLolEntityList
 import com.kos.entities.EntitiesTestHelper.gigaLolCharacterRequestList
 import com.kos.entities.repository.EntitiesInMemoryRepository
@@ -35,8 +35,8 @@ class EntitiesServiceTest {
     fun `inserting two characters over an empty repository returns the ids of both new characters`() {
         runBlocking {
             val request1 =
-                WowEntityRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
-            val request2 = WowEntityRequest("kakarøna", basicWowCharacter.region, basicWowCharacter.realm)
+                WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
+            val request2 = WowEntityRequest("kakarøna", basicWowEntity.region, basicWowEntity.realm)
 
             `when`(raiderIoClient.exists(request1)).thenReturn(true)
             `when`(raiderIoClient.exists(request2)).thenReturn(true)
@@ -55,8 +55,8 @@ class EntitiesServiceTest {
     fun `inserting two characters over an empty wow hardcore repository returns the ids of both new characters`() {
         runBlocking {
             val request1 =
-                WowEntityRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
-            val request2 = WowEntityRequest("kakarøna", basicWowCharacter.region, basicWowCharacter.realm)
+                WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
+            val request2 = WowEntityRequest("kakarøna", basicWowEntity.region, basicWowEntity.realm)
 
             `when`(blizzardClient.getCharacterProfile(request1.region, request1.realm, request1.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request1)
@@ -81,7 +81,7 @@ class EntitiesServiceTest {
     fun `inserting a character from a non hardcore realm does not get inserted over an empty wow hardcore repository`() {
         runBlocking {
             val request1 =
-                WowEntityRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
+                WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
 
             `when`(blizzardClient.getCharacterProfile(request1.region, request1.realm, request1.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request1)
@@ -103,8 +103,8 @@ class EntitiesServiceTest {
     fun `inserting a character that does not exist does not get inserted`() {
         runBlocking {
             val request1 =
-                WowEntityRequest(basicWowCharacter.name, basicWowCharacter.region, basicWowCharacter.realm)
-            val request2 = WowEntityRequest("kakarøna", basicWowCharacter.region, basicWowCharacter.realm)
+                WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
+            val request2 = WowEntityRequest("kakarøna", basicWowEntity.region, basicWowEntity.realm)
 
             `when`(raiderIoClient.exists(request1)).thenReturn(true)
             `when`(raiderIoClient.exists(request2)).thenReturn(false)
@@ -174,10 +174,10 @@ class EntitiesServiceTest {
     fun `i can get a wow character`() {
         runBlocking {
             val charactersRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowCharacter), listOf(), listOf()))
+                EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
             val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
-            assertEquals(basicWowCharacter, entitiesService.get(basicWowCharacter.id, Game.WOW))
+            assertEquals(basicWowEntity, entitiesService.get(basicWowEntity.id, Game.WOW))
         }
     }
 
@@ -198,14 +198,14 @@ class EntitiesServiceTest {
             val charactersRepository =
                 EntitiesInMemoryRepository().withState(
                     EntitiesState(
-                        listOf(basicWowCharacter),
+                        listOf(basicWowEntity),
                         listOf(),
                         listOf(basicLolEntity)
                     )
                 )
             val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
-            assertEquals(listOf(basicWowCharacter), entitiesService.get(Game.WOW))
+            assertEquals(listOf(basicWowEntity), entitiesService.get(Game.WOW))
         }
     }
 
@@ -215,7 +215,7 @@ class EntitiesServiceTest {
             val charactersRepository =
                 EntitiesInMemoryRepository().withState(
                     EntitiesState(
-                        listOf(basicWowCharacter),
+                        listOf(basicWowEntity),
                         listOf(),
                         listOf(basicLolEntity)
                     )

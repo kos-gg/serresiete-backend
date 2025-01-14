@@ -20,8 +20,8 @@ object EntitiesTestHelper {
         basicLolEntity.summonerId,
         basicLolEntity.summonerLevel
     )
-    val basicWowCharacter = basicWowRequest.toEntity(1)
-    val basicWowHardcoreEntity = basicWowCharacter.copy(blizzardId = 12345)
+    val basicWowEntity = basicWowRequest.toEntity(1)
+    val basicWowHardcoreEntity = basicWowEntity.copy(blizzardId = 12345)
     val basicWowEntity2 = basicWowRequest2.toEntity(2)
     val basicGetSummonerResponse = GetSummonerResponse(
         "1",

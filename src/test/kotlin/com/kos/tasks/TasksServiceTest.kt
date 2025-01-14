@@ -7,7 +7,7 @@ import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
@@ -139,7 +139,7 @@ class TasksServiceTest {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowCharacter), listOf(), listOf()))
+                EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
@@ -162,7 +162,7 @@ class TasksServiceTest {
             val tasksRepository = TasksInMemoryRepository()
             val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
 
-            `when`(raiderIoClient.get(basicWowCharacter)).thenReturn(RaiderIoMockHelper.get(basicWowCharacter))
+            `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
 
             val id = UUID.randomUUID().toString()

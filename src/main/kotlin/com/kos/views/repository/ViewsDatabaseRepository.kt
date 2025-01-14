@@ -2,6 +2,7 @@ package com.kos.views.repository
 
 import com.kos.common.fold
 import com.kos.common.getOrThrow
+import com.kos.entities.repository.EntitiesDatabaseRepository.Entities
 import com.kos.views.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
@@ -55,7 +56,9 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
     }
 
     object ViewEntities : Table("view_entities") {
-        val entityId = long("entity_id")
+        val entityId = long("entity_id").references(
+            Entities.id, onDelete = ReferenceOption.CASCADE
+        )
         val viewId = varchar("view_id", 48).references(
             Views.id, onDelete = ReferenceOption.CASCADE
         )
