@@ -36,6 +36,7 @@ object RiotMockHelper {
         GetMatchResponse(
             metadata = Metadata(matchId),
             info = MatchInfo(
+                "GameComplete",
                 1,
                 1,
                 listOf(
@@ -94,6 +95,7 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 8,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 47,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1883,
                                 totalTimeSpentDead = 174,
                                 win = true
@@ -111,6 +113,7 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 5,
                                 enemyMissingPings = 2,
                                 wardsPlaced = 20,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1146,
                                 totalTimeSpentDead = 24,
                                 win = true
@@ -128,6 +131,7 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 6,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 11,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 917,
                                 totalTimeSpentDead = 36,
                                 win = true
@@ -145,6 +149,7 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 16,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 51,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1712,
                                 totalTimeSpentDead = 67,
                                 win = true
@@ -162,6 +167,7 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 11,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 32,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1856,
                                 totalTimeSpentDead = 73,
                                 win = true

@@ -56,6 +56,7 @@ data class Metadata(
 
 @Serializable
 data class MatchInfo(
+    val endOfGameResult: String,
     val gameDuration: Int,
     val mapId: Int,
     val participants: List<MatchParticipant>
@@ -141,6 +142,7 @@ data class MatchProfile(
     val visionWardsBoughtInGame: Int,
     val enemyMissingPings: Int,
     val wardsPlaced: Int,
+    val gameFinishedCorrectly: Boolean,
     val gameDuration: Int,
     val totalTimeSpentDead: Int,
     val win: Boolean
@@ -198,6 +200,7 @@ data class RiotData(
                                     it.visionWardsBoughtInGame,
                                     it.enemyMissingPings,
                                     it.wardsPlaced,
+                                    getMatchResponse.info.endOfGameResult == "GameComplete",
                                     getMatchResponse.info.gameDuration,
                                     it.totalTimeSpentDead,
                                     it.win
