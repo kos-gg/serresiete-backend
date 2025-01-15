@@ -36,6 +36,7 @@ data class MatchParticipant(
     val visionScore: Int,
     val role: String,
     val individualPosition: String,
+    val teamPosition: String,
     val lane: String,
     val kills: Int,
     val enemyMissingPings: Int,
@@ -134,6 +135,7 @@ data class MatchProfile(
     val championName: String,
     val role: String,
     val individualPosition: String,
+    val teamPosition: String,
     val lane: String,
     val kills: Int,
     val deaths: Int,
@@ -150,7 +152,7 @@ data class MatchProfile(
 
 @Serializable
 data class LeagueProfile(
-    val mainRole: String,
+    val teamPosition: String,
     val tier: String,
     val rank: String,
     val leaguePoints: Int,
@@ -192,6 +194,7 @@ data class RiotData(
                                     it.championName,
                                     it.role,
                                     it.individualPosition,
+                                    it.teamPosition,
                                     it.lane,
                                     it.kills,
                                     it.deaths,
@@ -208,7 +211,7 @@ data class RiotData(
                             }
                         } + alreadyCachedMatches
                     leagueEntryResponse.queueType to LeagueProfile(
-                        playerMatches.groupBy { it.role }.mapValues { it.value.size }.maxBy { it.value }.key,
+                        playerMatches.groupBy { it.teamPosition }.mapValues { it.value.size }.maxBy { it.value }.key,
                         leagueEntryResponse.tier,
                         leagueEntryResponse.rank,
                         leagueEntryResponse.leaguePoints,
