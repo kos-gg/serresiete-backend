@@ -100,7 +100,15 @@ object RiotMockHelper {
                                 gameFinishedCorrectly = true,
                                 gameDuration = 1883,
                                 totalTimeSpentDead = 174,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 497,
@@ -119,7 +127,15 @@ object RiotMockHelper {
                                 gameFinishedCorrectly = true,
                                 gameDuration = 1146,
                                 totalTimeSpentDead = 24,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 12,
@@ -138,7 +154,15 @@ object RiotMockHelper {
                                 gameFinishedCorrectly = true,
                                 gameDuration = 917,
                                 totalTimeSpentDead = 36,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 497,
@@ -157,7 +181,15 @@ object RiotMockHelper {
                                 gameFinishedCorrectly = true,
                                 gameDuration = 1712,
                                 totalTimeSpentDead = 67,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 235,
@@ -176,7 +208,15 @@ object RiotMockHelper {
                                 gameFinishedCorrectly = true,
                                 gameDuration = 1856,
                                 totalTimeSpentDead = 73,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             )
                         )
                     )

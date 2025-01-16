@@ -1,4 +1,8 @@
 # Changelog
+## [4.3.2] 16-01-2026
+
+### Added
+- **League of Legends API Update**: The League of Legends API now retrieves the match-up for every game, allowing users to view the match-up information for each character in every game.
 
 ## [4.3.1] 10-01-2026
 
