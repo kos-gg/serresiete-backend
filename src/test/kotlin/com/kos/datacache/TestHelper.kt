@@ -62,7 +62,15 @@ object TestHelper {
                         "gameFinishedCorrectly": true,
                         "gameDuration": 1883,
                         "totalTimeSpentDead": 174,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -82,7 +90,15 @@ object TestHelper {
                         "gameFinishedCorrectly": true,
                         "gameDuration": 1146,
                         "totalTimeSpentDead": 24,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -102,7 +118,15 @@ object TestHelper {
                         "gameFinishedCorrectly": true,
                         "gameDuration": 917,
                         "totalTimeSpentDead": 36,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -122,7 +146,15 @@ object TestHelper {
                         "gameFinishedCorrectly": true,
                         "gameDuration": 1712,
                         "totalTimeSpentDead": 67,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -142,7 +174,15 @@ object TestHelper {
                         "gameFinishedCorrectly": true,
                         "gameDuration": 1856,
                         "totalTimeSpentDead": 73,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     }
                 ]
             }
@@ -192,7 +232,15 @@ object TestHelper {
                             "gameFinishedCorrectly": true,
                             "gameDuration": 1800,
                             "totalTimeSpentDead": 300,
-                            "win": true
+                            "win": true,
+                            "matchUp" : {
+                                "championId" : 2,
+                                "championName" : "Aatrox",
+                                "teamPosition" : "TOP",
+                                "kills" : 10,
+                                "deaths" : 1,
+                                "assists" : 0
+                            }
                         },
                         {
                             "id": "match2",
@@ -212,7 +260,15 @@ object TestHelper {
                             "gameFinishedCorrectly": true,
                             "gameDuration": 1800,
                             "totalTimeSpentDead": 300,
-                            "win": true
+                            "win": true,
+                            "matchUp" : {
+                                "championId" : 2,
+                                "championName" : "Aatrox",
+                                "teamPosition" : "TOP",
+                                "kills" : 10,
+                                "deaths" : 1,
+                                "assists" : 0
+                            }
                         },
                         {
                             "id": "match3",
@@ -232,7 +288,15 @@ object TestHelper {
                             "gameFinishedCorrectly": true,
                             "gameDuration": 1800,
                             "totalTimeSpentDead": 300,
-                            "win": true
+                            "win": true,
+                            "matchUp" : {
+                                "championId" : 2,
+                                "championName" : "Aatrox",
+                                "teamPosition" : "TOP",
+                                "kills" : 10,
+                                "deaths" : 1,
+                                "assists" : 0
+                            }
                         }
                     ]
                 }
