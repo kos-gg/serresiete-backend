@@ -199,9 +199,8 @@ data class RiotData(
                     val playerMatches: List<MatchProfile> =
                         retrievedMatches.flatMap { getMatchResponse ->
                             getMatchResponse.info.participants.filter { it.puuid == lolCharacter.puuid }.map { participant ->
-                                val matchUp = getMatchResponse.info.participants
-                                    .filter { it.teamPosition == participant.teamPosition && it.puuid != participant.puuid }
-                                    .map {
+                                val matchUp = getMatchResponse.info.participants.find { it.teamPosition == participant.teamPosition && it.puuid != participant.puuid }
+                                    ?.let {
                                         MatchUpProfile(
                                             it.championId,
                                             it.championName,
@@ -210,7 +209,7 @@ data class RiotData(
                                             it.deaths,
                                             it.assists
                                         )
-                                    }.firstOrNull()
+                                    }
 
                                 MatchProfile(
                                     getMatchResponse.metadata.matchId,
