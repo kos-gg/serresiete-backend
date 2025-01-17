@@ -36,6 +36,7 @@ object RiotMockHelper {
         GetMatchResponse(
             metadata = Metadata(matchId),
             info = MatchInfo(
+                "GameComplete",
                 1,
                 1,
                 listOf(
@@ -47,6 +48,7 @@ object RiotMockHelper {
                         1,
                         "SUPPORT",
                         "SUPPORT",
+                        "BOTTOM",
                         "BOT",
                         1,
                         1,
@@ -73,7 +75,7 @@ object RiotMockHelper {
                 Pair(
                     QueueType.SOLO_Q,
                     LeagueProfile(
-                        mainRole = "SUPPORT",
+                        teamPosition = "UTILITY",
                         tier = "GOLD",
                         rank = "I",
                         leaguePoints = 1,
@@ -86,6 +88,7 @@ object RiotMockHelper {
                                 championName = "Rakan",
                                 role = "SUPPORT",
                                 individualPosition = "UTILITY",
+                                teamPosition = "UTILITY",
                                 lane = "BOTTOM",
                                 kills = 2,
                                 deaths = 7,
@@ -94,15 +97,25 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 8,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 47,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1883,
                                 totalTimeSpentDead = 174,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 497,
                                 championName = "Rakan",
                                 role = "SUPPORT",
                                 individualPosition = "UTILITY",
+                                teamPosition = "UTILITY",
                                 lane = "NONE",
                                 kills = 0,
                                 deaths = 2,
@@ -111,15 +124,25 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 5,
                                 enemyMissingPings = 2,
                                 wardsPlaced = 20,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1146,
                                 totalTimeSpentDead = 24,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 12,
                                 championName = "Alistar",
                                 role = "SUPPORT",
                                 individualPosition = "UTILITY",
+                                teamPosition = "UTILITY",
                                 lane = "NONE",
                                 kills = 2,
                                 deaths = 2,
@@ -128,15 +151,25 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 6,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 11,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 917,
                                 totalTimeSpentDead = 36,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 497,
                                 championName = "Rakan",
                                 role = "SUPPORT",
                                 individualPosition = "UTILITY",
+                                teamPosition = "UTILITY",
                                 lane = "BOTTOM",
                                 kills = 2,
                                 deaths = 3,
@@ -145,15 +178,25 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 16,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 51,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1712,
                                 totalTimeSpentDead = 67,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             ), MatchProfile(
                                 id = matchId,
                                 championId = 235,
                                 championName = "Senna",
                                 role = "SUPPORT",
                                 individualPosition = "UTILITY",
+                                teamPosition = "UTILITY",
                                 lane = "BOTTOM",
                                 kills = 0,
                                 deaths = 2,
@@ -162,9 +205,18 @@ object RiotMockHelper {
                                 visionWardsBoughtInGame = 11,
                                 enemyMissingPings = 0,
                                 wardsPlaced = 32,
+                                gameFinishedCorrectly = true,
                                 gameDuration = 1856,
                                 totalTimeSpentDead = 73,
-                                win = true
+                                win = true,
+                                matchUp = MatchUpProfile(
+                                    championId = 2,
+                                    championName = "Aatrox",
+                                    teamPosition = "TOP",
+                                    kills = 10,
+                                    deaths = 1,
+                                    assists = 0
+                                )
                             )
                         )
                     )

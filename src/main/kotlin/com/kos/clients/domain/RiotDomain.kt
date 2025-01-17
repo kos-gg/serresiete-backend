@@ -36,6 +36,7 @@ data class MatchParticipant(
     val visionScore: Int,
     val role: String,
     val individualPosition: String,
+    val teamPosition: String,
     val lane: String,
     val kills: Int,
     val enemyMissingPings: Int,
@@ -56,6 +57,7 @@ data class Metadata(
 
 @Serializable
 data class MatchInfo(
+    val endOfGameResult: String,
     val gameDuration: Int,
     val mapId: Int,
     val participants: List<MatchParticipant>
@@ -127,12 +129,23 @@ data class LeagueMatchData(
 )
 
 @Serializable
+data class MatchUpProfile(
+    val championId: Int,
+    val championName: String,
+    val teamPosition: String,
+    val kills: Int,
+    val deaths: Int,
+    val assists: Int
+)
+
+@Serializable
 data class MatchProfile(
     val id: String,
     val championId: Int,
     val championName: String,
     val role: String,
     val individualPosition: String,
+    val teamPosition: String,
     val lane: String,
     val kills: Int,
     val deaths: Int,
@@ -141,14 +154,16 @@ data class MatchProfile(
     val visionWardsBoughtInGame: Int,
     val enemyMissingPings: Int,
     val wardsPlaced: Int,
+    val gameFinishedCorrectly: Boolean,
     val gameDuration: Int,
     val totalTimeSpentDead: Int,
-    val win: Boolean
+    val win: Boolean,
+    val matchUp: MatchUpProfile?
 )
 
 @Serializable
 data class LeagueProfile(
-    val mainRole: String,
+    val teamPosition: String,
     val tier: String,
     val rank: String,
     val leaguePoints: Int,
@@ -183,29 +198,46 @@ data class RiotData(
                     val gamesPlayed = leagueEntryResponse.wins + leagueEntryResponse.losses
                     val playerMatches: List<MatchProfile> =
                         retrievedMatches.flatMap { getMatchResponse ->
-                            getMatchResponse.info.participants.filter { it.puuid == lolEntity.puuid }.map {
-                                MatchProfile(
-                                    getMatchResponse.metadata.matchId,
-                                    it.championId,
-                                    it.championName,
-                                    it.role,
-                                    it.individualPosition,
-                                    it.lane,
-                                    it.kills,
-                                    it.deaths,
-                                    it.assists,
-                                    it.assistMePings,
-                                    it.visionWardsBoughtInGame,
-                                    it.enemyMissingPings,
-                                    it.wardsPlaced,
-                                    getMatchResponse.info.gameDuration,
-                                    it.totalTimeSpentDead,
-                                    it.win
-                                )
-                            }
+                            getMatchResponse.info.participants.filter { it.puuid == lolEntity.puuid }
+                                .map { participant ->
+                                    val matchUp =
+                                        getMatchResponse.info.participants.find { it.teamPosition == participant.teamPosition && it.puuid != participant.puuid }
+                                            ?.let {
+                                                MatchUpProfile(
+                                                    it.championId,
+                                                    it.championName,
+                                                    it.teamPosition,
+                                                    it.kills,
+                                                    it.deaths,
+                                                    it.assists
+                                                )
+                                            }
+
+                                    MatchProfile(
+                                        getMatchResponse.metadata.matchId,
+                                        participant.championId,
+                                        participant.championName,
+                                        participant.role,
+                                        participant.individualPosition,
+                                        participant.teamPosition,
+                                        participant.lane,
+                                        participant.kills,
+                                        participant.deaths,
+                                        participant.assists,
+                                        participant.assistMePings,
+                                        participant.visionWardsBoughtInGame,
+                                        participant.enemyMissingPings,
+                                        participant.wardsPlaced,
+                                        getMatchResponse.info.endOfGameResult == "GameComplete",
+                                        getMatchResponse.info.gameDuration,
+                                        participant.totalTimeSpentDead,
+                                        participant.win,
+                                        matchUp
+                                    )
+                                }
                         } + alreadyCachedMatches
                     leagueEntryResponse.queueType to LeagueProfile(
-                        playerMatches.groupBy { it.role }.mapValues { it.value.size }.maxBy { it.value }.key,
+                        playerMatches.groupBy { it.teamPosition }.mapValues { it.value.size }.maxBy { it.value }.key,
                         leagueEntryResponse.tier,
                         leagueEntryResponse.rank,
                         leagueEntryResponse.leaguePoints,

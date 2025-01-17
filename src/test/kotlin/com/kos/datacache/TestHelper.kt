@@ -37,7 +37,7 @@ object TestHelper {
         "summonerTag": "KAKO",
         "leagues": {
             "RANKED_SOLO_5x5": {
-                "mainRole": "SUPPORT",
+                "teamPosition": "UTILITY",
                 "tier": "GOLD",
                 "rank": "I",
                 "leaguePoints": 1,
@@ -50,6 +50,7 @@ object TestHelper {
                         "championName": "Rakan",
                         "role": "SUPPORT",
                         "individualPosition": "UTILITY",
+                        "teamPosition": "UTILITY",
                         "lane": "BOTTOM",
                         "kills": 2,
                         "deaths": 7,
@@ -58,9 +59,18 @@ object TestHelper {
                         "visionWardsBoughtInGame": 8,
                         "enemyMissingPings": 0,
                         "wardsPlaced": 47,
+                        "gameFinishedCorrectly": true,
                         "gameDuration": 1883,
                         "totalTimeSpentDead": 174,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -68,6 +78,7 @@ object TestHelper {
                         "championName": "Rakan",
                         "role": "SUPPORT",
                         "individualPosition": "UTILITY",
+                        "teamPosition": "UTILITY",
                         "lane": "NONE",
                         "kills": 0,
                         "deaths": 2,
@@ -76,9 +87,18 @@ object TestHelper {
                         "visionWardsBoughtInGame": 5,
                         "enemyMissingPings": 2,
                         "wardsPlaced": 20,
+                        "gameFinishedCorrectly": true,
                         "gameDuration": 1146,
                         "totalTimeSpentDead": 24,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -86,6 +106,7 @@ object TestHelper {
                         "championName": "Alistar",
                         "role": "SUPPORT",
                         "individualPosition": "UTILITY",
+                        "teamPosition": "UTILITY",
                         "lane": "NONE",
                         "kills": 2,
                         "deaths": 2,
@@ -94,9 +115,18 @@ object TestHelper {
                         "visionWardsBoughtInGame": 6,
                         "enemyMissingPings": 0,
                         "wardsPlaced": 11,
+                        "gameFinishedCorrectly": true,
                         "gameDuration": 917,
                         "totalTimeSpentDead": 36,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -104,6 +134,7 @@ object TestHelper {
                         "championName": "Rakan",
                         "role": "SUPPORT",
                         "individualPosition": "UTILITY",
+                        "teamPosition": "UTILITY",
                         "lane": "BOTTOM",
                         "kills": 2,
                         "deaths": 3,
@@ -112,9 +143,18 @@ object TestHelper {
                         "visionWardsBoughtInGame": 16,
                         "enemyMissingPings": 0,
                         "wardsPlaced": 51,
+                        "gameFinishedCorrectly": true,
                         "gameDuration": 1712,
                         "totalTimeSpentDead": 67,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     },
                     {
                         "id": "EUW1_232424252",
@@ -122,6 +162,7 @@ object TestHelper {
                         "championName": "Senna",
                         "role": "SUPPORT",
                         "individualPosition": "UTILITY",
+                        "teamPosition": "UTILITY",
                         "lane": "BOTTOM",
                         "kills": 0,
                         "deaths": 2,
@@ -130,9 +171,18 @@ object TestHelper {
                         "visionWardsBoughtInGame": 11,
                         "enemyMissingPings": 0,
                         "wardsPlaced": 32,
+                        "gameFinishedCorrectly": true,
                         "gameDuration": 1856,
                         "totalTimeSpentDead": 73,
-                        "win": true
+                        "win": true,
+                        "matchUp" : {
+                            "championId" : 2,
+                            "championName" : "Aatrox",
+                            "teamPosition" : "TOP",
+                            "kills" : 10,
+                            "deaths" : 1,
+                            "assists" : 0
+                        }
                     }
                 ]
             }
@@ -157,7 +207,7 @@ object TestHelper {
             "summonerTag": "TAG",
             "leagues": {
                 "RANKED_FLEX_SR": {
-                    "mainRole": "MainRole",
+                    "teamPosition": "TOP",
                     "tier": "Gold",
                     "rank": "I",
                     "leaguePoints": 100,
@@ -170,6 +220,7 @@ object TestHelper {
                             "championName": "ChampionName",
                             "role": "Role",
                             "individualPosition": "Position",
+                            "teamPosition": "Position",
                             "lane": "Lane",
                             "kills": 5,
                             "deaths": 1,
@@ -178,9 +229,18 @@ object TestHelper {
                             "visionWardsBoughtInGame": 0,
                             "enemyMissingPings": 0,
                             "wardsPlaced": 0,
+                            "gameFinishedCorrectly": true,
                             "gameDuration": 1800,
                             "totalTimeSpentDead": 300,
-                            "win": true
+                            "win": true,
+                            "matchUp" : {
+                                "championId" : 2,
+                                "championName" : "Aatrox",
+                                "teamPosition" : "TOP",
+                                "kills" : 10,
+                                "deaths" : 1,
+                                "assists" : 0
+                            }
                         },
                         {
                             "id": "match2",
@@ -188,6 +248,7 @@ object TestHelper {
                             "championName": "ChampionName",
                             "role": "Role",
                             "individualPosition": "Position",
+                            "teamPosition": "Position",
                             "lane": "Lane",
                             "kills": 5,
                             "deaths": 1,
@@ -196,9 +257,18 @@ object TestHelper {
                             "visionWardsBoughtInGame": 0,
                             "enemyMissingPings": 0,
                             "wardsPlaced": 0,
+                            "gameFinishedCorrectly": true,
                             "gameDuration": 1800,
                             "totalTimeSpentDead": 300,
-                            "win": true
+                            "win": true,
+                            "matchUp" : {
+                                "championId" : 2,
+                                "championName" : "Aatrox",
+                                "teamPosition" : "TOP",
+                                "kills" : 10,
+                                "deaths" : 1,
+                                "assists" : 0
+                            }
                         },
                         {
                             "id": "match3",
@@ -206,6 +276,7 @@ object TestHelper {
                             "championName": "ChampionName",
                             "role": "Role",
                             "individualPosition": "Position",
+                            "teamPosition": "Position",
                             "lane": "Lane",
                             "kills": 5,
                             "deaths": 1,
@@ -214,9 +285,18 @@ object TestHelper {
                             "visionWardsBoughtInGame": 0,
                             "enemyMissingPings": 0,
                             "wardsPlaced": 0,
+                            "gameFinishedCorrectly": true,
                             "gameDuration": 1800,
                             "totalTimeSpentDead": 300,
-                            "win": true
+                            "win": true,
+                            "matchUp" : {
+                                "championId" : 2,
+                                "championName" : "Aatrox",
+                                "teamPosition" : "TOP",
+                                "kills" : 10,
+                                "deaths" : 1,
+                                "assists" : 0
+                            }
                         }
                     ]
                 }
