@@ -11,3 +11,5 @@ ALTER TABLE wow_entities ADD CONSTRAINT fk_entities FOREIGN KEY (id) REFERENCES 
 ALTER TABLE lol_entities ADD CONSTRAINT fk_entities FOREIGN KEY (id) REFERENCES entities (id) ON DELETE CASCADE;
 
 ALTER TABLE view_entities ADD CONSTRAINT fk_entities FOREIGN KEY (entity_id) REFERENCES entities (id) ON DELETE CASCADE;
+
+UPDATE subscriptions SET name='entities' where name='characters';
