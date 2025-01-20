@@ -41,6 +41,22 @@ app.get('/api/views', (req, res) => {
     });
 });
 
+app.get('/api/credentials/:userName', (req, res) => {
+    const userName = req.params.userName;
+    const filePath = join(__dirname, 'resources', 'user.json')
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) return res.status(500).json({ error: 'Failed to read file' });
+
+        const user = JSON.parse(data);
+
+        if (user.userName === userName) return res.json(user);
+
+        return res.status(404).json({error: 'User not found'});
+
+    })
+})
+
 app.listen(port, () => {
     console.log(`Mock server running at http://localhost:${port}`);
 });
