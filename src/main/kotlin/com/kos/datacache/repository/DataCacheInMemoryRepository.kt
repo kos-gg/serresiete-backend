@@ -10,7 +10,7 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
 
     override suspend fun insert(data: List<DataCache>): Boolean = cachedData.addAll(data)
 
-    override suspend fun get(characterId: Long): List<DataCache> = cachedData.filter { it.characterId == characterId }
+    override suspend fun get(entityId: Long): List<DataCache> = cachedData.filter { it.entityId == entityId }
     override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
         fun Game?.matches(other: Game): Boolean = this == null || this == other
 
@@ -18,19 +18,19 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
         return if (keepLastRecord) {
             val idsToRetain = cachedData
                 .filter { it.inserted.plusHours(ttl) < currentTime && game.matches(it.game) }
-                .groupBy { it.characterId }
+                .groupBy { it.entityId }
                 .filter { it.value.size == 1 }
                 .keys
 
             val deletedRecords = cachedData.count {
                 it.inserted.plusHours(ttl) < currentTime
                         && game.matches(it.game)
-                        && it.characterId !in idsToRetain
+                        && it.entityId !in idsToRetain
             }
             cachedData.removeAll {
                 it.inserted.plusHours(ttl) < currentTime
                         && game.matches(it.game) &&
-                        it.characterId !in idsToRetain
+                        it.entityId !in idsToRetain
             }
             deletedRecords
         } else {

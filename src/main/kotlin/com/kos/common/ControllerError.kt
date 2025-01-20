@@ -1,6 +1,6 @@
 package com.kos.common
 
-import com.kos.characters.WowCharacterRequest
+import com.kos.entities.WowEntityRequest
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
@@ -24,14 +24,22 @@ class InvalidQueryParameter(param: String, value: String, allowed: List<String>?
 
 class InvalidTaskType(val type: String) : IllegalArgumentException("Invalid task type: $type")
 class InvalidGameType(val type: String) : IllegalArgumentException("Invalid game type: $type")
+
 interface HttpError : ControllerError {
     fun error(): String
 }
 
-class NonHardcoreCharacter(private val wowCharacter: WowCharacterRequest) : HttpError {
-    override fun error(): String = "${wowCharacter.realm} is not hardcore"
+class WowHardcoreCharacterIsDead(private val character: String, private val characterId: Long) : HttpError {
+    override fun error(): String = "Character with name [$character] and id [$characterId] could not be sync because it is dead"
 }
 
+class NotFoundHardcoreCharacter(private val name: String) : HttpError {
+    override fun error(): String = "$name not found in Blizzard Api"
+}
+
+class NonHardcoreCharacter(private val wowEntity: WowEntityRequest) : HttpError {
+    override fun error(): String = "${wowEntity.realm} is not hardcore"
+}
 
 data class JsonParseError(val json: String, val path: String, val error: String? = null) : HttpError {
     override fun error(): String = "ParsedJson: ${json}\nPath: $path Error: $error"
@@ -47,7 +55,7 @@ data class RaiderIoError(
 
 class NotPublished(val id: String) : ControllerError
 data object TooMuchViews : ControllerError
-data object TooMuchCharacters : ControllerError
+data object TooMuchEntities : ControllerError
 data object UserWithoutRoles : ControllerError
 
 interface DatabaseError : ControllerError
@@ -70,7 +78,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is NotEnoughPermissions -> respond(Forbidden)
         is NotPublished -> respond(BadRequest, "view not published")
         is TooMuchViews -> respond(BadRequest, "too much views")
-        is TooMuchCharacters -> respond(BadRequest, "too many characters in a view")
+        is TooMuchEntities -> respond(BadRequest, "too many entities in a view")
         is BadRequest -> respond(BadRequest, error.problem)
         is JsonParseError -> respondLogging(error.error())
         is RaiderIoError -> respondLogging(error.error())

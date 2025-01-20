@@ -3,11 +3,11 @@ package com.kos.eventsourcing
 
 import arrow.core.Either
 import com.kos.assertTrue
-import com.kos.characters.CharactersService
-import com.kos.characters.CharactersTestHelper
-import com.kos.characters.WowCharacter
-import com.kos.characters.repository.CharactersInMemoryRepository
-import com.kos.characters.repository.CharactersState
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper
+import com.kos.entities.WowEntity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -288,7 +288,7 @@ class EventSubscriptionTest {
             runBlocking {
                 val (eventStore, viewsService, viewsRepository) = createService(
                     listOf(),
-                    CharactersTestHelper.emptyCharactersState,
+                    EntitiesTestHelper.emptyEntitiesState,
                     listOf(),
                     CredentialsTestHelper.emptyCredentialsInitialState
                 )
@@ -333,7 +333,7 @@ class EventSubscriptionTest {
             runBlocking {
                 val (eventStore, viewsService, viewsRepository) = createService(
                     listOf(ViewsTestHelper.basicSimpleLolView),
-                    CharactersTestHelper.emptyCharactersState,
+                    EntitiesTestHelper.emptyEntitiesState,
                     listOf(),
                     CredentialsTestHelper.emptyCredentialsInitialState
                 )
@@ -373,7 +373,7 @@ class EventSubscriptionTest {
             runBlocking {
                 val (eventStore, viewsService, viewsRepository) = createService(
                     listOf(ViewsTestHelper.basicSimpleLolView),
-                    CharactersTestHelper.emptyCharactersState,
+                    EntitiesTestHelper.emptyEntitiesState,
                     listOf(),
                     CredentialsTestHelper.emptyCredentialsInitialState,
                 )
@@ -410,14 +410,14 @@ class EventSubscriptionTest {
 
         private suspend fun createService(
             viewsState: List<SimpleView>,
-            charactersState: CharactersState,
+            entitiesState: EntitiesState,
             dataCacheState: List<DataCache>,
             credentialState: CredentialsRepositoryState,
         ): Triple<EventStore, ViewsService, ViewsRepository> {
             val viewsRepository = ViewsInMemoryRepository()
                 .withState(viewsState)
-            val charactersRepository = CharactersInMemoryRepository()
-                .withState(charactersState)
+            val charactersRepository = EntitiesInMemoryRepository()
+                .withState(entitiesState)
             val dataCacheRepository = DataCacheInMemoryRepository()
                 .withState(dataCacheState)
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -425,13 +425,13 @@ class EventSubscriptionTest {
             val eventStore = EventStoreInMemory()
 
             val credentialsService = CredentialsService(credentialsRepository)
-            val charactersService = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
             val dataCacheService =
-                DataCacheService(dataCacheRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+                DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
             val service =
                 ViewsService(
                     viewsRepository,
-                    charactersService,
+                    entitiesService,
                     dataCacheService,
                     credentialsService,
                     eventStore
@@ -459,7 +459,7 @@ class EventSubscriptionTest {
             assertEquals(ViewsTestHelper.id, insertedView.id)
             assertEquals(name, insertedView.name)
             assertEquals(ViewsTestHelper.owner, insertedView.owner)
-            assertEquals(listOf(), insertedView.characterIds)
+            assertEquals(listOf(), insertedView.entitiesIds)
             assertTrue(insertedView.published)
         }
     }
@@ -479,15 +479,15 @@ class EventSubscriptionTest {
                     listOf(wowHardcoreRemainingView)
                 )
                 val wowHardcoreCharacters =
-                    (1..5).map { WowCharacter(it.toLong(), it.toString(), it.toString(), it.toString()) }
-                val charactersRepository = CharactersInMemoryRepository(viewsRepository = viewsRepository).withState(
-                    CharactersState(
-                        wowCharacters = listOf(),
-                        lolCharacters = listOf(),
-                        wowHardcoreCharacters = wowHardcoreCharacters
+                    (1..5).map { WowEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it.toLong()) }
+                val charactersRepository = EntitiesInMemoryRepository(viewsRepository = viewsRepository).withState(
+                    EntitiesState(
+                        wowEntities = listOf(),
+                        lolEntities = listOf(),
+                        wowHardcoreEntities = wowHardcoreCharacters
                     )
                 )
-                val service = CharactersService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+                val service = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
 
                 val eventData =
                     ViewDeletedEvent(
@@ -505,8 +505,8 @@ class EventSubscriptionTest {
                     Event(aggregateRoot, ViewsTestHelper.id, eventData)
                 )
 
-                EventSubscription.charactersProcessor(eventWithVersion, service)
-                assertEquals(expectedRemainingCharacters, charactersRepository.state().wowHardcoreCharacters.map { it.id })
+                EventSubscription.entitiesProcessor(eventWithVersion, service)
+                assertEquals(expectedRemainingCharacters, charactersRepository.state().wowHardcoreEntities.map { it.id })
 
             }
         }

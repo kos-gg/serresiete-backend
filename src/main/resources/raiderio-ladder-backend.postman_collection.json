@@ -222,7 +222,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"wow-view-example\",\n    \"game\": \"WOW\",\n    \"published\": true,\n    \"characters\": [\n        {\n            \"name\": \"kakarona\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.characters.WowCharacterRequest\"\n        },\n        {\n            \"name\": \"osborno\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.characters.WowCharacterRequest\"\n        },\n        {\n            \"name\": \"sanxxei\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.characters.WowCharacterRequest\"\n        }\n    ]\n}",
+									"raw": "{\n    \"name\": \"wow-view-example-entities\",\n    \"game\": \"WOW\",\n    \"published\": true,\n    \"featured\": true,\n    \"entities\": [\n        {\n            \"name\": \"kumii\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"osborno\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"sanxxei\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        }\n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -271,7 +271,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"lol-view-example\",\n    \"game\": \"LOL\",\n    \"published\": true,\n    \"characters\": [\n        {\n            \"name\": \"sanxei\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Handx\",\n            \"tag\": \"013\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        }\n    ]\n}",
+									"raw": "{\n    \"name\": \"lol-view-example\",\n    \"game\": \"LOL\",\n    \"published\": true,\n    \"featured\": false,\n    \"entities\": [\n        {\n            \"name\": \"sanxei\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Handx\",\n            \"tag\": \"013\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Mogge\",\n            \"tag\": \"EUW12\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        }\n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -312,6 +312,67 @@
 							],
 							"cookie": [],
 							"body": "{\n    \"viewId\": \"83607273-e2d9-44db-8d12-ad4dec00ecc0\",\n    \"characters\": [\n        49\n    ]\n}"
+						},
+						{
+							"name": "Create WOW HC View",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Onlyfangs 2\",\n    \"game\": \"WOW_HC\",\n    \"published\": true,\n    \"entities\": [\n        {\n            \"name\": \"Shuloneta\",\n            \"region\": \"eu\",\n            \"realm\": \"soulseeker\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"Surmana\",\n            \"region\": \"eu\",\n            \"realm\": \"soulseeker\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        }\n    ],\n    \"featured\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUri}}/api/views",
+									"host": [
+										"{{baseUri}}"
+									],
+									"path": [
+										"api",
+										"views"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "vary",
+									"value": "Origin"
+								},
+								{
+									"key": "www-authenticate",
+									"value": "Bearer realm=\"Ktor Server\""
+								},
+								{
+									"key": "date",
+									"value": "Fri, 15 Nov 2024 22:08:18 GMT"
+								},
+								{
+									"key": "server",
+									"value": "Fly/bc77ddfa7 (2024-11-15)"
+								},
+								{
+									"key": "via",
+									"value": "1.1 fly.io"
+								},
+								{
+									"key": "fly-request-id",
+									"value": "01JCRXX7BNRKZ9H3JA59EW9HS3-mad"
+								},
+								{
+									"key": "content-length",
+									"value": "0"
+								}
+							],
+							"cookie": [],
+							"body": null
 						}
 					]
 				},
@@ -332,7 +393,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"LEC\",\n    \"characters\": [\n        {\n            \"name\": \"CABALLO GANADOR\",\n            \"tag\": \"CTANG\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Wesley Warren Jr\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"qrds\",\n            \"tag\": \"211\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        }\n    ],\n    \"published\": true,\n    \"game\": \"LOL\"\n}",
+							"raw": "{\n    \"name\": \"LEC\",\n    \"entities\": [\n        {\n            \"name\": \"CABALLO GANADOR\",\n            \"tag\": \"CTANG\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Wesley Warren Jr\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"qrds\",\n            \"tag\": \"211\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        }\n    ],\n    \"published\": true,\n    \"featured\": false,\n    \"game\": \"LOL\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -958,6 +1019,359 @@
 						}
 					},
 					"response": []
+				}
+			]
+		},
+		{
+			"name": "subscriptions",
+			"item": [
+				{
+					"name": "Get Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blizzard Request Examples",
+			"item": [
+				{
+					"name": "GET Character Equipment",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Battlenet-Namespace",
+								"value": "profile-classic1x-eu",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+								"type": "text"
+							},
+							{
+								"key": "Battlenet-Locale",
+								"value": "en_US",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/equipment?namespace=profile-classic1x-eu&locale=en_US",
+							"protocol": "https",
+							"host": [
+								"eu",
+								"api",
+								"blizzard",
+								"com"
+							],
+							"path": [
+								"profile",
+								"wow",
+								"character",
+								"stitches",
+								"kumii",
+								"equipment"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "profile-classic1x-eu"
+								},
+								{
+									"key": "locale",
+									"value": "en_US"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Character Appreance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Battlenet-Namespace",
+								"value": "profile-classic1x-eu",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+								"type": "text"
+							},
+							{
+								"key": "Battlenet-Locale",
+								"value": "en_US",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/equipment?namespace=profile-classic1x-eu&locale=en_US",
+							"protocol": "https",
+							"host": [
+								"eu",
+								"api",
+								"blizzard",
+								"com"
+							],
+							"path": [
+								"profile",
+								"wow",
+								"character",
+								"stitches",
+								"kumii",
+								"equipment"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "profile-classic1x-eu"
+								},
+								{
+									"key": "locale",
+									"value": "en_US"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Character",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii?namespace=profile-classic1x-eu&locale=en_US",
+							"protocol": "https",
+							"host": [
+								"eu",
+								"api",
+								"blizzard",
+								"com"
+							],
+							"path": [
+								"profile",
+								"wow",
+								"character",
+								"stitches",
+								"kumii"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "profile-classic1x-eu"
+								},
+								{
+									"key": "locale",
+									"value": "en_US"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Character Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/cleanjuice/statistics?namespace=profile-classic1x-eu&local=en_US",
+							"protocol": "https",
+							"host": [
+								"eu",
+								"api",
+								"blizzard",
+								"com"
+							],
+							"path": [
+								"profile",
+								"wow",
+								"character",
+								"stitches",
+								"cleanjuice",
+								"statistics"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "profile-classic1x-eu"
+								},
+								{
+									"key": "local",
+									"value": "en_US"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Character Talents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/specializations?namespace=profile-classic1x-eu&locale=en_US",
+							"protocol": "https",
+							"host": [
+								"eu",
+								"api",
+								"blizzard",
+								"com"
+							],
+							"path": [
+								"profile",
+								"wow",
+								"character",
+								"stitches",
+								"kumii",
+								"specializations"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "profile-classic1x-eu"
+								},
+								{
+									"key": "locale",
+									"value": "en_US"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "blizzard-character-example Copy",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "blizzard-character-example Copy 2",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "blizzard-character-example Copy",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Battlenet-Namespace",
+								"value": "profile-classic1x-eu",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+								"type": "text"
+							},
+							{
+								"key": "Battlenet-Locale",
+								"value": "en_US",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://eu.api.blizzard.com/profile/wow/character/lone-wolf/camilo?locale=en_US",
+							"protocol": "https",
+							"host": [
+								"eu",
+								"api",
+								"blizzard",
+								"com"
+							],
+							"path": [
+								"profile",
+								"wow",
+								"character",
+								"lone-wolf",
+								"camilo"
+							],
+							"query": [
+								{
+									"key": "locale",
+									"value": "en_US"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "blizzard-character-example Copy 2",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "blizzard-character-example Copy 2",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},

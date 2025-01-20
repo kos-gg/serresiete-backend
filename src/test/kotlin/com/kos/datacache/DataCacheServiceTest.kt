@@ -1,23 +1,32 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.characters.CharactersTestHelper.basicLolCharacter
-import com.kos.characters.CharactersTestHelper.basicWowCharacter
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.domain.*
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
+import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
+import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
+import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.*
-import com.kos.clients.domain.Metadata
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
 import com.kos.views.Game
+import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
+import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.mockito.Mockito.*
 import java.time.OffsetDateTime
 import kotlin.test.Test
@@ -30,18 +39,126 @@ class DataCacheServiceTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
+    @Test
+    fun `the wow hardcore cache service retrieves a dead character and this character is not processed `() {
+        runBlocking {
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf(
+                    wowHardcoreDataCache.copy(
+                        data = wowHardcoreDataCache.data.replace(
+                            """"isDead": false""",
+                            """"isDead": true"""
+                        )
+                    )
+                )
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+            val cacheResult = dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+            assertTrue(cacheResult[0] is WowHardcoreCharacterIsDead)
+        }
+    }
+
+
+    @Test
+    fun `the wow hardcore cache service deletes the wow hardcore character if not found in the datacache repository `() {
+        runBlocking {
+            val expectedNotFoundHardcoreCharacter = NotFoundHardcoreCharacter(basicWowHardcoreEntity.name)
+
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(Either.Left(expectedNotFoundHardcoreCharacter))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf())
+            val viewsRepository = ViewsInMemoryRepository()
+                .withState(listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))))
+            val entitiesRepository = EntitiesInMemoryRepository(dataCacheRepository, viewsRepository)
+                .withState(
+                    EntitiesState(
+                        listOf(),
+                        listOf(basicWowHardcoreEntity, basicWowHardcoreEntity.copy(id = 2, blizzardId = 123)),
+                        listOf()
+                    )
+                )
+
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig
+            )
+
+            val cacheResult = dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
+            assertNull(entitiesRepository.get(1, Game.WOW_HC))
+        }
+    }
+
+    @Test
+    fun `the wow hardcore cache service marks a character as dead if not found in blizzard api`() {
+        runBlocking {
+            val expectedNotFoundHardcoreCharacter = NotFoundHardcoreCharacter(basicWowHardcoreEntity.name)
+
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(Either.Left(expectedNotFoundHardcoreCharacter))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf(
+                    wowHardcoreDataCache
+                )
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+
+            val cacheResult = dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
+            dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertTrue(expectedHardcoreData.isDead)
+            }
+            assertEquals(2, dataCacheRepository.state().size)
+        }
+    }
+
     @Test
     fun `i can get wow data`() {
         runBlocking {
             val repo = DataCacheInMemoryRepository().withState(
                 listOf(
                     wowDataCache,
-                    wowDataCache.copy(characterId = 2, data = wowDataCache.data.replace(""""id": 1""", """"id": 2""")),
-                    wowDataCache.copy(characterId = 3, data = wowDataCache.data.replace(""""id": 1""", """"id": 3"""))
+                    wowDataCache.copy(entityId = 2, data = wowDataCache.data.replace(""""id": 1""", """"id": 2""")),
+                    wowDataCache.copy(entityId = 3, data = wowDataCache.data.replace(""""id": 1""", """"id": 3"""))
                 )
             )
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            val data = service.getData(listOf(1, 3), oldFirst = true)
+
+            val data = createService(repo).getData(listOf(1, 3), oldFirst = true)
             assertTrue(data.isRight { it.size == 2 })
             assertEquals(listOf<Long>(1, 3), data.map {
                 it.map { d ->
@@ -58,11 +175,10 @@ class DataCacheServiceTest {
             val repo = DataCacheInMemoryRepository().withState(
                 listOf(lolDataCache)
             )
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            val data = service.getData(listOf(2), oldFirst = true)
+            val data = createService(repo).getData(listOf(2), oldFirst = true)
 
             assertTrue(data.isRight { it.size == 1 })
-            assertEquals(listOf(basicLolCharacter.name), data.map {
+            assertEquals(listOf(basicLolEntity.name), data.map {
                 it.map { d ->
                     d as RiotData
                     d.summonerName
@@ -80,8 +196,7 @@ class DataCacheServiceTest {
                     wowDataCache.copy(data = wowDataCache.data.replace(""""score": 0.0""", """"score": 1.0""")),
                 )
             )
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            val data = service.getData(listOf(1), oldFirst = true)
+            val data = createService(repo).getData(listOf(1), oldFirst = true)
             assertTrue(data.isRight { it.size == 1 })
             assertEquals(listOf(0.0), data.map {
                 it.map { d ->
@@ -95,15 +210,14 @@ class DataCacheServiceTest {
     @Test
     fun `i can cache wow data`() {
         runBlocking {
-            `when`(raiderIoClient.get(basicWowCharacter)).thenReturn(RaiderIoMockHelper.get(basicWowCharacter))
-            `when`(raiderIoClient.get(basicWowCharacter.copy(id = 2))).thenReturn(
-                RaiderIoMockHelper.get(basicWowCharacter.copy(id = 2))
+            `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
+            `when`(raiderIoClient.get(basicWowEntity.copy(id = 2))).thenReturn(
+                RaiderIoMockHelper.get(basicWowEntity.copy(id = 2))
             )
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
             val repo = DataCacheInMemoryRepository().withState(listOf(wowDataCache))
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
             assertEquals(listOf(wowDataCache), repo.state())
-            service.cache(listOf(basicWowCharacter, basicWowCharacter.copy(id = 2)), Game.WOW)
+            createService(repo).cache(listOf(basicWowEntity, basicWowEntity.copy(id = 2)), Game.WOW)
             assertEquals(3, repo.state().size)
         }
     }
@@ -111,17 +225,16 @@ class DataCacheServiceTest {
     @Test
     fun `i can cache lol data`() {
         runBlocking {
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId)).thenReturn(RiotMockHelper.leagueEntries)
-            `when`(riotClient.getMatchesByPuuid(basicLolCharacter.puuid, QueueType.FLEX_Q.toInt())).thenReturn(
+            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId)).thenReturn(RiotMockHelper.leagueEntries)
+            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())).thenReturn(
                 RiotMockHelper.matches
             )
-            `when`(riotClient.getMatchesByPuuid(basicLolCharacter.puuid, QueueType.SOLO_Q.toInt())).thenReturn(
+            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt())).thenReturn(
                 RiotMockHelper.matches
             )
             `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))
             val repo = DataCacheInMemoryRepository()
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-            service.cache(listOf(basicLolCharacter), Game.LOL)
+            createService(repo).cache(listOf(basicLolEntity), Game.LOL)
             assertEquals(1, repo.state().size)
         }
     }
@@ -133,18 +246,16 @@ class DataCacheServiceTest {
             val newMatchIds = listOf("match1", "match2", "match3", "match4", "match5")
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId))
+            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
             `when`(
-                riotClient.getMatchesByPuuid(basicLolCharacter.puuid, QueueType.FLEX_Q.toInt())
+                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
             ).thenReturn(Either.Right(newMatchIds))
 
             `when`(riotClient.getMatchById(anyString())).thenReturn(Either.Right(RiotMockHelper.match))
 
             val repo = DataCacheInMemoryRepository().withState(listOf(dataCache))
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolEntity), Game.LOL)
 
             verify(riotClient, times(0)).getMatchById("match1")
             verify(riotClient, times(0)).getMatchById("match2")
@@ -162,13 +273,11 @@ class DataCacheServiceTest {
         runBlocking {
 
             val jsonParseError = Either.Left(JsonParseError("{}", ""))
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId))
+            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
                 .thenReturn(jsonParseError)
 
             val repo = DataCacheInMemoryRepository()
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolEntity), Game.LOL)
 
             assertEquals(listOf(jsonParseError.value), errors)
         }
@@ -180,10 +289,10 @@ class DataCacheServiceTest {
             val requestedMatchIds = listOf("match3", "match4", "match5", "match6", "match7")
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId))
+            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
             `when`(
-                riotClient.getMatchesByPuuid(basicLolCharacter.puuid, QueueType.FLEX_Q.toInt())
+                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
             ).thenReturn(Either.Right(requestedMatchIds))
 
             `when`(riotClient.getMatchById("match4")).thenReturn(
@@ -224,9 +333,7 @@ class DataCacheServiceTest {
             )
 
             val repo = DataCacheInMemoryRepository().withState(listOf(dataCache))
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolEntity), Game.LOL)
 
             verify(riotClient, times(0)).getMatchById("match3")
 
@@ -235,7 +342,7 @@ class DataCacheServiceTest {
             verify(riotClient, times(1)).getMatchById("match6")
             verify(riotClient, times(1)).getMatchById("match7")
 
-            val insertedValue = service.get(1).maxBy { it.inserted }
+            val insertedValue = createService(repo).get(1).maxBy { it.inserted }
             requestedMatchIds.forEach {
                 assertTrue(insertedValue.data.contains(""""id":"$it""""), "${insertedValue.data} should contain id:$it")
             }
@@ -257,10 +364,10 @@ class DataCacheServiceTest {
         runBlocking {
             val requestedMatchIds = listOf("match3", "match4", "match5", "match6", "match7")
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolCharacter.summonerId))
+            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
             `when`(
-                riotClient.getMatchesByPuuid(basicLolCharacter.puuid, QueueType.FLEX_Q.toInt())
+                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
             ).thenReturn(Either.Right(requestedMatchIds))
 
             `when`(riotClient.getMatchById("match3")).thenReturn(
@@ -311,9 +418,7 @@ class DataCacheServiceTest {
             )
 
             val repo = DataCacheInMemoryRepository()
-            val service = DataCacheService(repo, raiderIoClient, riotClient, blizzardClient, retryConfig)
-
-            val errors = service.cache(listOf(basicLolCharacter, basicLolCharacter.copy(id = 2)), Game.LOL)
+            val errors = createService(repo).cache(listOf(basicLolEntity, basicLolEntity.copy(id = 2)), Game.LOL)
 
             verify(riotClient, times(1)).getMatchById("match3")
             verify(riotClient, times(1)).getMatchById("match4")
@@ -323,6 +428,28 @@ class DataCacheServiceTest {
 
             assertEquals(listOf(), errors)
         }
+    }
+
+    private suspend fun createService(dataCacheRepository: DataCacheInMemoryRepository): DataCacheService {
+        val viewsRepository = ViewsInMemoryRepository()
+            .withState(listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))))
+        val entitiesRepository = EntitiesInMemoryRepository(dataCacheRepository, viewsRepository)
+            .withState(
+                EntitiesState(
+                    listOf(),
+                    listOf(basicWowHardcoreEntity, basicWowHardcoreEntity.copy(id = 2, blizzardId = 123)),
+                    listOf()
+                )
+            )
+
+        return DataCacheService(
+            dataCacheRepository,
+            entitiesRepository,
+            raiderIoClient,
+            riotClient,
+            blizzardClient,
+            retryConfig
+        )
     }
 
 }

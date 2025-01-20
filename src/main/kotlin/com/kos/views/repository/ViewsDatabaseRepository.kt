@@ -2,6 +2,7 @@ package com.kos.views.repository
 
 import com.kos.common.fold
 import com.kos.common.getOrThrow
+import com.kos.entities.repository.EntitiesDatabaseRepository.Entities
 import com.kos.views.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
@@ -21,9 +22,9 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 this[Views.featured] = it.featured
             }
             initialState.forEach { sv ->
-                CharactersView.batchInsert(sv.characterIds) {
-                    this[CharactersView.viewId] = sv.id
-                    this[CharactersView.characterId] = it
+                ViewEntities.batchInsert(sv.entitiesIds) {
+                    this[ViewEntities.viewId] = sv.id
+                    this[ViewEntities.entityId] = it
                 }
             }
         }
@@ -47,23 +48,25 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             row[Views.name],
             row[Views.owner],
             row[Views.published],
-            CharactersView.selectAll().where { CharactersView.viewId.eq(row[Views.id]) }
-                .map { resultRowToCharacterView(it).first },
+            ViewEntities.selectAll().where { ViewEntities.viewId.eq(row[Views.id]) }
+                .map { resultRowToViewEntity(it).second },
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured]
         )
     }
 
-    object CharactersView : Table("characters_view") {
-        val characterId = long("character_id")
+    object ViewEntities : Table("view_entities") {
+        val entityId = long("entity_id").references(
+            Entities.id, onDelete = ReferenceOption.CASCADE
+        )
         val viewId = varchar("view_id", 48).references(
             Views.id, onDelete = ReferenceOption.CASCADE
         )
     }
 
-    private fun resultRowToCharacterView(row: ResultRow): Pair<Long, String> = Pair(
-        row[CharactersView.characterId],
-        row[CharactersView.viewId],
+    private fun resultRowToViewEntity(row: ResultRow): Pair<String, Long> = Pair(
+        row[ViewEntities.viewId],
+        row[ViewEntities.entityId]
     )
 
     override suspend fun getOwnViews(owner: String): List<SimpleView> {
@@ -82,7 +85,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String,
         name: String,
         owner: String,
-        characterIds: List<Long>,
+        entitiesIds: List<Long>,
         game: Game,
         featured: Boolean,
     ): SimpleView {
@@ -95,19 +98,19 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.game] = game.toString()
                 it[Views.featured] = featured
             }
-            CharactersView.batchInsert(characterIds) {
-                this[CharactersView.viewId] = id
-                this[CharactersView.characterId] = it
+            ViewEntities.batchInsert(entitiesIds) {
+                this[ViewEntities.viewId] = id
+                this[ViewEntities.entityId] = it
             }
         }
-        return SimpleView(id, name, owner, true, characterIds, game, featured)
+        return SimpleView(id, name, owner, true, entitiesIds, game, featured)
     }
 
     override suspend fun edit(
         id: String,
         name: String,
         published: Boolean,
-        characters: List<Long>,
+        entities: List<Long>,
         featured: Boolean
     ): ViewModified {
         newSuspendedTransaction(Dispatchers.IO, db) {
@@ -116,35 +119,35 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.published] = published
                 it[Views.featured] = featured
             }
-            CharactersView.deleteWhere { viewId.eq(id) }
-            CharactersView.batchInsert(characters) {
-                this[CharactersView.viewId] = id
-                this[CharactersView.characterId] = it
+            ViewEntities.deleteWhere { viewId.eq(id) }
+            ViewEntities.batchInsert(entities) {
+                this[ViewEntities.viewId] = id
+                this[ViewEntities.entityId] = it
             }
         }
-        return ViewModified(id, name, published, characters, featured)
+        return ViewModified(id, name, published, entities, featured)
     }
 
     override suspend fun patch(
         id: String,
         name: String?,
         published: Boolean?,
-        characters: List<Long>?,
+        entities: List<Long>?,
         featured: Boolean?
     ): ViewPatched {
         newSuspendedTransaction(Dispatchers.IO, db) {
             name?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.name] = it } }
             published?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.published] = it } }
-            characters?.let {
-                CharactersView.deleteWhere { viewId.eq(id) }
-                CharactersView.batchInsert(it) { cid ->
-                    this[CharactersView.viewId] = id
-                    this[CharactersView.characterId] = cid
+            entities?.let {
+                ViewEntities.deleteWhere { viewId.eq(id) }
+                ViewEntities.batchInsert(it) { cid ->
+                    this[ViewEntities.viewId] = id
+                    this[ViewEntities.entityId] = cid
                 }
             }
             featured?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.featured] = it } }
         }
-        return ViewPatched(id, name, published, characters, featured)
+        return ViewPatched(id, name, published, entities, featured)
     }
 
     override suspend fun delete(id: String): Unit {

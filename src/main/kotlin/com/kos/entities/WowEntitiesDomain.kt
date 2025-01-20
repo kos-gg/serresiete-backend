@@ -1,4 +1,4 @@
-package com.kos.characters
+package com.kos.entities
 
 import kotlinx.serialization.Serializable
 
@@ -6,18 +6,43 @@ data class Spec(val name: String, val externalSpec: Int, val internalSpec: Int)
 data class Class(val `class`: String, val specs: List<Spec>)
 
 @Serializable
-data class WowCharacterRequest(override val name: String, val region: String, val realm: String): CharacterCreateRequest, CharacterInsertRequest {
-    override fun toCharacter(id: Long) = WowCharacter(id, name, region, realm)
-    override fun same(other: Character): Boolean {
-        return when(other) {
-            is WowCharacter -> this.name == other.name && this.region == other.region && this.realm == other.realm
+data class WowEntityRequest(override val name: String, val region: String, val realm: String) :
+    CreateEntityRequest, InsertEntityRequest {
+    override fun toEntity(id: Long) = WowEntity(id, name, region, realm, null)
+    override fun same(other: Entity): Boolean {
+        return when (other) {
+            is WowEntity -> this.name == other.name && this.region == other.region && this.realm == other.realm
+            else -> false
+        }
+    }
+}
+
+data class WowEnrichedEntityRequest(
+    override val name: String,
+    val region: String,
+    val realm: String,
+    val blizzardId: Long?
+) : InsertEntityRequest {
+    override fun toEntity(id: Long): WowEntity {
+        return WowEntity(id, name, region, realm, blizzardId)
+    }
+
+    override fun same(other: Entity): Boolean {
+        return when (other) {
+            is WowEntity -> this.blizzardId == other.blizzardId
             else -> false
         }
     }
 }
 
 @Serializable
-data class WowCharacter(override val id: Long, override val name: String, val region: String, val realm: String): Character {
+data class WowEntity(
+    override val id: Long,
+    override val name: String,
+    val region: String,
+    val realm: String,
+    val blizzardId: Long?
+) : Entity {
     fun specsWithName(`class`: String): List<Spec> = classes.find { it.`class` == `class` }?.specs.orEmpty()
 }
 

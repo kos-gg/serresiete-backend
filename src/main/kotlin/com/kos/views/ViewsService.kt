@@ -3,8 +3,8 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import com.kos.characters.CharacterCreateRequest
-import com.kos.characters.CharactersService
+import com.kos.entities.CreateEntityRequest
+import com.kos.entities.EntitiesService
 import com.kos.clients.domain.Data
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
@@ -16,7 +16,7 @@ import java.util.*
 
 class ViewsService(
     private val viewsRepository: ViewsRepository,
-    private val charactersService: CharactersService,
+    private val entitiesService: EntitiesService,
     private val dataCacheService: DataCacheService,
     private val credentialsService: CredentialsService,
     private val eventStore: EventStore
@@ -35,8 +35,8 @@ class ViewsService(
                     simpleView.name,
                     simpleView.owner,
                     simpleView.published,
-                    simpleView.characterIds.mapNotNull {
-                        charactersService.get(it, simpleView.game)
+                    simpleView.entitiesIds.mapNotNull {
+                        entitiesService.get(it, simpleView.game)
                     },
                     simpleView.game,
                     simpleView.featured
@@ -50,7 +50,7 @@ class ViewsService(
     suspend fun create(owner: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
             ensureMaxNumberOfViews(owner).bind()
-            ensureMaxNumberOfCharacters(owner, request.characters).bind()
+            ensureMaxNumberOfEntities(owner, request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -61,7 +61,7 @@ class ViewsService(
                     operationId,
                     request.name,
                     request.published,
-                    request.characters,
+                    request.entities,
                     request.game,
                     owner,
                     request.featured
@@ -77,13 +77,13 @@ class ViewsService(
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Either<InsertError, Operation> {
         return either {
-            val characterIds =
-                charactersService.createAndReturnIds(viewToBeCreatedEvent.characters, viewToBeCreatedEvent.game).bind()
+            val entitiesIds =
+                entitiesService.createAndReturnIds(viewToBeCreatedEvent.entities, viewToBeCreatedEvent.game).bind()
             val view = viewsRepository.create(
                 viewToBeCreatedEvent.id,
                 viewToBeCreatedEvent.name,
                 viewToBeCreatedEvent.owner,
-                characterIds,
+                entitiesIds,
                 viewToBeCreatedEvent.game,
                 viewToBeCreatedEvent.featured
             )
@@ -98,7 +98,7 @@ class ViewsService(
 
     suspend fun edit(owner: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
-            ensureMaxNumberOfCharacters(owner, request.characters).bind()
+            ensureMaxNumberOfEntities(owner, request.entities).bind()
 
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
@@ -108,7 +108,7 @@ class ViewsService(
                     id,
                     request.name,
                     request.published,
-                    request.characters,
+                    request.entities,
                     request.game,
                     request.featured
                 )
@@ -123,14 +123,14 @@ class ViewsService(
         viewToBeEditedEvent: ViewToBeEditedEvent
     ): Either<ControllerError, Operation> {
         return either {
-            val characters =
-                charactersService.createAndReturnIds(viewToBeEditedEvent.characters, viewToBeEditedEvent.game).bind()
+            val entities =
+                entitiesService.createAndReturnIds(viewToBeEditedEvent.entities, viewToBeEditedEvent.game).bind()
             val viewModified =
                 viewsRepository.edit(
                     viewToBeEditedEvent.id,
                     viewToBeEditedEvent.name,
                     viewToBeEditedEvent.published,
-                    characters,
+                    entities,
                     viewToBeEditedEvent.featured
                 )
             val event = Event(
@@ -145,7 +145,7 @@ class ViewsService(
 
     suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
         return either {
-            ensureMaxNumberOfCharacters(owner, request.characters).bind()
+            ensureMaxNumberOfEntities(owner, request.entities).bind()
 
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
@@ -155,7 +155,7 @@ class ViewsService(
                     id,
                     request.name,
                     request.published,
-                    request.characters,
+                    request.entities,
                     request.game,
                     request.featured
                 )
@@ -171,14 +171,14 @@ class ViewsService(
         viewToBePatchedEvent: ViewToBePatchedEvent
     ): Either<InsertError, Operation> {
         return either {
-            val charactersToInsert = viewToBePatchedEvent.characters?.let { charactersToInsert ->
-                charactersService.createAndReturnIds(charactersToInsert, viewToBePatchedEvent.game).bind()
+            val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
+                entitiesService.createAndReturnIds(entitiesToInsert, viewToBePatchedEvent.game).bind()
             }
             val patchedView = viewsRepository.patch(
                 viewToBePatchedEvent.id,
                 viewToBePatchedEvent.name,
                 viewToBePatchedEvent.published,
-                charactersToInsert,
+                entitiesToInsert,
                 viewToBePatchedEvent.featured
             )
             val event = Event(
@@ -199,7 +199,7 @@ class ViewsService(
                 viewToDelete.id,
                 viewToDelete.name,
                 viewToDelete.owner,
-                viewToDelete.characterIds,
+                viewToDelete.entitiesIds,
                 viewToDelete.published,
                 viewToDelete.game,
                 viewToDelete.featured
@@ -211,10 +211,10 @@ class ViewsService(
     }
 
     suspend fun getData(view: View): Either<HttpError, List<Data>> =
-        dataCacheService.getData(view.characters.map { it.id }, oldFirst = false)
+        dataCacheService.getData(view.entities.map { it.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =
-        dataCacheService.getData(simpleView.characterIds, oldFirst = true)
+        dataCacheService.getData(simpleView.entitiesIds, oldFirst = true)
 
     private suspend fun getMaxNumberOfViewsByRole(owner: String): Either<UserWithoutRoles, Int> =
         when (val maxNumberOfViews = credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfViews }) {
@@ -222,11 +222,11 @@ class ViewsService(
             else -> Either.Right(maxNumberOfViews)
         }
 
-    private suspend fun getMaxNumberOfCharactersByRole(owner: String): Either<UserWithoutRoles, Int> =
-        when (val maxNumberOfCharacters =
-            credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfCharacters }) {
+    private suspend fun getMaxNumberOfEntitiesByRole(owner: String): Either<UserWithoutRoles, Int> =
+        when (val maxNumberOfEntities =
+            credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) {
             null -> Either.Left(UserWithoutRoles)
-            else -> Either.Right(maxNumberOfCharacters)
+            else -> Either.Right(maxNumberOfEntities)
         }
 
     private suspend fun ensureMaxNumberOfViews(owner: String): Either<ControllerError, Unit> {
@@ -236,14 +236,14 @@ class ViewsService(
         }
     }
 
-    private suspend fun ensureMaxNumberOfCharacters(
+    private suspend fun ensureMaxNumberOfEntities(
         owner: String,
-        characters: List<CharacterCreateRequest>?
+        entities: List<CreateEntityRequest>?
     ): Either<ControllerError, Unit> {
         return either {
-            val ownerMaxCharacters = getMaxNumberOfCharactersByRole(owner).bind()
-            characters?.let { charactersToInsert ->
-                ensure(charactersToInsert.size <= ownerMaxCharacters) { TooMuchCharacters }
+            val ownerMaxNumberOfEntities = getMaxNumberOfEntitiesByRole(owner).bind()
+            entities?.let { entitiesToInsert ->
+                ensure(entitiesToInsert.size <= ownerMaxNumberOfEntities) { TooMuchEntities }
             }
         }
     }

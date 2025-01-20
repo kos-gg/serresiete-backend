@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import com.kos.clients.domain.*
 import com.kos.common.HttpError
 import com.kos.common.JsonParseError
+import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
@@ -119,9 +120,25 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 val tokenResponse = getAndUpdateToken().bind()
                 val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")
                 val namespace = "profile-classic1x"
-                fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
-                    json.decodeFromString<GetWowCharacterResponse>(it)
-                }.bind()
+
+                val response = client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                        append(HttpHeaders.Accept, "*/*")
+                        append("Battlenet-Namespace", "$namespace-$region")
+                    }
+                }
+
+                if (response.status.value == 404) raise(NotFoundHardcoreCharacter(name))
+
+                val jsonString = response.body<String>()
+                try {
+                    json.decodeFromString<GetWowCharacterResponse>(jsonString)
+                } catch (e: SerializationException) {
+                    raise(JsonParseError(jsonString, e.stackTraceToString()))
+                } catch (e: IllegalArgumentException) {
+                    raise(json.decodeFromString<RiotError>(jsonString))
+                }
             }
         }
     }

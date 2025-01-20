@@ -40,7 +40,7 @@ abstract class DataCacheRepositoryTestCommon {
     @Test
     open fun `given a repository with multiple cached data i can retrieve the only ones related to a certain character`() {
         runBlocking {
-            val repositoryWithState = repository.withState(listOf(wowDataCache, wowDataCache.copy(characterId = 2)))
+            val repositoryWithState = repository.withState(listOf(wowDataCache, wowDataCache.copy(entityId = 2)))
             assertEquals(listOf(wowDataCache), repositoryWithState.get(1))
         }
     }

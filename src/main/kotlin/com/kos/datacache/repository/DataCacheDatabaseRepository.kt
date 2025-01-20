@@ -16,7 +16,7 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
     override suspend fun withState(initialState: List<DataCache>): DataCacheDatabaseRepository {
         newSuspendedTransaction(Dispatchers.IO, db) {
             DataCaches.batchInsert(initialState) {
-                this[DataCaches.characterId] = it.characterId
+                this[DataCaches.entityId] = it.entityId
                 this[DataCaches.data] = it.data
                 this[DataCaches.inserted] = it.inserted.toString()
                 this[DataCaches.game] = it.game.toString()
@@ -26,16 +26,16 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
     }
 
     object DataCaches : Table("data_cache") {
-        val characterId = long("character_id")
+        val entityId = long("entity_id")
         val data = text("data")
         val inserted = text("inserted")
         val game = text("game")
 
-        override val primaryKey = PrimaryKey(characterId)
+        override val primaryKey = PrimaryKey(entityId)
     }
 
     private fun resultRowToDataCache(row: ResultRow) = DataCache(
-        row[DataCaches.characterId],
+        row[DataCaches.entityId],
         row[DataCaches.data],
         OffsetDateTime.parse(row[DataCaches.inserted]),
         Game.fromString(row[DataCaches.game]).getOrThrow()
@@ -44,7 +44,7 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
     override suspend fun insert(data: List<DataCache>): Boolean {
         newSuspendedTransaction(Dispatchers.IO, db) {
             DataCaches.batchInsert(data) {
-                this[DataCaches.characterId] = it.characterId
+                this[DataCaches.entityId] = it.entityId
                 this[DataCaches.data] = it.data
                 this[DataCaches.inserted] = it.inserted.toString()
                 this[DataCaches.game] = it.game.toString()
@@ -53,9 +53,9 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
         return true
     }
 
-    override suspend fun get(characterId: Long): List<DataCache> =
+    override suspend fun get(entityId: Long): List<DataCache> =
         newSuspendedTransaction(Dispatchers.IO, db) {
-            DataCaches.selectAll().where { DataCaches.characterId.eq(characterId) }.map { resultRowToDataCache(it) }
+            DataCaches.selectAll().where { DataCaches.entityId.eq(entityId) }.map { resultRowToDataCache(it) }
         }
 
     override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
@@ -68,14 +68,14 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
                 .and(expiredCondition)
 
         return if (keepLastRecord) newSuspendedTransaction(Dispatchers.IO, db) {
-            val idsToRetain = DataCaches.select(DataCaches.characterId)
+            val idsToRetain = DataCaches.select(DataCaches.entityId)
                 .where(where)
-                .groupBy(DataCaches.characterId)
-                .having { DataCaches.characterId.count() eq 1 }
-                .map { it[DataCaches.characterId] }
+                .groupBy(DataCaches.entityId)
+                .having { DataCaches.entityId.count() eq 1 }
+                .map { it[DataCaches.entityId] }
 
             DataCaches.deleteWhere {
-                where.and(characterId notInList idsToRetain)
+                where.and(entityId notInList idsToRetain)
             }
 
         } else {

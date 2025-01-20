@@ -8,6 +8,7 @@ object ViewsTestHelper {
     val published = true
     val featured = false
     val basicSimpleWowView = SimpleView(id, name, owner, published, listOf(), Game.WOW, featured)
+    val basicSimpleWowHardcoreView = SimpleView(id, name, owner, published, listOf(), Game.WOW_HC, featured)
     val basicSimpleLolView = SimpleView(id, name, owner, published, listOf(), Game.LOL, featured)
     val basicSimpleLolViews = listOf(
         basicSimpleLolView,
@@ -31,4 +32,4 @@ object ViewsTestHelper {
 }
 
 fun View.toSimple() =
-    SimpleView(this.id, this.name, this.owner, this.published, this.characters.map { it.id }, this.game, this.featured)
+    SimpleView(this.id, this.name, this.owner, this.published, this.entities.map { it.id }, this.game, this.featured)

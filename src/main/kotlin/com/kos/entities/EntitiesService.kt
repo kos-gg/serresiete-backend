@@ -1,18 +1,14 @@
-package com.kos.characters
+package com.kos.entities
 
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import com.kos.characters.repository.CharactersRepository
-import com.kos.common.InsertError
-import com.kos.common.WithLogger
-import com.kos.common.collect
-import com.kos.common.split
-import com.kos.common.*
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRealmResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.common.*
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -21,27 +17,27 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-data class CharactersService(
-    private val charactersRepository: CharactersRepository,
+data class EntitiesService(
+    private val entitiesRepository: EntitiesRepository,
     private val raiderioClient: RaiderIoClient,
     private val riotClient: RiotClient,
     private val blizzardClient: BlizzardClient
-) : WithLogger("CharactersService") {
+) : WithLogger("EntitiesService") {
     suspend fun createAndReturnIds(
-        requestedCharacters: List<CharacterCreateRequest>,
+        requestedEntities: List<CreateEntityRequest>,
         game: Game
     ): Either<InsertError, List<Long>> {
-        suspend fun getCurrentAndNewCharacters(
-            requestedCharacters: List<CharacterCreateRequest>,
+        suspend fun getCurrentAndNewEntities(
+            requestedEntities: List<CreateEntityRequest>,
             game: Game,
-            charactersRepository: CharactersRepository
-        ): Pair<List<Character>, List<CharacterCreateRequest>> = coroutineScope {
+            entitiesRepository: EntitiesRepository
+        ): Pair<List<Entity>, List<CreateEntityRequest>> = coroutineScope {
 
-            val characters = requestedCharacters.asFlow()
-                .map { requestedCharacter ->
+            val entities = requestedEntities.asFlow()
+                .map { requestedEntity ->
                     async {
-                        when (val maybeFound = charactersRepository.get(requestedCharacter, game)) {
-                            null -> Either.Right(requestedCharacter)
+                        when (val maybeFound = entitiesRepository.get(requestedEntity, game)) {
+                            null -> Either.Right(requestedEntity)
                             else -> Either.Left(maybeFound)
                         }
                     }
@@ -50,19 +46,19 @@ data class CharactersService(
                 .toList()
                 .awaitAll()
 
-            characters.split()
+            entities.split()
         }
 
-        val existentAndNew = getCurrentAndNewCharacters(requestedCharacters, game, charactersRepository)
+        val existentAndNew = getCurrentAndNewEntities(requestedEntities, game, entitiesRepository)
 
-        existentAndNew.second.forEach { logger.info("Character new found: $it") }
+        existentAndNew.second.forEach { logger.info("Entity new found: $it") }
 
         val newThatExist = when (game) {
             Game.WOW -> {
                 coroutineScope {
                     existentAndNew.second.map { initialRequest ->
                         async {
-                            initialRequest as WowCharacterRequest
+                            initialRequest as WowEntityRequest
                             initialRequest to raiderioClient.exists(initialRequest)
                         }
                     }
@@ -75,7 +71,7 @@ data class CharactersService(
                     val errorsAndValidated = existentAndNew.second.map { initialRequest ->
                         async {
                             either {
-                                initialRequest as WowCharacterRequest
+                                initialRequest as WowEntityRequest
                                 val characterResponse =
                                     blizzardClient.getCharacterProfile(
                                         initialRequest.region,
@@ -85,8 +81,17 @@ data class CharactersService(
                                 val realm: GetWowRealmResponse =
                                     blizzardClient.getRealm(initialRequest.region, characterResponse.realm.id).bind()
                                 //TODO: Anniversary can be also non hardcore. Try to find another way to decide if its hardcore or not
-                                ensure(realm.category == "Hardcore" || realm.category == "Anniversary") { NonHardcoreCharacter(initialRequest) }
-                                initialRequest
+                                ensure(realm.category == "Hardcore" || realm.category == "Anniversary") {
+                                    NonHardcoreCharacter(
+                                        initialRequest
+                                    )
+                                }
+                                WowEnrichedEntityRequest(
+                                    initialRequest.name,
+                                    initialRequest.region,
+                                    initialRequest.realm,
+                                    characterResponse.id
+                                )
                             }
                         }
                     }.awaitAll().split()
@@ -100,14 +105,14 @@ data class CharactersService(
                     .buffer(40)
                     .mapNotNull { initialRequest ->
                         either {
-                            initialRequest as LolCharacterRequest
+                            initialRequest as LolEntityRequest
                             val puuid = riotClient.getPUUIDByRiotId(initialRequest.name, initialRequest.tag)
                                 .onLeft { error -> logger.error(error.error()) }
                                 .bind()
                             val summonerResponse = riotClient.getSummonerByPuuid(puuid.puuid)
                                 .onLeft { error -> logger.error(error.error()) }
                                 .bind()
-                            LolCharacterEnrichedRequest(
+                            LolEnrichedEntityRequest(
                                 initialRequest.name,
                                 initialRequest.tag,
                                 summonerResponse.puuid,
@@ -118,19 +123,19 @@ data class CharactersService(
                         }.getOrNull()
                     }
                     .buffer(3)
-                    .filterNot { characterToInsert -> charactersRepository.get(characterToInsert, game).isDefined() }
+                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert, game).isDefined() }
                     .toList()
             }
         }
 
-        return charactersRepository.insert(newThatExist, game)
+        return entitiesRepository.insert(newThatExist, game)
             .map { list -> list.map { it.id } + existentAndNew.first.map { it.id } }
     }
 
-    suspend fun updateLolCharacters(characters: List<LolCharacter>): List<ControllerError> =
+    suspend fun updateLolEntities(entities: List<LolEntity>): List<ControllerError> =
         coroutineScope {
             val errorsChannel = Channel<ControllerError>()
-            val dataChannel = Channel<Pair<LolCharacterEnrichedRequest, Long>>()
+            val dataChannel = Channel<Pair<LolEnrichedEntityRequest, Long>>()
             val errorsList = mutableListOf<ControllerError>()
 
             val errorsCollector = launch {
@@ -143,19 +148,19 @@ data class CharactersService(
             val dataCollector = launch {
                 dataChannel.consumeAsFlow()
                     .buffer(40)
-                    .collect { characterWithId ->
-                        charactersRepository.update(characterWithId.second, characterWithId.first, Game.LOL)
-                        logger.info("updated character ${characterWithId.second}")
+                    .collect { entityWithId ->
+                        entitiesRepository.update(entityWithId.second, entityWithId.first, Game.LOL)
+                        logger.info("updated eEntity ${entityWithId.second}")
                     }
             }
 
-            characters.asFlow()
+            entities.asFlow()
                 .buffer(40)
-                .collect { lolCharacter ->
-                    val result = retrieveUpdatedLolCharacter(lolCharacter)
+                .collect { lolEntity ->
+                    val result = retrieveUpdatedLolEntity(lolEntity)
                     result.fold(
                         ifLeft = { error -> errorsChannel.send(error) },
-                        ifRight = { dataChannel.send(Pair(it, lolCharacter.id)) }
+                        ifRight = { dataChannel.send(Pair(it, lolEntity.id)) }
                     )
                 }
             dataChannel.close()
@@ -164,18 +169,18 @@ data class CharactersService(
             errorsCollector.join()
             dataCollector.join()
 
-            logger.info("Finished Updating Lol characters")
+            logger.info("Finished Updating Lol entities")
             errorsList
         }
 
-    private suspend fun retrieveUpdatedLolCharacter(lolCharacter: LolCharacter): Either<HttpError, LolCharacterEnrichedRequest> =
+    private suspend fun retrieveUpdatedLolEntity(lolEntity: LolEntity): Either<HttpError, LolEnrichedEntityRequest> =
         either {
-            val summoner = riotClient.getSummonerByPuuid(lolCharacter.puuid).bind()
-            val account = riotClient.getAccountByPUUID(lolCharacter.puuid).bind()
-            LolCharacterEnrichedRequest(
+            val summoner = riotClient.getSummonerByPuuid(lolEntity.puuid).bind()
+            val account = riotClient.getAccountByPUUID(lolEntity.puuid).bind()
+            LolEnrichedEntityRequest(
                 name = account.gameName,
                 tag = account.tagLine,
-                puuid = lolCharacter.puuid,
+                puuid = lolEntity.puuid,
                 summonerIconId = summoner.profileIconId,
                 summonerId = summoner.id,
                 summonerLevel = summoner.summonerLevel
@@ -183,11 +188,13 @@ data class CharactersService(
         }
 
 
-    suspend fun get(id: Long, game: Game): Character? = charactersRepository.get(id, game)
-    suspend fun get(game: Game): List<Character> = charactersRepository.get(game)
-    suspend fun getCharactersToSync(game: Game, olderThanMinutes: Long) =
-        charactersRepository.getCharactersToSync(game, olderThanMinutes)
+    suspend fun get(id: Long, game: Game): Entity? = entitiesRepository.get(id, game)
+    suspend fun get(game: Game): List<Entity> = entitiesRepository.get(game)
+    suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long) =
+        entitiesRepository.getEntitiesToSync(game, olderThanMinutes)
 
-    suspend fun getViewsFromCharacter(id: Long, game: Game?): List<String> = charactersRepository.getViewsFromCharacter(id, game)
-    suspend fun delete(id: Long, game: Game): Unit = charactersRepository.delete(id, game)
+    suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =
+        entitiesRepository.getViewsFromEntity(id, game)
+
+    suspend fun delete(id: Long, game: Game): Unit = entitiesRepository.delete(id, game)
 }
