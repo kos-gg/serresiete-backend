@@ -1,7 +1,7 @@
 package com.kos.clients.raiderio
 
 import arrow.core.Either
-import com.kos.characters.WowCharacter
+import com.kos.entities.WowEntity
 import com.kos.clients.domain.RaiderIoResponse
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.raiderioProfileResponse
@@ -20,7 +20,7 @@ class RaiderIoHTTPClientTest {
     fun `test get() method with successful response`() {
         runBlocking {
             val result: Either<HttpError, RaiderIoResponse> = raiderIoClient.get(
-                WowCharacter(1, "region", "realm", "name", null)
+                WowEntity(1, "region", "realm", "name", null)
             )
             assertEquals(Either.Right(raiderioProfileResponse), result)
         }

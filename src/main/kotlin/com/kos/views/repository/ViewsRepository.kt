@@ -10,7 +10,7 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
         id: String,
         name: String,
         owner: String,
-        characterIds: List<Long>,
+        entitiesIds: List<Long>,
         game: Game,
         featured: Boolean
     ): SimpleView
@@ -19,7 +19,7 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
         id: String,
         name: String,
         published: Boolean,
-        characters: List<Long>,
+        entities: List<Long>,
         featured: Boolean
     ): ViewModified
 
@@ -27,7 +27,7 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
         id: String,
         name: String?,
         published: Boolean?,
-        characters: List<Long>?,
+        entities: List<Long>?,
         featured: Boolean?
     ): ViewPatched
 

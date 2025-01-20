@@ -2,14 +2,14 @@ package com.kos.views
 
 import com.kos.activities.Activities
 import com.kos.assertTrue
-import com.kos.characters.CharactersService
-import com.kos.characters.CharactersTestHelper.basicLolCharacter
-import com.kos.characters.CharactersTestHelper.basicWowCharacter
-import com.kos.characters.CharactersTestHelper.basicWowRequest2
-import com.kos.characters.CharactersTestHelper.emptyCharactersState
-import com.kos.characters.CharactersTestHelper.lolCreateCharacterRequest
-import com.kos.characters.repository.CharactersInMemoryRepository
-import com.kos.characters.repository.CharactersState
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowRequest2
+import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.EntitiesTestHelper.lolEntityRequest
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -53,7 +53,7 @@ class ViewsControllerTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
     private val viewsRepository = ViewsInMemoryRepository()
-    private val charactersRepository = CharactersInMemoryRepository()
+    private val entitiesRepository = EntitiesInMemoryRepository()
     private val dataCacheRepository = DataCacheInMemoryRepository()
     private val credentialsRepository = CredentialsInMemoryRepository()
     private val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
@@ -62,22 +62,22 @@ class ViewsControllerTest {
     private suspend fun createController(
         credentialsState: CredentialsRepositoryState,
         viewsState: List<SimpleView>,
-        charactersState: CharactersState,
+        entitiesState: EntitiesState,
         dataCacheState: List<DataCache>,
     ): ViewsController {
         val viewsRepositoryWithState = viewsRepository.withState(viewsState)
-        val charactersRepositoryWithState = charactersRepository.withState(charactersState)
+        val charactersRepositoryWithState = entitiesRepository.withState(entitiesState)
         val dataCacheRepositoryWithState = dataCacheRepository.withState(dataCacheState)
         val credentialsRepositoryWithState = credentialsRepository.withState(credentialsState)
 
         val dataCacheService =
             DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
-        val charactersService =
-            CharactersService(charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
+        val entitiesService =
+            EntitiesService(charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
         val viewsService = ViewsService(
             viewsRepositoryWithState,
-            charactersService,
+            entitiesService,
             dataCacheService,
             credentialsService,
             eventStore
@@ -90,7 +90,7 @@ class ViewsControllerTest {
     @BeforeTest
     fun beforeEach() {
         viewsRepository.clear()
-        charactersRepository.clear()
+        entitiesRepository.clear()
         dataCacheRepository.clear()
         credentialsRepository.clear()
         rolesActivitiesRepository.clear()
@@ -104,7 +104,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 basicSimpleGameViews,
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -124,7 +124,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 basicSimpleGameViews,
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -143,7 +143,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 listOf(basicSimpleWowView, featuredView),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -162,7 +162,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 views,
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
 
@@ -183,7 +183,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 listOf(basicSimpleWowView, basicSimpleWowView.copy(owner = "not-owner")),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -201,7 +201,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 listOf(basicSimpleWowView, notOwnerView),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -219,7 +219,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 listOf(basicSimpleWowView, notOwnerView),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -239,7 +239,7 @@ class ViewsControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 listOf(),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             assertEquals(
@@ -260,7 +260,7 @@ class ViewsControllerTest {
                     mapOf(owner to listOf(Role.USER))
                 ),
                 listOf(),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
 
@@ -288,7 +288,7 @@ class ViewsControllerTest {
                     mapOf(owner to listOf(Role.USER))
                 ),
                 listOf(),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
             controller.createView(
@@ -314,7 +314,7 @@ class ViewsControllerTest {
                     mapOf(owner to listOf(Role.USER))
                 ),
                 listOf(basicSimpleWowView, basicSimpleWowView),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf()
             )
 
@@ -333,13 +333,13 @@ class ViewsControllerTest {
         runBlocking {
             val controller = createController(
                 emptyCredentialsState,
-                listOf(basicSimpleWowView.copy(characterIds = listOf(1))),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf()),
-                listOf(DataCache(basicWowCharacter.id, raiderIoDataString, OffsetDateTime.now(), Game.WOW))
+                listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
+                listOf(DataCache(basicWowEntity.id, raiderIoDataString, OffsetDateTime.now(), Game.WOW))
             )
 
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
-            `when`(raiderIoClient.get(basicWowCharacter)).thenReturn(RaiderIoMockHelper.get(basicWowCharacter))
+            `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
 
             controller.getViewData("owner", basicSimpleWowView.id, setOf(Activities.getViewData))
                 .onRight {
@@ -354,8 +354,8 @@ class ViewsControllerTest {
         runBlocking {
             val controller = createController(
                 emptyCredentialsState,
-                listOf(basicSimpleLolView.copy(characterIds = listOf(2))),
-                CharactersState(listOf(), listOf(), listOf(basicLolCharacter.copy(id = 2))),
+                listOf(basicSimpleLolView.copy(entitiesIds = listOf(2))),
+                EntitiesState(listOf(), listOf(), listOf(basicLolEntity.copy(id = 2))),
                 listOf(lolDataCache)
             )
 
@@ -373,8 +373,8 @@ class ViewsControllerTest {
 
             val controller = createController(
                 emptyCredentialsState,
-                listOf(basicSimpleWowView.copy(characterIds = listOf(1))),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf()),
+                listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
                 listOf(wowDataCache)
             )
 
@@ -396,8 +396,8 @@ class ViewsControllerTest {
 
             val controller = createController(
                 credentialsState,
-                listOf(basicSimpleLolView.copy(characterIds = listOf(2))),
-                CharactersState(listOf(), listOf(), listOf(basicLolCharacter)),
+                listOf(basicSimpleLolView.copy(entitiesIds = listOf(2))),
+                EntitiesState(listOf(), listOf(), listOf(basicLolEntity)),
                 listOf(lolDataCache)
             )
 
@@ -420,13 +420,13 @@ class ViewsControllerTest {
             val controller = createController(
                 credentialsState,
                 listOf(basicSimpleWowView),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf(basicLolEntity)),
                 listOf(lolDataCache)
             )
 
             `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
 
-            val viewRequest = ViewRequest("new-name", false, characters = listOf(basicWowRequest2), Game.WOW, false)
+            val viewRequest = ViewRequest("new-name", false, entities = listOf(basicWowRequest2), Game.WOW, false)
 
             controller.editView("owner", viewRequest, basicSimpleWowView.id, setOf(Activities.editAnyView))
                 .onRight {
@@ -449,13 +449,13 @@ class ViewsControllerTest {
             val controller = createController(
                 credentialsState,
                 listOf(basicSimpleWowView),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf(basicLolEntity)),
                 listOf(lolDataCache)
             )
 
             `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
 
-            val viewRequest = ViewRequest("new-name", false, characters = listOf(basicWowRequest2), Game.WOW, true)
+            val viewRequest = ViewRequest("new-name", false, entities = listOf(basicWowRequest2), Game.WOW, true)
 
             controller.editView("owner", viewRequest, basicSimpleWowView.id, setOf(Activities.editAnyView))
                 .onRight {
@@ -480,12 +480,12 @@ class ViewsControllerTest {
             val controller = createController(
                 credentialsState,
                 listOf(basicSimpleWowView),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf(basicLolEntity)),
                 listOf(lolDataCache)
             )
 
             val viewPatchRequest =
-                ViewPatchRequest("new-name", false, characters = listOf(lolCreateCharacterRequest), Game.LOL, null)
+                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), Game.LOL, null)
 
             controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
                 .onRight {
@@ -510,12 +510,12 @@ class ViewsControllerTest {
             val controller = createController(
                 credentialsState,
                 listOf(basicSimpleWowView),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf(basicLolEntity)),
                 listOf(lolDataCache)
             )
 
             val viewPatchRequest =
-                ViewPatchRequest("new-name", false, characters = listOf(lolCreateCharacterRequest), Game.LOL, true)
+                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), Game.LOL, true)
 
             controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
                 .onRight {
@@ -540,12 +540,12 @@ class ViewsControllerTest {
             val controller = createController(
                 credentialsState,
                 listOf(basicSimpleWowView),
-                CharactersState(listOf(basicWowCharacter), listOf(), listOf(basicLolCharacter)),
+                EntitiesState(listOf(basicWowEntity), listOf(), listOf(basicLolEntity)),
                 listOf(lolDataCache)
             )
 
             val viewPatchRequest =
-                ViewPatchRequest("new-name", false, characters = listOf(lolCreateCharacterRequest), Game.LOL, true)
+                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), Game.LOL, true)
 
             controller.patchView(
                 user,

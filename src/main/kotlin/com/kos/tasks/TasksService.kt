@@ -1,8 +1,8 @@
 package com.kos.tasks
 
 import com.kos.auth.AuthService
-import com.kos.characters.CharactersService
-import com.kos.characters.LolCharacter
+import com.kos.entities.EntitiesService
+import com.kos.entities.LolEntity
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
 import com.kos.tasks.repository.TasksRepository
@@ -12,7 +12,7 @@ import java.time.OffsetDateTime
 data class TasksService(
     private val tasksRepository: TasksRepository,
     private val dataCacheService: DataCacheService,
-    private val charactersService: CharactersService,
+    private val entitiesService: EntitiesService,
     private val authService: AuthService
 ) : WithLogger("tasksService") {
 
@@ -29,20 +29,20 @@ data class TasksService(
             TaskType.CACHE_WOW_DATA_TASK -> cacheDataTask(Game.WOW, taskType, taskId)
             TaskType.CACHE_WOW_HC_DATA_TASK -> cacheDataTask(Game.WOW_HC, taskType, taskId)
             TaskType.TASK_CLEANUP_TASK -> taskCleanup(taskId)
-            TaskType.UPDATE_LOL_CHARACTERS_TASK -> updateLolCharacters(taskId)
+            TaskType.UPDATE_LOL_ENTITIES_TASK -> updateLolEntities(taskId)
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    suspend fun updateLolCharacters(id: String) {
-        logger.info("Updating lol characters")
-        val lolCharacters = charactersService.get(Game.LOL) as List<LolCharacter>
-        val errors = charactersService.updateLolCharacters(lolCharacters)
+    suspend fun updateLolEntities(id: String) {
+        logger.info("Updating lol entities")
+        val lolEntities = entitiesService.get(Game.LOL) as List<LolEntity>
+        val errors = entitiesService.updateLolEntities(lolEntities)
         if (errors.isEmpty()) {
             tasksRepository.insertTask(
                 Task(
                     id,
-                    TaskType.UPDATE_LOL_CHARACTERS_TASK,
+                    TaskType.UPDATE_LOL_ENTITIES_TASK,
                     TaskStatus(Status.SUCCESSFUL, null),
                     OffsetDateTime.now()
                 )
@@ -51,7 +51,7 @@ data class TasksService(
             tasksRepository.insertTask(
                 Task(
                     id,
-                    TaskType.UPDATE_LOL_CHARACTERS_TASK,
+                    TaskType.UPDATE_LOL_ENTITIES_TASK,
                     TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
                     OffsetDateTime.now()
                 )
@@ -89,15 +89,15 @@ data class TasksService(
 
     suspend fun cacheDataTask(game: Game, taskType: TaskType, id: String) {
         logger.info("Running $taskType")
-        val characters = charactersService.getCharactersToSync(game, 30)
-        logger.debug("characters to be synced: {}", characters.map { it.id }.joinToString(","))
-        val errors = dataCacheService.cache(characters, game)
+        val entities = entitiesService.getEntitiesToSync(game, 30)
+        logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
+        val errors = dataCacheService.cache(entities, game)
         if (errors.isEmpty()) {
             tasksRepository.insertTask(
                 Task(
                     id,
                     taskType,
-                    TaskStatus(Status.SUCCESSFUL, "characters synced: ${characters.map { it.id }.joinToString { "," }}"),
+                    TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"),
                     OffsetDateTime.now()
                 )
             )

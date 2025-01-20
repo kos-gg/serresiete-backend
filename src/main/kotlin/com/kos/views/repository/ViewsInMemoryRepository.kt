@@ -16,11 +16,11 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         id: String,
         name: String,
         owner: String,
-        characterIds: List<Long>,
+        entitiesIds: List<Long>,
         game: Game,
         featured: Boolean
     ): SimpleView {
-        val simpleView = SimpleView(id, name, owner, true, characterIds, game, featured)
+        val simpleView = SimpleView(id, name, owner, true, entitiesIds, game, featured)
         views.add(simpleView)
         return simpleView
     }
@@ -29,21 +29,21 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         id: String,
         name: String,
         published: Boolean,
-        characters: List<Long>,
+        entities: List<Long>,
         featured: Boolean
     ): ViewModified {
         val index = views.indexOfFirst { it.id == id }
         val oldView = views[index]
         views.removeAt(index)
-        views.add(index, SimpleView(id, name, oldView.owner, published, characters, oldView.game, featured))
-        return ViewModified(id, name, published, characters, featured)
+        views.add(index, SimpleView(id, name, oldView.owner, published, entities, oldView.game, featured))
+        return ViewModified(id, name, published, entities, featured)
     }
 
     override suspend fun patch(
         id: String,
         name: String?,
         published: Boolean?,
-        characters: List<Long>?,
+        entities: List<Long>?,
         featured: Boolean?
     ): ViewPatched {
         val index = views.indexOfFirst { it.id == id }
@@ -54,7 +54,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             name ?: oldView.name,
             oldView.owner,
             published ?: oldView.published,
-            characters ?: oldView.characterIds,
+            entities ?: oldView.entitiesIds,
             oldView.game,
             featured ?: oldView.featured
         )
@@ -62,7 +62,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             index,
             simpleView
         )
-        return ViewPatched(id, name, published, characters, featured)
+        return ViewPatched(id, name, published, entities, featured)
     }
 
     override suspend fun delete(id: String): Unit {
@@ -108,7 +108,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
     //TODO: this operation will be removed upon having parent character table implemented
     fun deleteCharacterFromViews(characterId: Long) {
         val viewsWithoutDeletedCharacter =
-            views.map { view -> view.copy(characterIds = view.characterIds.filterNot { it == characterId }) }
+            views.map { view -> view.copy(entitiesIds = view.entitiesIds.filterNot { it == characterId }) }
 
         views.clear()
         views.addAll(viewsWithoutDeletedCharacter)

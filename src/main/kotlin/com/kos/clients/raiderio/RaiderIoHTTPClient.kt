@@ -1,8 +1,8 @@
 package com.kos.clients.raiderio
 
 import arrow.core.Either
-import com.kos.characters.WowCharacter
-import com.kos.characters.WowCharacterRequest
+import com.kos.entities.WowEntity
+import com.kos.entities.WowEntityRequest
 import com.kos.clients.domain.*
 import com.kos.common.*
 import io.ktor.client.*
@@ -47,15 +47,15 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
             }
         }
 
-    override suspend fun get(wowCharacter: WowCharacter): Either<HttpError, RaiderIoResponse> {
-        val response = getRaiderioProfile(wowCharacter.region, wowCharacter.realm, wowCharacter.name)
+    override suspend fun get(wowEntity: WowEntity): Either<HttpError, RaiderIoResponse> {
+        val response = getRaiderioProfile(wowEntity.region, wowEntity.realm, wowEntity.name)
         val jsonString = response.body<String>()
         val decodedResponse: Either<HttpError, RaiderIoProfile> = responseToEitherErrorOrProfile(jsonString)
 
         return decodedResponse.fold({ httpError -> Either.Left(httpError) }) {
             RaiderIoProtocol.parseMythicPlusRanks(
                 jsonString,
-                wowCharacter.specsWithName(it.`class`),
+                wowEntity.specsWithName(it.`class`),
                 it.seasonScores[0].scores
             ).fold({ jsonError -> Either.Left(jsonError) }) { specsWithName ->
                 Either.Right(RaiderIoResponse(it, specsWithName))
@@ -63,8 +63,8 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
         }
     }
 
-    override suspend fun exists(wowCharacterRequest: WowCharacterRequest): Boolean {
-        val response = getRaiderioProfile(wowCharacterRequest.region, wowCharacterRequest.realm, wowCharacterRequest.name)
+    override suspend fun exists(wowEntityRequest: WowEntityRequest): Boolean {
+        val response = getRaiderioProfile(wowEntityRequest.region, wowEntityRequest.realm, wowEntityRequest.name)
         return response.status.value < 300
     }
 
@@ -83,7 +83,7 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
         return RaiderIoProtocol.parseCutoffJson(jsonString)
     }
 
-    override suspend fun wowheadEmbeddedCalculator(wowCharacter: WowCharacter): Either<HttpError, RaiderioWowHeadEmbeddedResponse> {
+    override suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<HttpError, RaiderioWowHeadEmbeddedResponse> {
         logger.debug("getting wowhead calculator")
         val partialUri = "/characters/profile"
         val response = client.get(classicBaseURI.toString() + partialUri) {
@@ -91,9 +91,9 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
                 append(HttpHeaders.Accept, "*/*")
             }
             url {
-                parameters.append("region", wowCharacter.region)
-                parameters.append("realm", wowCharacter.realm)
-                parameters.append("name", wowCharacter.name)
+                parameters.append("region", wowEntity.region)
+                parameters.append("realm", wowEntity.realm)
+                parameters.append("name", wowEntity.name)
                 parameters.append("fields", "talents")
             }
         }

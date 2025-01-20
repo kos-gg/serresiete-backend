@@ -5,10 +5,10 @@ import com.kos.activities.Activity
 import com.kos.auth.AuthService
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthInMemoryRepository
-import com.kos.characters.CharactersService
-import com.kos.characters.CharactersTestHelper.emptyCharactersState
-import com.kos.characters.repository.CharactersInMemoryRepository
-import com.kos.characters.repository.CharactersState
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.common.JWTConfig
 import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
@@ -40,7 +40,7 @@ class TasksControllerTest {
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
-    private val charactersRepository = CharactersInMemoryRepository()
+    private val entitiesRepository = EntitiesInMemoryRepository()
     private val dataCacheRepository = DataCacheInMemoryRepository()
     private val credentialsRepository = CredentialsInMemoryRepository()
     private val rolesRepository = RolesInMemoryRepository()
@@ -51,13 +51,13 @@ class TasksControllerTest {
     private suspend fun createController(
         credentialsState: CredentialsRepositoryState,
         tasksState: List<Task>,
-        charactersState: CharactersState,
+        entitiesState: EntitiesState,
         dataCacheState: List<DataCache>,
         authState: List<Authorization>,
         rolesState: List<Role>,
         rolesActivitiesState: Map<Role, Set<Activity>>
     ): TasksController {
-        val charactersRepositoryWithState = charactersRepository.withState(charactersState)
+        val entitiesRepositoryWithState = entitiesRepository.withState(entitiesState)
         val dataCacheRepositoryWithState = dataCacheRepository.withState(dataCacheState)
         val credentialsRepositoryWithState = credentialsRepository.withState(credentialsState)
         val rolesActivitiesRepositoryWithState = rolesActivitiesRepository.withState(rolesActivitiesState)
@@ -68,11 +68,11 @@ class TasksControllerTest {
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
-        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
-        val charactersService = CharactersService(charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
+        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
+        val entitiesService = EntitiesService(entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
-        val tasksService = TasksService(tasksRepositoryWithState, dataCacheService, charactersService, authService)
+        val tasksService = TasksService(tasksRepositoryWithState, dataCacheService, entitiesService, authService)
 
         return TasksController(tasksService)
     }
@@ -86,7 +86,7 @@ class TasksControllerTest {
             val controller = createController(
                 emptyCredentialsState,
                 listOf(task),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf(),
                 listOf(),
                 listOf(),
@@ -110,7 +110,7 @@ class TasksControllerTest {
             val controller = createController(
                 credentialsState,
                 listOf(task),
-                emptyCharactersState,
+                emptyEntitiesState,
                 listOf(),
                 listOf(),
                 listOf(),

@@ -1,5 +1,11 @@
 package com.kos.views
 
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.WowEntity
+import com.kos.entities.repository.EntitiesDatabaseRepository
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.views.ViewsTestHelper.basicSimpleGameViews
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
 import com.kos.views.ViewsTestHelper.basicSimpleLolViews
@@ -26,6 +32,7 @@ import kotlin.test.assertEquals
 
 abstract class ViewsRepositoryTest {
     abstract val repository: ViewsRepository
+    abstract val entitiesRepository: EntitiesRepository
 
     @Test
     fun `given a repository with views i can retrieve the views of a game`() {
@@ -133,7 +140,7 @@ abstract class ViewsRepositoryTest {
             val res = repository.create(id, name, owner, listOf(), Game.WOW, false)
             assertEquals(owner, res.owner)
             assertEquals(name, res.name)
-            assertEquals(listOf(), res.characterIds)
+            assertEquals(listOf(), res.entitiesIds)
             assertEquals(id, res.id)
             assertEquals(Game.WOW, res.game)
             assert(repository.state().size == 1)
@@ -143,32 +150,53 @@ abstract class ViewsRepositoryTest {
     @Test
     fun `given a repository with a view i can edit it`() {
         runBlocking {
-            val repo =
-                repository.withState(listOf(basicSimpleWowView))
-            val res = repo.edit(id, "name2", published, listOf(1), featured)
-            val finalState = repo.state()
+            repository.withState(listOf(basicSimpleWowView))
+            entitiesRepository.withState(
+                EntitiesState(
+                    wowEntities = listOf(basicWowEntity),
+                    wowHardcoreEntities = listOf(),
+                    lolEntities = listOf()
+                )
+            )
+            val res = repository.edit(id, "name2", published, listOf(1), featured)
+            val finalState = repository.state()
             assertEquals(ViewModified(id, "name2", published, listOf(1), featured), res)
-            assertEquals(finalState, listOf(basicSimpleWowView.copy(name = "name2", characterIds = listOf(1))))
+            assertEquals(finalState, listOf(basicSimpleWowView.copy(name = "name2", entitiesIds = listOf(1))))
         }
     }
 
     @Test
     fun `given a repository with a view i can edit more than one character`() {
         runBlocking {
-            val repositoryWithState = repository.withState(listOf(basicSimpleWowView))
-            val edit = repositoryWithState.edit(id, "name", published, listOf(1, 2, 3, 4), featured)
-            val finalState = repositoryWithState.state()
+            repository.withState(listOf(basicSimpleWowView))
+            entitiesRepository.withState(
+                EntitiesState(
+                    wowEntities = (1..4).map {
+                        WowEntity(
+                            it.toLong(),
+                            it.toString(),
+                            it.toString(),
+                            it.toString(),
+                            null
+                        )
+                    },
+                    wowHardcoreEntities = listOf(),
+                    lolEntities = listOf()
+                )
+            )
+            val edit = repository.edit(id, "name", published, listOf(1, 2, 3, 4), featured)
+            val finalState = repository.state()
             assertEquals(ViewModified(id, "name", published, listOf(1, 2, 3, 4), featured), edit)
-            assertEquals(finalState, listOf(basicSimpleWowView.copy(characterIds = listOf(1, 2, 3, 4))))
+            assertEquals(finalState, listOf(basicSimpleWowView.copy(entitiesIds = listOf(1, 2, 3, 4))))
         }
     }
 
     @Test
     fun `given a repository with a view i can delete it`() {
         runBlocking {
-            val repo = repository.withState(listOf(basicSimpleWowView))
-            repo.delete(id)
-            val finalState = repo.state()
+            repository.withState(listOf(basicSimpleWowView))
+            repository.delete(id)
+            val finalState = repository.state()
             assertEquals(finalState, listOf())
         }
     }
@@ -184,7 +212,7 @@ abstract class ViewsRepositoryTest {
             assertEquals(expectedPatchedView, patch)
             assertEquals(basicSimpleWowView.id, patchedView.id)
             assertEquals(basicSimpleWowView.published, patchedView.published)
-            assertEquals(basicSimpleWowView.characterIds, patchedView.characterIds)
+            assertEquals(basicSimpleWowView.entitiesIds, patchedView.entitiesIds)
             assertEquals(true, patchedView.featured)
             assertEquals(patchedName, patchedView.name)
         }
@@ -193,16 +221,23 @@ abstract class ViewsRepositoryTest {
     @Test
     fun `given a repository with a view i can patch more than one field`() {
         runBlocking {
-            val repo = repository.withState(listOf(basicSimpleWowView))
+            repository.withState(listOf(basicSimpleWowView))
+            entitiesRepository.withState(
+                EntitiesState(
+                    wowEntities = (1..3).map { WowEntity(it.toLong(), it.toString(), it.toString(), it.toString(), null) },
+                    wowHardcoreEntities = listOf(),
+                    lolEntities = listOf()
+                )
+            )
             val characters: List<Long> = listOf(1, 2, 3)
             val patchedName = "new-name"
             val patchedPublish = false
-            val patch = repo.patch(basicSimpleWowView.id, patchedName, patchedPublish, characters, featured)
-            val patchedView = repo.state().first()
+            val patch = repository.patch(basicSimpleWowView.id, patchedName, patchedPublish, characters, featured)
+            val patchedView = repository.state().first()
             assertEquals(ViewPatched(basicSimpleWowView.id, patchedName, patchedPublish, characters, featured), patch)
             assertEquals(basicSimpleWowView.id, patchedView.id)
             assertEquals(patchedPublish, patchedView.published)
-            assertEquals(characters, patchedView.characterIds)
+            assertEquals(characters, patchedView.entitiesIds)
             assertEquals(patchedName, patchedView.name)
         }
     }
@@ -210,6 +245,7 @@ abstract class ViewsRepositoryTest {
 
 class ViewsInMemoryRepositoryTest : ViewsRepositoryTest() {
     override val repository = ViewsInMemoryRepository()
+    override val entitiesRepository: EntitiesRepository = EntitiesInMemoryRepository()
 
     @BeforeEach
     fun beforeEach() {
@@ -229,6 +265,8 @@ class ViewsDatabaseRepositoryTest : ViewsRepositoryTest() {
         .load()
 
     override val repository = ViewsDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
+    override val entitiesRepository: EntitiesRepository =
+        EntitiesDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
 
     @BeforeEach
     fun beforeEach() {

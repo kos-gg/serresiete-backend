@@ -2,10 +2,10 @@ package com.kos.datacache
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.characters.Character
-import com.kos.characters.LolCharacter
-import com.kos.characters.WowCharacter
-import com.kos.characters.repository.CharactersRepository
+import com.kos.entities.Entity
+import com.kos.entities.LolEntity
+import com.kos.entities.WowEntity
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
@@ -34,7 +34,7 @@ import java.time.OffsetDateTime
 
 data class DataCacheService(
     private val dataCacheRepository: DataCacheRepository,
-    private val charactersRepository: CharactersRepository,
+    private val entitiesRepository: EntitiesRepository,
     private val raiderIoClient: RaiderIoClient,
     private val riotClient: RiotClient,
     private val blizzardClient: BlizzardClient,
@@ -54,8 +54,8 @@ data class DataCacheService(
         encodeDefaults = false
     }
 
-    suspend fun get(characterId: Long) = dataCacheRepository.get(characterId)
-    suspend fun getData(characterIds: List<Long>, oldFirst: Boolean): Either<JsonParseError, List<Data>> =
+    suspend fun get(entityId: Long) = dataCacheRepository.get(entityId)
+    suspend fun getData(entitiesIds: List<Long>, oldFirst: Boolean): Either<JsonParseError, List<Data>> =
         either {
             val comparator: (List<DataCache>) -> DataCache? = if (oldFirst) {
                 { it.minByOrNull { dc -> dc.inserted } }
@@ -63,7 +63,7 @@ data class DataCacheService(
                 { it.maxByOrNull { dc -> dc.inserted } }
             }
 
-            characterIds.mapNotNull { id ->
+            entitiesIds.mapNotNull { id ->
                 comparator(get(id))?.let { dataCache ->
                     try {
                         json.decodeFromString<Data>(dataCache.data)
@@ -77,15 +77,15 @@ data class DataCacheService(
         }
 
     @Suppress("UNCHECKED_CAST")
-    suspend fun cache(characters: List<Character>, game: Game): List<HttpError> {
+    suspend fun cache(entities: List<Entity>, game: Game): List<HttpError> {
         return when (game) {
-            Game.WOW -> cacheWowCharacters(characters as List<WowCharacter>)
-            Game.LOL -> cacheLolCharacters(characters as List<LolCharacter>)
-            Game.WOW_HC -> cacheWowHardcoreCharacters(characters as List<WowCharacter>)
+            Game.WOW -> cacheWowEntities(entities as List<WowEntity>)
+            Game.LOL -> cacheLolEntities(entities as List<LolEntity>)
+            Game.WOW_HC -> cacheWowHardcoreEntities(entities as List<WowEntity>)
         }
     }
 
-    private suspend fun cacheLolCharacters(lolCharacters: List<LolCharacter>): List<HttpError> = coroutineScope {
+    private suspend fun cacheLolEntities(lolEntities: List<LolEntity>): List<HttpError> = coroutineScope {
         val errorsChannel = Channel<HttpError>()
         val dataChannel = Channel<DataCache>()
         val errorsList = mutableListOf<HttpError>()
@@ -103,15 +103,15 @@ data class DataCacheService(
                 .buffer(50)
                 .collect { data ->
                     dataCacheRepository.insert(listOf(data))
-                    logger.info("Cached character ${data.characterId}")
+                    logger.info("Cached entity ${data.entityId}")
                 }
         }
 
         val start = OffsetDateTime.now()
-        lolCharacters.asFlow()
+        lolEntities.asFlow()
             .buffer(10)
-            .collect { lolCharacter ->
-                val result = cacheLolCharacter(lolCharacter, matchCache)
+            .collect { lolEntity ->
+                val result = cachedLolEntity(lolEntity, matchCache)
                 result.fold(
                     ifLeft = { error -> errorsChannel.send(error) },
                     ifRight = { (id, riotData) ->
@@ -133,9 +133,9 @@ data class DataCacheService(
         errorsCollector.join()
         dataCollector.join()
 
-        logger.info("Finished Caching Lol characters")
+        logger.info("Finished Caching Lol entities")
         logger.debug(
-            "cached ${lolCharacters.size} characters in ${
+            "cached ${lolEntities.size} entities in ${
                 Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
             } minutes"
         )
@@ -143,18 +143,18 @@ data class DataCacheService(
         errorsList
     }
 
-    private suspend fun cacheLolCharacter(
-        lolCharacter: LolCharacter,
+    private suspend fun cachedLolEntity(
+        lolEntity: LolEntity,
         matchCache: DynamicCache<Either<HttpError, GetMatchResponse>>
     ): Either<HttpError, Pair<Long, RiotData>> =
         either {
 
-            val newestCharacterDataCacheEntry: RiotData? =
-                dataCacheRepository.get(lolCharacter.id).maxByOrNull { it.inserted }?.let {
+            val newestDataCacheEntry: RiotData? =
+                dataCacheRepository.get(lolEntity.id).maxByOrNull { it.inserted }?.let {
                     try {
                         json.decodeFromString<RiotData>(it.data)
                     } catch (e: Throwable) {
-                        logger.debug("Couldn't deserialize character ${lolCharacter.id} " +
+                        logger.debug("Couldn't deserialize entity ${lolEntity.id} " +
                                 "while trying to obtain newest cached record.\n${e.message}")
                         null
                     }
@@ -162,7 +162,7 @@ data class DataCacheService(
 
             val leagues: List<LeagueEntryResponse> =
                 retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesBySummonerId") {
-                    riotClient.getLeagueEntriesBySummonerId(lolCharacter.summonerId)
+                    riotClient.getLeagueEntriesBySummonerId(lolEntity.summonerId)
                 }.bind()
 
             val leagueWithMatches: List<LeagueMatchData> =
@@ -171,10 +171,10 @@ data class DataCacheService(
                         async {
                             val lastMatchesForLeague: List<String> =
                                 retryEitherWithFixedDelay(retryConfig, "getMatchesByPuuid") {
-                                    riotClient.getMatchesByPuuid(lolCharacter.puuid, leagueEntry.queueType.toInt())
+                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
                                 }.bind()
 
-                            val matchesToRequest = newestCharacterDataCacheEntry._fold(
+                            val matchesToRequest = newestDataCacheEntry._fold(
                                 left = { lastMatchesForLeague },
                                 right = { record ->
                                     lastMatchesForLeague
@@ -196,23 +196,23 @@ data class DataCacheService(
                             LeagueMatchData(
                                 leagueEntry,
                                 matchResponses,
-                                newestCharacterDataCacheEntry?.leagues?.get(leagueEntry.queueType)?.matches.orEmpty()
+                                newestDataCacheEntry?.leagues?.get(leagueEntry.queueType)?.matches.orEmpty()
                                     .filter { lastMatchesForLeague.contains(it.id) }
                             )
                         }
                     }.awaitAll()
                 }
 
-            Pair(lolCharacter.id, RiotData.apply(lolCharacter, leagueWithMatches))
+            Pair(lolEntity.id, RiotData.apply(lolEntity, leagueWithMatches))
         }
 
 
-    private suspend fun cacheWowCharacters(wowCharacters: List<WowCharacter>): List<HttpError> =
+    private suspend fun cacheWowEntities(wowEntities: List<WowEntity>): List<HttpError> =
         coroutineScope {
             val cutoffErrorOrMaybeErrors = either {
                 val cutoff = raiderIoClient.cutoff().bind()
                 val errorsAndData =
-                    wowCharacters.map {
+                    wowEntities.map {
                         async {
                             retryEitherWithFixedDelay(retryConfig, "raiderIoGet") {
                                 raiderIoClient.get(it).map { r -> Pair(it.id, r) }
@@ -239,33 +239,33 @@ data class DataCacheService(
                     )
                 }
                 dataCacheRepository.insert(data)
-                data.forEach { logger.info("Cached character ${it.characterId}") }
+                data.forEach { logger.info("Cached entity ${it.entityId}") }
                 errorsAndData.first
             }
             cutoffErrorOrMaybeErrors.mapLeft { listOf(it) }.fold({ it }, { it })
         }
 
-    private suspend fun cacheWowHardcoreCharacters(wowCharacters: List<WowCharacter>): List<HttpError> =
+    private suspend fun cacheWowHardcoreEntities(wowEntities: List<WowEntity>): List<HttpError> =
         coroutineScope {
             val errorsAndData =
-                wowCharacters.map { wowCharacter ->
+                wowEntities.map { wowEntity ->
                     async {
                         either {
-                            val newestCharacterDataCacheEntry: HardcoreData? =
-                                dataCacheRepository.get(wowCharacter.id).maxByOrNull { it.inserted }?.let {
+                            val newestDataCacheEntry: HardcoreData? =
+                                dataCacheRepository.get(wowEntity.id).maxByOrNull { it.inserted }?.let {
                                     try {
                                         json.decodeFromString<HardcoreData>(it.data)
                                     } catch (e: Throwable) {
-                                        logger.debug("Couldn't deserialize character ${wowCharacter.id} " +
+                                        logger.debug("Couldn't deserialize entity ${wowEntity.id} " +
                                                 "while trying to obtain newest cached record.\n${e.message}")
                                         null
                                     }
                                 }
 
-                            if (newestCharacterDataCacheEntry?.isDead != true) {
-                                syncWowHardcoreCharacter(wowCharacter, newestCharacterDataCacheEntry).bind()
+                            if (newestDataCacheEntry?.isDead != true) {
+                                syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
                             } else {
-                                raise(WowHardcoreCharacterIsDead(wowCharacter.name, wowCharacter.id))
+                                raise(WowHardcoreCharacterIsDead(wowEntity.name, wowEntity.id))
                             }
                         }
                     }
@@ -285,24 +285,24 @@ data class DataCacheService(
             errorsAndData.first
         }
 
-    private suspend fun syncWowHardcoreCharacter(
-        wowCharacter: WowCharacter,
-        newestCharacterDataCacheEntry: HardcoreData?
+    private suspend fun syncWowHardcoreEntity(
+        wowEntity: WowEntity,
+        newestDataCacheEntry: HardcoreData?
     ): Either<HttpError, Pair<Long, HardcoreData>> {
         return either {
             val characterResponse: GetWowCharacterResponse =
                 retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
                     blizzardClient.getCharacterProfile(
-                        wowCharacter.region,
-                        wowCharacter.realm,
-                        wowCharacter.name
+                        wowEntity.region,
+                        wowEntity.realm,
+                        wowEntity.name
                     )
                 }.onLeft { error ->
                     when (error) {
                         is NotFoundHardcoreCharacter -> {
                             handleNotFoundHardcoreCharacter(
-                                newestCharacterDataCacheEntry,
-                                wowCharacter
+                                newestDataCacheEntry,
+                                wowEntity
                             )
                         }
                     }
@@ -311,23 +311,23 @@ data class DataCacheService(
             val mediaResponse =
                 retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
                     blizzardClient.getCharacterMedia(
-                        wowCharacter.region,
-                        wowCharacter.realm,
-                        wowCharacter.name
+                        wowEntity.region,
+                        wowEntity.realm,
+                        wowEntity.name
                     )
                 }.bind()
 
             val equipmentResponse =
                 retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
                     blizzardClient.getCharacterEquipment(
-                        wowCharacter.region,
-                        wowCharacter.realm,
-                        wowCharacter.name
+                        wowEntity.region,
+                        wowEntity.realm,
+                        wowEntity.name
                     )
                 }.bind()
 
             val existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>> =
-                newestCharacterDataCacheEntry._fold(
+                newestDataCacheEntry._fold(
                     left = { equipmentResponse.equippedItems.map { Either.Right(it) } },
                     right = { record ->
                         equipmentResponse.equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemResponse>>()) { acc, itemResponse ->
@@ -346,11 +346,11 @@ data class DataCacheService(
                         Triple(
                             it,
                             retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
-                                blizzardClient.getItem(wowCharacter.region, it.item.id)
+                                blizzardClient.getItem(wowEntity.region, it.item.id)
                             }.bind(),
                             retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
                                 blizzardClient.getItemMedia(
-                                    wowCharacter.region,
+                                    wowEntity.region,
                                     it.item.id,
                                 )
                             }.getOrNull()
@@ -361,28 +361,28 @@ data class DataCacheService(
             val stats: GetWowCharacterStatsResponse =
                 retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
                     blizzardClient.getCharacterStats(
-                        wowCharacter.region,
-                        wowCharacter.realm,
-                        wowCharacter.name
+                        wowEntity.region,
+                        wowEntity.realm,
+                        wowEntity.name
                     )
                 }.bind()
 
             val specializations: GetWowSpecializationsResponse =
                 retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
                     blizzardClient.getCharacterSpecializations(
-                        wowCharacter.region,
-                        wowCharacter.realm,
-                        wowCharacter.name
+                        wowEntity.region,
+                        wowEntity.realm,
+                        wowEntity.name
                     )
                 }.bind()
 
             val wowHeadEmbeddedResponse: RaiderioWowHeadEmbeddedResponse? =
                 retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
-                    raiderIoClient.wowheadEmbeddedCalculator(wowCharacter)
+                    raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
                 }.getOrNull()
 
-            wowCharacter.id to HardcoreData.apply(
-                wowCharacter.region,
+            wowEntity.id to HardcoreData.apply(
+                wowEntity.region,
                 characterResponse,
                 mediaResponse,
                 existentItemsAndItemsToRequest.first,
@@ -396,17 +396,17 @@ data class DataCacheService(
 
     private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: HardcoreData?,
-        wowCharacter: WowCharacter
+        wowEntity: WowEntity
     ) {
         newestCharacterDataCacheEntry.fold(
             {
-                charactersRepository.delete(wowCharacter.id, Game.WOW_HC)
+                entitiesRepository.delete(wowEntity.id, Game.WOW_HC)
             },
             {
                 dataCacheRepository.insert(
                     listOf(
                         DataCache(
-                            wowCharacter.id,
+                            wowEntity.id,
                             json.encodeToString<Data>(it.copy(isDead = true)),
                             OffsetDateTime.now(),
                             Game.WOW_HC

@@ -1,8 +1,8 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.characters.WowCharacter
-import com.kos.characters.WowCharacterRequest
+import com.kos.entities.WowEntity
+import com.kos.entities.WowEntityRequest
 import com.kos.clients.domain.*
 import com.kos.common.HttpError
 import kotlin.random.Random
@@ -13,7 +13,7 @@ object BlizzardMockHelper {
         return Either.Right(TokenResponse("token", "token", 10, "sub"))
     }
 
-    fun getCharacterProfile(wowCharacter: WowCharacter): Either<HttpError, GetWowCharacterResponse> {
+    fun getCharacterProfile(wowCharacter: WowEntity): Either<HttpError, GetWowCharacterResponse> {
         return Either.Right(
             GetWowCharacterResponse(
                 wowCharacter.id,
@@ -35,7 +35,7 @@ object BlizzardMockHelper {
         )
     }
 
-    fun getCharacterMedia(wowCharacter: WowCharacter): Either<HttpError, GetWowMediaResponse> {
+    fun getCharacterMedia(wowCharacter: WowEntity): Either<HttpError, GetWowMediaResponse> {
         return Either.Right(
             GetWowMediaResponse(listOf(AssetKeyValue("avatar", "${wowCharacter.id}")))
         )
@@ -63,7 +63,7 @@ object BlizzardMockHelper {
         return Either.Right(getWowItemResponse)
     }
 
-    fun getCharacterProfile(wowCharacter: WowCharacterRequest): Either<HttpError, GetWowCharacterResponse> {
+    fun getCharacterProfile(wowCharacter: WowEntityRequest): Either<HttpError, GetWowCharacterResponse> {
         return Either.Right(
             GetWowCharacterResponse(
                 Random.nextLong(),

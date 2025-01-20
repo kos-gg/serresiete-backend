@@ -6,16 +6,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.*
 
-data class UpdateLolCharactersRunnable(
+data class UpdateLolEntitiesRunnable(
     val tasksService: TasksService,
     val coroutineScope: CoroutineScope,
-) : Runnable, WithLogger("updateLolCharacters") {
+) : Runnable, WithLogger("updateLolEntities") {
 
     override fun run() {
         coroutineScope.launch {
-            logger.info("Running update lol characters task")
-            tasksService.updateLolCharacters(UUID.randomUUID().toString())
-            logger.info("Finished running lol characters task")
+            logger.info("Running update lol entities task")
+            tasksService.updateLolEntities(UUID.randomUUID().toString())
+            logger.info("Finished running lol entities task")
         }
     }
 }
