@@ -130,8 +130,8 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         game: Game
     ): Either<InsertError, List<Entity>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            val nextId = selectNextId()
             val charsToInsert: List<Entity> = entities.map {
+                val nextId = selectNextId()
                 when (it) {
                     is WowEntityRequest -> WowEntity(nextId, it.name, it.region, it.realm, 0)
                     is WowEnrichedEntityRequest -> WowEntity(
