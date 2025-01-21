@@ -9,6 +9,8 @@ sealed interface Entity {
     val name: String
 }
 
+//TODO MAX: Afegir camp alias als objectes que faci falta (segur que a CreateEntityRequest)
+
 @Polymorphic
 @Serializable
 sealed interface CreateEntityRequest {

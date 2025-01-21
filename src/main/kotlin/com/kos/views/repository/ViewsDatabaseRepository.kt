@@ -62,8 +62,14 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         val viewId = varchar("view_id", 48).references(
             Views.id, onDelete = ReferenceOption.CASCADE
         )
+        //TODO MAX: Definir columna alias
     }
 
+    //TODO MAX: Afegir una migracio de flyway (tant al paquet de prod com al de test).
+    // Lo que va a la dreta de la V es el time since epoch. A mac es fa aixi date +%s
+    // 1737460786
+
+    //TODO MAX: Tornar un ViewEntity En comptes de un Triple amb el nou camp
     private fun resultRowToViewEntity(row: ResultRow): Pair<String, Long> = Pair(
         row[ViewEntities.viewId],
         row[ViewEntities.entityId]
@@ -85,6 +91,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String,
         name: String,
         owner: String,
+        //TODO MAX: En comptes de ser List<Long (entity id)>  hem de fer arribar List<Pair<Long, String? (alias)>
         entitiesIds: List<Long>,
         game: Game,
         featured: Boolean,
@@ -98,6 +105,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.game] = game.toString()
                 it[Views.featured] = featured
             }
+            //TODO MAX: Aqui s'acaba populant la taula de ViewEntities, amb lo que toca informar del alias.
             ViewEntities.batchInsert(entitiesIds) {
                 this[ViewEntities.viewId] = id
                 this[ViewEntities.entityId] = it

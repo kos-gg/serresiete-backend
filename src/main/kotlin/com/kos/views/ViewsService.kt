@@ -76,6 +76,7 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Either<InsertError, Operation> {
+        //TODO MAX: Aqui es on a partir de un Event de Creacio de vista (ViewToBeCreatedEvent) s'acaba creant la vista
         return either {
             val entitiesIds =
                 entitiesService.createAndReturnIds(viewToBeCreatedEvent.entities, viewToBeCreatedEvent.game).bind()

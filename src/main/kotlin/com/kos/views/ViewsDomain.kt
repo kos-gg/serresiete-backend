@@ -108,3 +108,5 @@ data class ViewPatched(
 
 @Serializable
 data class ViewData(val viewName: String, val data: List<Data>)
+
+//TODO MAX: Definir ViewEntityObject data class ViewEntity(entityId, viewId, alias)
