@@ -54,7 +54,7 @@ data class DataCacheService(
         encodeDefaults = false
     }
 
-    suspend fun get(entityId: Long) = dataCacheRepository.get(entityId)
+    suspend fun get(entityId: Long): List<DataCache> = dataCacheRepository.get(entityId)
     suspend fun getData(entitiesIds: List<Long>, oldFirst: Boolean): Either<JsonParseError, List<Data>> =
         either {
             val comparator: (List<DataCache>) -> DataCache? = if (oldFirst) {
@@ -111,7 +111,7 @@ data class DataCacheService(
         lolEntities.asFlow()
             .buffer(10)
             .collect { lolEntity ->
-                val result = cachedLolEntity(lolEntity, matchCache)
+                val result = cacheLolEntity(lolEntity, matchCache)
                 result.fold(
                     ifLeft = { error -> errorsChannel.send(error) },
                     ifRight = { (id, riotData) ->
@@ -143,7 +143,7 @@ data class DataCacheService(
         errorsList
     }
 
-    private suspend fun cachedLolEntity(
+    private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
         matchCache: DynamicCache<Either<HttpError, GetMatchResponse>>
     ): Either<HttpError, Pair<Long, RiotData>> =
@@ -154,8 +154,10 @@ data class DataCacheService(
                     try {
                         json.decodeFromString<RiotData>(it.data)
                     } catch (e: Throwable) {
-                        logger.debug("Couldn't deserialize entity ${lolEntity.id} " +
-                                "while trying to obtain newest cached record.\n${e.message}")
+                        logger.debug(
+                            "Couldn't deserialize entity ${lolEntity.id} " +
+                                    "while trying to obtain newest cached record.\n${e.message}"
+                        )
                         null
                     }
                 }
@@ -256,8 +258,10 @@ data class DataCacheService(
                                     try {
                                         json.decodeFromString<HardcoreData>(it.data)
                                     } catch (e: Throwable) {
-                                        logger.debug("Couldn't deserialize entity ${wowEntity.id} " +
-                                                "while trying to obtain newest cached record.\n${e.message}")
+                                        logger.debug(
+                                            "Couldn't deserialize entity ${wowEntity.id} " +
+                                                    "while trying to obtain newest cached record.\n${e.message}"
+                                        )
                                         null
                                     }
                                 }

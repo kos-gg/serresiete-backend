@@ -1,5 +1,6 @@
 package com.kos.entities
 
+import com.kos.clients.domain.Data
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 
@@ -21,3 +22,5 @@ sealed interface InsertEntityRequest {
     fun toEntity(id: Long): Entity
     fun same(other: Entity): Boolean
 }
+
+data class EntityDataResponse(val data: Data?, val isBeingSynced: Boolean)

@@ -22,12 +22,15 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         newSuspendedTransaction(Dispatchers.IO, db) {
             Entities.batchInsert(initialState.lolEntities) {
                 this[Entities.id] = it.id
+                this[Entities.game] = Game.LOL.toString()
             }
             Entities.batchInsert(initialState.wowEntities) {
                 this[Entities.id] = it.id
+                this[Entities.game] = Game.WOW.toString()
             }
             Entities.batchInsert(initialState.wowHardcoreEntities) {
                 this[Entities.id] = it.id
+                this[Entities.game] = Game.WOW_HC.toString()
             }
 
             WowEntities.batchInsert(initialState.wowEntities) {
@@ -63,6 +66,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
 
     object Entities : Table("entities") {
         val id = long("id")
+        val game = text("game")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -264,6 +268,12 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 }
             }
         }
+    }
+
+    override suspend fun get(id: Long): Entity {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            Entities.selectAll().where {Entities.id.eq(id)}
+        }.map { i }
     }
 
     override suspend fun get(id: Long, game: Game): Entity? {
