@@ -2,9 +2,6 @@ package com.kos.datacache
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.entities.Entity
-import com.kos.entities.LolEntity
-import com.kos.entities.WowEntity
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
@@ -13,6 +10,11 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.*
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.datacache.repository.DataCacheRepository
+import com.kos.entities.*
+import com.kos.eventsourcing.events.Event
+import com.kos.eventsourcing.events.Operation
+import com.kos.eventsourcing.events.RequestToBeSynced
+import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,6 +33,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Duration
 import java.time.OffsetDateTime
+import java.util.*
 
 data class DataCacheService(
     private val dataCacheRepository: DataCacheRepository,
@@ -38,7 +41,8 @@ data class DataCacheService(
     private val raiderIoClient: RaiderIoClient,
     private val riotClient: RiotClient,
     private val blizzardClient: BlizzardClient,
-    private val retryConfig: RetryConfig
+    private val retryConfig: RetryConfig,
+    private val eventStore: EventStore
 ) : WithLogger("DataCacheService") {
 
     private val ttl: Long = 24
@@ -64,17 +68,19 @@ data class DataCacheService(
             }
 
             entitiesIds.mapNotNull { id ->
-                comparator(get(id))?.let { dataCache ->
-                    try {
-                        json.decodeFromString<Data>(dataCache.data)
-                    } catch (se: SerializationException) {
-                        raise(JsonParseError(dataCache.data, "", se.stackTraceToString()))
-                    } catch (iae: IllegalArgumentException) {
-                        raise(JsonParseError(dataCache.data, "", iae.stackTraceToString()))
-                    }
-                }
+                comparator(get(id))?.let { dataCache -> parseData(dataCache).bind() }
             }
         }
+
+    fun parseData(dataCache: DataCache): Either<JsonParseError, Data> {
+        return try {
+            Either.Right(json.decodeFromString<Data>(dataCache.data))
+        } catch (se: SerializationException) {
+            Either.Left(JsonParseError(dataCache.data, "", se.stackTraceToString()))
+        } catch (iae: IllegalArgumentException) {
+            Either.Left(JsonParseError(dataCache.data, "", iae.stackTraceToString()))
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     suspend fun cache(entities: List<Entity>, game: Game): List<HttpError> {
@@ -423,4 +429,39 @@ data class DataCacheService(
 
     suspend fun clear(game: Game?, keepLastRecord: Boolean): Int =
         dataCacheRepository.deleteExpiredRecord(ttl, game, keepLastRecord)
+
+    suspend fun getOrSync(request: Pair<CreateEntityRequest, Game>): Either<JsonParseError, EntityDataResponse> {
+
+        suspend fun syncOperation(entityId: Long): Operation {
+            val eventData = RequestToBeSynced(request.first, request.second)
+            return eventStore.save(Event("/entity/$entityId", UUID.randomUUID().toString(), eventData))
+        }
+
+        return when (val maybeEntity = entitiesRepository.get(request.first, request.second)) {
+            null -> {
+                val operation = syncOperation(-1)
+                Either.Right(EntityDataResponse(null, operation))
+            }
+
+            else -> {
+                when (val maybeCachedRecord = get(maybeEntity.id).maxByOrNull { it.inserted }) {
+                    null -> {
+                        val operation = syncOperation(maybeEntity.id)
+                        Either.Right(EntityDataResponse(null, operation))
+                    }
+
+                    else -> {
+                        if (maybeCachedRecord.isTooOld()) {
+                            val operation = syncOperation(maybeEntity.id)
+                            parseData(maybeCachedRecord).map {
+                                EntityDataResponse(it, operation)
+                            }
+                        } else parseData(maybeCachedRecord).map {
+                            EntityDataResponse(it, null)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

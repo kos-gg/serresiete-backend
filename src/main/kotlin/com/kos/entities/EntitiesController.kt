@@ -5,29 +5,22 @@ import com.kos.activities.Activities
 import com.kos.activities.Activity
 import com.kos.common.*
 import com.kos.datacache.DataCacheService
-import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 
-class EntitiesController(val dataCacheService: DataCacheService, val entitiesRepository: EntitiesRepository) {
+class EntitiesController(
+    private val dataCacheService: DataCacheService
+) {
     suspend fun getEntityData(
         client: String?,
-        searchRequestAndGame: Pair<CreateEntityRequest, Game>?,
-        activities: Set<Activity>
+        activities: Set<Activity>,
+        maybeSearchRequestAndGame: Pair<CreateEntityRequest, Game>
     ): Either<ControllerError, EntityDataResponse> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.searchEntity)) {
-                    searchRequestAndGame._fold(
-                        left = { Either.Left(BadRequest("problemmmm")) },
-                        right = {
-                            entitiesRepository.get(it.first, it.second)
-                        }
-                    )
-
-                } else Either.Left(NotEnoughPermissions(client))
+                if (activities.contains(Activities.searchEntity)) dataCacheService.getOrSync(maybeSearchRequestAndGame)
+                else Either.Left(NotEnoughPermissions(client))
             }
         }
     }
-
 }

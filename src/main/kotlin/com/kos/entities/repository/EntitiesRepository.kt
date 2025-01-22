@@ -17,7 +17,6 @@ interface EntitiesRepository : WithState<EntitiesState, EntitiesRepository> {
     //TODO: insert should be on conflict do nothing so we can avoid the select all + diff on service
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game): Either<InsertError, List<Entity>>
     suspend fun update(id: Long, entity: InsertEntityRequest, game: Game): Either<InsertError, Int>
-    suspend fun get(id: Long): Entity
     suspend fun get(id: Long, game: Game): Entity?
     suspend fun get(request: CreateEntityRequest, game: Game): Entity?
     suspend fun get(game: Game): List<Entity>

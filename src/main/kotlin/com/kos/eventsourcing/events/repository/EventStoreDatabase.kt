@@ -1,6 +1,9 @@
 package com.kos.eventsourcing.events.repository
 
 import com.kos.common._fold
+import com.kos.entities.CreateEntityRequest
+import com.kos.entities.LolEntityRequest
+import com.kos.entities.WowEntityRequest
 import com.kos.eventsourcing.events.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.encodeToString
@@ -24,6 +27,13 @@ class EventStoreDatabase(private val db: Database) : EventStore {
                 subclass(ViewEditedEvent::class, ViewEditedEvent.serializer())
                 subclass(ViewPatchedEvent::class, ViewPatchedEvent.serializer())
                 subclass(ViewDeletedEvent::class, ViewDeletedEvent.serializer())
+                subclass(RequestToBeSynced::class, RequestToBeSynced.serializer())
+            }
+
+            //TODO: This is repeated code. We could do it better
+            polymorphic(CreateEntityRequest::class) {
+                subclass(WowEntityRequest::class, WowEntityRequest.serializer())
+                subclass(LolEntityRequest::class, LolEntityRequest.serializer())
             }
         }
         ignoreUnknownKeys = true
