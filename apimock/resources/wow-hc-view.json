@@ -1,0 +1,18 @@
+{
+  "id": "4b882ef0-da42-4ac8-9f16-a8cf323bac99",
+  "name": "omero test",
+  "owner": "kakoshi",
+  "published": true,
+  "entities": [
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 131,
+      "name": "omero",
+      "region": "eu",
+      "realm": "soulseeker",
+      "blizzardId": -1
+    }
+  ],
+  "game": "WOW_HC",
+  "featured": false
+}

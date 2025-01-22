@@ -1,0 +1,30 @@
+{
+  "id": "d4509c99-2f27-4f41-815a-60f7335f6fc9",
+  "name": "12p",
+  "owner": "kakoshi",
+  "published": true,
+  "entities": [
+    {
+      "type": "com.kos.entities.LolEntity",
+      "id": 87,
+      "name": "Layser",
+      "tag": "GOD",
+      "puuid": "WnVmX1598sVpAzrPhX7lSESv1GWI_9TNiMGLRudHJgJp7lPARD6s393pCXcolVlHSx6Nul4bx_WaEg",
+      "summonerIcon": 5169,
+      "summonerId": "hMMRiihKMXfKbf8H8h6cI2k3QeMuPKtn2itBKH7QeEJhwE8",
+      "summonerLevel": 443
+    },
+    {
+      "type": "com.kos.entities.LolEntity",
+      "id": 48,
+      "name": "GTP 王の弟子",
+      "tag": "MARC",
+      "puuid": "XMvPr6HxESLBXr9n-dGeee-UYzI7jG1dPRtTDfw4S5eLZJ3bDt59uCsKtkTIFbbE18CKcatgA_cuXA",
+      "summonerIcon": 4421,
+      "summonerId": "CmNDETzQ-D7uHhshDlrwyDMMjrHHPF1Pic54Ndxkmh8ChIfU",
+      "summonerLevel": 161
+    }
+  ],
+  "game": "LOL",
+  "featured": false
+}
