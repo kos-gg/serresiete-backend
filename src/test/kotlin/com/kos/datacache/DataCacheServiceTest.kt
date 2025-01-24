@@ -433,6 +433,11 @@ class DataCacheServiceTest {
         }
     }
 
+    @Test
+    fun `it must not return no data and sync operation when getOrSync entity was not in the system`() {
+
+    }
+
     private suspend fun createService(dataCacheRepository: DataCacheInMemoryRepository): DataCacheService {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))))
