@@ -9,6 +9,7 @@ import com.kos.clients.domain.Data
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
+import com.kos.entities.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository
@@ -23,7 +24,12 @@ class ViewsService(
 ) {
 
     suspend fun getOwnViews(owner: String): List<SimpleView> = viewsRepository.getOwnViews(owner)
-    suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): Pair<ViewMetadata, List<SimpleView>> =
+    suspend fun getViews(
+        game: Game?,
+        featured: Boolean,
+        page: Int?,
+        limit: Int?
+    ): Pair<ViewMetadata, List<SimpleView>> =
         viewsRepository.getViews(game, featured, page, limit)
 
     suspend fun get(id: String): View? {
@@ -37,6 +43,10 @@ class ViewsService(
                     simpleView.published,
                     simpleView.entitiesIds.mapNotNull {
                         entitiesService.get(it, simpleView.game)
+                    }.mapNotNull { entity ->
+                        viewsRepository.getViewEntity(simpleView.id, entity.id)?.let {
+                            EntityWithAlias(entity, it.alias)
+                        }
                     },
                     simpleView.game,
                     simpleView.featured
@@ -212,7 +222,7 @@ class ViewsService(
     }
 
     suspend fun getData(view: View): Either<HttpError, List<Data>> =
-        dataCacheService.getData(view.entities.map { it.id }, oldFirst = false)
+        dataCacheService.getData(view.entities.map { it.entity.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =
         dataCacheService.getData(simpleView.entitiesIds, oldFirst = true)

@@ -5,6 +5,7 @@ import com.kos.entities.Entity
 import com.kos.entities.CreateEntityRequest
 import com.kos.clients.domain.Data
 import com.kos.common.InvalidGameType
+import com.kos.entities.EntityWithAlias
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -52,7 +53,7 @@ data class View(
     val name: String,
     val owner: String,
     val published: Boolean,
-    val entities: List<Entity>,
+    val entities: List<EntityWithAlias>,
     val game: Game,
     val featured: Boolean
 )
@@ -110,3 +111,5 @@ data class ViewPatched(
 data class ViewData(val viewName: String, val data: List<Data>)
 
 //TODO MAX: Definir ViewEntityObject data class ViewEntity(entityId, viewId, alias)
+@Serializable
+data class ViewEntity(val entityId: Long, val viewId: String, val alias: String?)

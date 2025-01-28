@@ -15,9 +15,11 @@ import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.common.InsertError
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
+import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
@@ -47,7 +49,10 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
+            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { list ->
+                val ids = list.map { it.first }
+                assertEquals(expected, ids)
+            }
         }
     }
 
@@ -73,7 +78,10 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { assertEquals(expected, it) }
+            entitiesService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { list ->
+                val ids = list.map { it.first }
+                assertEquals(expected, ids)
+            }
         }
     }
 
@@ -95,7 +103,10 @@ class EntitiesServiceTest {
             val expected: List<Long> = listOf()
 
             entitiesService.createAndReturnIds(request, Game.WOW_HC)
-                .fold({ fail(it.message) }) { assertEquals(expected, it) }
+                .fold({ fail(it.message) }) { list ->
+                    val ids = list.map { it.first }
+                    assertEquals(expected, ids)
+                }
         }
     }
 
@@ -114,7 +125,10 @@ class EntitiesServiceTest {
 
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1)
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
+            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { list ->
+                val ids = list.map { it.first }
+                assertEquals(expected, ids)
+            }
         }
     }
 
@@ -148,7 +162,10 @@ class EntitiesServiceTest {
             val createAndReturnIds = entitiesService.createAndReturnIds(gigaLolCharacterRequestList, Game.LOL)
             val expectedReturnedIds = listOf<Long>(7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6)
 
-            createAndReturnIds.fold({ fail() }) { assertEquals(expectedReturnedIds, it) }
+            createAndReturnIds.fold({ fail() }) { list ->
+                val ids = list.map { it.first }
+                assertEquals(expectedReturnedIds, ids)
+            }
         }
     }
 
@@ -246,6 +263,28 @@ class EntitiesServiceTest {
 
             val res = entitiesService.updateLolEntities(listOf(basicLolEntity))
             assertEquals(listOf(), res)
+        }
+    }
+
+    @Test
+    fun `given a request of create entity return a list of pairs with Ids and the alias propagated`() {
+        runBlocking {
+            val name = basicLolEntity.name
+            val tag = basicLolEntity.tag
+            val alias = "kako"
+            val charactersRepository = EntitiesInMemoryRepository().withState(
+                EntitiesState(
+                    listOf(),
+                    listOf(),
+                    listOf(basicLolEntity, basicLolEntity2)
+                )
+            )
+            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val request = LolEntityRequest(name, tag, alias)
+
+            val result = entitiesService.createAndReturnIds(listOf(request), Game.LOL)
+
+            assertEquals(Either.Right(listOf(basicLolEntity.id to alias)), result)
         }
     }
 }

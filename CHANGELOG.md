@@ -1,10 +1,16 @@
 # Changelog
-## [4.3.2] 16-01-2026
+## [4.3.3] 25-01-2025
+
+### Added
+- **Feature Alias**: Added a feature to define aliases for entities associated with views.
+  - This allows users to create and manage custom names for entities, enhancing clarity and usability when working with complex data structures or multiple entities in a view.
+
+## [4.3.2] 16-01-2025
 
 ### Added
 - **League of Legends API Update**: The League of Legends API now retrieves the match-up for every game, allowing users to view the match-up information for each character in every game.
 
-## [4.3.1] 10-01-2026
+## [4.3.1] 10-01-2025
 
 ### Added
 - **WoW Classic Characters Differentiation**: Characters of WoW Classic with the same name, server, and region are now uniquely identified using the internal Blizzard identifier.

@@ -1,16 +1,22 @@
 package com.kos.views.repository
 
 import com.kos.common.WithState
+import com.kos.entities.EntityWithAlias
 import com.kos.views.*
 
-interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
+data class ViewsState(
+    val views: List<SimpleView>,
+    val viewEntities: List<ViewEntity>
+)
+
+interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
     suspend fun getOwnViews(owner: String): List<SimpleView>
     suspend fun get(id: String): SimpleView?
     suspend fun create(
         id: String,
         name: String,
         owner: String,
-        entitiesIds: List<Long>,
+        entitiesIds: List<Pair<Long, String?>>,
         game: Game,
         featured: Boolean
     ): SimpleView
@@ -19,7 +25,7 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
         id: String,
         name: String,
         published: Boolean,
-        entities: List<Long>,
+        entities: List<Pair<Long, String?>>,
         featured: Boolean
     ): ViewModified
 
@@ -27,10 +33,12 @@ interface ViewsRepository : WithState<List<SimpleView>, ViewsRepository> {
         id: String,
         name: String?,
         published: Boolean?,
-        entities: List<Long>?,
+        entities: List<Pair<Long, String?>>?,
         featured: Boolean?
     ): ViewPatched
 
     suspend fun delete(id: String): Unit
     suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): Pair<ViewMetadata, List<SimpleView>>
+
+    suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity?
 }

@@ -27,12 +27,10 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.SubscriptionState
 import com.kos.eventsourcing.subscriptions.SubscriptionStatus
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsInMemoryRepository
-import com.kos.views.Game
-import com.kos.views.SimpleView
-import com.kos.views.ViewsService
-import com.kos.views.ViewsTestHelper
+import com.kos.views.*
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsRepository
+import com.kos.views.repository.ViewsState
 import io.mockk.coVerify
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
@@ -287,7 +285,7 @@ class EventSubscriptionTest {
         fun `viewsProcessor calls createView on VIEW_TO_BE_CREATED event, creates a view and stores an event`() {
             runBlocking {
                 val (eventStore, viewsService, viewsRepository) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     EntitiesTestHelper.emptyEntitiesState,
                     listOf(),
                     CredentialsTestHelper.emptyCredentialsInitialState
@@ -332,7 +330,15 @@ class EventSubscriptionTest {
         fun `viewsProcessor calls edit view on VIEW_TO_BE_EDITED event, edits a view and stores an event`() {
             runBlocking {
                 val (eventStore, viewsService, viewsRepository) = createService(
-                    listOf(ViewsTestHelper.basicSimpleLolView),
+                    ViewsState(
+                        listOf(ViewsTestHelper.basicSimpleLolView),
+                        ViewsTestHelper.basicSimpleLolView.entitiesIds.map {
+                            ViewEntity(
+                                it,
+                                ViewsTestHelper.basicSimpleLolView.id,
+                                "alias"
+                            )
+                        }),
                     EntitiesTestHelper.emptyEntitiesState,
                     listOf(),
                     CredentialsTestHelper.emptyCredentialsInitialState
@@ -372,7 +378,15 @@ class EventSubscriptionTest {
         fun `viewsProcessor calls patch view on VIEW_TO_BE_PATCHED event, patches a view and stores an event`() {
             runBlocking {
                 val (eventStore, viewsService, viewsRepository) = createService(
-                    listOf(ViewsTestHelper.basicSimpleLolView),
+                    ViewsState(
+                        listOf(ViewsTestHelper.basicSimpleLolView),
+                        ViewsTestHelper.basicSimpleLolView.entitiesIds.map {
+                            ViewEntity(
+                                it,
+                                ViewsTestHelper.basicSimpleLolView.id,
+                                "alias"
+                            )
+                        }),
                     EntitiesTestHelper.emptyEntitiesState,
                     listOf(),
                     CredentialsTestHelper.emptyCredentialsInitialState,
@@ -409,7 +423,7 @@ class EventSubscriptionTest {
         }
 
         private suspend fun createService(
-            viewsState: List<SimpleView>,
+            viewsState: ViewsState,
             entitiesState: EntitiesState,
             dataCacheState: List<DataCache>,
             credentialState: CredentialsRepositoryState,
@@ -427,7 +441,14 @@ class EventSubscriptionTest {
             val credentialsService = CredentialsService(credentialsRepository)
             val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
             val dataCacheService =
-                DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+                DataCacheService(
+                    dataCacheRepository,
+                    charactersRepository,
+                    raiderIoClient,
+                    riotClient,
+                    blizzardClient,
+                    retryConfig
+                )
             val service =
                 ViewsService(
                     viewsRepository,
@@ -454,8 +475,8 @@ class EventSubscriptionTest {
         }
 
         private suspend fun assertView(viewsRepository: ViewsRepository, name: String) {
-            assertEquals(1, viewsRepository.state().size)
-            val insertedView = viewsRepository.state().first()
+            assertEquals(1, viewsRepository.state().views.size)
+            val insertedView = viewsRepository.state().views.first()
             assertEquals(ViewsTestHelper.id, insertedView.id)
             assertEquals(name, insertedView.name)
             assertEquals(ViewsTestHelper.owner, insertedView.owner)
@@ -476,7 +497,15 @@ class EventSubscriptionTest {
                 val wowHardcoreRemainingView =
                     SimpleView("1", "wowHcView", "owner", true, expectedRemainingCharacters, Game.WOW_HC, true)
                 val viewsRepository = ViewsInMemoryRepository().withState(
-                    listOf(wowHardcoreRemainingView)
+                    ViewsState(
+                        listOf(wowHardcoreRemainingView),
+                        wowHardcoreRemainingView.entitiesIds.map {
+                            ViewEntity(
+                                it,
+                                wowHardcoreRemainingView.id,
+                                "alias"
+                            )
+                        })
                 )
                 val wowHardcoreCharacters =
                     (1..5).map { WowEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it.toLong()) }
@@ -506,7 +535,9 @@ class EventSubscriptionTest {
                 )
 
                 EventSubscription.entitiesProcessor(eventWithVersion, service)
-                assertEquals(expectedRemainingCharacters, charactersRepository.state().wowHardcoreEntities.map { it.id })
+                assertEquals(
+                    expectedRemainingCharacters,
+                    charactersRepository.state().wowHardcoreEntities.map { it.id })
 
             }
         }

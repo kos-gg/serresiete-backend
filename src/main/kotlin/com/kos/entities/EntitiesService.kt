@@ -26,7 +26,7 @@ data class EntitiesService(
     suspend fun createAndReturnIds(
         requestedEntities: List<CreateEntityRequest>,
         game: Game
-    ): Either<InsertError, List<Long>> {
+    ): Either<InsertError, List<Pair<Long, String?>>> {
         //TODO MAX: En aquesta funcio t'arribara una llista de CreateEntityRequest amb el alias informat (o no per que es opcional)
         // Aquest atribut s'ha de propagar en el resultat. Ja no hem de tornar un List<Long> sino un List<Long, String>.
         // Per propagar aquest atribut durant el proces de creacio de entitats, es pot afegir l'atribut al insert request o jugar amb un Pair.
@@ -35,14 +35,14 @@ data class EntitiesService(
             requestedEntities: List<CreateEntityRequest>,
             game: Game,
             entitiesRepository: EntitiesRepository
-        ): Pair<List<Entity>, List<CreateEntityRequest>> = coroutineScope {
+        ): Pair<List<EntityWithAlias>, List<CreateEntityRequest>> = coroutineScope {
 
-            val entities = requestedEntities.asFlow()
+            val entities: List<Either<EntityWithAlias, CreateEntityRequest>> = requestedEntities.asFlow()
                 .map { requestedEntity ->
                     async {
                         when (val maybeFound = entitiesRepository.get(requestedEntity, game)) {
                             null -> Either.Right(requestedEntity)
-                            else -> Either.Left(maybeFound)
+                            else -> Either.Left(EntityWithAlias(maybeFound, requestedEntity.alias))
                         }
                     }
                 }
@@ -53,11 +53,12 @@ data class EntitiesService(
             entities.split()
         }
 
-        val existentAndNew = getCurrentAndNewEntities(requestedEntities, game, entitiesRepository)
+        val existentAndNew: Pair<List<EntityWithAlias>, List<CreateEntityRequest>> =
+            getCurrentAndNewEntities(requestedEntities, game, entitiesRepository)
 
         existentAndNew.second.forEach { logger.info("Entity new found: $it") }
 
-        val newThatExist = when (game) {
+        val newThatExist: List<Pair<InsertEntityRequest, String?>> = when (game) {
             Game.WOW -> {
                 coroutineScope {
                     existentAndNew.second.map { initialRequest ->
@@ -67,7 +68,7 @@ data class EntitiesService(
                         }
                     }
                         .awaitAll()
-                }.collect({ it.second }) { it.first }
+                }.collect({ it.second }) { it.first to it.first.alias }
             }
 
             Game.WOW_HC -> {
@@ -95,7 +96,7 @@ data class EntitiesService(
                                     initialRequest.region,
                                     initialRequest.realm,
                                     characterResponse.id
-                                )
+                                ) to initialRequest.alias
                             }
                         }
                     }.awaitAll().split()
@@ -123,17 +124,20 @@ data class EntitiesService(
                                 summonerResponse.profileIconId,
                                 summonerResponse.id,
                                 summonerResponse.summonerLevel
-                            )
+                            ) to initialRequest.alias
                         }.getOrNull()
                     }
                     .buffer(3)
-                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert, game).isDefined() }
+                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert.first, game).isDefined() }
                     .toList()
             }
         }
 
-        return entitiesRepository.insert(newThatExist, game)
-            .map { list -> list.map { it.id } + existentAndNew.first.map { it.id } }
+        return entitiesRepository.insert(newThatExist.map { it.first }, game)
+            .map { list ->
+                list.zip(newThatExist.map { it.second })
+                    .map { it.first.id to it.second } + existentAndNew.first.map { it.entity.id to it.alias }
+            }
     }
 
     suspend fun updateLolEntities(entities: List<LolEntity>): List<ControllerError> =
