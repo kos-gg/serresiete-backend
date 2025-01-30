@@ -11,6 +11,7 @@ import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.eventsourcing.logger.EventStatusLogger
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
 import com.kos.views.Game
 import com.kos.views.ViewsService
@@ -38,6 +39,7 @@ class EventSubscription(
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository,
     private val retryConfig: RetryConfig,
+    private val eventStatusLogger: EventStatusLogger,
     private val process: suspend (EventWithVersion) -> Either<ControllerError, Unit>,
 ) : WithLogger("event-subscription-$subscriptionName") {
 
