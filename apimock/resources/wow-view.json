@@ -1,0 +1,58 @@
+{
+  "id": "5f51f45c-a032-4a6e-bc49-dab4eeb707f7",
+  "name": "Los Tryhards",
+  "owner": "kakoshi",
+  "published": true,
+  "entities": [
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 10,
+      "name": "rauxiwr",
+      "region": "eu",
+      "realm": "sanguino",
+      "blizzardId": null
+    },
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 6,
+      "name": "rauxeta",
+      "region": "eu",
+      "realm": "sanguino",
+      "blizzardId": null
+    },
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 1,
+      "name": "Jing",
+      "region": "eu",
+      "realm": "zuljin",
+      "blizzardId": null
+    },
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 2,
+      "name": "Osbornetank",
+      "region": "eu",
+      "realm": "zuljin",
+      "blizzardId": null
+    },
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 3,
+      "name": "Kvarto",
+      "region": "eu",
+      "realm": "zuljin",
+      "blizzardId": null
+    },
+    {
+      "type": "com.kos.entities.WowEntity",
+      "id": 4,
+      "name": "Carallot",
+      "region": "eu",
+      "realm": "sanguino",
+      "blizzardId": null
+    }
+  ],
+  "game": "WOW",
+  "featured": false
+}
