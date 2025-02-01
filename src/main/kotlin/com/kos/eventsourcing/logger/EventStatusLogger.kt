@@ -1,15 +1,11 @@
 package com.kos.eventsourcing.logger
 
 import com.kos.eventsourcing.logger.repository.EventLoggerRepository
-import com.kos.eventsourcing.events.Operation
 
 
 enum class EventStatus {
     PENDING {
         override fun toString(): String = "pending"
-    },
-    UNPROCESSED {
-        override fun toString(): String = "unprocessed"
     },
     PROCESSING {
         override fun toString(): String = "processing"
@@ -26,16 +22,16 @@ class EventStatusLogger(
     private val repository: EventLoggerRepository
 ) {
 
-    suspend fun logStatus(eventId: String, status: EventStatus): Operation {
-        return repository.insert(eventId, status)
+    suspend fun logStatus(operationId: String, status: EventStatus): Boolean {
+        return repository.insert(operationId, status) ?: false
     }
 
-    suspend fun getStatusHistory(eventId: String): List<EventStatus> {
-        return repository.get(eventId) ?: listOf(EventStatus.UNPROCESSED)
+    suspend fun getStatusHistory(operationId: String): List<EventStatus> {
+        return repository.get(operationId) ?: listOf(EventStatus.PENDING)
     }
 
-    suspend fun getSummaryStatus(eventId: String): EventStatus {
-        return getStatusHistory(eventId).fold(EventStatus.PENDING) { acc, status ->
+    suspend fun getSummaryStatus(operationId: String): EventStatus {
+        return getStatusHistory(operationId).fold(EventStatus.PENDING) { acc, status ->
             when {
                 acc == EventStatus.ERROR -> EventStatus.ERROR
                 status == EventStatus.ERROR -> EventStatus.ERROR

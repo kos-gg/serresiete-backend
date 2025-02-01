@@ -11,6 +11,7 @@ import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.eventsourcing.logger.EventStatus
 import com.kos.eventsourcing.logger.EventStatusLogger
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
 import com.kos.views.Game
@@ -56,14 +57,17 @@ class EventSubscription(
                 .fold(Pair(true, initialState.version)) { (shouldKeepGoing, version), event ->
                     if (shouldKeepGoing) {
                         try {
+                            eventStatusLogger.logStatus(event.event.operationId, EventStatus.PROCESSING)
                             retryEitherWithExponentialBackoff(retryConfig) { process(event) }
                                 .onLeft { throw Exception(it.toString()) }
                             subscriptionsRepository.setState(
                                 subscriptionName,
                                 SubscriptionState(SubscriptionStatus.RUNNING, event.version, OffsetDateTime.now())
                             )
+                            eventStatusLogger.logStatus(event.event.operationId, EventStatus.SUCCESS)
                             Pair(true, event.version)
                         } catch (e: Exception) {
+                            eventStatusLogger.logStatus(event.event.operationId, EventStatus.ERROR)
                             subscriptionsRepository.setState(
                                 subscriptionName,
                                 SubscriptionState(

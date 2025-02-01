@@ -1,27 +1,28 @@
-package com.kos.eventsourcing.events.repository
+package com.kos.eventsourcing.logger.repository
 
 import com.kos.common.InMemoryRepository
-import com.kos.eventsourcing.events.Operation
 import com.kos.eventsourcing.logger.EventStatus
-import com.kos.eventsourcing.logger.repository.EventLoggerRepository
 
 class EventLoggerInMemory : EventLoggerRepository, InMemoryRepository {
     private val eventStatus = mutableMapOf<String, MutableList<EventStatus>>()
 
-    override suspend fun insert(id: String, status: EventStatus): Operation {
-        TODO("Not yet implemented")
+    override suspend fun insert(operationId: String, status: EventStatus): Boolean? {
+        return eventStatus[operationId]?.add(status)
     }
 
-    override suspend fun get(id: String): List<EventStatus>? {
-        TODO("Not yet implemented")
+    override suspend fun get(operationId: String): List<EventStatus>? {
+        return eventStatus[operationId]
     }
 
     override suspend fun state(): Map<String, List<EventStatus>> {
-        TODO("Not yet implemented")
+        return eventStatus
     }
 
     override suspend fun withState(initialState: Map<String, List<EventStatus>>): EventLoggerRepository {
-        TODO("Not yet implemented")
+        initialState.forEach { (operationId, statuses) ->
+            eventStatus[operationId] = statuses.toMutableList()
+        }
+        return this
     }
 
     override fun clear() {
