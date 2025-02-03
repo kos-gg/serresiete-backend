@@ -99,6 +99,18 @@ app.get('/api/credentials/:userName', (req, res) => {
     })
 })
 
+app.get('/api/tasks', (req, res) => {
+    const filePath = join(__dirname, 'resources', 'tasks.json');
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) return res.status(500).json({ error: 'Failed to read file' });
+
+        const parsedData = JSON.parse(data);
+
+        return res.json(parsedData);
+    });
+});
+
 app.post('/api/views', (req, res) => {
     const { authorization } = req.headers;
     if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
