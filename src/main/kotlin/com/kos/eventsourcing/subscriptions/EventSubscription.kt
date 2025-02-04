@@ -11,6 +11,8 @@ import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.eventsourcing.logger.OperationStatus
+import com.kos.eventsourcing.logger.EventStatusLogger
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
 import com.kos.views.Game
 import com.kos.views.ViewsService
@@ -99,6 +101,7 @@ class EventSubscription(
         suspend fun viewsProcessor(
             eventWithVersion: EventWithVersion,
             viewsService: ViewsService,
+            eventStatusLogger: EventStatusLogger
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_TO_BE_CREATED -> {
@@ -108,6 +111,7 @@ class EventSubscription(
                         val aggregateRoot = eventWithVersion.event.aggregateRoot
                         val operationId = eventWithVersion.event.operationId
                         viewsService.createView(operationId, aggregateRoot, payload).bind()
+                        eventStatusLogger.logStatus(operationId, OperationStatus.PROCESSING, "View pending to be created")
                     }
                 }
 
@@ -118,6 +122,7 @@ class EventSubscription(
                         val aggregateRoot = eventWithVersion.event.aggregateRoot
                         val operationId = eventWithVersion.event.operationId
                         viewsService.editView(operationId, aggregateRoot, payload).bind()
+                        eventStatusLogger.logStatus(operationId, OperationStatus.PROCESSING, "View pending to be edited")
                     }
                 }
 
@@ -128,6 +133,7 @@ class EventSubscription(
                         val aggregateRoot = eventWithVersion.event.aggregateRoot
                         val operationId = eventWithVersion.event.operationId
                         viewsService.patchView(operationId, aggregateRoot, payload).bind()
+                        eventStatusLogger.logStatus(operationId, OperationStatus.PROCESSING, "View pending to be patched")
                     }
                 }
 
@@ -145,7 +151,8 @@ class EventSubscription(
         suspend fun syncLolEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            dataCacheService: DataCacheService,
+            eventStatusLogger: EventStatusLogger
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -160,6 +167,8 @@ class EventSubscription(
                                 )
                             }
                             dataCacheService.cache(entities, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View created and synced")
                             Either.Right(Unit)
                         }
 
@@ -182,6 +191,8 @@ class EventSubscription(
                                 )
                             }
                             dataCacheService.cache(entities, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View edited")
                             Either.Right(Unit)
                         }
 
@@ -200,6 +211,8 @@ class EventSubscription(
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.LOL) }?.let {
                                 dataCacheService.cache(it, payload.game)
                             }
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View patched")
                             Either.Right(Unit)
                         }
 
@@ -224,7 +237,8 @@ class EventSubscription(
         suspend fun syncWowEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            dataCacheService: DataCacheService,
+            eventStatusLogger: EventStatusLogger
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -239,6 +253,8 @@ class EventSubscription(
                                 )
                             }
                             dataCacheService.cache(entities, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View created and synced")
                             Either.Right(Unit)
                         }
 
@@ -261,6 +277,8 @@ class EventSubscription(
                                 )
                             }
                             dataCacheService.cache(entities, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View edited")
                             Either.Right(Unit)
                         }
 
@@ -279,6 +297,8 @@ class EventSubscription(
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW) }?.let {
                                 dataCacheService.cache(it, payload.game)
                             }
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View patched")
                             Either.Right(Unit)
                         }
 
@@ -303,7 +323,8 @@ class EventSubscription(
         suspend fun syncWowHardcoreEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            dataCacheService: DataCacheService,
+            eventStatusLogger: EventStatusLogger
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -318,6 +339,8 @@ class EventSubscription(
                                 )
                             }
                             dataCacheService.cache(entities, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View created and synced")
                             Either.Right(Unit)
                         }
 
@@ -340,6 +363,8 @@ class EventSubscription(
                                 )
                             }
                             dataCacheService.cache(entities, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View edited")
                             Either.Right(Unit)
                         }
 
@@ -358,6 +383,8 @@ class EventSubscription(
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW_HC) }?.let {
                                 dataCacheService.cache(it, payload.game)
                             }
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View patched")
                             Either.Right(Unit)
                         }
 
@@ -381,7 +408,8 @@ class EventSubscription(
 
         suspend fun entitiesProcessor(
             eventWithVersion: EventWithVersion,
-            entitiesService: EntitiesService
+            entitiesService: EntitiesService,
+            eventStatusLogger: EventStatusLogger
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_DELETED -> {
@@ -390,12 +418,18 @@ class EventSubscription(
                         if (it.second.isEmpty()) {
                             entitiesProcessorLogger.debug("Deleting entity ${it.first}")
                             entitiesService.delete(it.first, payload.game)
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.SUCCESS, "View deleted")
                         }
-                        else entitiesProcessorLogger.debug(
-                            "Not deleting character {} because it's still in {}",
-                            it.first,
-                            it.second
-                        )
+                        else {
+                            entitiesProcessorLogger.debug(
+                                "Not deleting character {} because it's still in {}",
+                                it.first,
+                                it.second
+                            )
+                            val operationId = eventWithVersion.event.operationId
+                            eventStatusLogger.logStatus(operationId, OperationStatus.ERROR, "View could not be deleted")
+                        }
 
                     })
                 }

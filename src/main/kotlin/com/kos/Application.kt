@@ -23,6 +23,8 @@ import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
+import com.kos.eventsourcing.logger.EventStatusLogger
+import com.kos.eventsourcing.logger.repository.EventLoggerInMemory
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
@@ -129,41 +131,43 @@ fun Application.module() {
     val subscriptionsRepository = SubscriptionsDatabaseRepository(db)
     val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
     val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)
+    val eventLoggerRepository = EventLoggerInMemory()
+    val eventStatusLogger = EventStatusLogger(eventLoggerRepository)
 
     val viewsEventSubscription = EventSubscription(
         "views",
         eventStore,
         subscriptionsRepository,
-        subscriptionsRetryConfig
-    ) { EventSubscription.viewsProcessor(it, viewsService) }
+        subscriptionsRetryConfig,
+    ) { EventSubscription.viewsProcessor(it, viewsService, eventStatusLogger) }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
-        subscriptionsRetryConfig
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService) }
+        subscriptionsRetryConfig,
+    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService, eventStatusLogger) }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
-        subscriptionsRetryConfig
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService) }
+        subscriptionsRetryConfig,
+    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService, eventStatusLogger) }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
-        subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService) }
+        subscriptionsRetryConfig,
+    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService, eventStatusLogger) }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
-        subscriptionsRetryConfig
-    ) { EventSubscription.entitiesProcessor(it, entitiesService) }
+        subscriptionsRetryConfig,
+    ) { EventSubscription.entitiesProcessor(it, entitiesService, eventStatusLogger) }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)
