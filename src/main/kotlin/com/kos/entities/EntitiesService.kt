@@ -27,9 +27,6 @@ data class EntitiesService(
         requestedEntities: List<CreateEntityRequest>,
         game: Game
     ): Either<InsertError, List<Pair<Long, String?>>> {
-        //TODO MAX: En aquesta funcio t'arribara una llista de CreateEntityRequest amb el alias informat (o no per que es opcional)
-        // Aquest atribut s'ha de propagar en el resultat. Ja no hem de tornar un List<Long> sino un List<Long, String>.
-        // Per propagar aquest atribut durant el proces de creacio de entitats, es pot afegir l'atribut al insert request o jugar amb un Pair.
 
         suspend fun getCurrentAndNewEntities(
             requestedEntities: List<CreateEntityRequest>,
@@ -58,7 +55,7 @@ data class EntitiesService(
 
         existentAndNew.second.forEach { logger.info("Entity new found: $it") }
 
-        val newThatExist: List<Pair<InsertEntityRequest, String?>> = when (game) {
+        val newThatExist: List<InsertEntityRequestWithAlias> = when (game) {
             Game.WOW -> {
                 coroutineScope {
                     existentAndNew.second.map { initialRequest ->

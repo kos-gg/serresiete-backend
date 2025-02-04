@@ -31,9 +31,7 @@ object EntityWithAliasSerializer : KSerializer<EntityWithAlias> {
         val jsonEncoder = encoder as JsonEncoder
         val jsonObject = JsonObject(
             buildMap {
-                // Add entity fields
                 putAll(jsonEncoder.json.encodeToJsonElement(value.entity).jsonObject)
-                // Add alias
                 put("alias", JsonPrimitive(value.alias))
             }
         )
@@ -44,8 +42,6 @@ object EntityWithAliasSerializer : KSerializer<EntityWithAlias> {
         TODO()
     }
 }
-
-//TODO MAX: Afegir camp alias als objectes que faci falta (segur que a CreateEntityRequest)
 
 @Polymorphic
 @Serializable
@@ -60,3 +56,5 @@ sealed interface InsertEntityRequest {
     fun toEntity(id: Long): Entity
     fun same(other: Entity): Boolean
 }
+
+typealias InsertEntityRequestWithAlias = Pair<InsertEntityRequest, String?>

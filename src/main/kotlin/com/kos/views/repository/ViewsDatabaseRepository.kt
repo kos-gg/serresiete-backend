@@ -61,16 +61,9 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         val viewId = varchar("view_id", 48).references(
             Views.id, onDelete = ReferenceOption.CASCADE
         )
-
-        //TODO MAX: Definir columna alias
         val alias = varchar("alias", 48).nullable()
     }
 
-    //TODO MAX: Afegir una migracio de flyway (tant al paquet de prod com al de test).
-    // Lo que va a la dreta de la V es el time since epoch. A mac es fa aixi date +%s
-    // 1737460786
-
-    //TODO MAX: Tornar un ViewEntity En comptes de un Triple amb el nou camp
     private fun resultRowToViewEntity(row: ResultRow): ViewEntity = ViewEntity(
         row[ViewEntities.entityId],
         row[ViewEntities.viewId],
@@ -93,8 +86,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String,
         name: String,
         owner: String,
-        //TODO MAX: En comptes de ser List<Long (entity id)>  hem de fer arribar List<Pair<Long, String? (alias)>
-        entitiesIds: List<Pair<Long, String?>>,
+        entitiesIds: List<entityIdWithAlias>,
         game: Game,
         featured: Boolean,
     ): SimpleView {
@@ -107,7 +99,6 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.game] = game.toString()
                 it[Views.featured] = featured
             }
-            //TODO MAX: Aqui s'acaba populant la taula de ViewEntities, amb lo que toca informar del alias.
             ViewEntities.batchInsert(entitiesIds) {
                 this[ViewEntities.viewId] = id
                 this[ViewEntities.entityId] = it.first
@@ -121,7 +112,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String,
         name: String,
         published: Boolean,
-        entities: List<Pair<Long, String?>>,
+        entities: List<entityIdWithAlias>,
         featured: Boolean
     ): ViewModified {
         newSuspendedTransaction(Dispatchers.IO, db) {
@@ -144,7 +135,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String,
         name: String?,
         published: Boolean?,
-        entities: List<Pair<Long, String?>>?,
+        entities: List<entityIdWithAlias>?,
         featured: Boolean?
     ): ViewPatched {
         newSuspendedTransaction(Dispatchers.IO, db) {

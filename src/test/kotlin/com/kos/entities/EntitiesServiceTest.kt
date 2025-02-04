@@ -1,6 +1,7 @@
 package com.kos.entities
 
 import arrow.core.Either
+import arrow.core.right
 import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
 import com.kos.entities.EntitiesTestHelper.basicGetPuuidResponse
 import com.kos.entities.EntitiesTestHelper.basicGetSummonerResponse
@@ -269,22 +270,38 @@ class EntitiesServiceTest {
     @Test
     fun `given a request of create entity return a list of pairs with Ids and the alias propagated`() {
         runBlocking {
-            val name = basicLolEntity.name
-            val tag = basicLolEntity.tag
             val alias = "kako"
+            val alias2 = "sancho"
             val charactersRepository = EntitiesInMemoryRepository().withState(
                 EntitiesState(
                     listOf(),
                     listOf(),
-                    listOf(basicLolEntity, basicLolEntity2)
+                    listOf(basicLolEntity)
                 )
             )
             val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
-            val request = LolEntityRequest(name, tag, alias)
 
-            val result = entitiesService.createAndReturnIds(listOf(request), Game.LOL)
+            val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag, alias)
+            val requestNotInState = LolEntityRequest(basicLolEntity2.name, basicLolEntity2.tag, alias2)
 
-            assertEquals(Either.Right(listOf(basicLolEntity.id to alias)), result)
+            val puuid = UUID.randomUUID().toString()
+            `when`(riotClient.getPUUIDByRiotId(basicLolEntity2.name, basicLolEntity2.tag)).thenReturn(Either.Right(
+                GetPUUIDResponse(puuid, basicLolEntity2.name, basicLolEntity2.tag)
+            ))
+
+            `when`(riotClient.getSummonerByPuuid(puuid)).thenReturn(Either.Right(GetSummonerResponse(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                puuid,
+                1,
+                1L,
+                1
+            )))
+
+            val result = entitiesService.createAndReturnIds(listOf(request, requestNotInState), Game.LOL)
+
+            result.onLeft { fail(it.message) }
+                .onRight { assertEquals(listOf(basicLolEntity2.id to alias2, basicLolEntity.id to alias), it) }
         }
     }
 }
