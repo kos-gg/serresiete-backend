@@ -139,40 +139,35 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig,
-        eventStatusLogger
-    ) { EventSubscription.viewsProcessor(it, viewsService) }
+    ) { EventSubscription.viewsProcessor(it, viewsService, eventStatusLogger) }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig,
-        eventStatusLogger
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService, eventStatusLogger) }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig,
-        eventStatusLogger
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService, eventStatusLogger) }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig,
-        eventStatusLogger
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService, eventStatusLogger) }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig,
-        eventStatusLogger
-    ) { EventSubscription.entitiesProcessor(it, entitiesService) }
+    ) { EventSubscription.entitiesProcessor(it, entitiesService, eventStatusLogger) }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)

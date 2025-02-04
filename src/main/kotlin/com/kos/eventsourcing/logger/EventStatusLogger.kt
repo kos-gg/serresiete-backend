@@ -3,7 +3,7 @@ package com.kos.eventsourcing.logger
 import com.kos.eventsourcing.logger.repository.EventLoggerRepository
 
 
-enum class EventStatus {
+enum class OperationStatus {
     PENDING {
         override fun toString(): String = "pending"
     },
@@ -18,25 +18,21 @@ enum class EventStatus {
     }
 }
 
+data class OperationEntry(
+    val status: OperationStatus,
+    val info: String,
+    val timestamp: String,
+)
+
 class EventStatusLogger(
     private val repository: EventLoggerRepository
 ) {
 
-    suspend fun logStatus(operationId: String, status: EventStatus): Boolean {
-        return repository.insert(operationId, status) ?: false
+    suspend fun logStatus(operationId: String, status: OperationStatus, info: String): Boolean {
+        return repository.insert(operationId, OperationEntry(status, info, "todo")) ?: false
     }
 
-    suspend fun getStatusHistory(operationId: String): List<EventStatus> {
-        return repository.get(operationId) ?: listOf(EventStatus.PENDING)
-    }
-
-    suspend fun getSummaryStatus(operationId: String): EventStatus {
-        return getStatusHistory(operationId).fold(EventStatus.PENDING) { acc, status ->
-            when {
-                acc == EventStatus.ERROR -> EventStatus.ERROR
-                status == EventStatus.ERROR -> EventStatus.ERROR
-                else -> status
-            }
-        }
+    suspend fun getStatusHistory(operationId: String): List<OperationEntry> {
+        return repository.get(operationId) ?: listOf()
     }
 }
