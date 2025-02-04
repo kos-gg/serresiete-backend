@@ -111,6 +111,31 @@ app.get('/api/tasks', (req, res) => {
     });
 });
 
+app.post('/api/tasks', (req, res) => {
+    const { authorization } = req.headers;
+    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+
+    const token = authorization.split(' ')[1];
+    if (token !== 'mock-access-token') return res.status(401).json({ error: 'Invalid token' });
+
+    const { type } = req.body;
+
+    const taskTypes = [
+        "CACHE_WOW_DATA_TASK",
+        "CACHE_WOW_HC_DATA_TASK",
+        "CACHE_LOL_DATA_TASK",
+        "TOKEN_CLEANUP_TASK",
+        "TASK_CLEANUP_TASK",
+        "UPDATE_LOL_ENTITIES_TASK"
+    ];
+
+    if (taskTypes.includes(type)) {
+        return res.status(200).json({ message: `Starting ${type}` });
+    }
+
+    return res.status(400).json({ error: "Unknown task type" });
+})
+
 app.post('/api/views', (req, res) => {
     const { authorization } = req.headers;
     if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
