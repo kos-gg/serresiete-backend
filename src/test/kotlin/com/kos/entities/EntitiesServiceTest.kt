@@ -47,7 +47,8 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
+            entitiesService.createAndReturnIds(request, Game.WOW)
+                .fold({ fail() }) { entities -> assertEquals(expected, entities.map { it.id }) }
         }
     }
 
@@ -73,7 +74,7 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { assertEquals(expected, it) }
+            entitiesService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { entities -> assertEquals(expected, entities.map { it.id }) }
         }
     }
 
@@ -95,7 +96,7 @@ class EntitiesServiceTest {
             val expected: List<Long> = listOf()
 
             entitiesService.createAndReturnIds(request, Game.WOW_HC)
-                .fold({ fail(it.message) }) { assertEquals(expected, it) }
+                .fold({ fail(it.message) }) { entities -> assertEquals(expected, entities.map { it.id }) }
         }
     }
 
@@ -114,7 +115,7 @@ class EntitiesServiceTest {
 
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1)
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
+            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { entities -> assertEquals(expected, entities.map { it.id }) }
         }
     }
 
@@ -148,7 +149,7 @@ class EntitiesServiceTest {
             val createAndReturnIds = entitiesService.createAndReturnIds(gigaLolCharacterRequestList, Game.LOL)
             val expectedReturnedIds = listOf<Long>(7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6)
 
-            createAndReturnIds.fold({ fail() }) { assertEquals(expectedReturnedIds, it) }
+            createAndReturnIds.fold({ fail() }) { entities -> assertEquals(expectedReturnedIds, entities.map { it.id }) }
         }
     }
 

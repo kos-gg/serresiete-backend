@@ -6,6 +6,8 @@ import com.kos.auth.AuthController
 import com.kos.auth.authRouting
 import com.kos.credentials.CredentialsController
 import com.kos.credentials.credentialsRouting
+import com.kos.entities.EntitiesController
+import com.kos.entities.entitiesRouting
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.subscriptionsRouting
 import com.kos.roles.RolesController
@@ -25,7 +27,8 @@ fun Application.configureRouting(
     rolesController: RolesController,
     viewsController: ViewsController,
     tasksController: TasksController,
-    eventSubscriptionController: EventSubscriptionController
+    eventSubscriptionController: EventSubscriptionController,
+    entitiesController: EntitiesController
 ) {
 
     routing {
@@ -38,6 +41,7 @@ fun Application.configureRouting(
             credentialsRouting(credentialsController)
             tasksRouting(tasksController)
             subscriptionsRouting(eventSubscriptionController)
+            entitiesRouting(entitiesController)
         }
     }
 }

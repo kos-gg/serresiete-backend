@@ -19,6 +19,7 @@ import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.eventsourcing.events.*
+import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
@@ -46,11 +47,12 @@ class SyncCharactersSubscriptionTest {
                 listOf(EntitiesTestHelper.basicLolEntity)
             )
         )
+        val eventStore = EventStoreInMemory()
         val dataCacheRepository = DataCacheInMemoryRepository()
         val entitiesService =
             EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
         val dataCacheService =
-            DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig)
+            DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig, eventStore)
         return Triple(entitiesService, spyk(dataCacheService), dataCacheRepository)
     }
 

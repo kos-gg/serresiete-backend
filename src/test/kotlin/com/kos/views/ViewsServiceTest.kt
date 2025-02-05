@@ -909,7 +909,8 @@ class ViewsServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
-                retryConfig
+                retryConfig,
+                eventStore
             )
         val service =
             ViewsService(

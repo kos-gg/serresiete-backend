@@ -1,4 +1,16 @@
 # Changelog
+## [4.4.0] - 22-02-2026
+
+### Added
+- **Search Individual Entities Endpoint** (`GET /api/entities`):
+    - Introduced a new endpoint to search for **individual entities** rather than only tracking groups through views.
+    - Supports searching for **World of Warcraft (WOW), WoW Hardcore (WOW_HC), and League of Legends (LOL)** entities.
+    - **Required query parameters depend on the game type**:
+        - **WoW & WoW Hardcore** → `name`, `region`, `realm`
+        - **LoL** → `name`, `tag`
+        - `game` parameter is always required (Possible values are `wow`, `wow_hc` and `lol`)
+    - If required parameters are missing or an unknown game is provided, the API returns `400 Bad Request`.
+
 ## [4.3.2] 16-01-2026
 
 ### Added
@@ -17,7 +29,7 @@
     - **Repository Cleanup**: Characters returning a `404` are removed from the characters repository if no record exists for them in the cache.
         - This prevents stale or invalid entries from persisting in the database.
 
-## [4.3.0] - 22-12-2024
+## [4.3.0] 22-12-2024
 
 ### Added
 - **Metadata in Get Views Endpoint**: Introduced support for including metadata in the `Get Views` endpoint. By using the `include` parameter with the value `metadata`, users can now receive additional information, such as the total number of views. This is especially useful for users implementing pagination.

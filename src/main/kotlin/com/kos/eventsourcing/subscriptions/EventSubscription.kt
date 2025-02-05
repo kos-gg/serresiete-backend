@@ -85,6 +85,10 @@ class EventSubscription(
         }
     }
 
+    /*
+        Disclaimer: Despite maybe thinking all this entity syncs can be refactored into one, we might want to
+        remember that we want each game to be treated separately so one game does not block another
+     */
     companion object {
         private val viewsProcessorLogger = LoggerFactory.getLogger("eventSubscription.viewsProcessor")
         private val syncLolEntitiesProcessorLogger =
@@ -210,6 +214,27 @@ class EventSubscription(
                     }
                 }
 
+                EventType.REQUEST_TO_BE_SYNCED -> {
+                    val payload = eventWithVersion.event.eventData as RequestToBeSynced
+                    return when (payload.game) {
+                        Game.LOL -> {
+                            either {
+                                syncLolEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
+                                val newEntity = entitiesService.createAndReturnIds(
+                                    listOf(payload.request),
+                                    payload.game
+                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
+                                dataCacheService.cache(newEntity, payload.game)
+                            }
+                        }
+
+                        else -> {
+                            syncLolEntitiesProcessorLogger.debug("skipping event v${eventWithVersion.version}")
+                            Either.Right(Unit)
+                        }
+                    }
+                }
+
                 else -> {
                     syncLolEntitiesProcessorLogger.debug(
                         "skipping event v{} ({})",
@@ -280,6 +305,27 @@ class EventSubscription(
                                 dataCacheService.cache(it, payload.game)
                             }
                             Either.Right(Unit)
+                        }
+
+                        else -> {
+                            syncWowEntitiesProcessorLogger.debug("skipping event v${eventWithVersion.version}")
+                            Either.Right(Unit)
+                        }
+                    }
+                }
+
+                EventType.REQUEST_TO_BE_SYNCED -> {
+                    val payload = eventWithVersion.event.eventData as RequestToBeSynced
+                    return when (payload.game) {
+                        Game.WOW -> {
+                            either {
+                                syncWowEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
+                                val newEntity = entitiesService.createAndReturnIds(
+                                    listOf(payload.request),
+                                    payload.game
+                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
+                                dataCacheService.cache(newEntity, payload.game)
+                            }
                         }
 
                         else -> {
@@ -368,8 +414,29 @@ class EventSubscription(
                     }
                 }
 
+                EventType.REQUEST_TO_BE_SYNCED -> {
+                    val payload = eventWithVersion.event.eventData as RequestToBeSynced
+                    return when (payload.game) {
+                        Game.WOW_HC -> {
+                            either {
+                                syncWowHardcoreEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
+                                val newEntity = entitiesService.createAndReturnIds(
+                                    listOf(payload.request),
+                                    payload.game
+                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
+                                dataCacheService.cache(newEntity, payload.game)
+                            }
+                        }
+
+                        else -> {
+                            syncWowHardcoreEntitiesProcessorLogger.debug("skipping event v${eventWithVersion.version}")
+                            Either.Right(Unit)
+                        }
+                    }
+                }
+
                 else -> {
-                    syncLolEntitiesProcessorLogger.debug(
+                    syncWowHardcoreEntitiesProcessorLogger.debug(
                         "skipping event v{} ({})",
                         eventWithVersion.version,
                         eventWithVersion.event.eventData.eventType
@@ -386,18 +453,18 @@ class EventSubscription(
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_DELETED -> {
                     val payload = eventWithVersion.event.eventData as ViewDeletedEvent
-                    Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }.forEach {
-                        if (it.second.isEmpty()) {
-                            entitiesProcessorLogger.debug("Deleting entity ${it.first}")
-                            entitiesService.delete(it.first, payload.game)
-                        }
-                        else entitiesProcessorLogger.debug(
-                            "Not deleting character {} because it's still in {}",
-                            it.first,
-                            it.second
-                        )
+                    Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }
+                        .forEach {
+                            if (it.second.isEmpty()) {
+                                entitiesProcessorLogger.debug("Deleting entity ${it.first}")
+                                entitiesService.delete(it.first, payload.game)
+                            } else entitiesProcessorLogger.debug(
+                                "Not deleting character {} because it's still in {}",
+                                it.first,
+                                it.second
+                            )
 
-                    })
+                        })
                 }
 
                 else -> {

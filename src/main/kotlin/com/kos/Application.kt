@@ -22,6 +22,7 @@ import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
+import com.kos.entities.EntitiesController
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
@@ -98,13 +99,25 @@ fun Application.module() {
     val authController = AuthController(authService)
 
     val entitiesRepository = EntitiesDatabaseRepository(db)
-    val entitiesService = EntitiesService(entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient)
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
     val dataCacheRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
-        DataCacheService(dataCacheRepository, entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient, dataCacheRetryConfig)
+        DataCacheService(
+            dataCacheRepository,
+            entitiesRepository,
+            raiderIoHTTPClient,
+            riotHTTPClient,
+            blizzardClient,
+            dataCacheRetryConfig,
+            eventStore
+        )
+
+    val entitiesService = EntitiesService(entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient)
+    //TODO: This feels weird. Probably the responsibility of getOrSync should be on EntitiesService rather than DataCacheService
+    val entitiesController = EntitiesController(dataCacheService)
+
     val viewsService =
         ViewsService(
             viewsRepository,
@@ -180,7 +193,8 @@ fun Application.module() {
         rolesController,
         viewsController,
         tasksController,
-        eventSubscriptionController
+        eventSubscriptionController,
+        entitiesController
     )
     configureSerialization()
     configureLogging()
