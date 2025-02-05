@@ -52,12 +52,12 @@ fun Route.entitiesRouting(
 
                 parametersToEntityRequest(call.request.queryParameters).fold(
                     ifLeft = { call.respondWithHandledError(it) },
-                    ifRight = {
+                    ifRight = { entityWithGame ->
                         val userWithActivities = call.principal<UserWithActivities>()
                         entitiesController.getEntityData(
                             userWithActivities?.name,
                             userWithActivities?.activities.orEmpty(),
-                            it
+                            entityWithGame
                         ).fold({
                             call.respondWithHandledError(it)
                         }, {

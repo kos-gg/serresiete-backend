@@ -115,7 +115,8 @@ fun Application.module() {
         )
 
     val entitiesService = EntitiesService(entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient)
-    val entitiesController = EntitiesController(dataCacheService) //TODO: THIS FEELS WEIRD
+    //TODO: This feels weird. Probably the responsibility of getOrSync should be on EntitiesService rather than DataCacheService
+    val entitiesController = EntitiesController(dataCacheService)
 
     val viewsService =
         ViewsService(
