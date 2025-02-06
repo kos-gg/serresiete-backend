@@ -407,7 +407,7 @@ abstract class EntitiesRepositoryTestCommon {
     fun `given a repository with a character, I can delete it`() {
         runBlocking {
             repository.withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
-            repository.delete(basicWowEntity.id, Game.WOW)
+            repository.delete(basicWowEntity.id)
             assertEquals(listOf(), repository.state().wowEntities)
         }
     }

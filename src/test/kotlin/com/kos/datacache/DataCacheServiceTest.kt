@@ -242,7 +242,6 @@ class DataCacheServiceTest {
     @Test
     fun `caching lol data behaves smart and does not attempt to retrieve matches that are present on newest cached record`() {
         runBlocking {
-
             val newMatchIds = listOf("match1", "match2", "match3", "match4", "match5")
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 

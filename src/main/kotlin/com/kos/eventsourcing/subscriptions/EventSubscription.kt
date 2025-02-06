@@ -389,7 +389,7 @@ class EventSubscription(
                     Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }.forEach {
                         if (it.second.isEmpty()) {
                             entitiesProcessorLogger.debug("Deleting entity ${it.first}")
-                            entitiesService.delete(it.first, payload.game)
+                            entitiesService.delete(it.first)
                         }
                         else entitiesProcessorLogger.debug(
                             "Not deleting character {} because it's still in {}",

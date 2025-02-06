@@ -3,12 +3,12 @@ package com.kos.entities
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRealmResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.*
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -196,5 +196,5 @@ data class EntitiesService(
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =
         entitiesRepository.getViewsFromEntity(id, game)
 
-    suspend fun delete(id: Long, game: Game): Unit = entitiesRepository.delete(id, game)
+    suspend fun delete(id: Long): Unit = entitiesRepository.delete(id)
 }

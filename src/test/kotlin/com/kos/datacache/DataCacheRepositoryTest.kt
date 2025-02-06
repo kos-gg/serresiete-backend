@@ -13,6 +13,8 @@ import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
+import java.time.OffsetDateTime
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -70,6 +72,21 @@ abstract class DataCacheRepositoryTestCommon {
         runBlocking {
             val repositoryWithState = repository.withState(listOf(outdatedDataCache))
             assertEquals(0, repositoryWithState.deleteExpiredRecord(24, null, true))
+            assertEquals(listOf(outdatedDataCache), repositoryWithState.state())
+        }
+    }
+
+    @Ignore
+    @Test
+    open fun `given a repository with expired records of an entity i can clear it unless it's the last record`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(
+                listOf(
+                    outdatedDataCache,
+                    outdatedDataCache
+                )
+            )
+            assertEquals(1, repositoryWithState.deleteExpiredRecord(24, null, true))
             assertEquals(listOf(outdatedDataCache), repositoryWithState.state())
         }
     }

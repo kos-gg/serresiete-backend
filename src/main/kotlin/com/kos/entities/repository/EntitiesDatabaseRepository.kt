@@ -1,10 +1,9 @@
 package com.kos.entities.repository
 
 import arrow.core.Either
-import com.kos.entities.*
 import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
-import com.kos.entities.repository.EntitiesDatabaseRepository.WowEntities.references
+import com.kos.entities.*
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
@@ -401,19 +400,11 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         }
     }
 
-    override suspend fun delete(id: Long, game: Game) {
+    override suspend fun delete(id: Long) {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.WOW -> WowEntities.deleteWhere { WowEntities.id.eq(id) }
-                Game.LOL -> LolEntities.deleteWhere { LolEntities.id.eq(id) }
-                Game.WOW_HC -> WowHardcoreEntities.deleteWhere { WowHardcoreEntities.id.eq(id) }
-            }
-
-            //TODO: this operation will be removed upon having parent character table implemented
-            ViewsDatabaseRepository.ViewEntities.deleteWhere { entityId.eq(id) }
+            Entities.deleteWhere { Entities.id.eq(id) }
         }
     }
-
 
     override suspend fun state(): EntitiesState {
         return newSuspendedTransaction(Dispatchers.IO, db) {

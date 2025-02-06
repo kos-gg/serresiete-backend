@@ -400,7 +400,7 @@ data class DataCacheService(
     ) {
         newestCharacterDataCacheEntry.fold(
             {
-                entitiesRepository.delete(wowEntity.id, Game.WOW_HC)
+                entitiesRepository.delete(wowEntity.id)
             },
             {
                 dataCacheRepository.insert(
