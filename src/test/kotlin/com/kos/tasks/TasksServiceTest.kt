@@ -22,6 +22,7 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
@@ -47,13 +48,15 @@ class TasksServiceTest {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
+            val eventStore = EventStoreInMemory()
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
-                retryConfig
+                retryConfig,
+                eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
@@ -94,13 +97,15 @@ class TasksServiceTest {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
+            val eventStore = EventStoreInMemory()
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
-                retryConfig
+                retryConfig,
+                eventStore
             )
 
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -140,13 +145,15 @@ class TasksServiceTest {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository =
                 EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
+            val eventStore = EventStoreInMemory()
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
-                retryConfig
+                retryConfig,
+                eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
@@ -185,15 +192,16 @@ class TasksServiceTest {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository =
                 EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -237,15 +245,16 @@ class TasksServiceTest {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository =
                 EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -281,15 +290,16 @@ class TasksServiceTest {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -322,15 +332,16 @@ class TasksServiceTest {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -365,15 +376,16 @@ class TasksServiceTest {
         runBlocking {
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -409,15 +421,16 @@ class TasksServiceTest {
 
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()
@@ -445,15 +458,16 @@ class TasksServiceTest {
 
             val dataCacheRepository = DataCacheInMemoryRepository()
             val entitiesRepository = EntitiesInMemoryRepository()
-            val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+            val eventStore = EventStoreInMemory()
+            val dataCacheService = DataCacheService(
+                dataCacheRepository,
+                entitiesRepository,
+                raiderIoClient,
+                riotClient,
+                blizzardClient,
+                retryConfig,
+                eventStore
+            )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
 
             val credentialsRepository = CredentialsInMemoryRepository()

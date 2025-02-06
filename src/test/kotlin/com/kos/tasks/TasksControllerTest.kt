@@ -22,6 +22,8 @@ import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
@@ -64,11 +66,12 @@ class TasksControllerTest {
         val tasksRepositoryWithState = tasksRepository.withState(tasksState)
         val authRepositoryWithState = authRepository.withState(authState)
         val rolesRepositoryWithState = rolesRepository.withState(rolesState)
+        val eventStore = EventStoreInMemory()
 
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
-        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig)
+        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig, eventStore)
         val entitiesService = EntitiesService(entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
