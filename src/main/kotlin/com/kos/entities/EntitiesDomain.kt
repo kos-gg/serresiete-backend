@@ -2,6 +2,8 @@ package com.kos.entities
 
 import com.kos.clients.domain.QueueType
 import kotlinx.serialization.KSerializer
+import com.kos.clients.domain.Data
+import com.kos.eventsourcing.events.Operation
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
@@ -58,3 +60,6 @@ sealed interface InsertEntityRequest {
 }
 
 typealias InsertEntityRequestWithAlias = Pair<InsertEntityRequest, String?>
+
+@Serializable
+data class EntityDataResponse(val data: Data?, val operation: Operation?)

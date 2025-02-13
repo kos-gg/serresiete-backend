@@ -86,15 +86,14 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Either<InsertError, Operation> {
-        //TODO MAX: Aqui es on a partir de un Event de Creacio de vista (ViewToBeCreatedEvent) s'acaba creant la vista
         return either {
-            val entitiesIds =
+            val entities =
                 entitiesService.createAndReturnIds(viewToBeCreatedEvent.entities, viewToBeCreatedEvent.game).bind()
             val view = viewsRepository.create(
                 viewToBeCreatedEvent.id,
                 viewToBeCreatedEvent.name,
                 viewToBeCreatedEvent.owner,
-                entitiesIds,
+                entities.map { it.first.id to it.second },
                 viewToBeCreatedEvent.game,
                 viewToBeCreatedEvent.featured
             )
@@ -141,7 +140,7 @@ class ViewsService(
                     viewToBeEditedEvent.id,
                     viewToBeEditedEvent.name,
                     viewToBeEditedEvent.published,
-                    entities,
+                    entities.map { it.first.id to it.second },
                     viewToBeEditedEvent.featured
                 )
             val event = Event(
@@ -189,7 +188,7 @@ class ViewsService(
                 viewToBePatchedEvent.id,
                 viewToBePatchedEvent.name,
                 viewToBePatchedEvent.published,
-                entitiesToInsert,
+                entitiesToInsert?.map { it.first.id to it.second },
                 viewToBePatchedEvent.featured
             )
             val event = Event(

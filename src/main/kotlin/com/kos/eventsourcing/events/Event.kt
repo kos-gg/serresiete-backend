@@ -28,6 +28,9 @@ enum class EventType {
     },
     VIEW_DELETED {
         override fun toString(): String = "viewDeleted"
+    },
+    REQUEST_TO_BE_SYNCED {
+        override fun toString(): String = "requestToBeSynced"
     };
 
     companion object {
@@ -40,6 +43,7 @@ enum class EventType {
                 "viewEdited" -> VIEW_EDITED
                 "viewPatched" -> VIEW_PATCHED
                 "viewDeleted" -> VIEW_DELETED
+                "requestToBeSynced" -> REQUEST_TO_BE_SYNCED
                 else -> throw IllegalArgumentException("error parsing EventType: $string")
             }
         }
@@ -169,6 +173,14 @@ data class ViewDeletedEvent(
     val featured: Boolean
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_DELETED
+}
+
+@Serializable
+data class RequestToBeSynced(
+    val request: CreateEntityRequest,
+    val game: Game
+): EventData {
+    override val eventType: EventType = EventType.REQUEST_TO_BE_SYNCED
 }
 
 @Serializable

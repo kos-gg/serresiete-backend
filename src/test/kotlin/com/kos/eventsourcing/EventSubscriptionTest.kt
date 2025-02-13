@@ -441,14 +441,7 @@ class EventSubscriptionTest {
             val credentialsService = CredentialsService(credentialsRepository)
             val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
             val dataCacheService =
-                DataCacheService(
-                    dataCacheRepository,
-                    charactersRepository,
-                    raiderIoClient,
-                    riotClient,
-                    blizzardClient,
-                    retryConfig
-                )
+                DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig, eventStore)
             val service =
                 ViewsService(
                     viewsRepository,

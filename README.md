@@ -1,10 +1,11 @@
 # SERRESIETE BACKEND
+[![codecov](https://codecov.io/gh/locl95/serresiete-backend/graph/badge.svg?token=DYT934CTMG)](https://codecov.io/gh/locl95/serresiete-backend)
 
 Backend of:
 * https://alcaland-ranks.netlify.app/5f51f45c-a032-4a6e-bc49-dab4eeb707f7
 * https://osborno-gestiones.netlify.app/
 * https://correcalles.netlify.app/
-* Next coming: o7.gg
+* https://o7gg.netlify.app/
 
 Stack:
 * Main language: https://kotlinlang.org/

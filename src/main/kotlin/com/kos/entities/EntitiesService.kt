@@ -26,8 +26,7 @@ data class EntitiesService(
     suspend fun createAndReturnIds(
         requestedEntities: List<CreateEntityRequest>,
         game: Game
-    ): Either<InsertError, List<Pair<Long, String?>>> {
-
+    ): Either<InsertError, List<Pair<Entity, String?>>> {
         suspend fun getCurrentAndNewEntities(
             requestedEntities: List<CreateEntityRequest>,
             game: Game,
@@ -133,7 +132,7 @@ data class EntitiesService(
         return entitiesRepository.insert(newThatExist.map { it.first }, game)
             .map { list ->
                 list.zip(newThatExist.map { it.second })
-                    .map { it.first.id to it.second } + existentAndNew.first.map { it.entity.id to it.alias }
+                    .map { it.first to it.second } + existentAndNew.first.map { it.entity to it.alias }
             }
     }
 

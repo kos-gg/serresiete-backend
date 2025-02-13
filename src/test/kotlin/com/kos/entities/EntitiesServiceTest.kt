@@ -50,10 +50,8 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { list ->
-                val ids = list.map { it.first }
-                assertEquals(expected, ids)
-            }
+            entitiesService.createAndReturnIds(request, Game.WOW)
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -79,10 +77,8 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { list ->
-                val ids = list.map { it.first }
-                assertEquals(expected, ids)
-            }
+            entitiesService.createAndReturnIds(request, Game.WOW_HC)
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -104,10 +100,7 @@ class EntitiesServiceTest {
             val expected: List<Long> = listOf()
 
             entitiesService.createAndReturnIds(request, Game.WOW_HC)
-                .fold({ fail(it.message) }) { list ->
-                    val ids = list.map { it.first }
-                    assertEquals(expected, ids)
-                }
+                .fold({ fail(it.message) }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -126,10 +119,8 @@ class EntitiesServiceTest {
 
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1)
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { list ->
-                val ids = list.map { it.first }
-                assertEquals(expected, ids)
-            }
+            entitiesService.createAndReturnIds(request, Game.WOW)
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -163,10 +154,7 @@ class EntitiesServiceTest {
             val createAndReturnIds = entitiesService.createAndReturnIds(gigaLolCharacterRequestList, Game.LOL)
             val expectedReturnedIds = listOf<Long>(7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6)
 
-            createAndReturnIds.fold({ fail() }) { list ->
-                val ids = list.map { it.first }
-                assertEquals(expectedReturnedIds, ids)
-            }
+            createAndReturnIds.fold({ fail() }) { res -> assertEquals(expectedReturnedIds, res.map { it.first.id }) }
         }
     }
 
@@ -284,24 +272,29 @@ class EntitiesServiceTest {
             val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag, alias)
             val requestNotInState = LolEntityRequest(basicLolEntity2.name, basicLolEntity2.tag, alias2)
 
-            val puuid = UUID.randomUUID().toString()
-            `when`(riotClient.getPUUIDByRiotId(basicLolEntity2.name, basicLolEntity2.tag)).thenReturn(Either.Right(
-                GetPUUIDResponse(puuid, basicLolEntity2.name, basicLolEntity2.tag)
-            ))
+            `when`(riotClient.getPUUIDByRiotId(basicLolEntity2.name, basicLolEntity2.tag)).thenReturn(
+                Either.Right(
+                    GetPUUIDResponse(basicLolEntity2.puuid, basicLolEntity2.name, basicLolEntity2.tag)
+                )
+            )
 
-            `when`(riotClient.getSummonerByPuuid(puuid)).thenReturn(Either.Right(GetSummonerResponse(
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(),
-                puuid,
-                1,
-                1L,
-                1
-            )))
+            `when`(riotClient.getSummonerByPuuid(basicLolEntity2.puuid)).thenReturn(
+                Either.Right(
+                    GetSummonerResponse(
+                        basicLolEntity2.summonerId,
+                        basicLolEntity2.summonerId,
+                        basicLolEntity2.puuid,
+                        basicLolEntity2.summonerIcon,
+                        1L,
+                        basicLolEntity2.summonerLevel
+                    )
+                )
+            )
 
             val result = entitiesService.createAndReturnIds(listOf(request, requestNotInState), Game.LOL)
 
             result.onLeft { fail(it.message) }
-                .onRight { assertEquals(listOf(basicLolEntity2.id to alias2, basicLolEntity.id to alias), it) }
+                .onRight { assertEquals(listOf(basicLolEntity2 to alias2, basicLolEntity to alias), it) }
         }
     }
 }

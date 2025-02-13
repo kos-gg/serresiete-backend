@@ -3,430 +3,2199 @@
     "data": [
         {
             "type": "com.kos.clients.domain.HardcoreData",
-            "id": 30758927,
-            "name": "Kumii",
+            "id": 51871001,
+            "name": "Marielle",
             "level": 60,
-            "isDead": false,
-            "isSelfFound": false,
-            "averageItemLevel": 59,
+            "isDead": true,
+            "isSelfFound": true,
+            "averageItemLevel": 58,
             "equippedItemLevel": 57,
-            "characterClass": "Hunter",
-            "race": "Night Elf",
+            "characterClass": "Priest",
+            "race": "Dwarf",
             "gender": "Female",
-            "realm": "Stitches",
+            "realm": "Soulseeker",
             "region": "eu",
-            "guild": "I CANT RELEASE",
+            "guild": "ONLYFATS",
             "experience": 0,
             "items": [
                 {
-                    "id": 18421,
+                    "id": 13102,
                     "slot": "Head",
-                    "quality": "RARE",
-                    "name": "Backwood Helm",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_helmet_19.jpg"
+                    "quality": "Rare",
+                    "name": "Cassandra's Grace",
+                    "level": 47,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 42,
+                    "itemSubclass": "Cloth",
+                    "armor": "55 Armor",
+                    "stats": [
+                        "+7 Stamina",
+                        "+9 Spirit"
+                    ],
+                    "spells": [
+                        "Equip: Increases healing done by spells and effects by up to 44."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "68",
+                        "copper": "79"
+                    },
+                    "durability": "Durability 50 / 50",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_03.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 15411,
+                    "id": 17707,
                     "slot": "Neck",
-                    "quality": "RARE",
-                    "name": "Mark of Fordring",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_talisman_07.jpg"
+                    "quality": "Rare",
+                    "name": "Gemshard Heart",
+                    "level": 54,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 49,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+10 Stamina",
+                        "+10 Intellect",
+                        "+6 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "16",
+                        "copper": "31"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_stone_01.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 13358,
+                    "id": 18681,
                     "slot": "Shoulders",
-                    "quality": "RARE",
-                    "name": "Wyrmtongue Shoulders",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_24.jpg"
+                    "quality": "Rare",
+                    "name": "Burial Shawl",
+                    "level": 61,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 56,
+                    "itemSubclass": "Cloth",
+                    "armor": "65 Armor",
+                    "stats": [
+                        "+16 Intellect"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 20."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "52",
+                        "copper": "15"
+                    },
+                    "durability": "Durability 50 / 50",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_05.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 859,
-                    "slot": "Shirt",
-                    "quality": "COMMON",
-                    "name": "Fine Cloth Shirt",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_02.jpg"
-                },
-                {
-                    "id": 15787,
+                    "id": 14154,
                     "slot": "Chest",
-                    "quality": "UNCOMMON",
-                    "name": "Willow Band Hauberk",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_chain_16.jpg"
+                    "quality": "Epic",
+                    "name": "Truefaith Vestments",
+                    "level": 62,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 57,
+                    "itemSubclass": "Cloth",
+                    "armor": "96 Armor",
+                    "stats": [
+                        "+14 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Increases healing done by spells and effects by up to 73.",
+                        "Equip: Restores 6 mana per 5 sec.",
+                        "Equip: Reduces the cooldown of your Fade ability by 2 sec."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "90",
+                        "copper": "28"
+                    },
+                    "durability": "Durability 100 / 100",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_cloth_31.jpg",
+                    "enchantments": [
+                        "Enchanted: All Stats +3"
+                    ]
                 },
                 {
-                    "id": 18393,
+                    "id": 18740,
                     "slot": "Waist",
-                    "quality": "RARE",
-                    "name": "Warpwood Binding",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_34.jpg"
+                    "quality": "Rare",
+                    "name": "Thuzadin Sash",
+                    "level": 61,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 56,
+                    "itemSubclass": "Cloth",
+                    "armor": "49 Armor",
+                    "stats": [
+                        "+11 Stamina",
+                        "+12 Intellect",
+                        "+11 Spirit"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 11."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "1",
+                        "copper": "1"
+                    },
+                    "durability": "Durability 30 / 30",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_13.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 15062,
+                    "id": 11841,
                     "slot": "Legs",
-                    "quality": "RARE",
-                    "name": "Devilsaur Leggings",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_wolf.jpg"
+                    "quality": "Rare",
+                    "name": "Senior Designer's Pantaloons",
+                    "level": 55,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 50,
+                    "itemSubclass": "Cloth",
+                    "armor": "69 Armor",
+                    "stats": [
+                        "+8 Stamina",
+                        "+7 Intellect",
+                        "+18 Spirit"
+                    ],
+                    "spells": [
+                        "Equip: Increases healing done by spells and effects by up to 40."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "50",
+                        "copper": "32"
+                    },
+                    "durability": "Durability 65 / 65",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_09.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 16675,
+                    "id": 11822,
                     "slot": "Feet",
-                    "quality": "RARE",
-                    "name": "Beaststalker's Boots",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_plate_07.jpg"
+                    "quality": "Rare",
+                    "name": "Omnicast Boots",
+                    "level": 59,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 54,
+                    "itemSubclass": "Cloth",
+                    "armor": "58 Armor",
+                    "stats": [
+                        "+6 Stamina",
+                        "+9 Intellect"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 22."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "41",
+                        "copper": "53"
+                    },
+                    "durability": "Durability 40 / 40",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_05.jpg",
+                    "enchantments": [
+                        "Enchanted: Minor Speed Increase"
+                    ]
                 },
                 {
-                    "id": 16710,
+                    "id": 16697,
                     "slot": "Wrist",
-                    "quality": "RARE",
-                    "name": "Shadowcraft Bracers",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg"
+                    "quality": "Rare",
+                    "name": "Devout Bracers",
+                    "level": 57,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 52,
+                    "itemSubclass": "Cloth",
+                    "armor": "35 Armor",
+                    "stats": [
+                        "+7 Stamina",
+                        "+10 Intellect",
+                        "+10 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "85",
+                        "copper": "77"
+                    },
+                    "durability": "Durability 30 / 30",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_31.jpg",
+                    "enchantments": [
+                        "Enchanted: Intellect +5"
+                    ]
                 },
                 {
-                    "id": 15063,
+                    "id": 11634,
                     "slot": "Hands",
-                    "quality": "RARE",
-                    "name": "Devilsaur Gauntlets",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_26.jpg"
+                    "quality": "Rare",
+                    "name": "Silkweb Gloves",
+                    "level": 54,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 49,
+                    "itemSubclass": "Cloth",
+                    "armor": "48 Armor",
+                    "stats": [
+                        "+14 Stamina",
+                        "+13 Intellect"
+                    ],
+                    "spells": [
+                        "Equip: Restores 3 mana per 5 sec."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "70",
+                        "copper": "63"
+                    },
+                    "durability": "Durability 30 / 30",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_12.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 13217,
+                    "id": 16058,
                     "slot": "Ring 1",
-                    "quality": "UNCOMMON",
-                    "name": "Band of the Penitent",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_30.jpg"
+                    "quality": "Rare",
+                    "name": "Fordring's Seal",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+4 Stamina",
+                        "+5 Intellect"
+                    ],
+                    "spells": [
+                        "Equip: Increases healing done by spells and effects by up to 37."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "1",
+                        "copper": "56"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_19.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 9533,
+                    "id": 12543,
                     "slot": "Ring 2",
-                    "quality": "RARE",
-                    "name": "Masons Fraternity Ring",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_03.jpg"
+                    "quality": "Rare",
+                    "name": "Songstone of Ironforge",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+7 Intellect",
+                        "+4 Spirit"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 18."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "71",
+                        "copper": "56"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_05.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 11819,
+                    "slot": "Trinket 1",
+                    "quality": "Rare",
+                    "name": "Second Wind",
+                    "level": 59,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 54,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Use: Restores 30 mana every 1 sec for 10 sec. (15 Mins Cooldown)",
+                        "Equip: Increases healing done by spells and effects by up to 22."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "0",
+                        "copper": "0"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_talisman_06.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 12930,
+                    "slot": "Trinket 2",
+                    "quality": "Rare",
+                    "name": "Briarwood Reed",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 29."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "0",
+                        "copper": "0"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_root_02.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 11623,
+                    "slot": "Back",
+                    "quality": "Rare",
+                    "name": "Spritecaster Cape",
+                    "level": 52,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 47,
+                    "itemSubclass": "Cloth",
+                    "armor": "37 Armor",
+                    "stats": [
+                        "+4 Stamina",
+                        "+4 Intellect",
+                        "+5 Spirit"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 14."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "99",
+                        "copper": "99"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_20.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13161,
+                    "slot": "Main Hand",
+                    "quality": "Rare",
+                    "name": "Trindlehaven Staff",
+                    "level": 61,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 56,
+                    "itemSubclass": "Staff",
+                    "armor": null,
+                    "stats": [
+                        "+12 Stamina",
+                        "+25 Intellect"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 14."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "6",
+                        "silver": "57",
+                        "copper": "49"
+                    },
+                    "durability": "Durability 100 / 100",
+                    "weaponStats": {
+                        "damage": "87 - 132 Damage",
+                        "dps": "(52.1 damage per second)",
+                        "attackSpeed": "Speed 2.10"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_staff_29.jpg",
+                    "enchantments": [
+                        "Enchanted: Intellect +3"
+                    ]
+                },
+                {
+                    "id": 15282,
+                    "slot": "Ranged",
+                    "quality": "Uncommon",
+                    "name": "Dragon Finger",
+                    "level": 60,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Wand",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "3",
+                        "silver": "6",
+                        "copper": "28"
+                    },
+                    "durability": "Durability 55 / 55",
+                    "weaponStats": {
+                        "damage": "52 - 97 Fire Damage",
+                        "dps": "(53.2 damage per second)",
+                        "attackSpeed": "Speed 1.40"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_wand_06.jpg",
+                    "enchantments": [
+                        "+18 Healing Spells"
+                    ]
+                }
+            ],
+            "faction": "Alliance",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/soulseeker/25/51871001-avatar.jpg",
+            "stats": {
+                "health": 3157,
+                "resource": {
+                    "type": "Mana",
+                    "value": 4816
+                },
+                "strength": 40,
+                "agility": 39,
+                "intellect": 248,
+                "stamina": 194,
+                "meleeCrit": 0.55,
+                "attackPower": 30,
+                "mainHandStats": {
+                    "minDamage": 91.5,
+                    "maxDamage": 136.5,
+                    "speed": 2.1,
+                    "dps": 54.285717
+                },
+                "offHandStats": {
+                    "minDamage": 2.6428573,
+                    "maxDamage": 2.6428573,
+                    "speed": 2.0,
+                    "dps": 1.3214287
+                },
+                "spellPower": 175.0,
+                "spellPenetration": 0.0,
+                "spellCrit": 4.9664,
+                "manaRegen": 150.0,
+                "manaRegenCombat": 150.0,
+                "armor": 1985,
+                "dodge": 4.91,
+                "parry": 0.0,
+                "block": 0.0,
+                "rangedCrit": 4.95,
+                "spirit": 190,
+                "defense": 299,
+                "resistances": {
+                    "fire": 0,
+                    "holy": 0,
+                    "shadow": 0,
+                    "nature": 0,
+                    "arcane": 0
+                }
+            },
+            "specializations": {
+                "wowHeadEmbeddedTalents": "504200130500100-2052500303000550-",
+                "specializations": [
+                    {
+                        "name": "Discipline",
+                        "points": 21,
+                        "talents": [
+                            {
+                                "id": 345,
+                                "rank": 5
+                            },
+                            {
+                                "id": 343,
+                                "rank": 3
+                            },
+                            {
+                                "id": 344,
+                                "rank": 2
+                            },
+                            {
+                                "id": 348,
+                                "rank": 1
+                            },
+                            {
+                                "id": 347,
+                                "rank": 3
+                            },
+                            {
+                                "id": 342,
+                                "rank": 1
+                            },
+                            {
+                                "id": 341,
+                                "rank": 5
+                            },
+                            {
+                                "id": 351,
+                                "rank": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Shadow",
+                        "points": 5,
+                        "talents": [
+                            {
+                                "id": 465,
+                                "rank": 5
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Holy",
+                        "points": 24,
+                        "talents": [
+                            {
+                                "id": 406,
+                                "rank": 3
+                            },
+                            {
+                                "id": 401,
+                                "rank": 5
+                            },
+                            {
+                                "id": 410,
+                                "rank": 1
+                            },
+                            {
+                                "id": 1181,
+                                "rank": 5
+                            },
+                            {
+                                "id": 442,
+                                "rank": 1
+                            },
+                            {
+                                "id": 408,
+                                "rank": 3
+                            },
+                            {
+                                "id": 1636,
+                                "rank": 1
+                            },
+                            {
+                                "id": 403,
+                                "rank": 1
+                            },
+                            {
+                                "id": 402,
+                                "rank": 4
+                            }
+                        ]
+                    }
+                ]
+            },
+            "lastLogin": "2025-01-09T00:25:55+01:00"
+        },
+        {
+            "type": "com.kos.clients.domain.HardcoreData",
+            "id": 50881097,
+            "name": "Pikante",
+            "level": 60,
+            "isDead": false,
+            "isSelfFound": false,
+            "averageItemLevel": 58,
+            "equippedItemLevel": 58,
+            "characterClass": "Warrior",
+            "race": "Human",
+            "gender": "Male",
+            "realm": "Soulseeker",
+            "region": "eu",
+            "guild": "ONLYFATS",
+            "experience": 0,
+            "items": [
+                {
+                    "id": 12587,
+                    "slot": "Head",
+                    "quality": "Rare",
+                    "name": "Eye of Rend",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 58,
+                    "itemSubclass": "Leather",
+                    "armor": "143 Armor",
+                    "stats": [
+                        "+13 Strength",
+                        "+7 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 2%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "10",
+                        "copper": "31"
+                    },
+                    "durability": "Durability 60 / 60",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_helmet_46.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 11933,
+                    "slot": "Neck",
+                    "quality": "Rare",
+                    "name": "Imperial Jewel",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+7 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: +32 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "96",
+                        "copper": "46"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_gem_sapphire_01.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 16733,
+                    "slot": "Shoulders",
+                    "quality": "Rare",
+                    "name": "Spaulders of Valor",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Plate",
+                    "armor": "470 Armor",
+                    "stats": [
+                        "+11 Strength",
+                        "+9 Agility",
+                        "+17 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "52",
+                        "copper": "7"
+                    },
+                    "durability": "Durability 80 / 80",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_30.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 11926,
+                    "slot": "Chest",
+                    "quality": "Rare",
+                    "name": "Deathdealer Breastplate",
+                    "level": 57,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 52,
+                    "itemSubclass": "Mail",
+                    "armor": "338 Armor",
+                    "stats": [
+                        "+8 Strength",
+                        "+8 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 2%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "45",
+                        "copper": "90"
+                    },
+                    "durability": "Durability 120 / 120",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_chain_07.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 16736,
+                    "slot": "Waist",
+                    "quality": "Rare",
+                    "name": "Belt of Valor",
+                    "level": 58,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 53,
+                    "itemSubclass": "Plate",
+                    "armor": "341 Armor",
+                    "stats": [
+                        "+14 Strength",
+                        "+7 Agility",
+                        "+8 Stamina",
+                        "+4 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "92",
+                        "copper": "95"
+                    },
+                    "durability": "Durability 45 / 45",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_34.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13498,
+                    "slot": "Legs",
+                    "quality": "Rare",
+                    "name": "Handcrafted Mastersmith Leggings",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Plate",
+                    "armor": "548 Armor",
+                    "stats": [
+                        "+29 Strength",
+                        "+12 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "98",
+                        "copper": "90"
+                    },
+                    "durability": "Durability 100 / 100",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_04.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13259,
+                    "slot": "Feet",
+                    "quality": "Rare",
+                    "name": "Ribsteel Footguards",
+                    "level": 61,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 56,
+                    "itemSubclass": "Plate",
+                    "armor": "438 Armor",
+                    "stats": [
+                        "+10 Strength",
+                        "+10 Agility",
+                        "+17 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "60",
+                        "copper": "69"
+                    },
+                    "durability": "Durability 65 / 65",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_plate_08.jpg",
+                    "enchantments": [
+                        "Enchanted: Minor Speed Increase"
+                    ]
+                },
+                {
+                    "id": 16735,
+                    "slot": "Wrist",
+                    "quality": "Rare",
+                    "name": "Bracers of Valor",
+                    "level": 57,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 52,
+                    "itemSubclass": "Plate",
+                    "armor": "261 Armor",
+                    "stats": [
+                        "+7 Strength",
+                        "+3 Agility",
+                        "+14 Stamina",
+                        "+2 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "87",
+                        "copper": "38"
+                    },
+                    "durability": "Durability 45 / 45",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_18.jpg",
+                    "enchantments": [
+                        "Enchanted: Strength +7"
+                    ]
+                },
+                {
+                    "id": 13963,
+                    "slot": "Hands",
+                    "quality": "Rare",
+                    "name": "Voone's Vice Grips",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Mail",
+                    "armor": "221 Armor",
+                    "stats": [
+                        "+9 Agility",
+                        "+6 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to hit by 2%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "45",
+                        "copper": "33"
+                    },
+                    "durability": "Durability 40 / 40",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_15.jpg",
+                    "enchantments": [
+                        "Enchanted: Strength +5"
+                    ]
+                },
+                {
+                    "id": 17713,
+                    "slot": "Ring 1",
+                    "quality": "Rare",
+                    "name": "Blackstone Ring",
+                    "level": 54,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 49,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+6 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: +20 Attack Power.",
+                        "Equip: Improves your chance to hit by 1%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "46",
+                        "copper": "41"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_17.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13098,
+                    "slot": "Ring 2",
+                    "quality": "Rare",
+                    "name": "Painweaver Band",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 58,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+7 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 1%.",
+                        "Equip: +16 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "52",
+                        "copper": "82"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_18.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 17774,
+                    "slot": "Trinket 1",
+                    "quality": "Uncommon",
+                    "name": "Mark of the Chosen",
+                    "level": 48,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Equip: Has a 2% chance when struck in combat of increasing all stats by 25 for 1 min."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "61",
+                        "copper": "33"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_talisman_08.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13965,
+                    "slot": "Trinket 2",
+                    "quality": "Rare",
+                    "name": "Blackhand's Breadth",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 2%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "62",
+                        "copper": "50"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_armorkit_09.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 11626,
+                    "slot": "Back",
+                    "quality": "Rare",
+                    "name": "Blackveil Cape",
+                    "level": 53,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 48,
+                    "itemSubclass": "Cloth",
+                    "armor": "38 Armor",
+                    "stats": [
+                        "+6 Strength",
+                        "+14 Agility"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "96",
+                        "copper": "98"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_18.jpg",
+                    "enchantments": [
+                        "Enchanted: Agility +3"
+                    ]
+                },
+                {
+                    "id": 17705,
+                    "slot": "Main Hand",
+                    "quality": "Rare",
+                    "name": "Thrash Blade",
+                    "level": 53,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Sword",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Chance on hit: Grants an extra attack on your next swing."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "3",
+                        "silver": "28",
+                        "copper": "54"
+                    },
+                    "durability": "Durability 90 / 90",
+                    "weaponStats": {
+                        "damage": "66 - 124 Damage",
+                        "dps": "(35.2 damage per second)",
+                        "attackSpeed": "Speed 2.70"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_sword_36.jpg",
+                    "enchantments": [
+                        "Enchanted: Weapon Damage +3",
+                        "Sharpened +8"
+                    ]
+                },
+                {
+                    "id": 13204,
+                    "slot": "Off Hand",
+                    "quality": "Rare",
+                    "name": "Bashguuder",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Mace",
+                    "armor": null,
+                    "stats": [
+                        "+9 Strength"
+                    ],
+                    "spells": [
+                        "Chance on hit: Punctures target's armor lowering it by 200. Can be applied up to 3 times."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "5",
+                        "silver": "19",
+                        "copper": "45"
+                    },
+                    "durability": "Durability 90 / 90",
+                    "weaponStats": {
+                        "damage": "49 - 93 Damage",
+                        "dps": "(39.4 damage per second)",
+                        "attackSpeed": "Speed 1.80"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_mace_15.jpg",
+                    "enchantments": [
+                        "Enchanted: Weapon Damage +3"
+                    ]
+                },
+                {
+                    "id": 15323,
+                    "slot": "Ranged",
+                    "quality": "Uncommon",
+                    "name": "Percussion Shotgun",
+                    "level": 50,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 45,
+                    "itemSubclass": "Gun",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "77",
+                        "copper": "91"
+                    },
+                    "durability": "Durability 65 / 65",
+                    "weaponStats": {
+                        "damage": "37 - 70 Damage",
+                        "dps": "(23.3 damage per second)",
+                        "attackSpeed": "Speed 2.30"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_rifle_01.jpg",
+                    "enchantments": [
+                        "+4 Agility",
+                        "+4 Strength"
+                    ]
+                }
+            ],
+            "faction": "Alliance",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/soulseeker/73/50881097-avatar.jpg",
+            "stats": {
+                "health": 4519,
+                "resource": {
+                    "type": "Rage",
+                    "value": 100
+                },
+                "strength": 268,
+                "agility": 164,
+                "intellect": 30,
+                "stamina": 301,
+                "meleeCrit": 25.400002,
+                "attackPower": 904,
+                "mainHandStats": {
+                    "minDamage": 251.34286,
+                    "maxDamage": 309.34286,
+                    "speed": 2.7,
+                    "dps": 103.83069
+                },
+                "offHandStats": {
+                    "minDamage": 105.14286,
+                    "maxDamage": 132.64285,
+                    "speed": 1.8,
+                    "dps": 66.05159
+                },
+                "spellPower": 0.0,
+                "spellPenetration": 0.0,
+                "spellCrit": 9.999999,
+                "manaRegen": 0.0,
+                "manaRegenCombat": 0.0,
+                "armor": 3576,
+                "dodge": 8.2,
+                "parry": 7.0,
+                "block": 5.0,
+                "rangedCrit": 16.84,
+                "spirit": 66,
+                "defense": 300,
+                "resistances": {
+                    "fire": 81,
+                    "holy": 0,
+                    "shadow": 0,
+                    "nature": 0,
+                    "arcane": 0
+                }
+            },
+            "specializations": {
+                "wowHeadEmbeddedTalents": "023050113020000000-05050005525010051-",
+                "specializations": [
+                    {
+                        "name": "Fury",
+                        "points": 34,
+                        "talents": [
+                            {
+                                "id": 157,
+                                "rank": 5
+                            },
+                            {
+                                "id": 159,
+                                "rank": 5
+                            },
+                            {
+                                "id": 154,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1581,
+                                "rank": 5
+                            },
+                            {
+                                "id": 155,
+                                "rank": 5
+                            },
+                            {
+                                "id": 165,
+                                "rank": 1
+                            },
+                            {
+                                "id": 156,
+                                "rank": 5
+                            },
+                            {
+                                "id": 167,
+                                "rank": 1
+                            },
+                            {
+                                "id": 1542,
+                                "rank": 2
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Arms",
+                        "points": 17,
+                        "talents": [
+                            {
+                                "id": 127,
+                                "rank": 3
+                            },
+                            {
+                                "id": 130,
+                                "rank": 2
+                            },
+                            {
+                                "id": 641,
+                                "rank": 5
+                            },
+                            {
+                                "id": 121,
+                                "rank": 3
+                            },
+                            {
+                                "id": 137,
+                                "rank": 1
+                            },
+                            {
+                                "id": 131,
+                                "rank": 1
+                            },
+                            {
+                                "id": 662,
+                                "rank": 2
+                            }
+                        ]
+                    }
+                ]
+            },
+            "lastLogin": "2025-01-06T23:59:29+01:00"
+        },
+        {
+            "type": "com.kos.clients.domain.HardcoreData",
+            "id": 55064246,
+            "name": "Surmana",
+            "level": 49,
+            "isDead": false,
+            "isSelfFound": false,
+            "averageItemLevel": 40,
+            "equippedItemLevel": 39,
+            "characterClass": "Rogue",
+            "race": "Human",
+            "gender": "Female",
+            "realm": "Soulseeker",
+            "region": "eu",
+            "guild": "ONLYFATS",
+            "experience": 15549,
+            "items": [
+                {
+                    "id": 8176,
+                    "slot": "Head",
+                    "quality": "Uncommon",
+                    "name": "Nightscape Headband",
+                    "level": 41,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 36,
+                    "itemSubclass": "Leather",
+                    "armor": "91 Armor",
+                    "stats": [
+                        "+12 Agility",
+                        "+11 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "44",
+                        "copper": "95"
+                    },
+                    "durability": "Durability 50 / 50",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_24.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 12040,
+                    "slot": "Neck",
+                    "quality": "Uncommon",
+                    "name": "Forest Pendant",
+                    "level": 38,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 33,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "41",
+                        "copper": "64"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_necklace_01.jpg",
+                    "enchantments": [
+                        "+5 Agility",
+                        "+5 Stamina"
+                    ]
+                },
+                {
+                    "id": 14596,
+                    "slot": "Shoulders",
+                    "quality": "Uncommon",
+                    "name": "Hawkeye's Epaulets",
+                    "level": 38,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 33,
+                    "itemSubclass": "Leather",
+                    "armor": "80 Armor",
+                    "stats": [
+                        "+9 Agility",
+                        "+5 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "33",
+                        "copper": "88"
+                    },
+                    "durability": "Durability 50 / 50",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_07.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 4119,
+                    "slot": "Chest",
+                    "quality": "Uncommon",
+                    "name": "Raptor Hunter Tunic",
+                    "level": 43,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Leather",
+                    "armor": "117 Armor",
+                    "stats": [
+                        "+4 Strength",
+                        "+3 Agility",
+                        "+16 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "72",
+                        "copper": "71"
+                    },
+                    "durability": "Durability 85 / 85",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_leather_07.jpg",
+                    "enchantments": [
+                        "Enchanted: Reinforced Armor +32"
+                    ]
+                },
+                {
+                    "id": 13117,
+                    "slot": "Waist",
+                    "quality": "Rare",
+                    "name": "Ogron's Sash",
+                    "level": 42,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 37,
+                    "itemSubclass": "Leather",
+                    "armor": "71 Armor",
+                    "stats": [
+                        "+9 Strength",
+                        "+9 Agility",
+                        "+9 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "38",
+                        "copper": "30"
+                    },
+                    "durability": "Durability 35 / 35",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_15.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 9624,
+                    "slot": "Legs",
+                    "quality": "Rare",
+                    "name": "Triprunner Dungarees",
+                    "level": 37,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Leather",
+                    "armor": "101 Armor",
+                    "stats": [
+                        "+3 Strength",
+                        "+18 Agility",
+                        "+6 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "52",
+                        "copper": "67"
+                    },
+                    "durability": "Durability 75 / 75",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_08.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 9630,
+                    "slot": "Feet",
+                    "quality": "Uncommon",
+                    "name": "Pratt's Handcrafted Boots",
+                    "level": 45,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Leather",
+                    "armor": "84 Armor",
+                    "stats": [
+                        "+11 Agility",
+                        "+6 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "57",
+                        "copper": "80"
+                    },
+                    "durability": "Durability 45 / 45",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_07.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 15380,
+                    "slot": "Wrist",
+                    "quality": "Uncommon",
+                    "name": "Rageclaw Bracers",
+                    "level": 46,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 41,
+                    "itemSubclass": "Leather",
+                    "armor": "54 Armor",
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "43",
+                        "copper": "90"
+                    },
+                    "durability": "Durability 30 / 30",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_16.jpg",
+                    "enchantments": [
+                        "+11 Agility"
+                    ]
+                },
+                {
+                    "id": 6727,
+                    "slot": "Hands",
+                    "quality": "Uncommon",
+                    "name": "Razzeric's Racing Grips",
+                    "level": 41,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Leather",
+                    "armor": "70 Armor",
+                    "stats": [
+                        "+8 Agility",
+                        "+9 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "29",
+                        "copper": "96"
+                    },
+                    "durability": "Durability 30 / 30",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_24.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 2933,
+                    "slot": "Ring 1",
+                    "quality": "Rare",
+                    "name": "Seal of Wrynn",
+                    "level": 31,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+3 Strength",
+                        "+3 Agility",
+                        "+4 Stamina",
+                        "+4 Intellect",
+                        "+3 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "37",
+                        "copper": "50"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_05.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 4549,
+                    "slot": "Ring 2",
+                    "quality": "Uncommon",
+                    "name": "Seafire Band",
+                    "level": 46,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+2 Strength",
+                        "+2 Agility",
+                        "+10 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "20",
+                        "copper": "92"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_04.jpg",
+                    "enchantments": []
                 },
                 {
                     "id": 2820,
                     "slot": "Trinket 1",
-                    "quality": "UNCOMMON",
+                    "quality": "Uncommon",
                     "name": "Nifty Stopwatch",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_pocketwatch_01.jpg"
+                    "level": 50,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Use: Increases run speed by 40% for 10 sec. (30 Mins Cooldown)"
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "46",
+                        "copper": "62"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_pocketwatch_01.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 11122,
-                    "slot": "Trinket 2",
-                    "quality": "UNCOMMON",
-                    "name": "Carrot on a Stick",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_food_54.jpg"
-                },
-                {
-                    "id": 10518,
+                    "id": 4114,
                     "slot": "Back",
-                    "quality": "UNCOMMON",
-                    "name": "Parachute Cloak",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_11.jpg"
+                    "quality": "Uncommon",
+                    "name": "Darktide Cape",
+                    "level": 42,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Cloth",
+                    "armor": "28 Armor",
+                    "stats": [
+                        "+6 Agility",
+                        "+7 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "58",
+                        "copper": "26"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_06.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 18725,
+                    "id": 6829,
                     "slot": "Main Hand",
-                    "quality": "RARE",
-                    "name": "Peacemaker",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_spear_07.jpg"
+                    "quality": "Rare",
+                    "name": "Sword of Serenity",
+                    "level": 44,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Sword",
+                    "armor": null,
+                    "stats": [
+                        "+9 Stamina",
+                        "+4 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "87",
+                        "copper": "14"
+                    },
+                    "durability": "Durability 90 / 90",
+                    "weaponStats": {
+                        "damage": "46 - 86 Damage",
+                        "dps": "(30.0 damage per second)",
+                        "attackSpeed": "Speed 2.20"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_sword_27.jpg",
+                    "enchantments": [
+                        "Enchanted: Fiery Weapon",
+                        "Instant Poison IV (85 |4Charge:Charges;)"
+                    ]
                 },
                 {
-                    "id": 18738,
+                    "id": 10823,
+                    "slot": "Off Hand",
+                    "quality": "Rare",
+                    "name": "Vanquisher's Sword",
+                    "level": 44,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Sword",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Equip: +28 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "77",
+                        "copper": "96"
+                    },
+                    "durability": "Durability 90 / 90",
+                    "weaponStats": {
+                        "damage": "46 - 86 Damage",
+                        "dps": "(30.0 damage per second)",
+                        "attackSpeed": "Speed 2.20"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_sword_35.jpg",
+                    "enchantments": [
+                        "Enchanted: Fiery Weapon"
+                    ]
+                },
+                {
+                    "id": 3493,
                     "slot": "Ranged",
-                    "quality": "RARE",
-                    "name": "Carapace Spine Crossbow",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_crossbow_04.jpg"
+                    "quality": "Uncommon",
+                    "name": "Raptor's End",
+                    "level": 30,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Bow",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "34",
+                        "copper": "26"
+                    },
+                    "durability": "Durability 65 / 65",
+                    "weaponStats": {
+                        "damage": "24 - 46 Damage",
+                        "dps": "(12.1 damage per second)",
+                        "attackSpeed": "Speed 2.90"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_bow_03.jpg",
+                    "enchantments": []
                 }
             ],
-            "faction": "Alliance",
-            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/stitches/15/30758927-avatar.jpg",
+            "faction": "Horde",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/soulseeker/182/55064246-avatar.jpg",
             "stats": {
-                "health": 3323,
+                "health": 2636,
                 "resource": {
-                    "type": "Mana",
-                    "value": 2775
+                    "type": "Energy",
+                    "value": 100
                 },
-                "strength": 52,
-                "agility": 269,
-                "intellect": 89,
-                "stamina": 179,
-                "meleeCrit": 11.9641,
-                "attackPower": 627,
+                "strength": 94,
+                "agility": 223,
+                "intellect": 43,
+                "stamina": 167,
+                "meleeCrit": 15.0343,
+                "attackPower": 423,
                 "mainHandStats": {
-                    "minDamage": 289.27142,
-                    "maxDamage": 358.27142,
-                    "speed": 3.4,
-                    "dps": 95.22688
+                    "minDamage": 112.471436,
+                    "maxDamage": 152.47144,
+                    "speed": 2.2,
+                    "dps": 60.214287
                 },
                 "offHandStats": {
-                    "minDamage": 45.357147,
-                    "maxDamage": 45.357147,
-                    "speed": 2.0,
-                    "dps": 22.678574
+                    "minDamage": 84.471436,
+                    "maxDamage": 114.47143,
+                    "speed": 2.2,
+                    "dps": 45.214287
                 },
                 "spellPower": 0.0,
                 "spellPenetration": 0.0,
-                "spellCrit": 5.0685,
-                "manaRegen": 77.0,
-                "manaRegenCombat": 77.0,
-                "armor": 2122,
-                "dodge": 10.5413,
-                "parry": 6.3999996,
+                "spellCrit": 0.0,
+                "manaRegen": 0.0,
+                "manaRegenCombat": 0.0,
+                "armor": 1619,
+                "dodge": 19.326302,
+                "parry": 9.68,
                 "block": 0.0,
-                "rangedCrit": 17.084099,
-                "spirit": 79,
-                "defense": 285,
+                "rangedCrit": 12.9143,
+                "spirit": 60,
+                "defense": 237,
                 "resistances": {
-                    "fire": 0,
+                    "fire": 10,
                     "holy": 0,
-                    "shadow": 0,
+                    "shadow": 10,
                     "nature": 10,
-                    "arcane": 0
+                    "arcane": 10
                 }
             },
             "specializations": {
-                "wowHeadEmbeddedTalents": "2000000000000000-05251030513051-3320200410300000",
+                "wowHeadEmbeddedTalents": "024000000000000-3200552120050100231-",
                 "specializations": [
                     {
-                        "name": "Beast Mastery",
-                        "points": 2,
+                        "name": "Combat",
+                        "points": 32,
                         "talents": [
                             {
-                                "id": 1382,
+                                "id": 201,
                                 "rank": 2
+                            },
+                            {
+                                "id": 203,
+                                "rank": 3
+                            },
+                            {
+                                "id": 187,
+                                "rank": 5
+                            },
+                            {
+                                "id": 301,
+                                "rank": 1
+                            },
+                            {
+                                "id": 204,
+                                "rank": 2
+                            },
+                            {
+                                "id": 222,
+                                "rank": 2
+                            },
+                            {
+                                "id": 181,
+                                "rank": 5
+                            },
+                            {
+                                "id": 223,
+                                "rank": 1
+                            },
+                            {
+                                "id": 221,
+                                "rank": 5
+                            },
+                            {
+                                "id": 1703,
+                                "rank": 2
+                            },
+                            {
+                                "id": 1122,
+                                "rank": 3
+                            },
+                            {
+                                "id": 205,
+                                "rank": 1
                             }
                         ]
                     },
                     {
-                        "name": "Marksmanship",
-                        "points": 31,
+                        "name": "Assassination",
+                        "points": 8,
                         "talents": [
                             {
-                                "id": 1342,
-                                "rank": 5
-                            },
-                            {
-                                "id": 1344,
-                                "rank": 5
-                            },
-                            {
-                                "id": 1343,
+                                "id": 272,
                                 "rank": 2
                             },
                             {
-                                "id": 1352,
-                                "rank": 3
-                            },
-                            {
-                                "id": 1349,
+                                "id": 270,
                                 "rank": 5
                             },
                             {
-                                "id": 1345,
+                                "id": 277,
                                 "rank": 1
-                            },
-                            {
-                                "id": 1347,
-                                "rank": 3
-                            },
-                            {
-                                "id": 1353,
-                                "rank": 1
-                            },
-                            {
-                                "id": 1362,
-                                "rank": 5
-                            },
-                            {
-                                "id": 1361,
-                                "rank": 1
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Survival",
-                        "points": 18,
-                        "talents": [
-                            {
-                                "id": 1623,
-                                "rank": 3
-                            },
-                            {
-                                "id": 1301,
-                                "rank": 3
-                            },
-                            {
-                                "id": 1311,
-                                "rank": 2
-                            },
-                            {
-                                "id": 1621,
-                                "rank": 2
-                            },
-                            {
-                                "id": 1308,
-                                "rank": 1
-                            },
-                            {
-                                "id": 1622,
-                                "rank": 4
-                            },
-                            {
-                                "id": 1310,
-                                "rank": 3
                             }
                         ]
                     }
                 ]
-            }
+            },
+            "lastLogin": "2025-01-09T11:00:15+01:00"
         },
         {
             "type": "com.kos.clients.domain.HardcoreData",
-            "id": 31793578,
-            "name": "Rosaura",
-            "level": 40,
-            "isDead": false,
-            "isSelfFound": false,
-            "averageItemLevel": 27,
-            "equippedItemLevel": 27,
-            "characterClass": "Paladin",
+            "id": 50971785,
+            "name": "GelatoAlbert",
+            "level": 26,
+            "isDead": true,
+            "isSelfFound": true,
+            "averageItemLevel": 14,
+            "equippedItemLevel": 14,
+            "characterClass": "Mage",
             "race": "Human",
             "gender": "Female",
-            "realm": "Stitches",
+            "realm": "Soulseeker",
             "region": "eu",
-            "guild": "I CANT RELEASE",
-            "experience": 7581,
+            "guild": "ONLYFATSONLYFATSONLYFATS",
+            "experience": 30028,
             "items": [
                 {
-                    "id": 3836,
-                    "slot": "Head",
-                    "quality": "UNCOMMON",
-                    "name": "Green Iron Helm",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_helmet_03.jpg"
-                },
-                {
-                    "id": 15698,
+                    "id": 4698,
                     "slot": "Shoulders",
-                    "quality": "UNCOMMON",
-                    "name": "Wrangling Spaulders",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_14.jpg"
+                    "quality": "Common",
+                    "name": "Seer's Mantle",
+                    "level": 21,
+                    "binding": null,
+                    "requiredLevel": 16,
+                    "itemSubclass": "Cloth",
+                    "armor": "25 Armor",
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "3",
+                        "copper": "1"
+                    },
+                    "durability": "Durability 35 / 35",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_09.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 2575,
+                    "id": 3342,
                     "slot": "Shirt",
-                    "quality": "COMMON",
-                    "name": "Red Linen Shirt",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_red_01.jpg"
+                    "quality": "Common",
+                    "name": "Captain Sander's Shirt",
+                    "level": 15,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "1",
+                        "copper": "37"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_14.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 7418,
+                    "id": 5202,
                     "slot": "Chest",
-                    "quality": "UNCOMMON",
-                    "name": "Phalanx Breastplate of the Bear",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_plate01.jpg"
+                    "quality": "Rare",
+                    "name": "Corsair's Overshirt",
+                    "level": 24,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 19,
+                    "itemSubclass": "Cloth",
+                    "armor": "42 Armor",
+                    "stats": [
+                        "+5 Stamina",
+                        "+11 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "11",
+                        "copper": "47"
+                    },
+                    "durability": "Durability 75 / 75",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_08.jpg",
+                    "enchantments": [
+                        "Enchanted: Mana +5"
+                    ]
                 },
                 {
-                    "id": 6742,
+                    "id": 6570,
                     "slot": "Waist",
-                    "quality": "RARE",
-                    "name": "Stonefist Girdle",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_35.jpg"
+                    "quality": "Uncommon",
+                    "name": "Shimmering Sash",
+                    "level": 22,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 17,
+                    "itemSubclass": "Cloth",
+                    "armor": "20 Armor",
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "3",
+                        "copper": "63"
+                    },
+                    "durability": "Durability 20 / 20",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_25.jpg",
+                    "enchantments": [
+                        "+4 Intellect",
+                        "+4 Spirit"
+                    ]
                 },
                 {
-                    "id": 15561,
+                    "id": 4316,
                     "slot": "Legs",
-                    "quality": "UNCOMMON",
-                    "name": "Pillager's Leggings of the Bear",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_03.jpg"
+                    "quality": "Uncommon",
+                    "name": "Heavy Woolen Pants",
+                    "level": 22,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 17,
+                    "itemSubclass": "Cloth",
+                    "armor": "31 Armor",
+                    "stats": [
+                        "+3 Intellect",
+                        "+6 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "7",
+                        "copper": "43"
+                    },
+                    "durability": "Durability 45 / 45",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_01.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 7417,
+                    "id": 4312,
                     "slot": "Feet",
-                    "quality": "UNCOMMON",
-                    "name": "Phalanx Boots of the Bear",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_01.jpg"
+                    "quality": "Uncommon",
+                    "name": "Soft-soled Linen Boots",
+                    "level": 16,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 11,
+                    "itemSubclass": "Cloth",
+                    "armor": "20 Armor",
+                    "stats": [
+                        "+2 Stamina",
+                        "+2 Intellect"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "2",
+                        "copper": "37"
+                    },
+                    "durability": "Durability 25 / 25",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_09.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 9865,
+                    "id": 3641,
                     "slot": "Wrist",
-                    "quality": "UNCOMMON",
-                    "name": "Renegade Bracers of the Bear",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg"
+                    "quality": "Common",
+                    "name": "Journeyman's Bracers",
+                    "level": 8,
+                    "binding": null,
+                    "requiredLevel": 3,
+                    "itemSubclass": "Cloth",
+                    "armor": "7 Armor",
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "0",
+                        "copper": "15"
+                    },
+                    "durability": "Durability 14 / 14",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_03.jpg",
+                    "enchantments": [
+                        "Enchanted: Stamina +1"
+                    ]
                 },
                 {
-                    "id": 9868,
+                    "id": 892,
                     "slot": "Hands",
-                    "quality": "UNCOMMON",
-                    "name": "Renegade Gauntlets of the Bear",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_28.jpg"
+                    "quality": "Uncommon",
+                    "name": "Gnoll Casting Gloves",
+                    "level": 22,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 17,
+                    "itemSubclass": "Cloth",
+                    "armor": "22 Armor",
+                    "stats": [],
+                    "spells": [
+                        "Equip: Increases damage and healing done by magical spells and effects by up to 6."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "3",
+                        "copper": "69"
+                    },
+                    "durability": "Durability 20 / 20",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_04.jpg",
+                    "enchantments": []
                 },
                 {
-                    "id": 6749,
+                    "id": 11968,
                     "slot": "Ring 1",
-                    "quality": "UNCOMMON",
-                    "name": "Tiger Band",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_13.jpg"
+                    "quality": "Uncommon",
+                    "name": "Amber Hoop",
+                    "level": 26,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 21,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "9",
+                        "copper": "97"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_14.jpg",
+                    "enchantments": [
+                        "+7 Frost Resistance"
+                    ]
                 },
                 {
-                    "id": 2933,
-                    "slot": "Ring 2",
-                    "quality": "RARE",
-                    "name": "Seal of Wrynn",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_05.jpg"
-                },
-                {
-                    "id": 6901,
+                    "id": 9779,
                     "slot": "Back",
-                    "quality": "RARE",
-                    "name": "Glowing Thresher Cape",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_monsterscales_03.jpg"
+                    "quality": "Uncommon",
+                    "name": "Bandit Cloak",
+                    "level": 18,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 13,
+                    "itemSubclass": "Cloth",
+                    "armor": "16 Armor",
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "3",
+                        "copper": "34"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_19.jpg",
+                    "enchantments": [
+                        "Enchanted: Armor +20",
+                        "+3 Intellect"
+                    ]
                 },
                 {
-                    "id": 6687,
+                    "id": 2950,
                     "slot": "Main Hand",
-                    "quality": "RARE",
-                    "name": "Corpsemaker",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_halbard_01.jpg"
+                    "quality": "Uncommon",
+                    "name": "Icicle Rod",
+                    "level": 25,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Staff",
+                    "armor": null,
+                    "stats": [
+                        "+4 Intellect"
+                    ],
+                    "spells": [
+                        "Equip: Increases damage done by Frost spells and effects by up to 10."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "34",
+                        "copper": "76"
+                    },
+                    "durability": "Durability 75 / 75",
+                    "weaponStats": {
+                        "damage": "51 - 77 Damage",
+                        "dps": "(16.8 damage per second)",
+                        "attackSpeed": "Speed 3.80"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_staff_15.jpg",
+                    "enchantments": [
+                        "Enchanted: Weapon Damage +2"
+                    ]
+                },
+                {
+                    "id": 11288,
+                    "slot": "Ranged",
+                    "quality": "Uncommon",
+                    "name": "Greater Magic Wand",
+                    "level": 23,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 13,
+                    "itemSubclass": "Wand",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "15",
+                        "copper": "35"
+                    },
+                    "durability": "Durability 45 / 45",
+                    "weaponStats": {
+                        "damage": "22 - 41 Arcane Damage",
+                        "dps": "(17.5 damage per second)",
+                        "attackSpeed": "Speed 1.80"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_staff_07.jpg",
+                    "enchantments": []
                 }
             ],
             "faction": "Alliance",
-            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/stitches/170/31793578-avatar.jpg",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/soulseeker/137/50971785-avatar.jpg",
             "stats": {
-                "health": 2021,
+                "health": 513,
                 "resource": {
                     "type": "Mana",
-                    "value": 1577
+                    "value": 1335
                 },
-                "strength": 152,
-                "agility": 51,
-                "intellect": 58,
-                "stamina": 158,
-                "meleeCrit": 9.279099,
-                "attackPower": 489,
+                "strength": 23,
+                "agility": 25,
+                "intellect": 73,
+                "stamina": 36,
+                "meleeCrit": 2.1600003,
+                "attackPower": 13,
                 "mainHandStats": {
-                    "minDamage": 220.72859,
-                    "maxDamage": 264.72858,
+                    "minDamage": 56.528572,
+                    "maxDamage": 82.52857,
                     "speed": 3.8,
-                    "dps": 63.875942
+                    "dps": 18.296993
                 },
                 "offHandStats": {
-                    "minDamage": 35.357147,
-                    "maxDamage": 35.357147,
+                    "minDamage": 1.3571429,
+                    "maxDamage": 1.3571429,
                     "speed": 2.0,
-                    "dps": 17.678574
+                    "dps": 0.67857146
                 },
-                "spellPower": 0.0,
+                "spellPower": 6.0,
                 "spellPenetration": 0.0,
-                "spellCrit": 4.9268,
-                "manaRegen": 70.0,
-                "manaRegenCombat": 70.0,
-                "armor": 1468,
-                "dodge": 4.2391,
-                "parry": 9.76,
-                "block": 4.76,
-                "rangedCrit": 0.0,
-                "spirit": 66,
-                "defense": 194,
+                "spellCrit": 3.5361,
+                "manaRegen": 80.0,
+                "manaRegenCombat": 80.0,
+                "armor": 253,
+                "dodge": 4.7200007,
+                "parry": 0.0,
+                "block": 0.0,
+                "rangedCrit": 5.0000005,
+                "spirit": 79,
+                "defense": 123,
                 "resistances": {
                     "fire": 0,
                     "holy": 0,
@@ -436,208 +2205,704 @@
                 }
             },
             "specializations": {
-                "wowHeadEmbeddedTalents": "05500100000000--050050512020000",
+                "wowHeadEmbeddedTalents": "--20300231132000000",
                 "specializations": [
                     {
-                        "name": "Holy",
-                        "points": 11,
+                        "name": "Frost",
+                        "points": 17,
                         "talents": [
                             {
-                                "id": 1449,
-                                "rank": 5
+                                "id": 1649,
+                                "rank": 3
                             },
                             {
-                                "id": 1432,
-                                "rank": 5
+                                "id": 70,
+                                "rank": 2
                             },
                             {
-                                "id": 1435,
+                                "id": 65,
+                                "rank": 3
+                            },
+                            {
+                                "id": 62,
+                                "rank": 2
+                            },
+                            {
+                                "id": 63,
+                                "rank": 3
+                            },
+                            {
+                                "id": 69,
                                 "rank": 1
+                            },
+                            {
+                                "id": 61,
+                                "rank": 1
+                            },
+                            {
+                                "id": 741,
+                                "rank": 2
+                            }
+                        ]
+                    }
+                ]
+            },
+            "lastLogin": "2024-11-29T13:00:50+01:00"
+        },
+        {
+            "type": "com.kos.clients.domain.HardcoreData",
+            "id": 50885014,
+            "name": "Kakoshi",
+            "level": 60,
+            "isDead": false,
+            "isSelfFound": false,
+            "averageItemLevel": 60,
+            "equippedItemLevel": 56,
+            "characterClass": "Rogue",
+            "race": "Human",
+            "gender": "Male",
+            "realm": "Soulseeker",
+            "region": "eu",
+            "guild": "ONLYFATS",
+            "experience": 0,
+            "items": [
+                {
+                    "id": 12587,
+                    "slot": "Head",
+                    "quality": "Rare",
+                    "name": "Eye of Rend",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 58,
+                    "itemSubclass": "Leather",
+                    "armor": "143 Armor",
+                    "stats": [
+                        "+13 Strength",
+                        "+7 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 2%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "10",
+                        "copper": "31"
+                    },
+                    "durability": "Durability 60 / 60",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_helmet_46.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 15411,
+                    "slot": "Neck",
+                    "quality": "Rare",
+                    "name": "Mark of Fordring",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 1%.",
+                        "Equip: +26 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "2",
+                        "copper": "83"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_talisman_07.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 16708,
+                    "slot": "Shoulders",
+                    "quality": "Rare",
+                    "name": "Shadowcraft Spaulders",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Leather",
+                    "armor": "127 Armor",
+                    "stats": [
+                        "+22 Agility",
+                        "+9 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "81",
+                        "copper": "75"
+                    },
+                    "durability": "Durability 60 / 60",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shoulder_07.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 2575,
+                    "slot": "Shirt",
+                    "quality": "Common",
+                    "name": "Red Linen Shirt",
+                    "level": 10,
+                    "binding": null,
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "0",
+                        "copper": "25"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_red_01.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13944,
+                    "slot": "Chest",
+                    "quality": "Rare",
+                    "name": "Tombstone Breastplate",
+                    "level": 62,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 57,
+                    "itemSubclass": "Leather",
+                    "armor": "174 Armor",
+                    "stats": [
+                        "+10 Strength",
+                        "+10 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 2%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "68",
+                        "copper": "8"
+                    },
+                    "durability": "Durability 100 / 100",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_chain_17.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 16713,
+                    "slot": "Waist",
+                    "quality": "Rare",
+                    "name": "Shadowcraft Belt",
+                    "level": 58,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 53,
+                    "itemSubclass": "Leather",
+                    "armor": "93 Armor",
+                    "stats": [
+                        "+9 Strength",
+                        "+14 Agility",
+                        "+10 Stamina",
+                        "+9 Spirit"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "11",
+                        "copper": "96"
+                    },
+                    "durability": "Durability 35 / 35",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_03.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 15062,
+                    "slot": "Legs",
+                    "quality": "Rare",
+                    "name": "Devilsaur Leggings",
+                    "level": 60,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 55,
+                    "itemSubclass": "Leather",
+                    "armor": "148 Armor",
+                    "stats": [
+                        "+12 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: +46 Attack Power.",
+                        "Equip: Improves your chance to get a critical strike by 1%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "57",
+                        "copper": "9"
+                    },
+                    "durability": "Durability 75 / 75",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_wolf.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 14641,
+                    "slot": "Feet",
+                    "quality": "Rare",
+                    "name": "Cadaverous Walkers",
+                    "level": 61,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 56,
+                    "itemSubclass": "Leather",
+                    "armor": "118 Armor",
+                    "stats": [
+                        "+20 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: +24 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "90",
+                        "copper": "74"
+                    },
+                    "durability": "Durability 50 / 50",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_05.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13120,
+                    "slot": "Wrist",
+                    "quality": "Rare",
+                    "name": "Deepfury Bracers",
+                    "level": 55,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 50,
+                    "itemSubclass": "Leather",
+                    "armor": "69 Armor",
+                    "stats": [
+                        "+4 Strength",
+                        "+15 Agility",
+                        "+4 Stamina"
+                    ],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "95",
+                        "copper": "5"
+                    },
+                    "durability": "Durability 35 / 35",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 15063,
+                    "slot": "Hands",
+                    "quality": "Rare",
+                    "name": "Devilsaur Gauntlets",
+                    "level": 58,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 53,
+                    "itemSubclass": "Leather",
+                    "armor": "103 Armor",
+                    "stats": [
+                        "+9 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: +28 Attack Power.",
+                        "Equip: Improves your chance to get a critical strike by 1%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "17",
+                        "copper": "1"
+                    },
+                    "durability": "Durability 35 / 35",
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_26.jpg",
+                    "enchantments": [
+                        "Enchanted: Agility +7"
+                    ]
+                },
+                {
+                    "id": 12548,
+                    "slot": "Ring 1",
+                    "quality": "Rare",
+                    "name": "Magni's Will",
+                    "level": 60,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+6 Strength",
+                        "+7 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 1%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "0",
+                        "silver": "71",
+                        "copper": "2"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_05.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 17713,
+                    "slot": "Ring 2",
+                    "quality": "Rare",
+                    "name": "Blackstone Ring",
+                    "level": 54,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 49,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [
+                        "+6 Stamina"
+                    ],
+                    "spells": [
+                        "Equip: +20 Attack Power.",
+                        "Equip: Improves your chance to hit by 1%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "46",
+                        "copper": "41"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_ring_17.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 209612,
+                    "slot": "Trinket 1",
+                    "quality": "Rare",
+                    "name": "Insignia of the Alliance",
+                    "level": 1,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 0,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Use: Dispels all Charm, Fear and Polymorph effects. (5 Mins Cooldown)"
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "5",
+                        "silver": "0",
+                        "copper": "0"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_trinketpvp_01.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 11815,
+                    "slot": "Trinket 2",
+                    "quality": "Rare",
+                    "name": "Hand of Justice",
+                    "level": 58,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 53,
+                    "itemSubclass": "Miscellaneous",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [
+                        "Equip: 2% chance on melee hit to gain 1 extra attack.",
+                        "Equip: +20 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "0",
+                        "copper": "0"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_jewelry_talisman_01.jpg",
+                    "enchantments": []
+                },
+                {
+                    "id": 13340,
+                    "slot": "Back",
+                    "quality": "Rare",
+                    "name": "Cape of the Black Baron",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 58,
+                    "itemSubclass": "Cloth",
+                    "armor": "45 Armor",
+                    "stats": [
+                        "+15 Agility"
+                    ],
+                    "spells": [
+                        "Equip: +20 Attack Power."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "1",
+                        "silver": "64",
+                        "copper": "98"
+                    },
+                    "durability": null,
+                    "weaponStats": null,
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_20.jpg",
+                    "enchantments": [
+                        "Enchanted: Agility +3"
+                    ]
+                },
+                {
+                    "id": 12940,
+                    "slot": "Main Hand",
+                    "quality": "Rare",
+                    "name": "Dal'Rend's Sacred Charge",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 58,
+                    "itemSubclass": "Sword",
+                    "armor": null,
+                    "stats": [
+                        "+4 Strength"
+                    ],
+                    "spells": [
+                        "Equip: Improves your chance to get a critical strike by 1%."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "5",
+                        "silver": "48",
+                        "copper": "12"
+                    },
+                    "durability": "Durability 90 / 90",
+                    "weaponStats": {
+                        "damage": "81 - 151 Damage",
+                        "dps": "(41.4 damage per second)",
+                        "attackSpeed": "Speed 2.80"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_sword_43.jpg",
+                    "enchantments": [
+                        "Instant Poison VI (101 |4Charge:Charges;)"
+                    ]
+                },
+                {
+                    "id": 12939,
+                    "slot": "Off Hand",
+                    "quality": "Rare",
+                    "name": "Dal'Rend's Tribal Guardian",
+                    "level": 63,
+                    "binding": "Binds when picked up",
+                    "requiredLevel": 58,
+                    "itemSubclass": "Sword",
+                    "armor": "100 Armor",
+                    "stats": [],
+                    "spells": [
+                        "Equip: Increased Defense +7."
+                    ],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "6",
+                        "silver": "3",
+                        "copper": "63"
+                    },
+                    "durability": "Durability 90 / 90",
+                    "weaponStats": {
+                        "damage": "52 - 97 Damage",
+                        "dps": "(41.4 damage per second)",
+                        "attackSpeed": "Speed 1.80"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_sword_40.jpg",
+                    "enchantments": [
+                        "Instant Poison VI (105 |4Charge:Charges;)"
+                    ]
+                },
+                {
+                    "id": 15294,
+                    "slot": "Ranged",
+                    "quality": "Uncommon",
+                    "name": "Siege Bow",
+                    "level": 53,
+                    "binding": "Binds when equipped",
+                    "requiredLevel": 48,
+                    "itemSubclass": "Bow",
+                    "armor": null,
+                    "stats": [],
+                    "spells": [],
+                    "sellPrice": {
+                        "header": "Sell Price:",
+                        "gold": "2",
+                        "silver": "1",
+                        "copper": "35"
+                    },
+                    "durability": "Durability 65 / 65",
+                    "weaponStats": {
+                        "damage": "48 - 90 Damage",
+                        "dps": "(24.6 damage per second)",
+                        "attackSpeed": "Speed 2.80"
+                    },
+                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_weapon_bow_07.jpg",
+                    "enchantments": [
+                        "+7 Agility"
+                    ]
+                }
+            ],
+            "faction": "Alliance",
+            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/soulseeker/150/50885014-avatar.jpg",
+            "stats": {
+                "health": 3033,
+                "resource": {
+                    "type": "Energy",
+                    "value": 100
+                },
+                "strength": 126,
+                "agility": 213,
+                "intellect": 35,
+                "stamina": 169,
+                "meleeCrit": 26.748499,
+                "attackPower": 813,
+                "mainHandStats": {
+                    "minDamage": 243.60002,
+                    "maxDamage": 313.60004,
+                    "speed": 2.8,
+                    "dps": 99.500015
+                },
+                "offHandStats": {
+                    "minDamage": 117.3,
+                    "maxDamage": 151.05,
+                    "speed": 1.8,
+                    "dps": 74.54167
+                },
+                "spellPower": 0.0,
+                "spellPenetration": 0.0,
+                "spellCrit": 9.999999,
+                "manaRegen": 0.0,
+                "manaRegenCombat": 0.0,
+                "armor": 1746,
+                "dodge": 14.857,
+                "parry": 10.16,
+                "block": 0.0,
+                "rangedCrit": 24.2685,
+                "spirit": 66,
+                "defense": 304,
+                "resistances": {
+                    "fire": 81,
+                    "holy": 0,
+                    "shadow": 0,
+                    "nature": 0,
+                    "arcane": 0
+                }
+            },
+            "specializations": {
+                "wowHeadEmbeddedTalents": "025303105000000-3200552120050100231-",
+                "specializations": [
+                    {
+                        "name": "Assassination",
+                        "points": 19,
+                        "talents": [
+                            {
+                                "id": 272,
+                                "rank": 2
+                            },
+                            {
+                                "id": 270,
+                                "rank": 5
+                            },
+                            {
+                                "id": 277,
+                                "rank": 3
+                            },
+                            {
+                                "id": 281,
+                                "rank": 1
+                            },
+                            {
+                                "id": 269,
+                                "rank": 5
+                            },
+                            {
+                                "id": 273,
+                                "rank": 3
                             }
                         ]
                     },
                     {
-                        "name": "Retribution",
-                        "points": 20,
+                        "name": "Combat",
+                        "points": 32,
                         "talents": [
                             {
-                                "id": 1407,
+                                "id": 201,
+                                "rank": 2
+                            },
+                            {
+                                "id": 203,
+                                "rank": 3
+                            },
+                            {
+                                "id": 187,
                                 "rank": 5
                             },
                             {
-                                "id": 1403,
-                                "rank": 5
-                            },
-                            {
-                                "id": 1481,
+                                "id": 301,
                                 "rank": 1
                             },
                             {
-                                "id": 1634,
-                                "rank": 2
-                            },
-                            {
-                                "id": 1411,
+                                "id": 181,
                                 "rank": 5
                             },
                             {
-                                "id": 1405,
-                                "rank": 2
-                            }
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "type": "com.kos.clients.domain.HardcoreData",
-            "id": 30141039,
-            "name": "Grimlita",
-            "level": 12,
-            "isDead": false,
-            "isSelfFound": false,
-            "averageItemLevel": 5,
-            "equippedItemLevel": 5,
-            "characterClass": "Priest",
-            "race": "Dwarf",
-            "gender": "Female",
-            "realm": "Stitches",
-            "region": "eu",
-            "guild": null,
-            "experience": 3703,
-            "items": [
-                {
-                    "id": 2575,
-                    "slot": "Shirt",
-                    "quality": "COMMON",
-                    "name": "Red Linen Shirt",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_shirt_red_01.jpg"
-                },
-                {
-                    "id": 2578,
-                    "slot": "Chest",
-                    "quality": "UNCOMMON",
-                    "name": "Barbaric Linen Vest",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_chest_fur.jpg"
-                },
-                {
-                    "id": 4663,
-                    "slot": "Waist",
-                    "quality": "COMMON",
-                    "name": "Journeyman's Belt",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_belt_04.jpg"
-                },
-                {
-                    "id": 4309,
-                    "slot": "Legs",
-                    "quality": "UNCOMMON",
-                    "name": "Handstitched Linen Britches",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_pants_07.jpg"
-                },
-                {
-                    "id": 51,
-                    "slot": "Feet",
-                    "quality": "COMMON",
-                    "name": "Neophyte's Boots",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_boots_04.jpg"
-                },
-                {
-                    "id": 3373,
-                    "slot": "Wrist",
-                    "quality": "POOR",
-                    "name": "Patchwork Bracers",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_bracer_07.jpg"
-                },
-                {
-                    "id": 719,
-                    "slot": "Hands",
-                    "quality": "COMMON",
-                    "name": "Rabbit Handler Gloves",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_gauntlets_06.jpg"
-                },
-                {
-                    "id": 2580,
-                    "slot": "Back",
-                    "quality": "COMMON",
-                    "name": "Reinforced Linen Cape",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_misc_cape_07.jpg"
-                },
-                {
-                    "id": 1009,
-                    "slot": "Main Hand",
-                    "quality": "UNCOMMON",
-                    "name": "Compact Hammer",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_hammer_08.jpg"
-                },
-                {
-                    "id": 11287,
-                    "slot": "Ranged",
-                    "quality": "UNCOMMON",
-                    "name": "Lesser Magic Wand",
-                    "icon": "https://render.worldofwarcraft.com/classic1x-eu/icons/56/inv_staff_02.jpg"
-                }
-            ],
-            "faction": "Alliance",
-            "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/stitches/111/30141039-avatar.jpg",
-            "stats": {
-                "health": 307,
-                "resource": {
-                    "type": "Mana",
-                    "value": 524
-                },
-                "strength": 24,
-                "agility": 19,
-                "intellect": 38,
-                "stamina": 33,
-                "meleeCrit": 3.6530004,
-                "attackPower": 14,
-                "mainHandStats": {
-                    "minDamage": 13.3,
-                    "maxDamage": 23.3,
-                    "speed": 2.3,
-                    "dps": 7.9565215
-                },
-                "offHandStats": {
-                    "minDamage": 1.5,
-                    "maxDamage": 1.5,
-                    "speed": 2.0,
-                    "dps": 0.75
-                },
-                "spellPower": 0.0,
-                "spellPenetration": 0.0,
-                "spellCrit": 4.79,
-                "manaRegen": 50.0,
-                "manaRegenCombat": 50.0,
-                "armor": 120,
-                "dodge": 4.493,
-                "parry": 0.0,
-                "block": 0.0,
-                "rangedCrit": 4.653,
-                "spirit": 40,
-                "defense": 56,
-                "resistances": {
-                    "fire": 0,
-                    "holy": 0,
-                    "shadow": 0,
-                    "nature": 0,
-                    "arcane": 0
-                }
-            },
-            "specializations": {
-                "wowHeadEmbeddedTalents": "030000000000000--",
-                "specializations": [
-                    {
-                        "name": "Discipline",
-                        "points": 3,
-                        "talents": [
+                                "id": 221,
+                                "rank": 5
+                            },
                             {
-                                "id": 345,
+                                "id": 222,
+                                "rank": 2
+                            },
+                            {
+                                "id": 223,
+                                "rank": 1
+                            },
+                            {
+                                "id": 204,
+                                "rank": 2
+                            },
+                            {
+                                "id": 1122,
                                 "rank": 3
+                            },
+                            {
+                                "id": 1703,
+                                "rank": 2
+                            },
+                            {
+                                "id": 205,
+                                "rank": 1
                             }
                         ]
                     }
                 ]
-            }
+            },
+            "lastLogin": "2025-01-09T09:52:12+01:00"
         }
     ]
 }

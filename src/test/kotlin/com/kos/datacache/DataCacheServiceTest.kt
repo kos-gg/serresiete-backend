@@ -20,6 +20,7 @@ import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
 import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
@@ -104,6 +105,7 @@ class DataCacheServiceTest {
                         listOf()
                     )
                 )
+            val eventsStore = EventStoreInMemory()
 
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
@@ -111,7 +113,8 @@ class DataCacheServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
-                retryConfig
+                retryConfig,
+                eventsStore
             )
 
             val cacheResult = dataCacheService.cache(
@@ -442,6 +445,11 @@ class DataCacheServiceTest {
         }
     }
 
+    @Test
+    fun `it must not return no data and sync operation when getOrSync entity was not in the system`() {
+
+    }
+
     private suspend fun createService(dataCacheRepository: DataCacheInMemoryRepository): DataCacheService {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(
@@ -465,13 +473,16 @@ class DataCacheServiceTest {
                 )
             )
 
+        val eventsStore = EventStoreInMemory()
+
         return DataCacheService(
             dataCacheRepository,
             entitiesRepository,
             raiderIoClient,
             riotClient,
             blizzardClient,
-            retryConfig
+            retryConfig,
+            eventsStore
         )
     }
 
