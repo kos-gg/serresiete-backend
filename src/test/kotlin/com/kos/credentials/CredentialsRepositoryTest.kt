@@ -8,6 +8,7 @@ import com.kos.credentials.CredentialsTestHelper.user
 import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.credentials.repository.CredentialsRepository
+import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.roles.Role
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
@@ -48,6 +49,16 @@ abstract class CredentialsRepositoryTest {
             repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
             assertTrue(repository.state().users.size == 1)
             assertTrue(repository.state().users.all { it.userName == user && it.password == encryptedCredentials.password })
+        }
+    }
+
+    @Test
+    open fun `given a repository with credentials i can not insert a credential with existing username`() {
+        runBlocking {
+            repository.withState(basicCredentialsInitialState)
+            assertEquals(1, repository.state().users.size)
+            repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
+            assertEquals(1, repository.state().users.size)
         }
     }
 
