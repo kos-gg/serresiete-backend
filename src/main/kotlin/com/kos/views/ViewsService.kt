@@ -221,7 +221,7 @@ class ViewsService(
     }
 
     suspend fun getData(view: View): Either<HttpError, List<Data>> =
-        dataCacheService.getData(view.entities.map { it.entity.id }, oldFirst = false)
+        dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =
         dataCacheService.getData(simpleView.entitiesIds, oldFirst = true)

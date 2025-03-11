@@ -64,7 +64,7 @@ data class EntitiesService(
                         }
                     }
                         .awaitAll()
-                }.collect({ it.second }) { it.first to it.first.alias }
+                }.collect({ it.second }) { it.first.withAlias(it.first.alias) }
             }
 
             Game.WOW_HC -> {
@@ -92,7 +92,7 @@ data class EntitiesService(
                                     initialRequest.region,
                                     initialRequest.realm,
                                     characterResponse.id
-                                ) to initialRequest.alias
+                                ).withAlias(initialRequest.alias)
                             }
                         }
                     }.awaitAll().split()
@@ -120,19 +120,19 @@ data class EntitiesService(
                                 summonerResponse.profileIconId,
                                 summonerResponse.id,
                                 summonerResponse.summonerLevel
-                            ) to initialRequest.alias
+                            ).withAlias(initialRequest.alias)
                         }.getOrNull()
                     }
                     .buffer(3)
-                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert.first, game).isDefined() }
+                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert.value, game).isDefined() }
                     .toList()
             }
         }
 
-        return entitiesRepository.insert(newThatExist.map { it.first }, game)
+        return entitiesRepository.insert(newThatExist.map { it.value }, game)
             .map { list ->
-                list.zip(newThatExist.map { it.second })
-                    .map { it.first to it.second } + existentAndNew.first.map { it.entity to it.alias }
+                list.zip(newThatExist.map { it.alias })
+                    .map { it.first to it.second } + existentAndNew.first.map { it.value to it.alias }
             }
     }
 
