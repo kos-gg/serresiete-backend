@@ -26,19 +26,19 @@ data class EntitiesService(
     suspend fun createAndReturnIds(
         requestedEntities: List<CreateEntityRequest>,
         game: Game
-    ): Either<InsertError, List<Entity>> {
+    ): Either<InsertError, List<Pair<Entity, String?>>> {
         suspend fun getCurrentAndNewEntities(
             requestedEntities: List<CreateEntityRequest>,
             game: Game,
             entitiesRepository: EntitiesRepository
-        ): Pair<List<Entity>, List<CreateEntityRequest>> = coroutineScope {
+        ): Pair<List<EntityWithAlias>, List<CreateEntityRequest>> = coroutineScope {
 
-            val entities = requestedEntities.asFlow()
+            val entities: List<Either<EntityWithAlias, CreateEntityRequest>> = requestedEntities.asFlow()
                 .map { requestedEntity ->
                     async {
                         when (val maybeFound = entitiesRepository.get(requestedEntity, game)) {
                             null -> Either.Right(requestedEntity)
-                            else -> Either.Left(maybeFound)
+                            else -> Either.Left(EntityWithAlias(maybeFound, requestedEntity.alias))
                         }
                     }
                 }
@@ -49,11 +49,12 @@ data class EntitiesService(
             entities.split()
         }
 
-        val existentAndNew = getCurrentAndNewEntities(requestedEntities, game, entitiesRepository)
+        val existentAndNew: Pair<List<EntityWithAlias>, List<CreateEntityRequest>> =
+            getCurrentAndNewEntities(requestedEntities, game, entitiesRepository)
 
         existentAndNew.second.forEach { logger.info("Entity new found: $it") }
 
-        val newThatExist = when (game) {
+        val newThatExist: List<InsertEntityRequestWithAlias> = when (game) {
             Game.WOW -> {
                 coroutineScope {
                     existentAndNew.second.map { initialRequest ->
@@ -63,7 +64,7 @@ data class EntitiesService(
                         }
                     }
                         .awaitAll()
-                }.collect({ it.second }) { it.first }
+                }.collect({ it.second }) { it.first.withAlias(it.first.alias) }
             }
 
             Game.WOW_HC -> {
@@ -91,7 +92,7 @@ data class EntitiesService(
                                     initialRequest.region,
                                     initialRequest.realm,
                                     characterResponse.id
-                                )
+                                ).withAlias(initialRequest.alias)
                             }
                         }
                     }.awaitAll().split()
@@ -119,17 +120,20 @@ data class EntitiesService(
                                 summonerResponse.profileIconId,
                                 summonerResponse.id,
                                 summonerResponse.summonerLevel
-                            )
+                            ).withAlias(initialRequest.alias)
                         }.getOrNull()
                     }
                     .buffer(3)
-                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert, game).isDefined() }
+                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert.value, game).isDefined() }
                     .toList()
             }
         }
 
-        return entitiesRepository.insert(newThatExist, game)
-            .map { list -> list + existentAndNew.first }
+        return entitiesRepository.insert(newThatExist.map { it.value }, game)
+            .map { list ->
+                list.zip(newThatExist.map { it.alias })
+                    .map { it.first to it.second } + existentAndNew.first.map { it.value to it.alias }
+            }
     }
 
     suspend fun updateLolEntities(entities: List<LolEntity>): List<ControllerError> =

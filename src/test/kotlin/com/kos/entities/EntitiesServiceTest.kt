@@ -1,6 +1,7 @@
 package com.kos.entities
 
 import arrow.core.Either
+import arrow.core.right
 import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
 import com.kos.entities.EntitiesTestHelper.basicGetPuuidResponse
 import com.kos.entities.EntitiesTestHelper.basicGetSummonerResponse
@@ -15,9 +16,11 @@ import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.common.InsertError
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
+import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
@@ -48,7 +51,7 @@ class EntitiesServiceTest {
             val expected: List<Long> = listOf(1, 2)
 
             entitiesService.createAndReturnIds(request, Game.WOW)
-                .fold({ fail() }) { entities -> assertEquals(expected, entities.map { it.id }) }
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -74,7 +77,8 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW_HC).fold({ fail() }) { entities -> assertEquals(expected, entities.map { it.id }) }
+            entitiesService.createAndReturnIds(request, Game.WOW_HC)
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -96,7 +100,7 @@ class EntitiesServiceTest {
             val expected: List<Long> = listOf()
 
             entitiesService.createAndReturnIds(request, Game.WOW_HC)
-                .fold({ fail(it.message) }) { entities -> assertEquals(expected, entities.map { it.id }) }
+                .fold({ fail(it.message) }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -115,7 +119,8 @@ class EntitiesServiceTest {
 
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1)
-            entitiesService.createAndReturnIds(request, Game.WOW).fold({ fail() }) { entities -> assertEquals(expected, entities.map { it.id }) }
+            entitiesService.createAndReturnIds(request, Game.WOW)
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
 
@@ -149,7 +154,7 @@ class EntitiesServiceTest {
             val createAndReturnIds = entitiesService.createAndReturnIds(gigaLolCharacterRequestList, Game.LOL)
             val expectedReturnedIds = listOf<Long>(7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6)
 
-            createAndReturnIds.fold({ fail() }) { entities -> assertEquals(expectedReturnedIds, entities.map { it.id }) }
+            createAndReturnIds.fold({ fail() }) { res -> assertEquals(expectedReturnedIds, res.map { it.first.id }) }
         }
     }
 
@@ -247,6 +252,49 @@ class EntitiesServiceTest {
 
             val res = entitiesService.updateLolEntities(listOf(basicLolEntity))
             assertEquals(listOf(), res)
+        }
+    }
+
+    @Test
+    fun `given a request of create entity return a list of pairs with Ids and the alias propagated`() {
+        runBlocking {
+            val alias = "kako"
+            val alias2 = "sancho"
+            val charactersRepository = EntitiesInMemoryRepository().withState(
+                EntitiesState(
+                    listOf(),
+                    listOf(),
+                    listOf(basicLolEntity)
+                )
+            )
+            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+
+            val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag, alias)
+            val requestNotInState = LolEntityRequest(basicLolEntity2.name, basicLolEntity2.tag, alias2)
+
+            `when`(riotClient.getPUUIDByRiotId(basicLolEntity2.name, basicLolEntity2.tag)).thenReturn(
+                Either.Right(
+                    GetPUUIDResponse(basicLolEntity2.puuid, basicLolEntity2.name, basicLolEntity2.tag)
+                )
+            )
+
+            `when`(riotClient.getSummonerByPuuid(basicLolEntity2.puuid)).thenReturn(
+                Either.Right(
+                    GetSummonerResponse(
+                        basicLolEntity2.summonerId,
+                        basicLolEntity2.summonerId,
+                        basicLolEntity2.puuid,
+                        basicLolEntity2.summonerIcon,
+                        1L,
+                        basicLolEntity2.summonerLevel
+                    )
+                )
+            )
+
+            val result = entitiesService.createAndReturnIds(listOf(request, requestNotInState), Game.LOL)
+
+            result.onLeft { fail(it.message) }
+                .onRight { assertEquals(listOf(basicLolEntity2 to alias2, basicLolEntity to alias), it) }
         }
     }
 }
