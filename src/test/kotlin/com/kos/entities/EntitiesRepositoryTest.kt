@@ -263,6 +263,16 @@ abstract class EntitiesRepositoryTestCommon {
     }
 
     @Test
+    fun `whatever`() {
+        runBlocking {
+            repository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
+            repository.insert(listOf(WowEnrichedEntityRequest(basicWowHardcoreEntity.name, basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.blizzardId)), Game.WOW_HC)
+                .onRight { fail() }
+                .onLeft { print(it.message) }
+        }
+    }
+
+    @Test
     fun `given a repository with a wow hardcore character, i can update it`() {
         runBlocking {
             val repoWithState = repository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
