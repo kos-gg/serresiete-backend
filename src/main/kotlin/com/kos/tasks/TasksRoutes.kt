@@ -68,4 +68,19 @@ fun Route.tasksRouting(tasksController: TasksController) {
             }
         }
     }
+    route("/tasktypes") {
+        authenticate("auth-jwt") {
+            get {
+                val userWithActivities = call.principal<UserWithActivities>()
+                tasksController.getTaskTypes(
+                    userWithActivities?.name,
+                    userWithActivities?.activities.orEmpty()
+                ).fold({
+                    call.respondWithHandledError(it)
+                }, {
+                    call.respond(OK, it)
+                })
+            }
+        }
+    }
 }

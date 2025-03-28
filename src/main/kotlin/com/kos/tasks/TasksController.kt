@@ -11,7 +11,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.lang.ModuleLayer.Controller
 import java.util.*
+import javax.naming.ldap.Control
 
 class TasksController(private val tasksService: TasksService) {
 
@@ -58,5 +60,9 @@ class TasksController(private val tasksService: TasksService) {
                 }
             }
         }
+    }
+
+    fun getTaskTypes(client: String?, activities: Set<Activity>): Either<ControllerError, List<TaskType>> {
+        return Either.Right(tasksService.getTaskTypes())
     }
 }
