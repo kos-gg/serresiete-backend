@@ -114,6 +114,12 @@ data class TasksService(
     }
 
     fun getTaskTypes(): List<TaskType> {
-        TODO()
-    }
+        return listOf(
+            TaskType.CACHE_WOW_DATA_TASK,
+            TaskType.CACHE_WOW_HC_DATA_TASK,
+            TaskType.CACHE_LOL_DATA_TASK,
+            TaskType.TOKEN_CLEANUP_TASK,
+            TaskType.TASK_CLEANUP_TASK,
+            TaskType.UPDATE_LOL_ENTITIES_TASK
+        )
 }

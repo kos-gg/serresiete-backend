@@ -35,6 +35,7 @@ object Activities {
     const val runTask = "run task"
     const val getTask = "get task"
     const val getTasks = "get tasks"
+    const val getTaskTypes = "get task types"
     const val patchCredentials = "patch credentials"
     const val getEventSubscriptions = "get event subscriptions"
     const val featureView = "feature view"

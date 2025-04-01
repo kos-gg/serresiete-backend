@@ -63,6 +63,15 @@ class TasksController(private val tasksService: TasksService) {
     }
 
     fun getTaskTypes(client: String?, activities: Set<Activity>): Either<ControllerError, List<TaskType>> {
-        return Either.Right(tasksService.getTaskTypes())
+        return when (client) {
+            null -> Either.Left (NotAuthorized)
+            else -> {
+                if (activities.contains (Activities.getTaskTypes)) {
+                    Either.Right(tasksService.getTaskTypes())
+                } else {
+                    Either.Left(NotEnoughPermissions(client))
+                }
+            }
+        }
     }
 }

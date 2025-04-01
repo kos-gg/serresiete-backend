@@ -39,5 +39,6 @@ class CredentialsDomainTest {
         assertEquals("run task", Activities.runTask)
         assertEquals("get task", Activities.getTask)
         assertEquals("get tasks", Activities.getTasks)
+        assertEquals("get task types", Activities.getTaskTypes)
     }
 }
