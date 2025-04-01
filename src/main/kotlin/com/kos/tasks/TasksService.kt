@@ -122,4 +122,5 @@ data class TasksService(
             TaskType.TASK_CLEANUP_TASK,
             TaskType.UPDATE_LOL_ENTITIES_TASK
         )
+    }
 }
