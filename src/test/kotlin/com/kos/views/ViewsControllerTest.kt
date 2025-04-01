@@ -488,7 +488,7 @@ class ViewsControllerTest {
             )
 
             val viewPatchRequest =
-                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), Game.LOL, null)
+                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), null)
 
             controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
                 .onRight {
@@ -518,7 +518,7 @@ class ViewsControllerTest {
             )
 
             val viewPatchRequest =
-                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), Game.LOL, true)
+                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), true)
 
             controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
                 .onRight {
@@ -548,7 +548,7 @@ class ViewsControllerTest {
             )
 
             val viewPatchRequest =
-                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), Game.LOL, true)
+                ViewPatchRequest("new-name", false, entities = listOf(lolEntityRequest), true)
 
             controller.patchView(
                 user,

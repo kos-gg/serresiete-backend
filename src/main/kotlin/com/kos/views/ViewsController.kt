@@ -139,7 +139,7 @@ class ViewsController(
     ): Either<ControllerError, Operation> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
-            else -> when (val maybeView = viewsService.get(id)) {
+            else -> when (val maybeView = viewsService.getSimple(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
                     if (canEditView(maybeView, client, activities)) {
@@ -162,13 +162,13 @@ class ViewsController(
         //TODO: We can propagate view fields to those who are optional from patch, or we can keep it like this to display which fields we modified
         return when (client) {
             null -> Either.Left(NotAuthorized)
-            else -> when (val maybeView = viewsService.get(id)) {
+            else -> when (val maybeView = viewsService.getSimple(id)) {
                 null -> Either.Left(NotFound(id))
                 else -> {
                     if (canEditView(maybeView, client, activities)) {
                         if (request.featured != null && !activities.contains(Activities.featureView))
                             Either.Left(CantFeatureView)
-                        else viewsService.patch(client, maybeView.id, request)
+                        else viewsService.patch(client, maybeView, request)
                     } else
                         Either.Left(NotEnoughPermissions(client))
                 }
@@ -203,7 +203,7 @@ class ViewsController(
             || activities.contains(Activities.deleteAnyView))
 
     private fun canEditView(
-        maybeView: View,
+        maybeView: SimpleView,
         client: String?,
         activities: Set<Activity>
     ) = ((maybeView.owner == client && activities.contains(Activities.editOwnView))

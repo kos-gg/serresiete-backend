@@ -725,8 +725,8 @@ class ViewsServiceTest {
 
                 viewsService.patch(
                     owner,
-                    id,
-                    ViewPatchRequest(patchedName, null, null, Game.WOW, false)
+                    basicSimpleWowView,
+                    ViewPatchRequest(patchedName, null, null, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_PATCHED)
                 }.onLeft {
@@ -758,8 +758,8 @@ class ViewsServiceTest {
 
                 viewsService.patch(
                     owner,
-                    id,
-                    ViewPatchRequest(null, null, charactersRequest, Game.WOW, false)
+                    basicSimpleWowView,
+                    ViewPatchRequest(null, null, charactersRequest, false)
                 ).onRight {
                     fail()
                 }.onLeft {
@@ -781,8 +781,8 @@ class ViewsServiceTest {
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(
-                        listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
-                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
+                        listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -791,8 +791,8 @@ class ViewsServiceTest {
                 val characterRequests = listOf(request1, request2, request3, request4)
                 viewsService.patch(
                     owner,
-                    id,
-                    ViewPatchRequest(null, null, characterRequests, Game.WOW, false)
+                    basicSimpleWowView,
+                    ViewPatchRequest(null, null, characterRequests, false)
                 ).onRight {
                     assertOperation(it, EventType.VIEW_TO_BE_PATCHED)
                 }.onLeft {

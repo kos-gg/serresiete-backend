@@ -73,7 +73,6 @@ data class ViewPatchRequest(
     val name: String? = null,
     val published: Boolean? = null,
     val entities: List<CreateEntityRequest>? = null,
-    val game: Game,
     val featured: Boolean? = null
 )
 

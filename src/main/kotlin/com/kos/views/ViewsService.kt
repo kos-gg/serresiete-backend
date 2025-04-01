@@ -153,20 +153,20 @@ class ViewsService(
 
     }
 
-    suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
+    suspend fun patch(owner: String, view: SimpleView, request: ViewPatchRequest): Either<ControllerError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
 
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
                 aggregateRoot,
-                id,
+                view.id,
                 ViewToBePatchedEvent(
-                    id,
+                    view.id,
                     request.name,
                     request.published,
                     request.entities,
-                    request.game,
+                    view.game,
                     request.featured
                 )
             )
