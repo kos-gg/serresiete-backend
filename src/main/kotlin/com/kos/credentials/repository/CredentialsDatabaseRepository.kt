@@ -1,5 +1,7 @@
 package com.kos.credentials.repository
 
+import arrow.core.Either
+import com.kos.common.InsertError
 import com.kos.credentials.Credentials
 import com.kos.credentials.CredentialsRole
 import com.kos.credentials.PatchCredentialRequest
@@ -8,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.sql.SQLException
 
 class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepository {
     override suspend fun withState(initialState: CredentialsRepositoryState): CredentialsDatabaseRepository {
@@ -48,11 +51,17 @@ class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepos
         }
     }
 
-    override suspend fun insertCredentials(userName: String, password: String) {
-        newSuspendedTransaction(Dispatchers.IO, db) {
-            Users.insert {
-                it[Users.userName] = userName
-                it[Users.password] = password
+    override suspend fun insertCredentials(userName: String, password: String): Either<InsertError, Unit> {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            try {
+                Users.insert {
+                    it[Users.userName] = userName
+                    it[Users.password] = password
+                }
+                Either.Right(Unit)
+            } catch (e: SQLException) {
+                if (e.sqlState=="23505") Either.Left(InsertError("Duplicated user $userName"))
+                else Either.Left(InsertError(e.message?:e.stackTraceToString()))
             }
         }
     }

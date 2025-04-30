@@ -20,6 +20,7 @@ import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 abstract class CredentialsRepositoryTest {
 
@@ -122,6 +123,17 @@ abstract class CredentialsRepositoryTest {
             assertEquals(listOf(Role.SERVICE), repositoryWithState.state().credentialsRoles[user])
         }
     }
+
+    @Test
+    open fun `given a repository with a credential i cant insert it again`() {
+        runBlocking {
+            repository.withState(basicCredentialsInitialState)
+            repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password)
+                .onRight { fail() }
+                .onLeft { assertEquals(it.message, "Duplicated user $user") }
+        }
+    }
+
 }
 
 class CredentialsInMemoryRepositoryTest : CredentialsRepositoryTest() {
@@ -155,6 +167,6 @@ class CredentialsDatabaseRepositoryTest : CredentialsRepositoryTest() {
 
     @AfterAll
     fun afterAll() {
-        embeddedPostgres.close() 
+        embeddedPostgres.close()
     }
 }
