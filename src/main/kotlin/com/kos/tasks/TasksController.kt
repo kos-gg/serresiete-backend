@@ -21,13 +21,14 @@ class TasksController(private val tasksService: TasksService) {
         taskRequest: TaskRequest,
         activities: Set<Activity>
     ): Either<ControllerError, String> {
+        println(taskRequest)
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
                 if (activities.contains(Activities.runTask)) {
                     val taskId = UUID.randomUUID().toString()
                     scope.launch {
-                        tasksService.runTask(taskRequest.type, taskId)
+                        tasksService.runTask(taskRequest.type, taskId, taskRequest.arguments)
                     }
                     Either.Right(taskId)
                 } else Either.Left(NotEnoughPermissions(client))

@@ -8,4 +8,6 @@ interface DataCacheRepository : WithState<List<DataCache>, DataCacheRepository> 
     suspend fun insert(data: List<DataCache>): Boolean
     suspend fun get(entityId: Long): List<DataCache>
     suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int
+    suspend fun clearRecords(game: Game?): Int
+    // TODO add a clear/delete records
 }
