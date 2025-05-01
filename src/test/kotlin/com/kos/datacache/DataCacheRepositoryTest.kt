@@ -2,6 +2,7 @@ package com.kos.datacache
 
 import com.kos.datacache.TestHelper.outdatedDataCache
 import com.kos.datacache.TestHelper.wowDataCache
+import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
@@ -71,6 +72,23 @@ abstract class DataCacheRepositoryTestCommon {
             val repositoryWithState = repository.withState(listOf(outdatedDataCache))
             assertEquals(0, repositoryWithState.deleteExpiredRecord(24, null, true))
             assertEquals(listOf(outdatedDataCache), repositoryWithState.state())
+        }
+    }
+
+    @Test
+    open fun `given a repository random`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(listOf(outdatedDataCache))
+            assertEquals(1, repositoryWithState.clearRecords(null))
+            assertEquals(listOf(), repositoryWithState.state())
+        }
+    }
+    @Test
+    open fun `given a repository random2`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(listOf(outdatedDataCache, wowHardcoreDataCache))
+            assertEquals(1, repositoryWithState.clearRecords(Game.WOW))
+            assertEquals(listOf(wowHardcoreDataCache), repositoryWithState.state())
         }
     }
 }

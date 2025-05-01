@@ -85,6 +85,16 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
         }
     }
 
+    override suspend fun clearRecords(game: Game?): Int {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            val gameCondition = game?.let { DataCaches.game eq it.toString() }
+
+            val where = Op.TRUE.andIfNotNull(gameCondition)
+
+            DataCaches.deleteWhere { where }
+        }
+    }
+
     override suspend fun state(): List<DataCache> =
         newSuspendedTransaction(Dispatchers.IO, db) { DataCaches.selectAll().map { resultRowToDataCache(it) } }
 }

@@ -55,6 +55,9 @@ enum class TaskType {
     },
     UPDATE_LOL_ENTITIES_TASK {
         override fun toString(): String = "updateLolEntitiesTask"
+    },
+    CACHE_CLEAR_TASK {
+        override fun toString(): String = "cacheClearTask"
     };
 
     companion object {
@@ -65,10 +68,11 @@ enum class TaskType {
             "tokenCleanupTask" -> Either.Right(TOKEN_CLEANUP_TASK)
             "taskCleanupTask" -> Either.Right(TASK_CLEANUP_TASK)
             "updateLolEntitiesTask" -> Either.Right(UPDATE_LOL_ENTITIES_TASK)
+            "cacheClearTask" -> Either.Right(CACHE_CLEAR_TASK)
             else -> Either.Left(InvalidTaskType(value))
         }
     }
 }
 
 @Serializable
-data class TaskRequest(val type: TaskType)
+data class TaskRequest(val type: TaskType, val arguments: Map<String, String>? = null)
