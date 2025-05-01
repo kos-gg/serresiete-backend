@@ -21,7 +21,6 @@ class TasksController(private val tasksService: TasksService) {
         taskRequest: TaskRequest,
         activities: Set<Activity>
     ): Either<ControllerError, String> {
-        println(taskRequest)
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
