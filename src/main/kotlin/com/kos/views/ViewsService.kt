@@ -9,6 +9,7 @@ import com.kos.clients.domain.Data
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
+import com.kos.entities.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository
@@ -42,6 +43,10 @@ class ViewsService(
                     simpleView.published,
                     simpleView.entitiesIds.mapNotNull {
                         entitiesService.get(it, simpleView.game)
+                    }.mapNotNull { entity ->
+                        viewsRepository.getViewEntity(simpleView.id, entity.id)?.let {
+                            EntityWithAlias(entity, it.alias)
+                        }
                     },
                     simpleView.game,
                     simpleView.featured
@@ -88,7 +93,7 @@ class ViewsService(
                 viewToBeCreatedEvent.id,
                 viewToBeCreatedEvent.name,
                 viewToBeCreatedEvent.owner,
-                entities.map { it.id },
+                entities.map { it.first.id to it.second },
                 viewToBeCreatedEvent.game,
                 viewToBeCreatedEvent.featured
             )
@@ -135,7 +140,7 @@ class ViewsService(
                     viewToBeEditedEvent.id,
                     viewToBeEditedEvent.name,
                     viewToBeEditedEvent.published,
-                    entities.map { it.id },
+                    entities.map { it.first.id to it.second },
                     viewToBeEditedEvent.featured
                 )
             val event = Event(
@@ -183,7 +188,7 @@ class ViewsService(
                 viewToBePatchedEvent.id,
                 viewToBePatchedEvent.name,
                 viewToBePatchedEvent.published,
-                entitiesToInsert?.map { it.id },
+                entitiesToInsert?.map { it.first.id to it.second },
                 viewToBePatchedEvent.featured
             )
             val event = Event(
@@ -216,7 +221,7 @@ class ViewsService(
     }
 
     suspend fun getData(view: View): Either<HttpError, List<Data>> =
-        dataCacheService.getData(view.entities.map { it.id }, oldFirst = false)
+        dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =
         dataCacheService.getData(simpleView.entitiesIds, oldFirst = true)

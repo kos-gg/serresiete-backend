@@ -16,7 +16,8 @@ data class LolEntity(
 @Serializable
 data class LolEntityRequest(
     override val name: String,
-    val tag: String
+    val tag: String,
+    override val alias: String? = null
 ) : CreateEntityRequest {
 
     override fun same(other: Entity): Boolean {
