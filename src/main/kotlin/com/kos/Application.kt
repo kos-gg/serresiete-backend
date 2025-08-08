@@ -69,7 +69,7 @@ fun Application.module() {
         System.getenv("BLIZZARD_CLIENT_SECRET")
     )
 
-    val coroutineScope = CoroutineScope(Dispatchers.Default)
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     val db = DatabaseFactory.pooledDatabase()
 
