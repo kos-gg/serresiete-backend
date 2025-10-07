@@ -15,11 +15,12 @@ import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.fail
 
 abstract class CredentialsRepositoryTest {
 
@@ -48,6 +49,16 @@ abstract class CredentialsRepositoryTest {
             repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
             assertTrue(repository.state().users.size == 1)
             assertTrue(repository.state().users.all { it.userName == user && it.password == encryptedCredentials.password })
+        }
+    }
+
+    @Test
+    open fun `given a repository with credentials i can not insert a credential with existing username`() {
+        runBlocking {
+            repository.withState(basicCredentialsInitialState)
+            repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
+                .onLeft { assertTrue(it.message.contains("Duplicated")) }
+                .onRight { fail() }
         }
     }
 
@@ -122,6 +133,17 @@ abstract class CredentialsRepositoryTest {
             assertEquals(listOf(Role.SERVICE), repositoryWithState.state().credentialsRoles[user])
         }
     }
+
+    @Test
+    open fun `given a repository with a credential i cant insert it again`() {
+        runBlocking {
+            repository.withState(basicCredentialsInitialState)
+            repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password)
+                .onRight { fail() }
+                .onLeft { assertEquals(it.message, "Duplicated user $user") }
+        }
+    }
+
 }
 
 class CredentialsInMemoryRepositoryTest : CredentialsRepositoryTest() {
@@ -155,6 +177,6 @@ class CredentialsDatabaseRepositoryTest : CredentialsRepositoryTest() {
 
     @AfterAll
     fun afterAll() {
-        embeddedPostgres.close() 
+        embeddedPostgres.close()
     }
 }
