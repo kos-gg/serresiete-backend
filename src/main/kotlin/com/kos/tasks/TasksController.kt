@@ -27,7 +27,7 @@ class TasksController(private val tasksService: TasksService) {
                 if (activities.contains(Activities.runTask)) {
                     val taskId = UUID.randomUUID().toString()
                     scope.launch {
-                        tasksService.runTask(taskRequest.type, taskId)
+                        tasksService.runTask(taskRequest.type, taskId, taskRequest.arguments)
                     }
                     Either.Right(taskId)
                 } else Either.Left(NotEnoughPermissions(client))

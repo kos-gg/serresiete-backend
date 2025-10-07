@@ -427,8 +427,11 @@ data class DataCacheService(
     }
 
 
-    suspend fun clear(game: Game?, keepLastRecord: Boolean): Int =
+    suspend fun clearExpired(game: Game?, keepLastRecord: Boolean): Int =
         dataCacheRepository.deleteExpiredRecord(ttl, game, keepLastRecord)
+
+    suspend fun clearCache(game: Game?): Int =
+        dataCacheRepository.clearRecords(game)
 
     suspend fun getOrSync(request: Pair<CreateEntityRequest, Game>): Either<JsonParseError, EntityDataResponse> {
 

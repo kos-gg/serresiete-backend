@@ -22,7 +22,7 @@ data class TasksService(
 
     suspend fun getTask(id: String) = tasksRepository.getTask(id)
 
-    suspend fun runTask(taskType: TaskType, taskId: String) {
+    suspend fun runTask(taskType: TaskType, taskId: String, arguments: Map<String, String>?) {
         when (taskType) {
             TaskType.TOKEN_CLEANUP_TASK -> tokenCleanup(taskId)
             TaskType.CACHE_LOL_DATA_TASK -> cacheDataTask(Game.LOL, taskType, taskId)
@@ -30,6 +30,12 @@ data class TasksService(
             TaskType.CACHE_WOW_HC_DATA_TASK -> cacheDataTask(Game.WOW_HC, taskType, taskId)
             TaskType.TASK_CLEANUP_TASK -> taskCleanup(taskId)
             TaskType.UPDATE_LOL_ENTITIES_TASK -> updateLolEntities(taskId)
+            TaskType.CACHE_CLEAR_TASK -> {
+                val game = arguments?.get("game")?.let { Game.fromString(it) }
+                    ?.onLeft { logger.warn(it.toString()) }
+                    ?.getOrNull()
+                cacheCleanup(game, taskType, taskId)
+            }
         }
     }
 
@@ -68,6 +74,20 @@ data class TasksService(
                 id,
                 TaskType.TASK_CLEANUP_TASK,
                 TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTasks old tasks"),
+                OffsetDateTime.now()
+            )
+        )
+    }
+
+    private suspend fun cacheCleanup(game: Game?, taskType: TaskType, id: String) {
+        logger.info("Running cache cleanup task")
+        val deletedRecords = dataCacheService.clearCache(game)
+        logger.info("Deleted $deletedRecords old tasks")
+        tasksRepository.insertTask(
+            Task(
+                id,
+                taskType,
+                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedRecords old tasks"),
                 OffsetDateTime.now()
             )
         )
