@@ -3,6 +3,7 @@ val kotlin_version: String by project
 val logback_version: String by project
 val exposed_version: String by project
 val resilience4j_version: String by project
+val cucumber_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.0"
@@ -115,4 +116,9 @@ dependencies {
     testImplementation("io.ktor:ktor-client-mock:$ktor_version")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
     testImplementation("io.mockk:mockk:1.13.8")
+
+    testImplementation("io.cucumber:cucumber-java:$cucumber_version")
+    testImplementation("io.cucumber:cucumber-core:$cucumber_version")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:$cucumber_version")
+    testImplementation("org.junit.platform:junit-platform-suite:1.14.0")
 }
