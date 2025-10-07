@@ -11,9 +11,9 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 
 class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
 
-    override suspend fun withState(initialState: List<SimpleView>): ViewsDatabaseRepository {
+    override suspend fun withState(initialState: ViewsState): ViewsDatabaseRepository {
         newSuspendedTransaction(Dispatchers.IO, db) {
-            Views.batchInsert(initialState) {
+            Views.batchInsert(initialState.views) {
                 this[Views.id] = it.id
                 this[Views.name] = it.name
                 this[Views.owner] = it.owner
@@ -21,11 +21,10 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 this[Views.game] = it.game.toString()
                 this[Views.featured] = it.featured
             }
-            initialState.forEach { sv ->
-                ViewEntities.batchInsert(sv.entitiesIds) {
-                    this[ViewEntities.viewId] = sv.id
-                    this[ViewEntities.entityId] = it
-                }
+            ViewEntities.batchInsert(initialState.viewEntities) {
+                this[ViewEntities.viewId] = it.viewId
+                this[ViewEntities.entityId] = it.entityId
+                this[ViewEntities.alias] = it.alias
             }
         }
         return this
@@ -49,7 +48,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             row[Views.owner],
             row[Views.published],
             ViewEntities.selectAll().where { ViewEntities.viewId.eq(row[Views.id]) }
-                .map { resultRowToViewEntity(it).second },
+                .map { resultRowToViewEntity(it).entityId },
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured]
         )
@@ -62,11 +61,13 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         val viewId = varchar("view_id", 48).references(
             Views.id, onDelete = ReferenceOption.CASCADE
         )
+        val alias = varchar("alias", 48).nullable()
     }
 
-    private fun resultRowToViewEntity(row: ResultRow): Pair<String, Long> = Pair(
+    private fun resultRowToViewEntity(row: ResultRow): ViewEntity = ViewEntity(
+        row[ViewEntities.entityId],
         row[ViewEntities.viewId],
-        row[ViewEntities.entityId]
+        row[ViewEntities.alias]
     )
 
     override suspend fun getOwnViews(owner: String): List<SimpleView> {
@@ -85,7 +86,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String,
         name: String,
         owner: String,
-        entitiesIds: List<Long>,
+        entitiesIds: List<entityIdWithAlias>,
         game: Game,
         featured: Boolean,
     ): SimpleView {
@@ -100,17 +101,18 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             }
             ViewEntities.batchInsert(entitiesIds) {
                 this[ViewEntities.viewId] = id
-                this[ViewEntities.entityId] = it
+                this[ViewEntities.entityId] = it.first
+                this[ViewEntities.alias] = it.second
             }
         }
-        return SimpleView(id, name, owner, true, entitiesIds, game, featured)
+        return SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured)
     }
 
     override suspend fun edit(
         id: String,
         name: String,
         published: Boolean,
-        entities: List<Long>,
+        entities: List<entityIdWithAlias>,
         featured: Boolean
     ): ViewModified {
         newSuspendedTransaction(Dispatchers.IO, db) {
@@ -122,17 +124,18 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             ViewEntities.deleteWhere { viewId.eq(id) }
             ViewEntities.batchInsert(entities) {
                 this[ViewEntities.viewId] = id
-                this[ViewEntities.entityId] = it
+                this[ViewEntities.entityId] = it.first
+                this[ViewEntities.alias] = it.second
             }
         }
-        return ViewModified(id, name, published, entities, featured)
+        return ViewModified(id, name, published, entities.map { it.first }, featured)
     }
 
     override suspend fun patch(
         id: String,
         name: String?,
         published: Boolean?,
-        entities: List<Long>?,
+        entities: List<entityIdWithAlias>?,
         featured: Boolean?
     ): ViewPatched {
         newSuspendedTransaction(Dispatchers.IO, db) {
@@ -142,12 +145,13 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 ViewEntities.deleteWhere { viewId.eq(id) }
                 ViewEntities.batchInsert(it) { cid ->
                     this[ViewEntities.viewId] = id
-                    this[ViewEntities.entityId] = cid
+                    this[ViewEntities.entityId] = cid.first
+                    this[ViewEntities.alias] = cid.second
                 }
             }
             featured?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.featured] = it } }
         }
-        return ViewPatched(id, name, published, entities, featured)
+        return ViewPatched(id, name, published, entities?.map { it.first }, featured)
     }
 
     override suspend fun delete(id: String): Unit {
@@ -184,7 +188,19 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         }
     }
 
-    override suspend fun state(): List<SimpleView> {
-        return newSuspendedTransaction(Dispatchers.IO, db) { Views.selectAll().map { resultRowToSimpleView(it) } }
+    override suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity? {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            ViewEntities.selectAll().where(ViewEntities.entityId.eq(entityId) and ViewEntities.viewId.eq(viewId))
+                .map { resultRowToViewEntity(it) }.singleOrNull()
+        }
+    }
+
+    override suspend fun state(): ViewsState {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            ViewsState(
+                Views.selectAll().map { resultRowToSimpleView(it) },
+                ViewEntities.selectAll().map { resultRowToViewEntity(it) }
+            )
+        }
     }
 }

@@ -210,6 +210,27 @@ class EventSubscription(
                     }
                 }
 
+                EventType.REQUEST_TO_BE_SYNCED -> {
+                    val payload = eventWithVersion.event.eventData as RequestToBeSynced
+                    return when (payload.game) {
+                        Game.LOL -> {
+                            either {
+                                syncLolEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
+                                val newEntity = entitiesService.createAndReturnIds(
+                                    listOf(payload.request),
+                                    payload.game
+                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
+                                dataCacheService.cache(newEntity.map { it.first }, payload.game)
+                            }
+                        }
+
+                        else -> {
+                            syncLolEntitiesProcessorLogger.debug("skipping event v${eventWithVersion.version}")
+                            Either.Right(Unit)
+                        }
+                    }
+                }
+
                 else -> {
                     syncLolEntitiesProcessorLogger.debug(
                         "skipping event v{} ({})",
@@ -289,6 +310,27 @@ class EventSubscription(
                     }
                 }
 
+                EventType.REQUEST_TO_BE_SYNCED -> {
+                    val payload = eventWithVersion.event.eventData as RequestToBeSynced
+                    return when (payload.game) {
+                        Game.WOW -> {
+                            either {
+                                syncWowEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
+                                val newEntity = entitiesService.createAndReturnIds(
+                                    listOf(payload.request),
+                                    payload.game
+                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
+                                dataCacheService.cache(newEntity.map { it.first }, payload.game)
+                            }
+                        }
+
+                        else -> {
+                            syncWowEntitiesProcessorLogger.debug("skipping event v${eventWithVersion.version}")
+                            Either.Right(Unit)
+                        }
+                    }
+                }
+
                 else -> {
                     syncWowEntitiesProcessorLogger.debug(
                         "skipping event v{} ({})",
@@ -359,6 +401,27 @@ class EventSubscription(
                                 dataCacheService.cache(it, payload.game)
                             }
                             Either.Right(Unit)
+                        }
+
+                        else -> {
+                            syncWowHardcoreEntitiesProcessorLogger.debug("skipping event v${eventWithVersion.version}")
+                            Either.Right(Unit)
+                        }
+                    }
+                }
+
+                EventType.REQUEST_TO_BE_SYNCED -> {
+                    val payload = eventWithVersion.event.eventData as RequestToBeSynced
+                    return when (payload.game) {
+                        Game.WOW_HC -> {
+                            either {
+                                syncWowHardcoreEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
+                                val newEntity = entitiesService.createAndReturnIds(
+                                    listOf(payload.request),
+                                    payload.game
+                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
+                                dataCacheService.cache(newEntity.map{ it.first }, payload.game)
+                            }
                         }
 
                         else -> {

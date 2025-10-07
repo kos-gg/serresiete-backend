@@ -6,7 +6,9 @@ data class Spec(val name: String, val externalSpec: Int, val internalSpec: Int)
 data class Class(val `class`: String, val specs: List<Spec>)
 
 @Serializable
-data class WowEntityRequest(override val name: String, val region: String, val realm: String) :
+data class WowEntityRequest(
+    override val name: String, val region: String, val realm: String, override val alias: String? = null
+) :
     CreateEntityRequest, InsertEntityRequest {
     override fun toEntity(id: Long) = WowEntity(id, name, region, realm, null)
     override fun same(other: Entity): Boolean {

@@ -7,6 +7,7 @@ import com.kos.views.*
 class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
 
     private val views: MutableList<SimpleView> = mutableListOf()
+    private val viewEntities: MutableList<ViewEntity> = mutableListOf()
 
     override suspend fun getOwnViews(owner: String): List<SimpleView> = views.filter { it.owner == owner }
 
@@ -16,12 +17,13 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         id: String,
         name: String,
         owner: String,
-        entitiesIds: List<Long>,
+        entitiesIds: List<Pair<Long, String?>>,
         game: Game,
         featured: Boolean
     ): SimpleView {
-        val simpleView = SimpleView(id, name, owner, true, entitiesIds, game, featured)
+        val simpleView = SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured)
         views.add(simpleView)
+        entitiesIds.forEach { viewEntities.add(ViewEntity(it.first, id, it.second)) }
         return simpleView
     }
 
@@ -29,21 +31,26 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         id: String,
         name: String,
         published: Boolean,
-        entities: List<Long>,
+        entities: List<Pair<Long, String?>>,
         featured: Boolean
     ): ViewModified {
         val index = views.indexOfFirst { it.id == id }
         val oldView = views[index]
         views.removeAt(index)
-        views.add(index, SimpleView(id, name, oldView.owner, published, entities, oldView.game, featured))
-        return ViewModified(id, name, published, entities, featured)
+        views.add(
+            index,
+            SimpleView(id, name, oldView.owner, published, entities.map { it.first }, oldView.game, featured)
+        )
+        viewEntities.removeIf { it.viewId == id }
+        viewEntities.addAll(entities.map { ViewEntity(it.first, id, it.second) })
+        return ViewModified(id, name, published, entities.map { it.first }, featured)
     }
 
     override suspend fun patch(
         id: String,
         name: String?,
         published: Boolean?,
-        entities: List<Long>?,
+        entities: List<Pair<Long, String?>>?,
         featured: Boolean?
     ): ViewPatched {
         val index = views.indexOfFirst { it.id == id }
@@ -54,7 +61,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             name ?: oldView.name,
             oldView.owner,
             published ?: oldView.published,
-            entities ?: oldView.entitiesIds,
+            entities?.map { it.first } ?: oldView.entitiesIds,
             oldView.game,
             featured ?: oldView.featured
         )
@@ -62,12 +69,17 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             index,
             simpleView
         )
-        return ViewPatched(id, name, published, entities, featured)
+        if (entities != null) {
+            viewEntities.removeIf { it.viewId == id }
+            viewEntities.addAll(entities.map { ViewEntity(it.first, id, it.second) })
+        }
+        return ViewPatched(id, name, published, entities?.map { it.first }, featured)
     }
 
     override suspend fun delete(id: String): Unit {
         val index = views.indexOfFirst { it.id == id }
         views.removeAt(index)
+        viewEntities.removeIf { it.viewId == id }
     }
 
     override suspend fun getViews(
@@ -92,17 +104,24 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         return Pair(ViewMetadata(allViews.count()), views)
     }
 
-    override suspend fun state(): List<SimpleView> {
-        return views
+    override suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity? {
+        return viewEntities.firstOrNull { it.entityId == entityId && it.viewId == viewId }
     }
 
-    override suspend fun withState(initialState: List<SimpleView>): ViewsInMemoryRepository {
-        views.addAll(initialState)
+    override suspend fun state(): ViewsState {
+        return ViewsState(views, viewEntities)
+    }
+
+    override suspend fun withState(initialState: ViewsState): ViewsInMemoryRepository {
+        views.addAll(initialState.views)
+        viewEntities.addAll(initialState.viewEntities)
+
         return this
     }
 
     override fun clear() {
         views.clear()
+        viewEntities.clear()
     }
 
     //TODO: this operation will be removed upon having parent character table implemented

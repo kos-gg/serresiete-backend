@@ -22,8 +22,10 @@ import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
+import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
 import com.kos.views.repository.ViewsInMemoryRepository
+import com.kos.views.repository.ViewsState
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -84,7 +86,17 @@ class DataCacheServiceTest {
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf())
             val viewsRepository = ViewsInMemoryRepository()
-                .withState(listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))))
+                .withState(
+                    ViewsState(
+                        listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))),
+                        basicSimpleWowHardcoreView.entitiesIds.map {
+                            ViewEntity(
+                                it,
+                                basicSimpleWowHardcoreView.id,
+                                "alias"
+                            )
+                        })
+                )
             val entitiesRepository = EntitiesInMemoryRepository(dataCacheRepository, viewsRepository)
                 .withState(
                     EntitiesState(
@@ -439,7 +451,18 @@ class DataCacheServiceTest {
 
     private suspend fun createService(dataCacheRepository: DataCacheInMemoryRepository): DataCacheService {
         val viewsRepository = ViewsInMemoryRepository()
-            .withState(listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))))
+            .withState(
+                ViewsState(
+                    listOf(basicSimpleWowHardcoreView.copy(entitiesIds = listOf(1))),
+                    basicSimpleWowHardcoreView.entitiesIds.map {
+                        ViewEntity(
+                            it,
+                            basicSimpleWowHardcoreView.id,
+                            "alias"
+                        )
+                    }
+                )
+            )
         val entitiesRepository = EntitiesInMemoryRepository(dataCacheRepository, viewsRepository)
             .withState(
                 EntitiesState(

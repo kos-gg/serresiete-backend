@@ -1,15 +1,11 @@
 package com.kos.views
 
 import arrow.core.Either
-import com.kos.entities.CreateEntityRequest
-import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.LolEntityRequest
-import com.kos.entities.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
@@ -34,6 +30,7 @@ import com.kos.datacache.RiotMockHelper.anotherRiotData
 import com.kos.datacache.TestHelper.anotherLolDataCache
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.*
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
@@ -47,6 +44,7 @@ import com.kos.views.ViewsTestHelper.name
 import com.kos.views.ViewsTestHelper.owner
 import com.kos.views.ViewsTestHelper.published
 import com.kos.views.repository.ViewsInMemoryRepository
+import com.kos.views.repository.ViewsState
 import io.mockk.InternalPlatformDsl.toStr
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -81,7 +79,7 @@ class ViewsServiceTest {
         fun `i can get own views`() {
             runBlocking {
                 val (_, viewsService) = createService(
-                    listOf(basicSimpleWowView),
+                    ViewsState(listOf(basicSimpleWowView), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -97,7 +95,7 @@ class ViewsServiceTest {
                 val limit = 1
 
                 val (_, viewsService) = createService(
-                    basicSimpleGameViews,
+                    ViewsState(basicSimpleGameViews, listOf()),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -116,7 +114,7 @@ class ViewsServiceTest {
                 val limit = 10
 
                 val (_, viewsService) = createService(
-                    basicSimpleGameViews,
+                    ViewsState(basicSimpleGameViews, listOf()),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -132,7 +130,9 @@ class ViewsServiceTest {
         fun `i can get a simple view`() {
             runBlocking {
                 val (_, viewsService) = createService(
-                    listOf(basicSimpleWowView),
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -146,7 +146,7 @@ class ViewsServiceTest {
         fun `i can get views of a game`() {
             runBlocking {
                 val (_, viewsService) = createService(
-                    basicSimpleGameViews,
+                    ViewsState(basicSimpleGameViews, listOf()),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -160,7 +160,7 @@ class ViewsServiceTest {
         fun `i can get views returns only wow featured views`() {
             runBlocking {
                 val (_, viewsService) = createService(
-                    basicSimpleGameViews,
+                    ViewsState(basicSimpleGameViews, listOf()),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -172,6 +172,28 @@ class ViewsServiceTest {
                 )
             }
         }
+
+        @Test
+        fun `i can get view with alias of entities`() {
+            runBlocking {
+                val lolEntities = listOf(basicLolEntity, basicLolEntity2)
+                val alias = "kako"
+                val viewEntityOne = ViewEntity(basicLolEntity.id, basicSimpleLolView.id, alias)
+                val viewEntityTwo = ViewEntity(basicLolEntity2.id, basicSimpleLolView.id, null)
+                val (_, viewsService) = createService(
+                    ViewsState(
+                        listOf(basicSimpleLolView.copy(entitiesIds = lolEntities.map { it.id })),
+                        listOf(viewEntityOne, viewEntityTwo)
+                    ),
+                    EntitiesState(listOf(), listOf(), lolEntities),
+                    listOf(),
+                    defaultCredentialsState,
+                )
+                val view = viewsService.get(basicSimpleLolView.id)
+
+                assertEquals(listOf(alias, null), view?.entities?.map { it.alias })
+            }
+        }
     }
 
     @Nested
@@ -181,7 +203,7 @@ class ViewsServiceTest {
         fun `create a wow view stores a create view event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState,
@@ -211,7 +233,7 @@ class ViewsServiceTest {
         fun `create a lol view stores a create view event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState,
@@ -242,7 +264,7 @@ class ViewsServiceTest {
         fun `create a lol view with some characters stores a create view event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -275,7 +297,7 @@ class ViewsServiceTest {
         fun `trying to exceed the maximum number of views allowed does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView, basicSimpleLolView),
+                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -298,7 +320,7 @@ class ViewsServiceTest {
         fun `create a lol view with too many characters does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -320,7 +342,17 @@ class ViewsServiceTest {
         fun `admins can create a huge amount of views and an event gets stored`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    (1..100).map { SimpleView(it.toStr(), it.toStr(), owner, true, listOf(), Game.WOW, false) },
+                    ViewsState((1..100).map {
+                        SimpleView(
+                            it.toStr(),
+                            it.toStr(),
+                            owner,
+                            true,
+                            listOf(),
+                            Game.WOW,
+                            false
+                        )
+                    }, listOf()),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(
@@ -353,7 +385,7 @@ class ViewsServiceTest {
         fun `user without role trying to create a view does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf()))
@@ -376,7 +408,7 @@ class ViewsServiceTest {
         fun `create view processing view to be created event stores an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(),
+                    ViewsState(listOf(), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -417,7 +449,9 @@ class ViewsServiceTest {
         fun `editing a lol view stores an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView),
+                    ViewsState(
+                        listOf(basicSimpleLolView),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -445,7 +479,9 @@ class ViewsServiceTest {
         fun `editing a lol view with too many characters does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView),
+                    ViewsState(
+                        listOf(basicSimpleLolView),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -475,7 +511,9 @@ class ViewsServiceTest {
                 val request4 = WowEntityRequest("d", "r", "r")
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleWowView),
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -504,7 +542,9 @@ class ViewsServiceTest {
         fun `editing a lol view processing view to be edited stores an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView),
+                    ViewsState(
+                        listOf(basicSimpleLolView),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -542,7 +582,9 @@ class ViewsServiceTest {
                 `when`(raiderIoClient.exists(request4)).thenReturn(true)
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
+                    ViewsState(
+                        listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     EntitiesState(
                         listOf(basicWowEntity, basicWowEntity2),
                         listOf(),
@@ -582,7 +624,9 @@ class ViewsServiceTest {
                 val charactersRequest = (3..6).map { LolEntityRequest(it.toString(), it.toString()) }
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                    ViewsState(
+                        listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
                     EntitiesState(
                         listOf(),
                         listOf(),
@@ -637,7 +681,9 @@ class ViewsServiceTest {
             runBlocking {
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleWowView),
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
@@ -669,7 +715,9 @@ class ViewsServiceTest {
                 val patchedName = "new-name"
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleWowView),
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -696,7 +744,9 @@ class ViewsServiceTest {
         fun `trying to patch a view with too many characters fails without storing an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleWowView),
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -730,7 +780,9 @@ class ViewsServiceTest {
                 val request4 = WowEntityRequest("d", "r", "r")
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                    ViewsState(
+                        listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -767,7 +819,9 @@ class ViewsServiceTest {
                 val charactersRequest = (3..6).map { LolEntityRequest(it.toString(), it.toString()) }
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                    ViewsState(
+                        listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -826,7 +880,9 @@ class ViewsServiceTest {
 
 
                 val (eventStore, viewsService) = createService(
-                    listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
+                    ViewsState(
+                        listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
                     emptyEntitiesState,
                     listOf(),
                     CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
@@ -861,14 +917,17 @@ class ViewsServiceTest {
                 val simpleView = basicSimpleLolView.copy(entitiesIds = listOf(1))
                 val view = View(
                     simpleView.id, simpleView.name, simpleView.owner, simpleView.published, listOf(
-                        basicLolEntity
+                        EntityWithAlias(basicLolEntity, null)
                     ), simpleView.game, simpleView.featured
                 )
+
                 val moreRecentDataCache =
                     anotherLolDataCache.copy(entityId = 1, inserted = OffsetDateTime.now().plusHours(2))
 
                 val (_, viewsService) = createService(
-                    listOf(simpleView),
+                    ViewsState(
+                        listOf(simpleView),
+                        simpleView.entitiesIds.map { ViewEntity(it, simpleView.id, "alias") }),
                     EntitiesState(listOf(), listOf(), listOf(basicLolEntity)),
                     listOf(
                         lolDataCache.copy(entityId = 1),
@@ -885,7 +944,7 @@ class ViewsServiceTest {
     }
 
     private suspend fun createService(
-        viewsState: List<SimpleView>,
+        viewsState: ViewsState,
         entitiesState: EntitiesState,
         dataCacheState: List<DataCache>,
         credentialState: CredentialsRepositoryState,
