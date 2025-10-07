@@ -4,12 +4,6 @@ import arrow.core.Either
 import com.kos.auth.AuthService
 import com.kos.auth.AuthTestHelper.basicAuthorization
 import com.kos.auth.repository.AuthInMemoryRepository
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.QueueType
 import com.kos.clients.raiderio.RaiderIoClient
@@ -22,6 +16,12 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
@@ -316,7 +316,7 @@ class TasksServiceTest {
 
             val id = UUID.randomUUID().toString()
 
-            service.runTask(TaskType.TOKEN_CLEANUP_TASK, id)
+            service.runTask(TaskType.TOKEN_CLEANUP_TASK, id, mapOf())
 
             val insertedTask = tasksRepository.state().first()
 
@@ -360,7 +360,7 @@ class TasksServiceTest {
 
             val id = UUID.randomUUID().toString()
 
-            service.runTask(TaskType.CACHE_WOW_DATA_TASK, id)
+            service.runTask(TaskType.CACHE_WOW_DATA_TASK, id, mapOf())
 
             val insertedTask = tasksRepository.state().first()
 
@@ -402,7 +402,7 @@ class TasksServiceTest {
 
             val id = UUID.randomUUID().toString()
 
-            service.runTask(TaskType.CACHE_LOL_DATA_TASK, id)
+            service.runTask(TaskType.CACHE_LOL_DATA_TASK, id, mapOf())
 
             val insertedTask = tasksRepository.state().first()
 
