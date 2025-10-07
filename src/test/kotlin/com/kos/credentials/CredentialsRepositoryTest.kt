@@ -8,7 +8,6 @@ import com.kos.credentials.CredentialsTestHelper.user
 import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.credentials.repository.CredentialsRepository
-import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.roles.Role
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
@@ -16,11 +15,11 @@ import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.fail
 
 abstract class CredentialsRepositoryTest {
@@ -57,9 +56,9 @@ abstract class CredentialsRepositoryTest {
     open fun `given a repository with credentials i can not insert a credential with existing username`() {
         runBlocking {
             repository.withState(basicCredentialsInitialState)
-            assertEquals(1, repository.state().users.size)
             repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
-            assertEquals(1, repository.state().users.size)
+                .onLeft { assertTrue(it.message.contains("Duplicated")) }
+                .onRight { fail() }
         }
     }
 
