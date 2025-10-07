@@ -1,10 +1,10 @@
 package com.kos.entities.repository
 
 import arrow.core.Either
-import com.kos.entities.*
 import com.kos.common.InMemoryRepository
 import com.kos.common.InsertError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.*
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import java.time.OffsetDateTime
@@ -240,27 +240,23 @@ class EntitiesInMemoryRepository(
             .map { it.id }
     }
 
-    override suspend fun delete(id: Long, game: Game) {
-        when (game) {
-            Game.WOW -> {
-                val index = wowEntities.indexOfFirst { it.id == id }
-                wowEntities.removeAt(index)
-            }
-
-            Game.LOL -> {
-                val index = lolEntities.indexOfFirst { it.id == id }
-                lolEntities.removeAt(index)
-            }
-
-            Game.WOW_HC -> {
-                val index = wowHardcoreEntities.indexOfFirst { it.id == id }
-                wowHardcoreEntities.removeAt(index)
-            }
+    override suspend fun delete(id: Long) {
+        val wowIndex = wowEntities.indexOfFirst { it.id == id }
+        if (wowIndex != -1) {
+            wowEntities.removeAt(wowIndex)
         }
 
-        //TODO: this operation will be removed upon having parent character table implemented
-        viewsRepository.deleteCharacterFromViews(id)
+        val lolIndex = lolEntities.indexOfFirst { it.id == id }
+        if (lolIndex != -1) {
+            lolEntities.removeAt(lolIndex)
+        }
+
+        val wowHardcoreIndex = wowHardcoreEntities.indexOfFirst { it.id == id }
+        if (wowHardcoreIndex != -1) {
+            wowHardcoreEntities.removeAt(wowHardcoreIndex)
+        }
     }
+
 
     override suspend fun state(): EntitiesState {
         return EntitiesState(wowEntities, wowHardcoreEntities, lolEntities)
@@ -279,5 +275,4 @@ class EntitiesInMemoryRepository(
         lolEntities.clear()
         dataCacheRepository.clear()
     }
-
 }

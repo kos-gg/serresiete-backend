@@ -85,10 +85,6 @@ class EventSubscription(
         }
     }
 
-    /*
-        Disclaimer: Despite maybe thinking all this entity syncs can be refactored into one, we might want to
-        remember that we want each game to be treated separately so one game does not block another
-     */
     companion object {
         private val viewsProcessorLogger = LoggerFactory.getLogger("eventSubscription.viewsProcessor")
         private val syncLolEntitiesProcessorLogger =
@@ -436,7 +432,7 @@ class EventSubscription(
                 }
 
                 else -> {
-                    syncWowHardcoreEntitiesProcessorLogger.debug(
+                    syncLolEntitiesProcessorLogger.debug(
                         "skipping event v{} ({})",
                         eventWithVersion.version,
                         eventWithVersion.event.eventData.eventType
@@ -453,18 +449,18 @@ class EventSubscription(
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_DELETED -> {
                     val payload = eventWithVersion.event.eventData as ViewDeletedEvent
-                    Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }
-                        .forEach {
-                            if (it.second.isEmpty()) {
-                                entitiesProcessorLogger.debug("Deleting entity ${it.first}")
-                                entitiesService.delete(it.first, payload.game)
-                            } else entitiesProcessorLogger.debug(
-                                "Not deleting character {} because it's still in {}",
-                                it.first,
-                                it.second
-                            )
+                    Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }.forEach {
+                        if (it.second.isEmpty()) {
+                            entitiesProcessorLogger.debug("Deleting entity ${it.first}")
+                            entitiesService.delete(it.first)
+                        }
+                        else entitiesProcessorLogger.debug(
+                            "Not deleting character {} because it's still in {}",
+                            it.first,
+                            it.second
+                        )
 
-                        })
+                    })
                 }
 
                 else -> {

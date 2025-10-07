@@ -23,5 +23,5 @@ interface EntitiesRepository : WithState<EntitiesState, EntitiesRepository> {
     suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long): List<Entity>
     suspend fun get(entity: InsertEntityRequest, game: Game): Entity?
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String>
-    suspend fun delete(id: Long, game: Game): Unit
+    suspend fun delete(id: Long): Unit
 }
