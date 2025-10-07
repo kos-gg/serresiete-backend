@@ -21,6 +21,7 @@ import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
+import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
@@ -120,6 +121,26 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected: List<Long> = listOf(1)
             entitiesService.createAndReturnIds(request, Game.WOW)
+                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
+        }
+    }
+
+    @Test
+    fun `inserting a character with same blizzard id does not get inserted`() {
+        runBlocking {
+            val request = WowEntityRequest(basicWowHardcoreEntity.name, basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm)
+
+            `when`(blizzardClient.getCharacterProfile(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
+                .thenReturn(BlizzardMockHelper.getCharacterProfile(request)
+                    .map { it.copy(id = basicWowHardcoreEntity.blizzardId ?: 12345) })
+            `when`(blizzardClient.getRealm(request.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
+
+            val charactersRepository = EntitiesInMemoryRepository().withState(
+                EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
+            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+
+            val expected: List<Long> = listOf(1)
+            entitiesService.createAndReturnIds(listOf(request), Game.WOW_HC)
                 .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
         }
     }
