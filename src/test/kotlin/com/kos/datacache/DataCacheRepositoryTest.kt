@@ -2,6 +2,7 @@ package com.kos.datacache
 
 import com.kos.datacache.TestHelper.outdatedDataCache
 import com.kos.datacache.TestHelper.wowDataCache
+import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
@@ -13,7 +14,6 @@ import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import java.time.OffsetDateTime
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -88,6 +88,24 @@ abstract class DataCacheRepositoryTestCommon {
             )
             assertEquals(1, repositoryWithState.deleteExpiredRecord(24, null, true))
             assertEquals(listOf(outdatedDataCache), repositoryWithState.state())
+        }
+    }
+
+    @Test
+    open fun `given a repository random`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(listOf(outdatedDataCache))
+            assertEquals(1, repositoryWithState.clearRecords(null))
+            assertEquals(listOf(), repositoryWithState.state())
+        }
+    }
+
+    @Test
+    open fun `given a repository random2`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(listOf(outdatedDataCache, wowHardcoreDataCache))
+            assertEquals(1, repositoryWithState.clearRecords(Game.WOW))
+            assertEquals(listOf(wowHardcoreDataCache), repositoryWithState.state())
         }
     }
 }

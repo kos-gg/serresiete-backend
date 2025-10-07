@@ -40,6 +40,22 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
         }
     }
 
+    override suspend fun clearRecords(game: Game?): Int {
+        return when (game) {
+            null -> {
+                val deletedRecords = cachedData.size
+                cachedData.clear()
+                deletedRecords
+            }
+
+            else -> {
+                val deletedRecords = cachedData.count { game == it.game }
+                cachedData.removeAll { game == it.game }
+                deletedRecords
+            }
+        }
+    }
+
     override suspend fun state(): List<DataCache> = cachedData
     override suspend fun withState(initialState: List<DataCache>): DataCacheInMemoryRepository {
         cachedData.addAll(initialState)
