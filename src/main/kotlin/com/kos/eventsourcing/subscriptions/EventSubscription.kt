@@ -224,7 +224,7 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                dataCacheService.cache(newEntity, payload.game)
+                                dataCacheService.cache(newEntity.map { it.first }, payload.game)
                             }
                         }
 
@@ -324,7 +324,7 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                dataCacheService.cache(newEntity, payload.game)
+                                dataCacheService.cache(newEntity.map { it.first }, payload.game)
                             }
                         }
 
@@ -424,7 +424,7 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                dataCacheService.cache(newEntity, payload.game)
+                                dataCacheService.cache(newEntity.map{ it.first }, payload.game)
                             }
                         }
 

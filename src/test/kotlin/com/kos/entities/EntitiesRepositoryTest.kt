@@ -18,10 +18,12 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.views.Game
+import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
 import com.kos.views.repository.ViewsDatabaseRepository
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsRepository
+import com.kos.views.repository.ViewsState
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
@@ -261,6 +263,16 @@ abstract class EntitiesRepositoryTestCommon {
     }
 
     @Test
+    fun `whatever`() {
+        runBlocking {
+            repository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
+            repository.insert(listOf(WowEnrichedEntityRequest(basicWowHardcoreEntity.name, basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.blizzardId)), Game.WOW_HC)
+                .onRight { fail() }
+                .onLeft { print(it.message) }
+        }
+    }
+
+    @Test
     fun `given a repository with a wow hardcore character, i can update it`() {
         runBlocking {
             val repoWithState = repository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
@@ -413,10 +425,15 @@ abstract class EntitiesRepositoryTestCommon {
     }
 
     @Test
-    fun `given a repository with character present i views, I can retrieve those views`() {
+    fun `given a repository with character present in views, I can retrieve those views`() {
         runBlocking {
             repository.withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
-            viewsRepository.withState(listOf(basicSimpleWowView.copy(entitiesIds = listOf(basicWowEntity.id))))
+            val viewWithEntities = basicSimpleWowView.copy(entitiesIds = listOf(basicWowEntity.id))
+            viewsRepository.withState(
+                ViewsState(
+                    listOf(viewWithEntities),
+                    viewWithEntities.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") })
+            )
             val views = repository.getViewsFromEntity(basicWowEntity.id, Game.WOW)
             assertEquals(listOf(basicSimpleWowView.id), views)
         }
