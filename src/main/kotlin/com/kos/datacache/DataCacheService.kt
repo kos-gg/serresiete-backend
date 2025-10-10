@@ -169,8 +169,8 @@ data class DataCacheService(
                 }
 
             val leagues: List<LeagueEntryResponse> =
-                retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesBySummonerId") {
-                    riotClient.getLeagueEntriesBySummonerId(lolEntity.summonerId)
+                retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesByPUUID") {
+                    riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
                 }.bind()
 
             val leagueWithMatches: List<LeagueMatchData> =

@@ -216,7 +216,7 @@ class TasksServiceTest {
             val tasksRepository = TasksInMemoryRepository()
             val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId)).thenReturn(RiotMockHelper.leagueEntries)
+            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
             `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt())).thenReturn(
                 RiotMockHelper.matches
             )

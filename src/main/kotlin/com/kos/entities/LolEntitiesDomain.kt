@@ -9,7 +9,6 @@ data class LolEntity(
     val tag: String,
     val puuid: String,
     val summonerIcon: Int,
-    val summonerId: String,
     val summonerLevel: Int
 ) : Entity
 
@@ -33,7 +32,6 @@ data class LolEnrichedEntityRequest(
     val tag: String,
     val puuid: String,
     val summonerIconId: Int,
-    val summonerId: String,
     val summonerLevel: Int
 
 ) : InsertEntityRequest {
@@ -44,14 +42,13 @@ data class LolEnrichedEntityRequest(
             this.tag,
             this.puuid,
             this.summonerIconId,
-            this.summonerId,
             this.summonerLevel
         )
     }
 
     override fun same(other: Entity): Boolean {
         return when (other) {
-            is LolEntity -> this.puuid == other.puuid && this.summonerId == other.summonerId
+            is LolEntity -> this.puuid == other.puuid
             else -> false
         }
     }

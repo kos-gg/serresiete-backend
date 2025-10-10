@@ -86,7 +86,6 @@ class EntitiesDomainTest {
         assertEquals(basicLolEntity.name, entity.name)
         assertEquals(basicLolEntity.tag, entity.tag)
         assertEquals(basicLolEntity.puuid, entity.puuid)
-        assertEquals(basicLolEntity.summonerId, entity.summonerId)
         assertEquals(basicLolEntity.summonerIcon, entity.summonerIcon)
         assertEquals(basicLolEntity.summonerLevel, entity.summonerLevel)
     }
@@ -128,9 +127,7 @@ class EntitiesDomainTest {
         val lolCharacterRequest = basicLolEntityEnrichedRequest
         val entity = lolCharacterRequest.toEntity(1L)
         val diffPuuid = lolCharacterRequest.same(entity.copy(puuid = "diff-puuid"))
-        val diffSummonerId = lolCharacterRequest.same(entity.copy(summonerId = "diff-summonerId"))
         assertFalse(diffPuuid)
-        assertFalse(diffSummonerId)
     }
 
     @Test

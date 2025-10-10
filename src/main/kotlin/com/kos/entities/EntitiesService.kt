@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class EntitiesService(
     private val entitiesRepository: EntitiesRepository,
@@ -118,7 +119,6 @@ data class EntitiesService(
                                 initialRequest.tag,
                                 summonerResponse.puuid,
                                 summonerResponse.profileIconId,
-                                summonerResponse.id,
                                 summonerResponse.summonerLevel
                             ).withAlias(initialRequest.alias)
                         }.getOrNull()
@@ -186,7 +186,6 @@ data class EntitiesService(
                 tag = account.tagLine,
                 puuid = lolEntity.puuid,
                 summonerIconId = summoner.profileIconId,
-                summonerId = summoner.id,
                 summonerLevel = summoner.summonerLevel
             )
         }

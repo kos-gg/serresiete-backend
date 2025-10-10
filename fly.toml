@@ -1,5 +1,5 @@
 app = "raiderio-ladder-backend"
-primary_region = "mad"
+primary_region = "cdg"
 
 [http_service]
 auto_start_machines = true

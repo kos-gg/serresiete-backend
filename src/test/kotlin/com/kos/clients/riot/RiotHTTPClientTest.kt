@@ -2,7 +2,6 @@ package com.kos.clients.riot
 
 import com.kos.assertTrue
 import com.kos.clients.domain.QueueType
-import com.kos.clients.riot.RiotHTTPClient
 import com.kos.clients.riot.RiotHTTPClientHelper.client
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -52,7 +51,7 @@ class RiotHTTPClientTest {
     @Test
     fun `get league entries by summoner id works as expected`() {
         runBlocking {
-            val res = riotHTTPClient.getLeagueEntriesBySummonerId("XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E")
+            val res = riotHTTPClient.getLeagueEntriesByPUUID("XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E")
 
             assertTrue(res.isRight())
         }

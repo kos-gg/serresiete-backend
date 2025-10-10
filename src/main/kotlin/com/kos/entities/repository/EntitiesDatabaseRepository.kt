@@ -49,7 +49,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 this[LolEntities.tag] = it.tag
                 this[LolEntities.puuid] = it.puuid
                 this[LolEntities.summonerIcon] = it.summonerIcon
-                this[LolEntities.summonerId] = it.summonerId
                 this[LolEntities.summonerLevel] = it.summonerLevel
             }
         }
@@ -108,7 +107,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         val tag = text("tag")
         val puuid = text("puuid")
         val summonerIcon = integer("summoner_icon")
-        val summonerId = text("summoner_id")
         val summonerLevel = integer("summoner_level")
 
         override val primaryKey = PrimaryKey(id)
@@ -120,7 +118,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         row[LolEntities.tag],
         row[LolEntities.puuid],
         row[LolEntities.summonerIcon],
-        row[LolEntities.summonerId],
         row[LolEntities.summonerLevel]
     )
 
@@ -147,7 +144,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                         it.tag,
                         it.puuid,
                         it.summonerIconId,
-                        it.summonerId,
                         it.summonerLevel
                     )
                 }
@@ -181,7 +177,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                                     this[LolEntities.tag] = it.tag
                                     this[LolEntities.puuid] = it.puuid
                                     this[LolEntities.summonerIcon] = it.summonerIcon
-                                    this[LolEntities.summonerId] = it.summonerId
                                     this[LolEntities.summonerLevel] = it.summonerLevel
                                 }
                             }
@@ -229,7 +224,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                                 it[tag] = entity.tag
                                 it[puuid] = entity.puuid
                                 it[summonerIcon] = entity.summonerIconId
-                                it[summonerId] = entity.summonerId
                                 it[summonerLevel] = entity.summonerLevel
                             })
                         }
@@ -332,7 +326,6 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                     entity as LolEnrichedEntityRequest
                     LolEntities.selectAll().where {
                         LolEntities.puuid.eq(entity.puuid)
-                            .and(LolEntities.summonerId.eq(entity.summonerId))
                     }.map { resultRowToLolEntity(it) }
                 }
 

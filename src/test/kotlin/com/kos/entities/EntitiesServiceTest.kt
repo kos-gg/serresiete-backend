@@ -159,8 +159,6 @@ class EntitiesServiceTest {
                 val puuid = invocation.getArgument<String>(0)
                 Either.Right(
                     GetSummonerResponse(
-                        UUID.randomUUID().toString(),
-                        UUID.randomUUID().toString(),
                         puuid,
                         10,
                         10L,
@@ -302,8 +300,6 @@ class EntitiesServiceTest {
             `when`(riotClient.getSummonerByPuuid(basicLolEntity2.puuid)).thenReturn(
                 Either.Right(
                     GetSummonerResponse(
-                        basicLolEntity2.summonerId,
-                        basicLolEntity2.summonerId,
                         basicLolEntity2.puuid,
                         basicLolEntity2.summonerIcon,
                         1L,

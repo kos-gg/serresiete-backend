@@ -45,7 +45,7 @@ object RiotHTTPClientHelper {
                         )
 
 
-                    "/lol/league/v4/entries/by-summoner/XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E" ->
+                    "/lol/league/v4/entries/by-puuid/XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E" ->
                         respond(
                             responseFromResource("riot-get-leagues-by-summoner-id.json"),
                             HttpStatusCode.OK

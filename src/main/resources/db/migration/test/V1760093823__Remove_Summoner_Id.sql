@@ -1,0 +1,1 @@
+ALTER TABLE lol_entities DROP COLUMN summoner_id;

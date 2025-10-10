@@ -19,8 +19,6 @@ data class GetPUUIDResponse(val puuid: String, val gameName: String, val tagLine
 
 @Serializable
 data class GetSummonerResponse(
-    val id: String,
-    val accountId: String,
     val puuid: String,
     val profileIconId: Int,
     val revisionDate: Long,

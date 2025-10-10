@@ -190,7 +190,7 @@ abstract class EntitiesRepositoryTestCommon {
         runBlocking {
             repository.withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
             val request =
-                basicLolEntityEnrichedRequest.copy(puuid = "different-puuid", summonerId = "different-summoner-id")
+                basicLolEntityEnrichedRequest.copy(puuid = "different-puuid")
             val inserted = repository.insert(listOf(request), Game.LOL)
             inserted
                 .onRight { characters -> assertEquals(listOf<Long>(2), characters.map { it.id }) }
@@ -222,7 +222,6 @@ abstract class EntitiesRepositoryTestCommon {
                 updatedTag,
                 basicLolEntity.puuid,
                 updatedSummonerIconId,
-                basicLolEntity.summonerId,
                 updatedSummonerLevel
             )
             val update = repository.update(1, request, Game.LOL)
@@ -235,7 +234,6 @@ abstract class EntitiesRepositoryTestCommon {
             assertEquals(updatedSummonerIconId, updated.summonerIcon)
             assertEquals(updatedSummonerLevel, updated.summonerLevel)
             assertEquals(basicLolEntity.puuid, updated.puuid)
-            assertEquals(basicLolEntity.summonerId, updated.summonerId)
         }
     }
 
@@ -305,7 +303,6 @@ abstract class EntitiesRepositoryTestCommon {
                     it.toString(),
                     it.toString(),
                     it,
-                    it.toString(),
                     it
                 )
             }
@@ -339,7 +336,6 @@ abstract class EntitiesRepositoryTestCommon {
                     it.toString(),
                     it.toString(),
                     it,
-                    it.toString(),
                     it
                 )
             }
@@ -374,7 +370,6 @@ abstract class EntitiesRepositoryTestCommon {
                     it.toString(),
                     it.toString(),
                     it,
-                    it.toString(),
                     it
                 )
             }

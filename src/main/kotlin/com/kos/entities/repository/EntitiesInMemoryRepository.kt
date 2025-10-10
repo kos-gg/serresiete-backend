@@ -123,7 +123,6 @@ class EntitiesInMemoryRepository(
                         entity.tag,
                         entity.puuid,
                         entity.summonerIconId,
-                        entity.summonerId,
                         entity.summonerLevel
                     )
                     lolEntities.add(index, c)

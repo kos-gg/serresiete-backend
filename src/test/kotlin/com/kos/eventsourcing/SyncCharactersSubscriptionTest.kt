@@ -100,7 +100,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_CREATED with LOL game`() = runBlocking {
-            Mockito.`when`(riotClient.getLeagueEntriesBySummonerId(EntitiesTestHelper.basicLolEntity.summonerId))
+            Mockito.`when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
 
             val (charactersService, spiedService, dataCacheRepository) = createService()
@@ -160,7 +160,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_EDITED with LOL game`() = runBlocking {
-            Mockito.`when`(riotClient.getLeagueEntriesBySummonerId(EntitiesTestHelper.basicLolEntity.summonerId))
+            Mockito.`when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
             val (charactersService, spiedService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(
@@ -217,7 +217,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_PATCHED with LOL game`() = runBlocking {
-            Mockito.`when`(riotClient.getLeagueEntriesBySummonerId(EntitiesTestHelper.basicLolEntity.summonerId))
+            Mockito.`when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
             val (charactersService, spiedService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(

@@ -225,7 +225,7 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 logger.debug("getItemMedia for $id")
                 val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "static-classic1x"
+                val namespace = "static-classic"
                 val partialURI = URI("/data/wow/media/item/$id?locale=en_US")
                 fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
                     json.decodeFromString<GetWowMediaResponse>(it)
@@ -240,7 +240,7 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 logger.debug("getItem for $id")
                 val tokenResponse = getAndUpdateToken().bind()
                 val partialURI = URI("/data/wow/item/$id?locale=en_US")
-                val namespace = "static-classic1x"
+                val namespace = "static-classic"
                 fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
                     json.decodeFromString<GetWowItemResponse>(it)
                 }.bind()

@@ -150,10 +150,10 @@ data class RiotHTTPClient(val client: HttpClient, val apiKey: String) : RiotClie
         }
     }
 
-    override suspend fun getLeagueEntriesBySummonerId(summonerId: String): Either<HttpError, List<LeagueEntryResponse>> {
+    override suspend fun getLeagueEntriesByPUUID(puuid: String): Either<HttpError, List<LeagueEntryResponse>> {
         return throttleRequest {
-            logger.debug("Getting league entries for $summonerId")
-            val partialURI = URI("/lol/league/v4/entries/by-summoner/$summonerId")
+            logger.debug("Getting league entries for $puuid")
+            val partialURI = URI("/lol/league/v4/entries/by-puuid/$puuid")
             val response = client.get(baseURI("euw1").toString() + partialURI.toString()) {
                 headers {
                     append(HttpHeaders.Accept, "*/*")

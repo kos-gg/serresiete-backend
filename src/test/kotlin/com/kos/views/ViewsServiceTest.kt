@@ -646,8 +646,6 @@ class ViewsServiceTest {
                     val puuid = invocation.getArgument<String>(0)
                     Either.Right(
                         GetSummonerResponse(
-                            UUID.randomUUID().toString(),
-                            UUID.randomUUID().toString(),
                             puuid,
                             10,
                             10L,
@@ -837,8 +835,6 @@ class ViewsServiceTest {
                     val puuid = invocation.getArgument<String>(0)
                     Either.Right(
                         GetSummonerResponse(
-                            UUID.randomUUID().toString(),
-                            UUID.randomUUID().toString(),
                             puuid,
                             10,
                             10L,

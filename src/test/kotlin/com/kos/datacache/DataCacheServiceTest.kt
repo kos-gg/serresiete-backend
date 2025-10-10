@@ -240,7 +240,7 @@ class DataCacheServiceTest {
     @Test
     fun `i can cache lol data`() {
         runBlocking {
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId)).thenReturn(RiotMockHelper.leagueEntries)
+            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
             `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())).thenReturn(
                 RiotMockHelper.matches
             )
@@ -260,7 +260,7 @@ class DataCacheServiceTest {
             val newMatchIds = listOf("match1", "match2", "match3", "match4", "match5")
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
+            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
             `when`(
                 riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
@@ -287,7 +287,7 @@ class DataCacheServiceTest {
         runBlocking {
 
             val jsonParseError = Either.Left(JsonParseError("{}", ""))
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
+            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(jsonParseError)
 
             val repo = DataCacheInMemoryRepository()
@@ -303,7 +303,7 @@ class DataCacheServiceTest {
             val requestedMatchIds = listOf("match3", "match4", "match5", "match6", "match7")
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
+            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
             `when`(
                 riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
@@ -378,7 +378,7 @@ class DataCacheServiceTest {
         runBlocking {
             val requestedMatchIds = listOf("match3", "match4", "match5", "match6", "match7")
 
-            `when`(riotClient.getLeagueEntriesBySummonerId(basicLolEntity.summonerId))
+            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf(flexQEntryResponse)))
             `when`(
                 riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
