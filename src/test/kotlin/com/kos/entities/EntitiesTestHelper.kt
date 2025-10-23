@@ -1,9 +1,9 @@
 package com.kos.entities
 
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.domain.GetAccountResponse
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
+import com.kos.entities.repository.EntitiesState
 
 object EntitiesTestHelper {
     val emptyEntitiesState = EntitiesState(listOf(), listOf(), listOf())

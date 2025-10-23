@@ -1,7 +1,7 @@
 package com.kos.clients.domain
 
-import com.kos.entities.LolEntity
 import com.kos.common.HttpError
+import com.kos.entities.LolEntity
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

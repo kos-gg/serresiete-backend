@@ -1,9 +1,9 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.common.HttpError
 import com.kos.clients.domain.*
+import com.kos.common.HttpError
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
 
 object RiotMockHelper {
     val flexQEntryResponse = LeagueEntryResponse(

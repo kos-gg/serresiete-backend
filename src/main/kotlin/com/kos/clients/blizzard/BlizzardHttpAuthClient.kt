@@ -1,16 +1,15 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
-import com.kos.common.HttpError
-import com.kos.common.JsonParseError
 import com.kos.clients.domain.BlizzardCredentials
 import com.kos.clients.domain.RiotError
 import com.kos.clients.domain.TokenResponse
+import com.kos.common.HttpError
+import com.kos.common.JsonParseError
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
-import io.ktor.client.request.headers
 import io.ktor.http.*
 import io.ktor.util.*
 import kotlinx.serialization.SerializationException

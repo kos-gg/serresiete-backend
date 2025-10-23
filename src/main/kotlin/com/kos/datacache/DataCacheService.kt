@@ -2,7 +2,6 @@ package com.kos.datacache
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
@@ -11,6 +10,7 @@ import com.kos.common.*
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.*
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.Operation
 import com.kos.eventsourcing.events.RequestToBeSynced
@@ -353,18 +353,31 @@ data class DataCacheService(
             val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
                 existentItemsAndItemsToRequest.second.map {
                     either {
-                        Triple(
-                            it,
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
-                                blizzardClient.getItem(wowEntity.region, it.item.id)
-                            }.bind(),
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
-                                blizzardClient.getItemMedia(
-                                    wowEntity.region,
-                                    it.item.id,
+                        val itemId = it.item.id;
+                        val itemResponse = retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
+                            blizzardClient.getItem(wowEntity.region, it.item.id)
+                                .mapLeft { error ->
+                                    logger.error(
+                                        "Failed to get item $itemId for ${wowEntity.name} in region ${wowEntity.realm}-${wowEntity.region}",
+                                        error
+                                    )
+                                    error
+                                }
+                        }.bind()
+
+                        val itemMediaResponse = retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
+                            blizzardClient.getItemMedia(
+                                wowEntity.region, it.item.id,
+                            ).mapLeft { error ->
+                                logger.error(
+                                    "Failed to get item media $itemId for ${wowEntity.name} in region ${wowEntity.realm}-${wowEntity.region}",
+                                    error
                                 )
-                            }.getOrNull()
-                        )
+                                error
+                            }
+                        }.getOrNull()
+
+                        Triple(it, itemResponse, itemMediaResponse)
                     }
                 }.bindAll()
 

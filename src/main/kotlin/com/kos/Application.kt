@@ -6,8 +6,6 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
-import com.kos.entities.EntitiesService
-import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
@@ -23,6 +21,8 @@ import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
+import com.kos.entities.EntitiesService
+import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController

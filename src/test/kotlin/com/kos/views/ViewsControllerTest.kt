@@ -2,14 +2,6 @@ package com.kos.views
 
 import com.kos.activities.Activities
 import com.kos.assertTrue
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.EntitiesTestHelper.basicWowRequest2
-import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.EntitiesTestHelper.lolEntityRequest
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -29,6 +21,14 @@ import com.kos.datacache.RiotMockHelper.riotData
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowRequest2
+import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.EntitiesTestHelper.lolEntityRequest
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role

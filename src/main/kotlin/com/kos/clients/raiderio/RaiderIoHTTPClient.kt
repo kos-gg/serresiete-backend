@@ -1,10 +1,13 @@
 package com.kos.clients.raiderio
 
 import arrow.core.Either
+import com.kos.clients.domain.*
+import com.kos.common.HttpError
+import com.kos.common.JsonParseError
+import com.kos.common.RaiderIoError
+import com.kos.common.WithLogger
 import com.kos.entities.WowEntity
 import com.kos.entities.WowEntityRequest
-import com.kos.clients.domain.*
-import com.kos.common.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

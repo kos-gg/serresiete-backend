@@ -1,10 +1,10 @@
 package com.kos.clients.riot
 
 import arrow.core.Either
+import com.kos.clients.domain.*
 import com.kos.common.HttpError
 import com.kos.common.JsonParseError
 import com.kos.common.WithLogger
-import com.kos.clients.domain.*
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
