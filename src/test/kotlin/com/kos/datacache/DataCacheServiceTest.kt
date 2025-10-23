@@ -1,11 +1,6 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
@@ -20,6 +15,11 @@ import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
 import com.kos.views.ViewEntity

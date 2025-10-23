@@ -1,7 +1,6 @@
 package com.kos.views.repository
 
 import com.kos.common.WithState
-import com.kos.entities.EntityWithAlias
 import com.kos.views.*
 
 data class ViewsState(

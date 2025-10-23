@@ -3,12 +3,12 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import com.kos.entities.CreateEntityRequest
-import com.kos.entities.EntitiesService
 import com.kos.clients.domain.Data
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
+import com.kos.entities.CreateEntityRequest
+import com.kos.entities.EntitiesService
 import com.kos.entities.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore

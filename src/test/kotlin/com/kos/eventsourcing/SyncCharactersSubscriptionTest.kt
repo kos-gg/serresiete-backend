@@ -1,11 +1,6 @@
 package com.kos.eventsourcing
 
 import arrow.core.Either
-import com.kos.entities.Entity
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
@@ -18,6 +13,11 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper
+import com.kos.entities.Entity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.EventSubscription

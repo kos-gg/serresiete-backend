@@ -7,8 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
-import java.sql.SQLException
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.sql.SQLException
 import java.time.OffsetDateTime
 
 class AuthDatabaseRepository(private val db: Database) : AuthRepository {
