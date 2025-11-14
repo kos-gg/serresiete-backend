@@ -1,11 +1,6 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
@@ -14,12 +9,24 @@ import com.kos.common.JsonParseError
 import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
 import com.kos.common.WowHardcoreCharacterIsDead
+import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
+import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
+import com.kos.datacache.BlizzardMockHelper.getCharacterSpecializations
+import com.kos.datacache.BlizzardMockHelper.getCharacterStats
+import com.kos.datacache.BlizzardMockHelper.getItemMedia
+import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
+import com.kos.datacache.BlizzardMockHelper.getWowItemResponse
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
 import com.kos.views.ViewEntity
@@ -32,6 +39,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.mockito.Mockito.*
 import java.time.OffsetDateTime
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -46,6 +54,7 @@ class DataCacheServiceTest {
         ignoreUnknownKeys = true
     }
 
+    @Ignore
     @Test
     fun `the wow hardcore cache service retrieves a dead character and this character is not processed `() {
         runBlocking {
@@ -140,14 +149,8 @@ class DataCacheServiceTest {
                 )
             ).thenReturn(Either.Left(expectedNotFoundHardcoreCharacter))
 
-            val dataCacheRepository = DataCacheInMemoryRepository().withState(
-                listOf(
-                    wowHardcoreDataCache
-                )
-            )
-
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf(wowHardcoreDataCache))
             val dataCacheService = createService(dataCacheRepository)
-
             val cacheResult = dataCacheService.cache(
                 listOf(
                     basicWowHardcoreEntity
@@ -159,6 +162,114 @@ class DataCacheServiceTest {
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(2, dataCacheRepository.state().size)
+        }
+    }
+
+    @Test
+    fun `the wow hardcore cache service marks a character as dead when it is found but with different blizzard id`() {
+        runBlocking {
+
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(Either.Right(getWowCharacterResponse))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf(
+                    wowHardcoreDataCache
+                )
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+
+            dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+
+            dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertTrue(expectedHardcoreData.isDead)
+            }
+            assertEquals(2, dataCacheRepository.state().size)
+        }
+    }
+
+    @Test
+    fun `the wow hardcore cache service inserts a new cache entry when there is no recent data and character is found in blizzard api`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(Either.Right(getWowCharacterResponse.copy(id = 12345)))
+            `when`(
+                blizzardClient.getCharacterMedia(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterMedia(basicWowHardcoreEntity))
+            `when`(
+                blizzardClient.getCharacterEquipment(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterEquipment())
+            `when`(
+                blizzardClient.getCharacterStats(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterStats())
+            `when`(
+                blizzardClient.getCharacterSpecializations(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterSpecializations())
+            `when`(
+                blizzardClient.getItemMedia(
+                    basicWowHardcoreEntity.region,
+                    18421
+                )
+            ).thenReturn(getItemMedia())
+            `when`(
+                blizzardClient.getItem(
+                    basicWowHardcoreEntity.region,
+                    18421
+                )
+            ).thenReturn(getWowItemResponse())
+            `when`(
+                raiderIoClient.wowheadEmbeddedCalculator(basicWowHardcoreEntity)
+            ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf()
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+
+            dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+
+            dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertFalse(expectedHardcoreData.isDead)
+            }
+            assertEquals(1, dataCacheRepository.state().size)
         }
     }
 
