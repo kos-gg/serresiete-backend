@@ -8,7 +8,6 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
 import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
-import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
 import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
 import com.kos.datacache.BlizzardMockHelper.getCharacterSpecializations
@@ -39,7 +38,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.mockito.Mockito.*
 import java.time.OffsetDateTime
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -54,7 +52,6 @@ class DataCacheServiceTest {
         ignoreUnknownKeys = true
     }
 
-    @Ignore
     @Test
     fun `the wow hardcore cache service retrieves a dead character and this character is not processed `() {
         runBlocking {
@@ -70,12 +67,17 @@ class DataCacheServiceTest {
             )
 
             val dataCacheService = createService(dataCacheRepository)
-            val cacheResult = dataCacheService.cache(
+            dataCacheService.cache(
                 listOf(
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult[0] is WowHardcoreCharacterIsDead)
+
+            dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertTrue(expectedHardcoreData.isDead)
+            }
+            assertEquals(1, dataCacheRepository.state().size)
         }
     }
 

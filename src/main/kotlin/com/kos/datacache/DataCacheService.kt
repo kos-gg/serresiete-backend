@@ -272,8 +272,8 @@ data class DataCacheService(
                                         null
                                     }
                                 }
-
-                            syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
+                            if (newestDataCacheEntry?.isDead != true)
+                                syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
                         }
                     }
                 }.awaitAll().split()
