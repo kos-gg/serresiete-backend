@@ -348,6 +348,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -392,6 +393,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -437,6 +439,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -474,6 +477,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
