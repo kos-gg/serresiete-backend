@@ -30,35 +30,46 @@ data class TokenResponse(
 object NameExtractorSerializer : SingleFieldSerializer<String>(
     fieldName = "name",
     extractValue = { it.requireString("name") },
-    encodeValue = { encoder, value -> encoder.encodeString(value) }
+    encodeValue = { builder, value -> builder.put("name", value) }
 )
 
 object EffectiveExtractorSerializer : SingleFieldSerializer<Int>(
     fieldName = "effective",
     extractValue = { it.requireInt("effective") },
-    encodeValue = { encoder, value -> encoder.encodeInt(value) }
+    encodeValue = { builder, value -> builder.put("effective", value) }
 )
 
 object ValueExtractorSerializer : SingleFieldSerializer<Double>(
     fieldName = "value",
     extractValue = { it.requireDouble("value") },
-    encodeValue = { encoder, value -> encoder.encodeDouble(value) }
+    encodeValue = { builder, value -> builder.put("value", value) }
 )
 
 object NestedDisplayableStringExtractorSerializer : SingleFieldSerializer<String>(
     fieldName = "display.display_string",
     extractValue = { it.requireNestedString("display", "display_string") },
-    encodeValue = { encoder, value -> encoder.encodeString(value) }
+    encodeValue = { builder, value ->
+        builder.putJsonObject("display") {
+            put("display_string", value)
+        }
+    }
 )
 
 object DisplayableStringExtractorSerializer : SingleFieldSerializer<String>(
     fieldName = "display_string",
     extractValue = { it.requireString("display_string") },
-    encodeValue = { encoder, value -> encoder.encodeString(value) }
+    encodeValue = { builder, value -> builder.put("display_string", value) }
 )
 
+object DescriptionStringExtractorSerializer : SingleFieldSerializer<String>(
+    fieldName = "description",
+    extractValue = { it.requireString("description") },
+    encodeValue = { builder, value -> builder.put("description", value) }
+)
+
+
 object DescriptionListSerializer : ListFieldSerializer<String>(
-    elementSerializer = DisplayableStringExtractorSerializer,
+    elementSerializer = DescriptionStringExtractorSerializer,
     extractElement = { it.requireString("description") }
 )
 

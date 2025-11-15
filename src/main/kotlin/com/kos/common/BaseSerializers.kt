@@ -1,7 +1,7 @@
 package com.kos.common
 
-import arrow.core.Option
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -13,8 +13,9 @@ import kotlinx.serialization.json.*
 open class SingleFieldSerializer<T>(
     private val fieldName: String,
     private val extractValue: (JsonObject) -> T,
-    private val encodeValue: (JsonEncoder, T) -> Unit
+    private val encodeValue: (JsonObjectBuilder, T) -> Unit
 ) : KSerializer<T> {
+
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("SingleFieldSerializer", PrimitiveKind.STRING)
 
@@ -26,9 +27,11 @@ open class SingleFieldSerializer<T>(
 
     override fun serialize(encoder: Encoder, value: T) {
         require(encoder is JsonEncoder)
-        encodeValue(encoder, value)
+        val obj = buildJsonObject {
+            encodeValue(this, value)
+        }
+        encoder.encodeJsonElement(obj)
     }
-
 }
 
 open class ListFieldSerializer<T>(
@@ -46,6 +49,12 @@ open class ListFieldSerializer<T>(
 
     override fun serialize(encoder: Encoder, value: List<T>) {
         require(encoder is JsonEncoder)
-        encoder.encodeSerializableValue(ListSerializer(elementSerializer), value)
+        val jsonArray = buildJsonArray {
+            value.forEach { element ->
+                val jsonElement = encoder.json.encodeToJsonElement(elementSerializer, element)
+                add(jsonElement) // now each element is encoded as a proper JsonElement
+            }
+        }
+        encoder.encodeJsonElement(jsonArray)
     }
 }

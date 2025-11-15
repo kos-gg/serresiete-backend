@@ -1,5 +1,11 @@
-package com.kos.clients.domain
+package com.kos.scripts
 
+import com.kos.clients.domain.AssetKeyValue
+import com.kos.clients.domain.GetWowItemResponse
+import com.kos.clients.domain.GetWowMediaResponse
+import com.kos.clients.domain.WowPreviewItem
+import com.kos.clients.domain.WowPriceResponse
+import com.kos.clients.domain.WowWeaponStatsResponse
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
@@ -20,7 +26,6 @@ data class StaticWowItem(
 ) {
     fun toBlizzard(): GetWowItemResponse {
 
-        // ---- extract fields from tooltip ----
         val armor = tooltip.firstOrNull { it.label.endsWith("Armor") }?.label
 
         val stats = tooltip
@@ -39,7 +44,6 @@ data class StaticWowItem(
             .firstOrNull { it.label.startsWith("Durability") }
             ?.label
 
-        // ---- weapon specific fields ----
         val damage = tooltip.firstOrNull { it.label.contains("Damage") && !it.label.contains("per second") }?.label
         val dps = tooltip.firstOrNull { it.label.contains("per second") }?.label
         val speed = tooltip.firstOrNull { it.label.startsWith("Speed") }?.label
@@ -52,7 +56,6 @@ data class StaticWowItem(
             )
         } else null
 
-        // ---- sell price ----
         val gold = sellPrice?.div(10000)
         val silver = (sellPrice?.rem(10000))?.div(100)
         val copper = sellPrice?.rem(100)
@@ -78,7 +81,6 @@ data class StaticWowItem(
             weapon = weapon
         )
 
-        // ---- final result ----
         return GetWowItemResponse(
             id = itemId,
             name = name,

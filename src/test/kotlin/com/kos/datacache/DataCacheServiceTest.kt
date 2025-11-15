@@ -7,6 +7,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -40,6 +41,7 @@ class DataCacheServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
+    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
     private val json = Json {
@@ -113,6 +115,7 @@ class DataCacheServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventsStore
             )
@@ -480,6 +483,7 @@ class DataCacheServiceTest {
             raiderIoClient,
             riotClient,
             blizzardClient,
+            blizzardDatabaseClient,
             retryConfig,
             eventsStore
         )

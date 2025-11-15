@@ -6,11 +6,11 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
-import com.kos.clients.blizzard.StaticHttpItemClient
 import com.kos.clients.domain.BlizzardCredentials
 import com.kos.clients.raiderio.RaiderIoHTTPClient
 import com.kos.clients.riot.RiotHTTPClient
@@ -79,7 +79,7 @@ fun Application.module() {
     val riotHTTPClient = RiotHTTPClient(client, riotApiKey)
     val blizzardAuthClient = BlizzardHttpAuthClient(client, blizzardCredentials)
     val blizzardClient = BlizzardHttpClient(client, blizzardAuthClient)
-    val staticBlizzardHttpClient = StaticHttpItemClient(client)
+    val blizzardDatabaseClient = BlizzardDatabaseClient(db)
 
     val eventStore = EventStoreDatabase(db)
 
@@ -112,7 +112,7 @@ fun Application.module() {
             raiderIoHTTPClient,
             riotHTTPClient,
             blizzardClient,
-            staticBlizzardHttpClient,
+            blizzardDatabaseClient,
             dataCacheRetryConfig,
             eventStore
         )

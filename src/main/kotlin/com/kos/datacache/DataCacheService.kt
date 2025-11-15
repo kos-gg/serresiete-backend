@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.StaticHttpItemClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -42,7 +42,7 @@ data class DataCacheService(
     private val raiderIoClient: RaiderIoClient,
     private val riotClient: RiotClient,
     private val blizzardClient: BlizzardClient,
-    private val staticBlizzardClient: StaticHttpItemClient,
+    private val blizzardDatabaseClient: BlizzardDatabaseClient,
     private val retryConfig: RetryConfig,
     private val eventStore: EventStore
 ) : WithLogger("DataCacheService") {
@@ -361,7 +361,7 @@ data class DataCacheService(
 
                             blizzardClient.getItem(wowEntity.region, x.item.id).fold(
                                 ifLeft = {
-                                    staticBlizzardClient.fetchStaticItemStreaming(x.item.id).map { it.toBlizzard() }
+                                    blizzardDatabaseClient.getItem(wowEntity.region, x.item.id)
                                 },
                                 ifRight = { Either.Right(it) }
                             ).bind(),
@@ -369,7 +369,7 @@ data class DataCacheService(
                                 wowEntity.region,
                                 x.item.id,
                             ).fold(ifLeft = {
-                                staticBlizzardClient.fetchStaticItemStreaming(x.item.id).map { it.toBlizzardMedia() }
+                                blizzardDatabaseClient.getItemMedia(wowEntity.region, x.item.id)
                             }, ifRight = { Either.Right(it) }).getOrNull()
                         )
                     }
