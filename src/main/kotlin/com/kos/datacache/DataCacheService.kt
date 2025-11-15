@@ -361,7 +361,7 @@ data class DataCacheService(
 
                             blizzardClient.getItem(wowEntity.region, x.item.id).fold(
                                 ifLeft = {
-                                    blizzardDatabaseClient.getItem(wowEntity.region, x.item.id)
+                                    blizzardDatabaseClient.getItem(x.item.id)
                                 },
                                 ifRight = { Either.Right(it) }
                             ).bind(),
@@ -369,7 +369,7 @@ data class DataCacheService(
                                 wowEntity.region,
                                 x.item.id,
                             ).fold(ifLeft = {
-                                blizzardDatabaseClient.getItemMedia(wowEntity.region, x.item.id)
+                                blizzardDatabaseClient.getItemMedia(x.item.id)
                             }, ifRight = { Either.Right(it) }).getOrNull()
                         )
                     }
