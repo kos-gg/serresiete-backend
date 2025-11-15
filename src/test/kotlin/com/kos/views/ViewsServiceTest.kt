@@ -9,6 +9,7 @@ import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
@@ -65,6 +66,7 @@ class ViewsServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
+    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
     private val aggregateRoot = "/credentials/owner"
@@ -964,6 +966,7 @@ class ViewsServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )

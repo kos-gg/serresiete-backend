@@ -3,6 +3,7 @@ package com.kos.datacache
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -41,6 +42,7 @@ data class DataCacheService(
     private val raiderIoClient: RaiderIoClient,
     private val riotClient: RiotClient,
     private val blizzardClient: BlizzardClient,
+    private val blizzardDatabaseClient: BlizzardDatabaseClient,
     private val retryConfig: RetryConfig,
     private val eventStore: EventStore
 ) : WithLogger("DataCacheService") {
@@ -334,23 +336,28 @@ data class DataCacheService(
                                 }
                             }).split()
 
-                    val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
-                        existentItemsAndItemsToRequest.second.map {
-                            either {
-                                Triple(
-                                    it,
-                                    retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
-                                        blizzardClient.getItem(wowEntity.region, it.item.id)
-                                    }.bind(),
-                                    retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
-                                        blizzardClient.getItemMedia(
-                                            wowEntity.region,
-                                            it.item.id,
-                                        )
-                                    }.getOrNull()
-                                )
-                            }
-                        }.bindAll()
+            //TODO: BRING BACK RETRY WHEN IT PERFORMS BETTER.
+            val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
+                existentItemsAndItemsToRequest.second.map { x ->
+                    either {
+                        Triple(
+                            x,
+
+                            blizzardClient.getItem(wowEntity.region, x.item.id).fold(
+                                ifLeft = {
+                                    blizzardDatabaseClient.getItem(x.item.id)
+                                },
+                                ifRight = { Either.Right(it) }
+                            ).bind(),
+                            blizzardClient.getItemMedia(
+                                wowEntity.region,
+                                x.item.id,
+                            ).fold(ifLeft = {
+                                blizzardDatabaseClient.getItemMedia(x.item.id)
+                            }, ifRight = { Either.Right(it) }).getOrNull()
+                        )
+                    }
+                }.bindAll()
 
                     val stats: GetWowCharacterStatsResponse =
                         retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {

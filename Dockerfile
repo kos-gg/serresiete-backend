@@ -5,7 +5,7 @@ WORKDIR /home/gradle/src
 RUN gradle shadowJar --no-daemon
 
 # Final image stage
-FROM openjdk:17
+FROM openjdk:17.0.2-jdk-slim-bullseye
 EXPOSE 8080
 RUN mkdir /app
 COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/

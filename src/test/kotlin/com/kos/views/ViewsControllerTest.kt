@@ -11,6 +11,7 @@ import com.kos.entities.EntitiesTestHelper.lolEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.*
@@ -52,6 +53,7 @@ class ViewsControllerTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
+    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
     private val viewsRepository = ViewsInMemoryRepository()
     private val entitiesRepository = EntitiesInMemoryRepository()
@@ -72,7 +74,7 @@ class ViewsControllerTest {
         val credentialsRepositoryWithState = credentialsRepository.withState(credentialsState)
 
         val dataCacheService =
-            DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, retryConfig, eventStore)
+            DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient,retryConfig, eventStore)
         val entitiesService =
             EntitiesService(charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)

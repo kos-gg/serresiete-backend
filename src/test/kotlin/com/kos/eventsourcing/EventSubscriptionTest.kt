@@ -9,6 +9,7 @@ import com.kos.entities.WowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.NotFound
@@ -37,6 +38,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -47,6 +49,7 @@ class EventSubscriptionTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val riotClient = Mockito.mock(RiotClient::class.java)
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
 
     @Nested
     inner class BehaviorOfProcessPendingEvents {
@@ -441,7 +444,7 @@ class EventSubscriptionTest {
             val credentialsService = CredentialsService(credentialsRepository)
             val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
             val dataCacheService =
-                DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig, eventStore)
+                DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient, retryConfig, eventStore)
             val service =
                 ViewsService(
                     viewsRepository,

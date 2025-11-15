@@ -7,6 +7,7 @@ import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient
@@ -29,6 +30,7 @@ import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -38,6 +40,7 @@ class SyncCharactersSubscriptionTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val riotClient = Mockito.mock(RiotClient::class.java)
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
 
     private suspend fun createService(): Triple<EntitiesService, DataCacheService, DataCacheRepository> {
         val charactersRepository = EntitiesInMemoryRepository().withState(
@@ -52,7 +55,7 @@ class SyncCharactersSubscriptionTest {
         val entitiesService =
             EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
         val dataCacheService =
-            DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, retryConfig, eventStore)
+            DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient, retryConfig, eventStore)
         return Triple(entitiesService, spyk(dataCacheService), dataCacheRepository)
     }
 

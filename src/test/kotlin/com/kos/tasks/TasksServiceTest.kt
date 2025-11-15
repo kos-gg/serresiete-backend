@@ -5,6 +5,7 @@ import com.kos.auth.AuthService
 import com.kos.auth.AuthTestHelper.basicAuthorization
 import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.QueueType
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -31,6 +32,7 @@ import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.time.OffsetDateTime
 import java.util.*
@@ -41,6 +43,7 @@ class TasksServiceTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val riotClient = Mockito.mock(RiotClient::class.java)
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
     @Test
@@ -55,6 +58,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -104,6 +108,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -152,6 +157,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -199,6 +205,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -252,6 +259,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -297,6 +305,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -339,6 +348,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -383,6 +393,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -428,6 +439,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
@@ -465,6 +477,7 @@ class TasksServiceTest {
                 raiderIoClient,
                 riotClient,
                 blizzardClient,
+                blizzardDatabaseClient,
                 retryConfig,
                 eventStore
             )
