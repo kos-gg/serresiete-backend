@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.StaticHttpItemClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -41,6 +42,7 @@ data class DataCacheService(
     private val raiderIoClient: RaiderIoClient,
     private val riotClient: RiotClient,
     private val blizzardClient: BlizzardClient,
+    private val staticBlizzardClient: StaticHttpItemClient,
     private val retryConfig: RetryConfig,
     private val eventStore: EventStore
 ) : WithLogger("DataCacheService") {
@@ -350,20 +352,25 @@ data class DataCacheService(
                         }
                     }).split()
 
+            //TODO: BRING BACK RETRY WHEN IT PERFORMS BETTER.
             val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
-                existentItemsAndItemsToRequest.second.map {
+                existentItemsAndItemsToRequest.second.map { x ->
                     either {
                         Triple(
-                            it,
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItem") {
-                                blizzardClient.getItem(wowEntity.region, it.item.id)
-                            }.bind(),
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetItemMedia") {
-                                blizzardClient.getItemMedia(
-                                    wowEntity.region,
-                                    it.item.id,
-                                )
-                            }.getOrNull()
+                            x,
+
+                            blizzardClient.getItem(wowEntity.region, x.item.id).fold(
+                                ifLeft = {
+                                    staticBlizzardClient.fetchStaticItemStreaming(x.item.id).map { it.toBlizzard() }
+                                },
+                                ifRight = { Either.Right(it) }
+                            ).bind(),
+                            blizzardClient.getItemMedia(
+                                wowEntity.region,
+                                x.item.id,
+                            ).fold(ifLeft = {
+                                staticBlizzardClient.fetchStaticItemStreaming(x.item.id).map { it.toBlizzardMedia() }
+                            }, ifRight = { Either.Right(it) }).getOrNull()
                         )
                     }
                 }.bindAll()

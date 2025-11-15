@@ -1,5 +1,6 @@
 package com.kos.common
 
+import arrow.core.Option
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -27,6 +28,7 @@ open class SingleFieldSerializer<T>(
         require(encoder is JsonEncoder)
         encodeValue(encoder, value)
     }
+
 }
 
 open class ListFieldSerializer<T>(

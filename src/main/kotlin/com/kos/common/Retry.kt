@@ -34,11 +34,11 @@ object Retry : WithLogger("retry") {
             is Either.Left ->
                 if (retries > 0) {
                     logger.info("Retries left $retries for $functionName")
-                    logger.error("Last error: ${res.value}")
+                    logger.debug("Last error: ${res.value}")
                     delay(delayTime)
                     _retryEitherWithFixedDelay(retries - 1, delayTime, functionName, block)
                 } else {
-                    logger.error("Failed retrying with $res")
+                    logger.debug("Failed retrying with $res")
                     res
                 }
         }
@@ -58,7 +58,7 @@ object Retry : WithLogger("retry") {
                     delay(initialDelayMillis)
                     val nextDelay = (initialDelayMillis * factor).coerceAtMost(maxDelayMillis.toDouble()).toLong()
                     logger.info("Retries left $maxAttempts, next delay: $nextDelay")
-                    logger.error("Last error: ${res.value}")
+                    logger.debug("Last error: ${res.value}")
                     _retryEitherWithExponentialBackoff(
                         maxAttempts - 1,
                         nextDelay,
