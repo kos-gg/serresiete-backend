@@ -9,6 +9,7 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
 import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
+import com.kos.common.UnableToSyncEntityError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
 import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
 import com.kos.datacache.BlizzardMockHelper.getCharacterSpecializations
@@ -136,7 +137,7 @@ class DataCacheServiceTest {
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult.contains(JsonParseError("", "")))
+            cacheResult.any { it is UnableToSyncEntityError }
             assertNull(entitiesRepository.get(1, Game.WOW_HC))
         }
     }

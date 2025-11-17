@@ -1,6 +1,7 @@
 package com.kos.common
 
 import com.kos.entities.WowEntityRequest
+import com.kos.views.Game
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
@@ -27,6 +28,10 @@ class InvalidGameType(val type: String) : IllegalArgumentException("Invalid game
 
 interface HttpError : ControllerError {
     fun error(): String
+}
+
+class UnableToSyncEntityError(private val entityId: Long, private val game: Game) : HttpError {
+    override fun error(): String = "Entity with id [$entityId] from game [$game] could not be synced"
 }
 
 class WowHardcoreCharacterIsDead(private val character: String, private val characterId: Long) : HttpError {

@@ -422,8 +422,8 @@ data class DataCacheService(
         return newestCharacterDataCacheEntry.fold(
             {
                 entitiesRepository.delete(wowEntity.id)
-                //TODO: New exception to handle this scenario
-                Either.Left(JsonParseError("", ""))
+                //TODO: New exception to handle this scenario (this one is placeholder for the moment)
+                Either.Left(UnableToSyncEntityError(wowEntity.id, Game.WOW_HC))
             },
             {
                 Either.Right(markWowHardcoreCharacterAsDead(wowEntity, it))
