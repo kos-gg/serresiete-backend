@@ -122,6 +122,7 @@ data class TasksService(
                 )
             )
         } else {
+            //TODO: depending on the error, decide what to do with the task (not a true error, etc)
             tasksRepository.insertTask(
                 Task(
                     id,

@@ -85,7 +85,7 @@ class DataCacheServiceTest {
 
 
     @Test
-    fun `the wow hardcore cache service deletes the wow hardcore character if not found in the datacache repository `() {
+    fun `the wow hardcore cache service deletes the wow hardcore entity if not found neither in api or data cache repository`() {
         runBlocking {
             val expectedNotFoundHardcoreCharacter = NotFoundHardcoreCharacter(basicWowHardcoreEntity.name)
 
@@ -136,7 +136,7 @@ class DataCacheServiceTest {
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
+            assertTrue(cacheResult.contains(JsonParseError("", "")))
             assertNull(entitiesRepository.get(1, Game.WOW_HC))
         }
     }
@@ -156,13 +156,12 @@ class DataCacheServiceTest {
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf(wowHardcoreDataCache))
             val dataCacheService = createService(dataCacheRepository)
-            val cacheResult = dataCacheService.cache(
+            dataCacheService.cache(
                 listOf(
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
-            dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
+            dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
                 val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }

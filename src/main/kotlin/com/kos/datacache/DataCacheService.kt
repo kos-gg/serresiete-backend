@@ -257,7 +257,7 @@ data class DataCacheService(
 
     private suspend fun cacheWowHardcoreEntities(wowEntities: List<WowEntity>): List<HttpError> =
         coroutineScope {
-            val errorsAndData =
+            val errorsAndData: Pair<List<HttpError>, List<Pair<Long, HardcoreData>>> =
                 wowEntities.map { wowEntity ->
                     async {
                         either {
@@ -274,11 +274,25 @@ data class DataCacheService(
                                         null
                                     }
                                 }
-                            if (newestDataCacheEntry?.isDead != true)
+                            if (newestDataCacheEntry?.isDead != true) {
                                 syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
+                            } else {
+                                raise(WowHardcoreCharacterIsDead(wowEntity.name, wowEntity.id))
+                            }
                         }
                     }
                 }.awaitAll().split()
+
+            val data = errorsAndData.second.map {
+                DataCache(
+                    it.first,
+                    json.encodeToString<Data>(it.second),
+                    OffsetDateTime.now(),
+                    Game.WOW_HC
+                )
+            }
+
+            dataCacheRepository.insert(data)
 
             errorsAndData.first
         }
@@ -286,7 +300,7 @@ data class DataCacheService(
     private suspend fun syncWowHardcoreEntity(
         wowEntity: WowEntity,
         newestDataCacheEntry: HardcoreData?
-    ): Either<HttpError, Unit> {
+    ): Either<HttpError, Pair<Long, HardcoreData>> {
         return either {
             retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
                 blizzardClient.getCharacterProfile(
@@ -294,148 +308,134 @@ data class DataCacheService(
                     wowEntity.realm,
                     wowEntity.name
                 )
-            }.onLeft { error ->
-                when (error) {
-                    is NotFoundHardcoreCharacter -> {
-                        handleNotFoundHardcoreCharacter(newestDataCacheEntry, wowEntity)
-                    }
-                }
-            }.onRight { response ->
-                if (newestDataCacheEntry != null && wowEntity.blizzardId != response.id) {
-                    markWowHardcoreCharacterAsDead(wowEntity, newestDataCacheEntry)
-                } else {
-                    val mediaResponse =
-                        retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
-                            blizzardClient.getCharacterMedia(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
-                            )
-                        }.bind()
+            }.fold(
+                ifLeft = { error ->
+                    when (error) {
+                        is NotFoundHardcoreCharacter -> {
+                            handleNotFoundHardcoreCharacter(newestDataCacheEntry, wowEntity)
+                        }
 
-                    val equipmentResponse =
-                        retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
-                            blizzardClient.getCharacterEquipment(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
-                            )
-                        }.bind()
+                        else -> Either.Left(error)
+                    }.bind()
+                },
+                ifRight = { response ->
+                    if (newestDataCacheEntry != null && wowEntity.blizzardId != response.id) {
+                        markWowHardcoreCharacterAsDead(wowEntity, newestDataCacheEntry)
+                    } else {
+                        val mediaResponse =
+                            retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
+                                blizzardClient.getCharacterMedia(
+                                    wowEntity.region,
+                                    wowEntity.realm,
+                                    wowEntity.name
+                                )
+                            }.bind()
 
-                    val existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>> =
-                        newestDataCacheEntry._fold(
-                            left = { equipmentResponse.equippedItems.map { Either.Right(it) } },
-                            right = { record ->
-                                equipmentResponse.equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemResponse>>()) { acc, itemResponse ->
-                                    when (val maybeItem =
-                                        record.items.find { itemResponse.item.id == it.id }) {
-                                        null -> acc + Either.Right(itemResponse)
-                                        else -> acc + Either.Left(maybeItem)
+                        val equipmentResponse =
+                            retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
+                                blizzardClient.getCharacterEquipment(
+                                    wowEntity.region,
+                                    wowEntity.realm,
+                                    wowEntity.name
+                                )
+                            }.bind()
+
+                        val existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>> =
+                            newestDataCacheEntry._fold(
+                                left = { equipmentResponse.equippedItems.map { Either.Right(it) } },
+                                right = { record ->
+                                    equipmentResponse.equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemResponse>>()) { acc, itemResponse ->
+                                        when (val maybeItem =
+                                            record.items.find { itemResponse.item.id == it.id }) {
+                                            null -> acc + Either.Right(itemResponse)
+                                            else -> acc + Either.Left(maybeItem)
+                                        }
+
                                     }
+                                }).split()
 
+                        //TODO: BRING BACK RETRY WHEN IT PERFORMS BETTER.
+                        val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
+                            existentItemsAndItemsToRequest.second.map { x ->
+                                either {
+                                    Triple(
+                                        x,
+
+                                        blizzardClient.getItem(wowEntity.region, x.item.id).fold(
+                                            ifLeft = {
+                                                blizzardDatabaseClient.getItem(x.item.id)
+                                            },
+                                            ifRight = { Either.Right(it) }
+                                        ).bind(),
+                                        blizzardClient.getItemMedia(
+                                            wowEntity.region,
+                                            x.item.id,
+                                        ).fold(ifLeft = {
+                                            blizzardDatabaseClient.getItemMedia(x.item.id)
+                                        }, ifRight = { Either.Right(it) }).getOrNull()
+                                    )
                                 }
-                            }).split()
+                            }.bindAll()
 
-            //TODO: BRING BACK RETRY WHEN IT PERFORMS BETTER.
-            val newItemsWithIcons: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>> =
-                existentItemsAndItemsToRequest.second.map { x ->
-                    either {
-                        Triple(
-                            x,
+                        val stats: GetWowCharacterStatsResponse =
+                            retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
+                                blizzardClient.getCharacterStats(
+                                    wowEntity.region,
+                                    wowEntity.realm,
+                                    wowEntity.name
+                                )
+                            }.bind()
 
-                            blizzardClient.getItem(wowEntity.region, x.item.id).fold(
-                                ifLeft = {
-                                    blizzardDatabaseClient.getItem(x.item.id)
-                                },
-                                ifRight = { Either.Right(it) }
-                            ).bind(),
-                            blizzardClient.getItemMedia(
-                                wowEntity.region,
-                                x.item.id,
-                            ).fold(ifLeft = {
-                                blizzardDatabaseClient.getItemMedia(x.item.id)
-                            }, ifRight = { Either.Right(it) }).getOrNull()
+                        val specializations: GetWowSpecializationsResponse =
+                            retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
+                                blizzardClient.getCharacterSpecializations(
+                                    wowEntity.region,
+                                    wowEntity.realm,
+                                    wowEntity.name
+                                )
+                            }.bind()
+
+                        val wowHeadEmbeddedResponse: RaiderioWowHeadEmbeddedResponse? =
+                            retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
+                                raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
+                            }.getOrNull()
+
+                        wowEntity.id to HardcoreData.apply(
+                            wowEntity.region,
+                            response,
+                            mediaResponse,
+                            existentItemsAndItemsToRequest.first,
+                            newItemsWithIcons,
+                            stats,
+                            specializations,
+                            wowHeadEmbeddedResponse
                         )
                     }
-                }.bindAll()
-
-                    val stats: GetWowCharacterStatsResponse =
-                        retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
-                            blizzardClient.getCharacterStats(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
-                            )
-                        }.bind()
-
-                    val specializations: GetWowSpecializationsResponse =
-                        retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
-                            blizzardClient.getCharacterSpecializations(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
-                            )
-                        }.bind()
-
-                    val wowHeadEmbeddedResponse: RaiderioWowHeadEmbeddedResponse? =
-                        retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
-                            raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
-                        }.getOrNull()
-
-                    val newCacheEntry = wowEntity.id to HardcoreData.apply(
-                        wowEntity.region,
-                        response,
-                        mediaResponse,
-                        existentItemsAndItemsToRequest.first,
-                        newItemsWithIcons,
-                        stats,
-                        specializations,
-                        wowHeadEmbeddedResponse
-                    )
-
-                    dataCacheRepository.insert(
-                        listOf(
-                            DataCache(
-                                newCacheEntry.first,
-                                json.encodeToString<Data>(newCacheEntry.second),
-                                OffsetDateTime.now(),
-                                Game.WOW_HC
-                            )
-                        )
-                    )
-                }
-            }.bind()
+                })
         }
     }
 
     private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: HardcoreData?,
         wowEntity: WowEntity
-    ) {
-        newestCharacterDataCacheEntry.fold(
+    ): Either<HttpError, Pair<Long, HardcoreData>> {
+        return newestCharacterDataCacheEntry.fold(
             {
                 entitiesRepository.delete(wowEntity.id)
+                //TODO: New exception to handle this scenario
+                Either.Left(JsonParseError("", ""))
             },
             {
-                markWowHardcoreCharacterAsDead(wowEntity, it)
+                Either.Right(markWowHardcoreCharacterAsDead(wowEntity, it))
             })
     }
 
-    private suspend fun markWowHardcoreCharacterAsDead(
+    private fun markWowHardcoreCharacterAsDead(
         wowEntity: WowEntity,
         newestCharacterDataCacheEntry: HardcoreData
-    ) =
-        dataCacheRepository.insert(
-            listOf(
-                DataCache(
-                    wowEntity.id,
-                    json.encodeToString<Data>(newestCharacterDataCacheEntry.copy(isDead = true)),
-                    OffsetDateTime.now(),
-                    Game.WOW_HC
-                )
-            )
-        )
-
+    ): Pair<Long, HardcoreData> {
+        return wowEntity.id to newestCharacterDataCacheEntry.copy(isDead = true)
+    }
 
     suspend fun clearExpired(game: Game?, keepLastRecord: Boolean): Int =
         dataCacheRepository.deleteExpiredRecord(ttl, game, keepLastRecord)
