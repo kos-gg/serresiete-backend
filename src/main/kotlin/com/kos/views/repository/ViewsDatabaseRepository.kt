@@ -5,11 +5,26 @@ import com.kos.common.getOrThrow
 import com.kos.entities.repository.EntitiesDatabaseRepository.Entities
 import com.kos.views.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
+
+    private val json = Json {
+        serializersModule = SerializersModule {
+            polymorphic(ViewExtraArguments::class) {
+                subclass(WowHardcoreExtraArguments::class, WowHardcoreExtraArguments.serializer())
+                subclass(WowExtraArguments::class, WowExtraArguments.serializer())
+            }
+        }
+        ignoreUnknownKeys = true
+        encodeDefaults = false
+    }
 
     override suspend fun withState(initialState: ViewsState): ViewsDatabaseRepository {
         newSuspendedTransaction(Dispatchers.IO, db) {
@@ -37,6 +52,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         val published = bool("published")
         val game = text("game")
         val featured = bool("featured")
+        val extraArguments = text("extra_arguments").nullable()
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -50,7 +66,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             ViewEntities.selectAll().where { ViewEntities.viewId.eq(row[Views.id]) }
                 .map { resultRowToViewEntity(it).entityId },
             Game.fromString(row[Views.game]).getOrThrow(),
-            row[Views.featured]
+            row[Views.featured],
+            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it)}
         )
     }
 
@@ -89,6 +106,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         entitiesIds: List<entityIdWithAlias>,
         game: Game,
         featured: Boolean,
+        extraArguments: ViewExtraArguments?,
     ): SimpleView {
         newSuspendedTransaction(Dispatchers.IO, db) {
             Views.insert {
@@ -98,6 +116,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[published] = true
                 it[Views.game] = game.toString()
                 it[Views.featured] = featured
+                it[Views.extraArguments] = extraArguments?.let { ea -> json.encodeToString<ViewExtraArguments>(ea) }
             }
             ViewEntities.batchInsert(entitiesIds) {
                 this[ViewEntities.viewId] = id
@@ -105,7 +124,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 this[ViewEntities.alias] = it.second
             }
         }
-        return SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured)
+        return SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured, extraArguments)
     }
 
     override suspend fun edit(

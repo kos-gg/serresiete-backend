@@ -19,9 +19,10 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         owner: String,
         entitiesIds: List<Pair<Long, String?>>,
         game: Game,
-        featured: Boolean
+        featured: Boolean,
+        extraArguments: ViewExtraArguments?
     ): SimpleView {
-        val simpleView = SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured)
+        val simpleView = SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured, extraArguments)
         views.add(simpleView)
         entitiesIds.forEach { viewEntities.add(ViewEntity(it.first, id, it.second)) }
         return simpleView
