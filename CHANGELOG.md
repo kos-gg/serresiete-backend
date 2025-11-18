@@ -1,5 +1,20 @@
 # Changelog
-## [4.4.0] - 22-02-2026
+## [4.5.0] - 18-11-2025
+
+### Added
+- **Extra Arguments Support for WoW & WoW Hardcore Views**:
+    - Added the ability to include **extraArguments** when creating new views for **World of Warcraft** and **World of Warcraft Hardcore**.
+    - This enables specifying additional configuration such as:
+      ```json
+      "extraArguments": {
+          "type": "com.kos.views.WowExtraArguments",
+          "season": 15,
+          "isGuild": false
+      }
+      ```
+    - The system now correctly validates these arguments according to the selected game type.
+  
+## [4.4.0] - 22-02-2025
 
 ### Added
 - **Search Individual Entities Endpoint** (`GET /api/entities`):
