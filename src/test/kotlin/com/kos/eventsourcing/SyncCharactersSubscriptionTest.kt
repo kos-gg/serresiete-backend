@@ -115,7 +115,8 @@ class SyncCharactersSubscriptionTest {
                     listOf(EntitiesTestHelper.basicLolEntity.id),
                     true,
                     Game.LOL,
-                    ViewsTestHelper.featured
+                    ViewsTestHelper.featured,
+                    null
                 ), Game.LOL
             )
 
@@ -144,7 +145,8 @@ class SyncCharactersSubscriptionTest {
                         listOf(EntitiesTestHelper.basicLolEntity.id),
                         true,
                         Game.WOW,
-                        ViewsTestHelper.featured
+                        ViewsTestHelper.featured,
+                        null
                     ), Game.WOW
                 )
 
@@ -287,7 +289,8 @@ class SyncCharactersSubscriptionTest {
                         listOf(EntitiesTestHelper.basicWowRequest),
                         Game.LOL,
                         owner,
-                        ViewsTestHelper.featured
+                        ViewsTestHelper.featured,
+                        null
                     ), Game.LOL
                 )
 
@@ -324,7 +327,8 @@ class SyncCharactersSubscriptionTest {
                     listOf(EntitiesTestHelper.basicWowEntity.id),
                     true,
                     Game.WOW,
-                    ViewsTestHelper.featured
+                    ViewsTestHelper.featured,
+                    null
                 ), Game.WOW
             )
 
@@ -413,7 +417,8 @@ class SyncCharactersSubscriptionTest {
                         listOf(EntitiesTestHelper.basicWowRequest),
                         Game.WOW,
                         owner,
-                        ViewsTestHelper.featured
+                        ViewsTestHelper.featured,
+                        null
                     ), Game.WOW
                 )
 
@@ -509,7 +514,8 @@ class SyncCharactersSubscriptionTest {
                     listOf(EntitiesTestHelper.basicWowEntity.id),
                     true,
                     Game.WOW_HC,
-                    ViewsTestHelper.featured
+                    ViewsTestHelper.featured,
+                    null
                 ), Game.WOW_HC
             )
 
@@ -720,7 +726,8 @@ class SyncCharactersSubscriptionTest {
                         listOf(EntitiesTestHelper.basicWowRequest),
                         Game.WOW_HC,
                         owner,
-                        ViewsTestHelper.featured
+                        ViewsTestHelper.featured,
+                        null
                     ), Game.WOW_HC
                 )
 

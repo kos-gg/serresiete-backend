@@ -57,6 +57,7 @@ class NotPublished(val id: String) : ControllerError
 data object TooMuchViews : ControllerError
 data object TooMuchEntities : ControllerError
 data object UserWithoutRoles : ControllerError
+data object ExtraArgumentsWrongType: ControllerError
 
 interface DatabaseError : ControllerError
 data class InsertError(val message: String) : DatabaseError
@@ -78,6 +79,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is NotEnoughPermissions -> respond(Forbidden)
         is NotPublished -> respond(BadRequest, "view not published")
         is TooMuchViews -> respond(BadRequest, "too much views")
+        is ExtraArgumentsWrongType -> respond(BadRequest, "wrong extra arguments type")
         is TooMuchEntities -> respond(BadRequest, "too many entities in a view")
         is BadRequest -> respond(BadRequest, error.problem)
         is JsonParseError -> respondLogging(error.error())
@@ -89,6 +91,6 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is HttpError -> TODO()
         is CantDeleteYourself -> respond(BadRequest, "can't delete your credentials")
         is CantFeatureView -> respond(Forbidden, "not enough permissions to feature a view")
-        UserWithoutRoles -> TODO()
+        is UserWithoutRoles -> TODO()
     }
 }

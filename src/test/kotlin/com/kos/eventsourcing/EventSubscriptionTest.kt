@@ -76,7 +76,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents updates state to WAITING on successful processing`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
                 val event = Event("root", "id", eventData)
                 val eventWithVersion = EventWithVersion(1, event)
 
@@ -116,7 +116,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents sets state to FAILED on processing error`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
                 val event = Event("root", "id", eventData)
                 val eventWithVersion = EventWithVersion(1, event)
 
@@ -156,7 +156,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents sets state to FAILED on processing error and stops processing further events`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
                 val event = Event("root", "id", eventData)
 
                 val events = (1L..10L).map { EventWithVersion(it, event) }
@@ -197,7 +197,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents sets state to FAILED on processing error and stops processing further events when some events were processed`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
                 val event = Event("root", "id", eventData)
 
                 val events = (1L..10L).map { EventWithVersion(it, event) }
@@ -241,7 +241,7 @@ class EventSubscriptionTest {
         @Test
         fun `processPendingEvents retries to process the events even when in FAILED state`() {
             runBlocking {
-                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false)
+                val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
                 val event = Event("root", "id", eventData)
 
                 val events = (1L..10L).map { EventWithVersion(it, event) }
@@ -297,7 +297,7 @@ class EventSubscriptionTest {
                 val spiedService = spyk(viewsService)
 
                 val eventData =
-                    ViewToBeCreatedEvent(ViewsTestHelper.id, "name", true, listOf(), Game.LOL, "owner", false)
+                    ViewToBeCreatedEvent(ViewsTestHelper.id, "name", true, listOf(), Game.LOL, "owner", false, null)
                 val eventWithVersion = EventWithVersion(
                     1L,
                     Event(aggregateRoot, ViewsTestHelper.id, eventData)
@@ -321,7 +321,7 @@ class EventSubscriptionTest {
                     ViewCreatedEvent(
                         ViewsTestHelper.id,
                         ViewsTestHelper.name,
-                        ViewsTestHelper.owner, listOf(), true, Game.LOL, false
+                        ViewsTestHelper.owner, listOf(), true, Game.LOL, false, null
                     )
                 )
 

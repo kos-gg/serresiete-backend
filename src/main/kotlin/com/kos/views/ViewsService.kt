@@ -61,6 +61,7 @@ class ViewsService(
         return either {
             ensureMaxNumberOfViews(owner).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
+            ensureRequest(request).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -74,7 +75,8 @@ class ViewsService(
                     request.entities,
                     request.game,
                     owner,
-                    request.featured
+                    request.featured,
+                    request.extraArguments
                 )
             )
             eventStore.save(event)
@@ -95,7 +97,8 @@ class ViewsService(
                 viewToBeCreatedEvent.owner,
                 entities.map { it.first.id to it.second },
                 viewToBeCreatedEvent.game,
-                viewToBeCreatedEvent.featured
+                viewToBeCreatedEvent.featured,
+                viewToBeCreatedEvent.extraArguments
             )
             val event = Event(
                 aggregateRoot,
@@ -254,6 +257,18 @@ class ViewsService(
             val ownerMaxNumberOfEntities = getMaxNumberOfEntitiesByRole(owner).bind()
             entities?.let { entitiesToInsert ->
                 ensure(entitiesToInsert.size <= ownerMaxNumberOfEntities) { TooMuchEntities }
+            }
+        }
+    }
+
+    private fun ensureRequest(
+        request: ViewRequest
+    ): Either<ControllerError, Unit> {
+        return either {
+            when (request.game) {
+                Game.WOW_HC -> ensure(request.extraArguments == null || request.extraArguments is WowHardcoreExtraArguments) { ExtraArgumentsWrongType }
+                Game.LOL -> Either.Right(Unit)
+                Game.WOW -> ensure(request.extraArguments == null || request.extraArguments is WowExtraArguments) { ExtraArgumentsWrongType }
             }
         }
     }
