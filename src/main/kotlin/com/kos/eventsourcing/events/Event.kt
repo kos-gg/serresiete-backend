@@ -3,8 +3,10 @@ package com.kos.eventsourcing.events
 import com.kos.entities.CreateEntityRequest
 import com.kos.views.Game
 import com.kos.views.SimpleView
+import com.kos.views.ViewExtraArguments
 import com.kos.views.ViewModified
 import com.kos.views.ViewPatched
+import com.kos.views.WowExtraArguments
 import kotlinx.serialization.Serializable
 
 enum class EventType {
@@ -62,7 +64,8 @@ data class ViewToBeCreatedEvent(
     val entities: List<CreateEntityRequest>,
     val game: Game,
     val owner: String,
-    val featured: Boolean
+    val featured: Boolean,
+    val extraArguments: ViewExtraArguments?
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_TO_BE_CREATED
 }
@@ -99,7 +102,8 @@ data class ViewCreatedEvent(
     val entities: List<Long>,
     val published: Boolean,
     val game: Game,
-    val featured: Boolean
+    val featured: Boolean,
+    val extraArguments: ViewExtraArguments?
 ) : EventData {
     override val eventType: EventType = EventType.VIEW_CREATED
 
@@ -111,7 +115,8 @@ data class ViewCreatedEvent(
             simpleView.entitiesIds,
             simpleView.published,
             simpleView.game,
-            simpleView.featured
+            simpleView.featured,
+            simpleView.extraArguments
         )
     }
 }

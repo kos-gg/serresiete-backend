@@ -30,6 +30,20 @@ enum class Game {
 }
 
 @Serializable
+sealed interface ViewExtraArguments
+
+@Serializable
+data class WowExtraArguments(
+    val isGuild: Boolean,
+    val season: Int
+): ViewExtraArguments
+
+@Serializable
+data class WowHardcoreExtraArguments(
+    val isGuild: Boolean
+): ViewExtraArguments
+
+@Serializable
 data class GetViewsResponse(val metadata: ViewMetadata? = null, val records: List<SimpleView>)
 
 @Serializable
@@ -43,7 +57,8 @@ data class SimpleView(
     val published: Boolean,
     val entitiesIds: List<Long>,
     val game: Game,
-    val featured: Boolean
+    val featured: Boolean,
+    val extraArguments: ViewExtraArguments? = null
 )
 
 @Serializable
@@ -65,7 +80,8 @@ data class ViewRequest(
     val published: Boolean,
     val entities: List<CreateEntityRequest>,
     val game: Game,
-    val featured: Boolean
+    val featured: Boolean,
+    val extraArguments: ViewExtraArguments? = null
 )
 
 @Serializable

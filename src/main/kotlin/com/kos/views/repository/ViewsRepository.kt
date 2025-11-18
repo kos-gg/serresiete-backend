@@ -1,7 +1,6 @@
 package com.kos.views.repository
 
 import com.kos.common.WithState
-import com.kos.entities.EntityWithAlias
 import com.kos.views.*
 
 data class ViewsState(
@@ -18,7 +17,8 @@ interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
         owner: String,
         entitiesIds: List<Pair<Long, String?>>,
         game: Game,
-        featured: Boolean
+        featured: Boolean,
+        extraArguments: ViewExtraArguments? = null
     ): SimpleView
 
     suspend fun edit(

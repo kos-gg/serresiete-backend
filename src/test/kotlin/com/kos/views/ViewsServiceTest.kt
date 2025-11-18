@@ -418,12 +418,12 @@ class ViewsServiceTest {
 
                 createViewFromEventAndAssert(
                     viewsService,
-                    ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false)
+                    ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false, null)
                 )
 
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL, false)
+                    ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL, false, null)
                 )
             }
         }

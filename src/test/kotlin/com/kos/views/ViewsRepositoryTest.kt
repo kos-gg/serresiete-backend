@@ -30,6 +30,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import java.util.*
+import kotlin.math.exp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -313,6 +314,38 @@ abstract class ViewsRepositoryTest {
                 ViewEntity(viewEntityOne.entityId, basicSimpleLolView.id, alias),
                 repository.getViewEntity(basicSimpleLolView.id, viewEntityOne.entityId)
             )
+        }
+    }
+
+    @Test
+    fun `given an empty repository i can insert and retrieve views with extra arguments `() {
+        runBlocking {
+            val expected = SimpleView(
+                "id",
+                "name",
+                "owner",
+                true,
+                listOf(),
+                Game.WOW_HC,
+                false,
+                WowHardcoreExtraArguments(true)
+            )
+
+            val insertResult =
+                repository.create(
+                    expected.id,
+                    expected.name,
+                    expected.owner,
+                    listOf(),
+                    expected.game,
+                    expected.featured,
+                    expected.extraArguments
+                )
+
+            val getResult = repository.get("id")
+
+            assertEquals(expected, insertResult)
+            assertEquals(expected, getResult)
         }
     }
 }

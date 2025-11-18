@@ -33,7 +33,8 @@ abstract class EventStoreTest {
                 listOf(),
                 basicSimpleWowView.game,
                 basicSimpleWowView.owner,
-                basicSimpleWowView.featured
+                basicSimpleWowView.featured,
+                null
             )
             val event1 = Event("/credentials/client1", UUID.randomUUID().toString(), payload)
             val event2 = Event("/credentials/client1", UUID.randomUUID().toString(), payload)
@@ -55,7 +56,8 @@ abstract class EventStoreTest {
                 listOf(),
                 basicSimpleWowView.game,
                 basicSimpleWowView.owner,
-                basicSimpleWowView.featured
+                basicSimpleWowView.featured,
+                null
             )
             val event1 = EventWithVersion(1, Event("/credentials/client1", UUID.randomUUID().toString(), payload))
             val event2 = EventWithVersion(2, Event("/credentials/client1", UUID.randomUUID().toString(), payload))
@@ -76,7 +78,8 @@ abstract class EventStoreTest {
                 listOf(),
                 basicSimpleWowView.game,
                 basicSimpleWowView.owner,
-                basicSimpleWowView.featured
+                basicSimpleWowView.featured,
+                null
             )
             val event1 = EventWithVersion(1, Event("/credentials/client1", UUID.randomUUID().toString(), payload))
             val event2 = EventWithVersion(2, Event("/credentials/client1", UUID.randomUUID().toString(), payload))
