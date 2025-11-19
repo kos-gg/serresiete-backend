@@ -69,6 +69,28 @@ object RaiderIoProtocol {
     }
 }
 
+@Serializable
+data class Season(
+    @SerialName("is_main_season")
+    val isCurrentSeason: Boolean,
+    val name: String,
+    val dungeons: List<Dungeon>
+)
+
+@Serializable
+data class Dungeon(
+    val name: String,
+    @SerialName("short_name")
+    val shortName: String,
+    @SerialName("id")
+    val dungeonId: Int
+)
+
+@Serializable
+data class ExpansionSeasons(
+    @Serializable
+    val seasons: List<Season>
+)
 
 @Serializable
 data class SeasonScores(

@@ -1,10 +1,13 @@
 package com.kos.clients.raiderio
 
 import arrow.core.Either
+import com.kos.clients.domain.*
+import com.kos.common.HttpError
+import com.kos.common.JsonParseError
+import com.kos.common.RaiderIoError
+import com.kos.common.WithLogger
 import com.kos.entities.WowEntity
 import com.kos.entities.WowEntityRequest
-import com.kos.clients.domain.*
-import com.kos.common.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -22,30 +25,25 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
         ignoreUnknownKeys = true
     }
 
-    private fun responseToEitherErrorOrProfile(jsonString: String) = try {
-        Either.Right(json.decodeFromString<RaiderIoProfile>(jsonString))
-    } catch (e: SerializationException) {
-        Either.Left(JsonParseError(jsonString, e.stackTraceToString()))
-    } catch (e: IllegalArgumentException) {
-        val error = json.decodeFromString<RaiderIoError>(jsonString)
-        Either.Left(error)
-    }
-
-    private suspend fun getRaiderioProfile(region: String, realm: String, name: String): HttpResponse =
-        client.get(baseURI.toString() + partialProfileUri) {
+    override suspend fun getExpansionSeasons(expansionId: Int): Either<HttpError, ExpansionSeasons> {
+        val partialUri = "/mythic-plus/static-data"
+        val jsonResponse = client.get(baseURI.toString() + partialUri) {
             headers {
                 append(HttpHeaders.Accept, "*/*")
             }
             url {
-                parameters.append("region", region)
-                parameters.append("realm", realm)
-                parameters.append("name", name)
-                parameters.append(
-                    "fields",
-                    "mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks"
-                )
+                parameters.append("expansion_id", expansionId.toString())
             }
+        }.body<String>()
+
+        return try {
+            Either.Right(json.decodeFromString<ExpansionSeasons>(jsonResponse))
+        } catch (e: SerializationException) {
+            Either.Left(JsonParseError(jsonResponse, e.stackTraceToString()))
+        } catch (e: IllegalArgumentException) {
+            Either.Left(json.decodeFromString<RaiderIoError>(jsonResponse))
         }
+    }
 
     override suspend fun get(wowEntity: WowEntity): Either<HttpError, RaiderIoResponse> {
         val response = getRaiderioProfile(wowEntity.region, wowEntity.realm, wowEntity.name)
@@ -107,4 +105,31 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
             Either.Left(error)
         }
     }
+
+    private fun responseToEitherErrorOrProfile(jsonString: String) = try {
+        Either.Right(json.decodeFromString<RaiderIoProfile>(jsonString))
+    } catch (e: SerializationException) {
+        Either.Left(JsonParseError(jsonString, e.stackTraceToString()))
+    } catch (e: IllegalArgumentException) {
+        val error = json.decodeFromString<RaiderIoError>(jsonString)
+        Either.Left(error)
+    }
+
+    private suspend fun getRaiderioProfile(region: String, realm: String, name: String): HttpResponse =
+        client.get(baseURI.toString() + partialProfileUri) {
+            headers {
+                append(HttpHeaders.Accept, "*/*")
+            }
+            url {
+                parameters.append("region", region)
+                parameters.append("realm", realm)
+                parameters.append("name", name)
+                parameters.append(
+                    "fields",
+                    "mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks"
+                )
+            }
+        }
+
+
 }

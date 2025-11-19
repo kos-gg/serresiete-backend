@@ -6,9 +6,16 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import java.nio.charset.StandardCharsets
 
 object RaiderioHttpClientHelper {
+
+    object ResourceLoader {
+        fun readResource(path: String): String =
+            object {}.javaClass.classLoader
+                .getResourceAsStream(path)!!
+                .bufferedReader(Charsets.UTF_8)
+                .use { it.readText() }
+    }
 
     val raiderioProfileResponse =
         RaiderIoResponse(
@@ -106,13 +113,26 @@ object RaiderioHttpClientHelper {
         engine {
             addHandler { request ->
                 when (request.url.encodedPath) {
-                    "/mythic-plus/season-cutoffs" -> respond("content", HttpStatusCode.OK)
+
+                    "/api/v1/mythic-plus/static-data" -> {
+                        val response = ResourceLoader.readResource("tww-seasons.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/mythic-plus/season-cutoffs" ->
+                        respond("content", HttpStatusCode.OK)
+
                     "/api/v1/characters/profile" -> {
-                        val response = javaClass.classLoader
-                            .getResourceAsStream("raiderio-profile-response.json")!!
-                            .bufferedReader(StandardCharsets.UTF_8)
-                            .use { it.readText() }
-                        respond(response, HttpStatusCode.OK)
+                        val response = ResourceLoader.readResource("raiderio-profile-response.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
                     }
 
                     else -> error("Unhandled ${request.url.encodedPath}")
