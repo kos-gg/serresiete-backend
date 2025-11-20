@@ -14,8 +14,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
-
-
 @Serializable
 data class RaiderIoCutoff(val totalPopulation: Int)
 
