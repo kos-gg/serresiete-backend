@@ -17,6 +17,50 @@ object RaiderioHttpClientHelper {
                 .use { it.readText() }
     }
 
+    val client = HttpClient(MockEngine) {
+        install(ContentNegotiation) {
+            json()
+        }
+        engine {
+            addHandler { request ->
+                when (request.url.encodedPath) {
+
+                    "/api/v1/mythic-plus/static-data" -> {
+                        val response = ResourceLoader.readResource("wow/raiderio-tww-seasons.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/api/v1/mythic-plus/season-cutoffs" -> {
+                        val response = ResourceLoader.readResource("wow/raiderio-cutoff-response.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/api/v1/characters/profile" -> {
+                        val response = when (request.url.parameters["fields"]) {
+                            "talents" -> ResourceLoader.readResource("wow/raiderio-classic-talents-response.json")
+                            else -> ResourceLoader.readResource("wow/raiderio-profile-response.json")
+                        }
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    else -> error("Unhandled ${request.url.encodedPath}")
+                }
+            }
+        }
+    }
+
     val raiderioProfileResponse =
         RaiderIoResponse(
             RaiderIoProfile(
@@ -105,39 +149,4 @@ object RaiderioHttpClientHelper {
                 MythicPlusRankWithSpecName("Destruction", 0.0, 0, 0, 0)
             )
         )
-
-    val client = HttpClient(MockEngine) {
-        install(ContentNegotiation) {
-            json()
-        }
-        engine {
-            addHandler { request ->
-                when (request.url.encodedPath) {
-
-                    "/api/v1/mythic-plus/static-data" -> {
-                        val response = ResourceLoader.readResource("tww-seasons.json")
-                        respond(
-                            content = response,
-                            status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType, "application/json")
-                        )
-                    }
-
-                    "/mythic-plus/season-cutoffs" ->
-                        respond("content", HttpStatusCode.OK)
-
-                    "/api/v1/characters/profile" -> {
-                        val response = ResourceLoader.readResource("raiderio-profile-response.json")
-                        respond(
-                            content = response,
-                            status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType, "application/json")
-                        )
-                    }
-
-                    else -> error("Unhandled ${request.url.encodedPath}")
-                }
-            }
-        }
-    }
 }

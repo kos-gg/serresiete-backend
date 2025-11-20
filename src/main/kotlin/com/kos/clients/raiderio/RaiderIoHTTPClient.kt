@@ -2,6 +2,11 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.domain.*
+import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
+import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
+import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
+import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_CUTOFFS_PATH
+import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.HttpError
 import com.kos.common.JsonParseError
 import com.kos.common.RaiderIoError
@@ -18,16 +23,21 @@ import kotlinx.serialization.json.Json
 import java.net.URI
 
 data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogger("RaiderioClient") {
-    private val baseURI = URI("https://raider.io/api/v1")
-    private val classicBaseURI = URI("https://era.raider.io/api/v1")
-    private val partialProfileUri = "/characters/profile"
     private val json = Json {
         ignoreUnknownKeys = true
     }
 
+    object RaiderIoHTTPClientConstants {
+        val BASE_URI = URI("https://raider.io/api/v1")
+        val CLASSIC_BASE_URI = URI("https://era.raider.io/api/v1")
+
+        const val CHARACTERS_PROFILE_PATH = "/characters/profile"
+        const val MYTHIC_PLUS_STATIC_DATA_PATH = "/mythic-plus/static-data"
+        const val MYTHIC_PLUS_CUTOFFS_PATH = "/mythic-plus/season-cutoffs"
+    }
+
     override suspend fun getExpansionSeasons(expansionId: Int): Either<HttpError, ExpansionSeasons> {
-        val partialUri = "/mythic-plus/static-data"
-        val jsonResponse = client.get(baseURI.toString() + partialUri) {
+        val jsonResponse = client.get(BASE_URI.toString() + MYTHIC_PLUS_STATIC_DATA_PATH) {
             headers {
                 append(HttpHeaders.Accept, "*/*")
             }
@@ -67,8 +77,7 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
     }
 
     override suspend fun cutoff(): Either<HttpError, RaiderIoCutoff> {
-        val partialUri = "/mythic-plus/season-cutoffs"
-        val response = client.get(baseURI.toString() + partialUri) {
+        val response = client.get(BASE_URI.toString() + MYTHIC_PLUS_CUTOFFS_PATH) {
             headers {
                 append(HttpHeaders.Accept, "*/*")
             }
@@ -82,9 +91,10 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
     }
 
     override suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<HttpError, RaiderioWowHeadEmbeddedResponse> {
-        logger.debug("getting wowhead calculator")
-        val partialUri = "/characters/profile"
-        val response = client.get(classicBaseURI.toString() + partialUri) {
+        logger.debug("Getting Wowhead talents for entity {}", wowEntity)
+
+        val url = CLASSIC_BASE_URI.toString() + CHARACTERS_PROFILE_PATH
+        val response = client.get(url) {
             headers {
                 append(HttpHeaders.Accept, "*/*")
             }
@@ -101,8 +111,7 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
         } catch (e: SerializationException) {
             Either.Left(JsonParseError(jsonString, e.stackTraceToString()))
         } catch (e: IllegalArgumentException) {
-            val error = json.decodeFromString<RaiderIoError>(jsonString)
-            Either.Left(error)
+            Either.Left(json.decodeFromString<RaiderIoError>(jsonString))
         }
     }
 
@@ -111,12 +120,11 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
     } catch (e: SerializationException) {
         Either.Left(JsonParseError(jsonString, e.stackTraceToString()))
     } catch (e: IllegalArgumentException) {
-        val error = json.decodeFromString<RaiderIoError>(jsonString)
-        Either.Left(error)
+        Either.Left(json.decodeFromString<RaiderIoError>(jsonString))
     }
 
     private suspend fun getRaiderioProfile(region: String, realm: String, name: String): HttpResponse =
-        client.get(baseURI.toString() + partialProfileUri) {
+        client.get(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
             headers {
                 append(HttpHeaders.Accept, "*/*")
             }
@@ -130,6 +138,4 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
                 )
             }
         }
-
-
 }
