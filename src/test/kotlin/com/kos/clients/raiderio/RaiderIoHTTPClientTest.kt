@@ -1,20 +1,23 @@
 package com.kos.clients.raiderio
 
 import arrow.core.Either
-import com.kos.entities.WowEntity
-import com.kos.clients.domain.RaiderIoResponse
+import com.kos.assertTrue
+import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.raiderioProfileResponse
 import com.kos.common.HttpError
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.WowEntity
+import com.kos.entities.WowEntityRequest
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 class RaiderIoHTTPClientTest {
 
     private val raiderIoClient = RaiderIoHTTPClient(client)
-
-    //TODO: This suite must be more extensive
 
     @Test
     fun `test get() method with successful response`() {
@@ -25,4 +28,52 @@ class RaiderIoHTTPClientTest {
             assertEquals(Either.Right(raiderioProfileResponse), result)
         }
     }
+
+    @Test
+    fun `test getExpansionSeasons() method with successful response`() {
+        runBlocking {
+            val result: Either<HttpError, ExpansionSeasons> = raiderIoClient.getExpansionSeasons(10)
+            result.onLeft { fail() }
+            result.onRight {
+                assertEquals(it.seasons[0].name, "TWW Season 3")
+                assertTrue(it.seasons[0].isCurrentSeason)
+                assertTrue(it.seasons[0].dungeons.contains(Dungeon("Eco-Dome Al'dani", "EDA", 542)))
+            }
+        }
+    }
+
+    @Test
+    fun `test exists() method with successful response`() {
+        runBlocking {
+            assertTrue(
+                raiderIoClient.exists(
+                    WowEntityRequest(
+                        basicWowEntity.name,
+                        basicWowEntity.region,
+                        basicWowEntity.realm
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `test  cutoff() method with successful response`() {
+        runBlocking {
+            assertEquals(Either.Right(RaiderIoCutoff(1860760)), raiderIoClient.cutoff())
+        }
+    }
+
+    @Test
+    fun `test wowheadEmbeddedCalculator() method with successful response`() {
+        runBlocking {
+            val result: Either<HttpError, RaiderioWowHeadEmbeddedResponse> =
+                raiderIoClient.wowheadEmbeddedCalculator(WowEntity(1, "Surmana", "eu", "Soulseeker", null))
+            result.onLeft { fail() }
+            result.onRight {
+                assertNotNull(it.talentLoadout)
+            }
+        }
+    }
+
 }
