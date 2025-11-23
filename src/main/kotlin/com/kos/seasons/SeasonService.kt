@@ -1,4 +1,58 @@
 package com.kos.seasons
 
-class SeasonService {
+import arrow.core.Either
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.common.HttpError
+import com.kos.common.Retry.retryEitherWithFixedDelay
+import com.kos.common.RetryConfig
+import com.kos.common.UnableToAddNewMythicPlusSeason
+import com.kos.common.WithLogger
+import com.kos.seasons.repository.SeasonRepository
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+class SeasonService(
+    private val seasonRepository: SeasonRepository,
+    private val raiderIoClient: RaiderIoClient,
+    private val retryConfig: RetryConfig,
+) : WithLogger("SeasonService") {
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
+    suspend fun addNewMythicPlusSeason(): Either<HttpError, GameSeason> {
+        return retryEitherWithFixedDelay(retryConfig, "raiderIoGetExpansionSeasons") {
+            raiderIoClient.getExpansionSeasons(10)
+        }.fold(
+            ifLeft = { error ->
+                logger.error("Failed to fetch expansion seasons: $error")
+                Either.Left(error)
+            },
+            ifRight = { expansionSeasons ->
+                val currentSeason = expansionSeasons.seasons
+                    .firstOrNull { it.isCurrentSeason }
+                    ?: return Either.Left(
+                        UnableToAddNewMythicPlusSeason("There is no current season for expansion id: 10")
+                    )
+
+                val wowSeason =
+                    WowSeason(
+                        currentSeason.blizzardSeasonId,
+                        currentSeason.name,
+                        10,
+                        json.encodeToString(currentSeason)
+                    )
+
+                seasonRepository.insert(wowSeason).fold(
+                    {
+                        Either.Left(UnableToAddNewMythicPlusSeason(it.message))
+                    },
+                    {
+                        Either.Right(wowSeason)
+                    }
+                )
+            }
+        )
+    }
 }

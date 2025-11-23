@@ -27,11 +27,13 @@ import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
+import com.kos.seasons.SeasonService
+import com.kos.seasons.repository.SeasonInMemoryRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
-import org.mockito.Mockito
+import org.junit.Before
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.time.OffsetDateTime
@@ -40,461 +42,221 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class TasksServiceTest {
-    private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
-    private val riotClient = Mockito.mock(RiotClient::class.java)
-    private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+
+    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val riotClient = mock(RiotClient::class.java)
+    private val blizzardClient = mock(BlizzardClient::class.java)
     private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
+
     private val retryConfig = RetryConfig(1, 1)
 
-    @Test
-    fun `token cleanup task should cleanup tokens`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    private lateinit var dataCacheRepository: DataCacheInMemoryRepository
+    private lateinit var entitiesRepository: EntitiesInMemoryRepository
+    private lateinit var eventStore: EventStoreInMemory
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
+    private lateinit var dataCacheService: DataCacheService
+    private lateinit var entitiesService: EntitiesService
 
-            val authRepository = AuthInMemoryRepository().withState(
-                listOf(
-                    basicAuthorization,
-                    basicAuthorization.copy(validUntil = OffsetDateTime.now().minusHours(1))
-                )
-            )
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+    private lateinit var credentialsRepository: CredentialsInMemoryRepository
+    private lateinit var rolesRepository: RolesInMemoryRepository
+    private lateinit var rolesActivitiesRepository: RolesActivitiesInMemoryRepository
+    private lateinit var credentialsService: CredentialsService
+    private lateinit var rolesService: RolesService
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+    private lateinit var authRepository: AuthInMemoryRepository
+    private lateinit var authService: AuthService
 
-            val id = UUID.randomUUID().toString()
+    private lateinit var seasonService: SeasonService
 
-            service.tokenCleanup(id)
+    @Before
+    fun setup() {
+        dataCacheRepository = DataCacheInMemoryRepository()
+        entitiesRepository = EntitiesInMemoryRepository()
+        eventStore = EventStoreInMemory()
 
-            val insertedTask = tasksRepository.state().first()
+        dataCacheService = DataCacheService(
+            dataCacheRepository,
+            entitiesRepository,
+            raiderIoClient,
+            riotClient,
+            blizzardClient,
+            blizzardDatabaseClient,
+            retryConfig,
+            eventStore
+        )
 
-            assertEquals(listOf(basicAuthorization), authRepository.state())
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.TOKEN_CLEANUP_TASK, insertedTask.type)
-        }
+        entitiesService = EntitiesService(
+            entitiesRepository,
+            raiderIoClient,
+            riotClient,
+            blizzardClient
+        )
+
+        credentialsRepository = CredentialsInMemoryRepository()
+        rolesRepository = RolesInMemoryRepository()
+        rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
+
+        credentialsService = CredentialsService(credentialsRepository)
+        rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
+
+        authRepository = AuthInMemoryRepository()
+        authService = AuthService(
+            authRepository,
+            credentialsService,
+            rolesService,
+            JWTConfig("issuer", "secret")
+        )
+
+        seasonService = SeasonService(SeasonInMemoryRepository(), raiderIoClient, retryConfig)
     }
 
     @Test
-    fun `tasks cleanup task should cleanup old tasks`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
+    fun `token cleanup task should cleanup tokens`() = runBlocking {
+        authRepository.withState(
+            listOf(
+                basicAuthorization,
+                basicAuthorization.copy(validUntil = OffsetDateTime.now().minusHours(1))
             )
+        )
 
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+        val tasksRepository = TasksInMemoryRepository()
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val id = UUID.randomUUID().toString()
+        service.tokenCleanup(id)
 
-            val now = OffsetDateTime.now()
-            val expectedRemainingTask = task(now)
-            val tasksRepository =
-                TasksInMemoryRepository().withState(listOf(expectedRemainingTask, task(now.minusDays(8))))
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+        val insertedTask = tasksRepository.state().first()
 
-            val id = UUID.randomUUID().toString()
-
-            service.taskCleanup(id)
-
-            val insertedTask = tasksRepository.state().last()
-
-            assertEquals(listOf(expectedRemainingTask, insertedTask), tasksRepository.state())
-            assertEquals(2, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.TASK_CLEANUP_TASK, insertedTask.type)
-        }
+        assertEquals(listOf(basicAuthorization), authRepository.state())
+        assertEquals(id, insertedTask.id)
+        assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
+        assertEquals(TaskType.TOKEN_CLEANUP_TASK, insertedTask.type)
     }
 
     @Test
-    fun `data cache wow task should cache wow entities`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    fun `tasks cleanup task should cleanup old tasks`() = runBlocking {
+        val now = OffsetDateTime.now()
+        val remaining = task(now)
+        val tasksRepository = TasksInMemoryRepository()
+            .withState(listOf(remaining, task(now.minusDays(8))))
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+        val id = UUID.randomUUID().toString()
+        service.taskCleanup(id)
 
-            `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        val insertedTask = tasksRepository.state().last()
 
-            val id = UUID.randomUUID().toString()
-
-            service.cacheDataTask(Game.WOW, TaskType.CACHE_WOW_DATA_TASK, id)
-
-            val insertedTask = tasksRepository.state().first()
-
-            assertEquals(1, dataCacheRepository.state().size)
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.CACHE_WOW_DATA_TASK, insertedTask.type)
-        }
+        assertEquals(listOf(remaining, insertedTask), tasksRepository.state())
+        assertEquals(TaskType.TASK_CLEANUP_TASK, insertedTask.type)
     }
 
     @Test
-    fun `data cache lol task should cache lol entities`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    fun `data cache wow task should cache wow entities`() = runBlocking {
+        entitiesRepository.withState(
+            EntitiesState(listOf(basicWowEntity), listOf(), listOf())
+        )
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val tasksRepository = TasksInMemoryRepository()
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
 
-            `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
-            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt())).thenReturn(
-                RiotMockHelper.matches
-            )
-            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())).thenReturn(
-                RiotMockHelper.matches
-            )
-            `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))
+        `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
+        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
 
-            val id = UUID.randomUUID().toString()
+        val id = UUID.randomUUID().toString()
 
-            service.cacheDataTask(Game.LOL, TaskType.CACHE_LOL_DATA_TASK, id)
+        service.cacheDataTask(Game.WOW, TaskType.CACHE_WOW_DATA_TASK, id)
 
-            val insertedTask = tasksRepository.state().first()
-
-            assertEquals(1, dataCacheRepository.state().size)
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.CACHE_LOL_DATA_TASK, insertedTask.type)
-        }
+        val insertedTask = tasksRepository.state().first()
+        assertEquals(1, dataCacheRepository.state().size)
+        assertEquals(TaskType.CACHE_WOW_DATA_TASK, insertedTask.type)
     }
 
     @Test
-    fun `update lol entities task should update lol entities correctly`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    fun `data cache lol task should cache lol entities`() = runBlocking {
+        entitiesRepository.withState(
+            EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
+        )
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val tasksRepository = TasksInMemoryRepository()
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
 
-            `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid)).thenReturn(Either.Right(EntitiesTestHelper.basicGetSummonerResponse))
-            `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid)).thenReturn(Either.Right(EntitiesTestHelper.basicGetAccountResponse))
+        `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
+        `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt()))
+            .thenReturn(RiotMockHelper.matches)
+        `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt()))
+            .thenReturn(RiotMockHelper.matches)
+        `when`(riotClient.getMatchById(RiotMockHelper.matchId))
+            .thenReturn(Either.Right(RiotMockHelper.match))
 
-            val id = UUID.randomUUID().toString()
+        val id = UUID.randomUUID().toString()
+        service.cacheDataTask(Game.LOL, TaskType.CACHE_LOL_DATA_TASK, id)
 
-            service.updateLolEntities(id)
-
-            val insertedTask = tasksRepository.state().first()
-
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.UPDATE_LOL_ENTITIES_TASK, insertedTask.type)
-        }
+        assertEquals(1, dataCacheRepository.state().size)
     }
 
     @Test
-    fun `run task with correct parameters should run token cleanup task`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    fun `update lol entities task should update lol entities correctly`() = runBlocking {
+        entitiesRepository.withState(
+            EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
+        )
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val tasksRepository = TasksInMemoryRepository()
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
 
-            val id = UUID.randomUUID().toString()
+        `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid))
+            .thenReturn(Either.Right(EntitiesTestHelper.basicGetSummonerResponse))
+        `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid))
+            .thenReturn(Either.Right(EntitiesTestHelper.basicGetAccountResponse))
 
-            service.runTask(TaskType.TOKEN_CLEANUP_TASK, id, mapOf())
+        val id = UUID.randomUUID().toString()
+        service.updateLolEntities(id)
 
-            val insertedTask = tasksRepository.state().first()
-
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.TOKEN_CLEANUP_TASK, insertedTask.type)
-        }
+        val insertedTask = tasksRepository.state().first()
+        assertEquals(TaskType.UPDATE_LOL_ENTITIES_TASK, insertedTask.type)
     }
 
     @Test
-    fun `run task with correct parameters should run wow data cache task`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    fun `run task with correct parameters should run token cleanup task`() = runBlocking {
+        val tasksRepository = TasksInMemoryRepository()
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val credentialsService = CredentialsService(credentialsRepository)
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+        val id = UUID.randomUUID().toString()
+        service.runTask(TaskType.TOKEN_CLEANUP_TASK, id, emptyMap())
 
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
-
-            val id = UUID.randomUUID().toString()
-
-            service.runTask(TaskType.CACHE_WOW_DATA_TASK, id, mapOf())
-
-            val insertedTask = tasksRepository.state().first()
-
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.CACHE_WOW_DATA_TASK, insertedTask.type)
-        }
+        assertEquals(TaskType.TOKEN_CLEANUP_TASK, tasksRepository.state().first().type)
     }
 
     @Test
-    fun `run task with correct parameters should run lol data cache task`() {
-        runBlocking {
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+    fun `I can get tasks`() = runBlocking {
+        val now = OffsetDateTime.now()
+        val t = task(now)
 
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val credentialsService = CredentialsService(credentialsRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val tasksRepository = TasksInMemoryRepository().withState(listOf(t))
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
-            val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
 
-            val id = UUID.randomUUID().toString()
-
-            service.runTask(TaskType.CACHE_LOL_DATA_TASK, id, mapOf())
-
-            val insertedTask = tasksRepository.state().first()
-
-            assertEquals(1, tasksRepository.state().size)
-            assertEquals(id, insertedTask.id)
-            assertEquals(Status.SUCCESSFUL, insertedTask.taskStatus.status)
-            assertEquals(TaskType.CACHE_LOL_DATA_TASK, insertedTask.type)
-        }
+        assertEquals(listOf(t), service.getTasks(null))
     }
 
     @Test
-    fun `I can get tasks`() {
-        runBlocking {
-            val now = OffsetDateTime.now()
-            val task = task(now)
+    fun `I can get tasks by id`() = runBlocking {
+        val knownId = "1"
+        val t = task(OffsetDateTime.now()).copy(id = knownId)
 
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
-
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val credentialsService = CredentialsService(credentialsRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val tasksRepository = TasksInMemoryRepository().withState(listOf(t))
+        val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
 
 
-            val tasksRepository = TasksInMemoryRepository().withState(listOf(task))
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
-            assertEquals(listOf(task), service.getTasks(null))
-        }
+        assertEquals(t, service.getTask(knownId))
     }
 
     @Test
-    fun `I can get tasks by id`() {
-        runBlocking {
-            val now = OffsetDateTime.now()
-            val knownId = "1"
-            val task = task(now).copy(id = knownId)
-
-            val dataCacheRepository = DataCacheInMemoryRepository()
-            val entitiesRepository = EntitiesInMemoryRepository()
-            val eventStore = EventStoreInMemory()
-            val dataCacheService = DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
-                eventStore
-            )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
-
-            val credentialsRepository = CredentialsInMemoryRepository()
-            val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
-            val rolesRepository = RolesInMemoryRepository()
-            val rolesService = RolesService(rolesRepository, rolesActivitiesRepository)
-            val credentialsService = CredentialsService(credentialsRepository)
-            val authRepository = AuthInMemoryRepository()
-            val authService =
-                AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
-
-            val tasksRepository = TasksInMemoryRepository().withState(listOf(task))
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
-            assertEquals(task, service.getTask(knownId))
-        }
+    fun `run task to update Wow Mythic plus season`() {
+        TODO()
     }
 }
