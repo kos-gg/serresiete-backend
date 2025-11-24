@@ -11,13 +11,13 @@ class SeasonInMemoryRepository : SeasonRepository, InMemoryRepository {
     private val wowSeasons: MutableList<WowSeason> = mutableListOf()
 
     override suspend fun insert(season: GameSeason): Either<InsertError, Boolean> {
-        when (season) {
+        return when (season) {
             is WowSeason -> {
                 if (this.wowSeasons.any { wowSeason -> season.same(wowSeason) })
-                    return Either.Left(InsertError("Error inserting wow season $season because it already exists."))
+                    Either.Left(InsertError("Error inserting wow season $season because it already exists."))
                 else {
                     this.wowSeasons.add(season)
-                    return Either.Right(true)
+                    Either.Right(true)
                 }
             }
         }

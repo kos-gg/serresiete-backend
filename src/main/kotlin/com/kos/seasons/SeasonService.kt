@@ -8,10 +8,13 @@ import com.kos.common.RetryConfig
 import com.kos.common.UnableToAddNewMythicPlusSeason
 import com.kos.common.WithLogger
 import com.kos.seasons.repository.SeasonRepository
+import com.kos.staticdata.WowExpansion
+import com.kos.staticdata.repository.StaticDataRepository
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class SeasonService(
+data class SeasonService(
+    private val staticDataRepository: StaticDataRepository,
     private val seasonRepository: SeasonRepository,
     private val raiderIoClient: RaiderIoClient,
     private val retryConfig: RetryConfig,
@@ -22,8 +25,10 @@ class SeasonService(
     }
 
     suspend fun addNewMythicPlusSeason(): Either<HttpError, GameSeason> {
+        val currentExpansion = getCurrentExpansion()
+
         return retryEitherWithFixedDelay(retryConfig, "raiderIoGetExpansionSeasons") {
-            raiderIoClient.getExpansionSeasons(10)
+            raiderIoClient.getExpansionSeasons(currentExpansion.id)
         }.fold(
             ifLeft = { error ->
                 logger.error("Failed to fetch expansion seasons: $error")
@@ -33,7 +38,9 @@ class SeasonService(
                 val currentSeason = expansionSeasons.seasons
                     .firstOrNull { it.isCurrentSeason }
                     ?: return Either.Left(
-                        UnableToAddNewMythicPlusSeason("There is no current season for expansion id: 10")
+                        UnableToAddNewMythicPlusSeason(
+                            "There is no current season for expansion ${currentExpansion.id} - ${currentExpansion.name}"
+                        )
                     )
 
                 val wowSeason =
@@ -54,5 +61,11 @@ class SeasonService(
                 )
             }
         )
+    }
+
+    private suspend fun getCurrentExpansion(): WowExpansion {
+        return staticDataRepository.getExpansions()
+            .firstOrNull { it.isCurrentExpansion }
+            ?: throw UnableToAddNewMythicPlusSeason("No current expansion found")
     }
 }

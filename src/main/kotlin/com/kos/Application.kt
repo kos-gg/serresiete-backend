@@ -34,7 +34,9 @@ import com.kos.roles.RolesController
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesDatabaseRepository
 import com.kos.roles.repository.RolesDatabaseRepository
+import com.kos.seasons.SeasonService
 import com.kos.seasons.repository.SeasonDatabaseRepository
+import com.kos.staticdata.repository.StaticDataDatabaseRepository
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
@@ -105,7 +107,11 @@ fun Application.module() {
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
+
     val seasonRepository = SeasonDatabaseRepository(db)
+    val staticDataRepository = StaticDataDatabaseRepository(db)
+    val seasonService = SeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient, RetryConfig(3, 1200))
+
     val dataCacheRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
         DataCacheService(
@@ -136,7 +142,7 @@ fun Application.module() {
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
     val tasksService =
-        TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+        TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
     val tasksLauncher =
         TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
     val tasksController = TasksController(tasksService)

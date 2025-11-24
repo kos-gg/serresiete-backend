@@ -29,6 +29,7 @@ import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
 import com.kos.seasons.SeasonService
 import com.kos.seasons.repository.SeasonInMemoryRepository
+import com.kos.staticdata.repository.StaticDataInMemoryRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
@@ -107,7 +108,18 @@ class TasksServiceTest {
             JWTConfig("issuer", "secret")
         )
 
-        seasonService = SeasonService(SeasonInMemoryRepository(), raiderIoClient, retryConfig)
+        seasonService =
+            SeasonService(StaticDataInMemoryRepository(), SeasonInMemoryRepository(), raiderIoClient, retryConfig)
+    }
+
+    @Test
+    fun `task update mythic plus dungeon season is successful`() {
+
+    }
+
+    @Test
+    fun `task update mythic plus dungeon season failed and is handled`() {
+
     }
 
     @Test

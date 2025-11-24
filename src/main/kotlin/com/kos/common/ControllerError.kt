@@ -31,8 +31,8 @@ interface HttpError : ControllerError {
 }
 
 class UnableToAddNewMythicPlusSeason(
-    val message: String
-) : HttpError {
+    override val message: String
+) : RuntimeException(message), HttpError {
     override fun error(): String = message
 }
 

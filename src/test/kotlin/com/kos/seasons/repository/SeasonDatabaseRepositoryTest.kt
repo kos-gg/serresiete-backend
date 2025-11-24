@@ -29,6 +29,16 @@ abstract class SeasonDatabaseRepositoryTestCommon {
             assertEquals(SeasonsState(listOf(wowSeason)), repository.state())
         }
     }
+
+    @Test
+    open fun `given an existing repository I can retrieve it by calling state()`() {
+
+    }
+
+    @Test
+    open fun `i can change the repository state succesfully`() {
+
+    }
 }
 
 class SeasonInMemoryRepositoryTest : SeasonDatabaseRepositoryTestCommon() {

@@ -1,8 +1,11 @@
 CREATE TABLE mythic_plus_seasons
 (
-    id           integer,
-    name         varchar(48) not null,
-    expansion_id integer,
-    data         text        not null,
-    PRIMARY KEY (id, expansion_id)
-)
+    id           integer NOT NULL,
+    name         varchar(48) NOT NULL,
+    expansion_id integer NOT NULL,
+    data         text NOT NULL,
+    PRIMARY KEY (id, expansion_id),
+    CONSTRAINT fk_mythic_plus_seasons
+        FOREIGN KEY (expansion_id)
+            REFERENCES wow_expansions(id)
+);
