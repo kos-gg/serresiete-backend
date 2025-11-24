@@ -5,6 +5,8 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.LolEntity
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.repository.WowGuildsDatabaseRepository
 import com.kos.tasks.repository.TasksRepository
 import com.kos.views.Game
 import java.time.OffsetDateTime
@@ -36,14 +38,39 @@ data class TasksService(
                     ?.getOrNull()
                 cacheCleanup(game, taskType, taskId)
             }
+            TaskType.UPDATE_WOW_HARDCORE_GUILDS -> updateWowGuildEntities(taskId)
         }
     }
 
     @Suppress("UNCHECKED_CAST")
     suspend fun updateLolEntities(id: String) {
         logger.info("Updating lol entities")
-        val lolEntities = entitiesService.get(Game.LOL) as List<LolEntity>
-        val errors = entitiesService.updateLolEntities(lolEntities)
+        val errors = entitiesService.updateEntities(Game.LOL)
+        if (errors.isEmpty()) {
+            tasksRepository.insertTask(
+                Task(
+                    id,
+                    TaskType.UPDATE_LOL_ENTITIES_TASK,
+                    TaskStatus(Status.SUCCESSFUL, null),
+                    OffsetDateTime.now()
+                )
+            )
+        } else {
+            tasksRepository.insertTask(
+                Task(
+                    id,
+                    TaskType.UPDATE_LOL_ENTITIES_TASK,
+                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
+                    OffsetDateTime.now()
+                )
+            )
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    suspend fun updateWowGuildEntities(id: String) {
+        logger.info("Updating wow hardcore guild entities")
+        val errors = entitiesService.updateWowHardcoreGuilds()
         if (errors.isEmpty()) {
             tasksRepository.insertTask(
                 Task(

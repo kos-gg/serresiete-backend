@@ -14,7 +14,8 @@ class TasksDomainTest {
             "tokenCleanupTask",
             "taskCleanupTask",
             "updateLolEntitiesTask",
-            "cacheClearTask"
+            "cacheClearTask",
+            "updateWowHardcoreGuilds"
         )
         assertEquals(expected, TaskType.entries.map { it.toString() })
     }

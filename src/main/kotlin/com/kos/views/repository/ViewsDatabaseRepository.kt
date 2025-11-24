@@ -67,7 +67,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 .map { resultRowToViewEntity(it).entityId },
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured],
-            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it)}
+            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it) }
         )
     }
 
@@ -118,11 +118,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.featured] = featured
                 it[Views.extraArguments] = extraArguments?.let { ea -> json.encodeToString<ViewExtraArguments>(ea) }
             }
-            ViewEntities.batchInsert(entitiesIds) {
-                this[ViewEntities.viewId] = id
-                this[ViewEntities.entityId] = it.first
-                this[ViewEntities.alias] = it.second
-            }
+            associateEntitiesIdsToViewQuery(entitiesIds, id)
         }
         return SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured, extraArguments)
     }
@@ -141,11 +137,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 it[Views.featured] = featured
             }
             ViewEntities.deleteWhere { viewId.eq(id) }
-            ViewEntities.batchInsert(entities) {
-                this[ViewEntities.viewId] = id
-                this[ViewEntities.entityId] = it.first
-                this[ViewEntities.alias] = it.second
-            }
+            associateEntitiesIdsToViewQuery(entities, id)
         }
         return ViewModified(id, name, published, entities.map { it.first }, featured)
     }
@@ -162,15 +154,27 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             published?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.published] = it } }
             entities?.let {
                 ViewEntities.deleteWhere { viewId.eq(id) }
-                ViewEntities.batchInsert(it) { cid ->
-                    this[ViewEntities.viewId] = id
-                    this[ViewEntities.entityId] = cid.first
-                    this[ViewEntities.alias] = cid.second
-                }
+                associateEntitiesIdsToViewQuery(it, id)
             }
             featured?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.featured] = it } }
         }
         return ViewPatched(id, name, published, entities?.map { it.first }, featured)
+    }
+
+    private fun associateEntitiesIdsToViewQuery(
+        entitiesIds: List<entityIdWithAlias>,
+        id: String
+    ): List<ResultRow> = ViewEntities.batchInsert(entitiesIds, ignore = true) {
+        this[ViewEntities.viewId] = id
+        this[ViewEntities.entityId] = it.first
+        this[ViewEntities.alias] = it.second
+    }
+
+    override suspend fun associateEntitiesIdsToView(
+        entities: List<entityIdWithAlias>,
+        id: String
+    ) {
+        newSuspendedTransaction(Dispatchers.IO, db) { associateEntitiesIdsToViewQuery(entities, id) }
     }
 
     override suspend fun delete(id: String): Unit {

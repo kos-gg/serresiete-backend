@@ -58,6 +58,7 @@ data object TooMuchViews : ControllerError
 data object TooMuchEntities : ControllerError
 data object UserWithoutRoles : ControllerError
 data object ExtraArgumentsWrongType: ControllerError
+data object GuildViewMoreThanTwoEntities: ControllerError
 
 interface DatabaseError : ControllerError
 data class InsertError(val message: String) : DatabaseError
@@ -82,6 +83,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is ExtraArgumentsWrongType -> respond(BadRequest, "wrong extra arguments type")
         is TooMuchEntities -> respond(BadRequest, "too many entities in a view")
         is BadRequest -> respond(BadRequest, error.problem)
+        is GuildViewMoreThanTwoEntities -> respond(BadRequest, "guild views must have only 1 entity")
         is JsonParseError -> respondLogging(error.error())
         is RaiderIoError -> respondLogging(error.error())
         is InvalidQueryParameter -> respond(BadRequest, error.message)
