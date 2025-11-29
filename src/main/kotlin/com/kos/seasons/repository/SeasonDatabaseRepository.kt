@@ -15,7 +15,7 @@ class SeasonDatabaseRepository(private val db: Database) : SeasonRepository {
         val expansionId = integer("expansion_id")
         val data = text("data")
 
-        override val primaryKey = PrimaryKey(seasonId, name)
+        override val primaryKey = PrimaryKey(seasonId, expansionId)
     }
 
     override suspend fun insert(season: GameSeason): Either<InsertError, Boolean> {

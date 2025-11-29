@@ -39,6 +39,7 @@ data class TasksService(
                     ?.getOrNull()
                 cacheCleanup(game, taskType, taskId)
             }
+
             TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON -> taskMythicPlusSeason(taskId, taskType)
         }
     }
@@ -83,11 +84,13 @@ data class TasksService(
                 )
             }
             .onRight {
-                Task(
-                    id,
-                    TaskType.TASK_CLEANUP_TASK,
-                    TaskStatus(Status.SUCCESSFUL, "Updated Wow Season to season ${it.id} - ${it.name}"),
-                    OffsetDateTime.now()
+                tasksRepository.insertTask(
+                    Task(
+                        id,
+                        TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON,
+                        TaskStatus(Status.SUCCESSFUL, "Updated Wow Season to season ${it.id} - ${it.name}"),
+                        OffsetDateTime.now()
+                    )
                 )
             }
     }

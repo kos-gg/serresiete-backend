@@ -11,7 +11,7 @@ data class WowSeason(
 ) : GameSeason {
     override fun same(other: GameSeason): Boolean {
         return when (other) {
-            is WowSeason -> this.id == other.id && this.expansionId == this.expansionId
+            is WowSeason -> this.id == other.id && this.expansionId == other.expansionId
             else -> false
         }
     }

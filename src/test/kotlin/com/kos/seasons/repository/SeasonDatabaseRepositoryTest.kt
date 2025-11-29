@@ -32,12 +32,12 @@ abstract class SeasonDatabaseRepositoryTestCommon {
 
     @Test
     open fun `given an existing repository I can retrieve it by calling state()`() {
-
+        TODO()
     }
 
     @Test
     open fun `i can change the repository state succesfully`() {
-
+        TODO()
     }
 }
 
