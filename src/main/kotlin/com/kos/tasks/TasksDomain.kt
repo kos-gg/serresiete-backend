@@ -58,6 +58,9 @@ enum class TaskType {
     },
     CACHE_CLEAR_TASK {
         override fun toString(): String = "cacheClearTask"
+    },
+    TASK_UPDATE_MYTHIC_PLUS_SEASON {
+        override fun toString(): String = "updateMythicPlusSeason"
     };
 
     companion object {
@@ -69,6 +72,7 @@ enum class TaskType {
             "taskCleanupTask" -> Either.Right(TASK_CLEANUP_TASK)
             "updateLolEntitiesTask" -> Either.Right(UPDATE_LOL_ENTITIES_TASK)
             "cacheClearTask" -> Either.Right(CACHE_CLEAR_TASK)
+            "updateMythicPlusSeason" -> Either.Right(TASK_UPDATE_MYTHIC_PLUS_SEASON)
             else -> Either.Left(InvalidTaskType(value))
         }
     }

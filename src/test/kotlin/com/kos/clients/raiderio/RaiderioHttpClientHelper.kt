@@ -6,9 +6,60 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import java.nio.charset.StandardCharsets
 
 object RaiderioHttpClientHelper {
+
+    object ResourceLoader {
+        fun readResource(path: String): String =
+            object {}.javaClass.classLoader
+                .getResourceAsStream(path)!!
+                .bufferedReader(Charsets.UTF_8)
+                .use { it.readText() }
+    }
+
+    val client = HttpClient(MockEngine) {
+        install(ContentNegotiation) {
+            json()
+        }
+        engine {
+            addHandler { request ->
+                when (request.url.encodedPath) {
+
+                    "/api/v1/mythic-plus/static-data" -> {
+                        val response = ResourceLoader.readResource("wow/raiderio-tww-seasons.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/api/v1/mythic-plus/season-cutoffs" -> {
+                        val response = ResourceLoader.readResource("wow/raiderio-cutoff-response.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/api/v1/characters/profile" -> {
+                        val response = when (request.url.parameters["fields"]) {
+                            "talents" -> ResourceLoader.readResource("wow/raiderio-classic-talents-response.json")
+                            else -> ResourceLoader.readResource("wow/raiderio-profile-response.json")
+                        }
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    else -> error("Unhandled ${request.url.encodedPath}")
+                }
+            }
+        }
+    }
 
     val raiderioProfileResponse =
         RaiderIoResponse(
@@ -98,26 +149,4 @@ object RaiderioHttpClientHelper {
                 MythicPlusRankWithSpecName("Destruction", 0.0, 0, 0, 0)
             )
         )
-
-    val client = HttpClient(MockEngine) {
-        install(ContentNegotiation) {
-            json()
-        }
-        engine {
-            addHandler { request ->
-                when (request.url.encodedPath) {
-                    "/mythic-plus/season-cutoffs" -> respond("content", HttpStatusCode.OK)
-                    "/api/v1/characters/profile" -> {
-                        val response = javaClass.classLoader
-                            .getResourceAsStream("raiderio-profile-response.json")!!
-                            .bufferedReader(StandardCharsets.UTF_8)
-                            .use { it.readText() }
-                        respond(response, HttpStatusCode.OK)
-                    }
-
-                    else -> error("Unhandled ${request.url.encodedPath}")
-                }
-            }
-        }
-    }
 }

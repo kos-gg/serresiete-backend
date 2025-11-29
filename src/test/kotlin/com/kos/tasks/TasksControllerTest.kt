@@ -5,10 +5,10 @@ import com.kos.activities.Activity
 import com.kos.auth.AuthService
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthInMemoryRepository
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
 import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
@@ -19,16 +19,18 @@ import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.datacache.DataCache
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
-import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
+import com.kos.seasons.SeasonService
+import com.kos.seasons.repository.SeasonInMemoryRepository
+import com.kos.staticdata.repository.StaticDataInMemoryRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -39,9 +41,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class TasksControllerTest {
-    private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
-    private val riotClient = Mockito.mock(RiotClient::class.java)
-    private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val riotClient = mock(RiotClient::class.java)
+    private val blizzardClient = mock(BlizzardClient::class.java)
     private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
@@ -52,6 +54,8 @@ class TasksControllerTest {
     private val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
     private val tasksRepository = TasksInMemoryRepository()
     private val authRepository = AuthInMemoryRepository()
+    private val staticDataRepository = StaticDataInMemoryRepository()
+    private val seasonDatabaseRepository = SeasonInMemoryRepository()
 
     private suspend fun createController(
         credentialsState: CredentialsRepositoryState,
@@ -71,14 +75,24 @@ class TasksControllerTest {
         val rolesRepositoryWithState = rolesRepository.withState(rolesState)
         val eventStore = EventStoreInMemory()
 
-
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
-        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient, retryConfig, eventStore)
+        val dataCacheService = DataCacheService(
+            dataCacheRepositoryWithState,
+            entitiesRepositoryWithState,
+            raiderIoClient,
+            riotClient,
+            blizzardClient,
+            blizzardDatabaseClient,
+            retryConfig,
+            eventStore
+        )
         val entitiesService = EntitiesService(entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
-        val tasksService = TasksService(tasksRepositoryWithState, dataCacheService, entitiesService, authService)
+        val seasonService = SeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient, retryConfig)
+        val tasksService =
+            TasksService(tasksRepositoryWithState, dataCacheService, entitiesService, authService, seasonService)
 
         return TasksController(tasksService)
     }
