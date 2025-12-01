@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.common.RaiderIoError
 import com.kos.common.RetryConfig
 import com.kos.seasons.repository.SeasonInMemoryRepository
 import com.kos.seasons.repository.SeasonsState
@@ -72,12 +73,48 @@ class SeasonServiceTest {
 
     @Test
     fun `i can not add a new mythic plus dungeon season because the raider io client is not available`() {
-        TODO()
+        runBlocking {
+            `when`(raiderIoClient.getExpansionSeasons(10))
+                .thenReturn(Either.Left(RaiderIoError(500, "Internal server error", "error from server")))
+
+            val staticDataInMemoryRepository =
+                StaticDataInMemoryRepository()
+                    .withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
+            val seasonInMemoryRepository =
+                SeasonInMemoryRepository()
+                    .withState(SeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, ""))))
+
+            val seasonService =
+                SeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
+
+            assertTrue(
+                seasonService.addNewMythicPlusSeason()
+                    .isLeft()
+            )
+        }
     }
 
     @Test
     fun `i can not add a new mythic plus dungeon season because there is not current season for the current expansion`() {
-        TODO()
+        runBlocking {
+            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(false, "TWW Season 3", 15, listOf())))
+            `when`(raiderIoClient.getExpansionSeasons(10))
+                .thenReturn(Either.Right(expectedExpansionSeasons))
+
+            val staticDataInMemoryRepository =
+                StaticDataInMemoryRepository()
+                    .withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
+            val seasonInMemoryRepository = SeasonInMemoryRepository()
+                .withState(SeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, ""))))
+
+            val seasonService =
+                SeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
+
+            assertTrue(
+                seasonService.addNewMythicPlusSeason()
+                    .isLeft()
+            )
+        }
     }
 
 }

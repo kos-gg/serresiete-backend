@@ -46,6 +46,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class TasksServiceTest {
+    val raiderIoClient = mock(RaiderIoClient::class.java)
+    val riotClient = mock(RiotClient::class.java)
+    val blizzardClient = mock(BlizzardClient::class.java)
+    val blizzardDbClient = mock(BlizzardDatabaseClient::class.java)
+    val retryConfig = RetryConfig(1, 1)
 
     @Test
     fun `task update mythic plus dungeon season is successful`() = runBlocking {
@@ -54,7 +59,7 @@ class TasksServiceTest {
         val expected = ExpansionSeasons(listOf(Season(true, "TWW3", 15, listOf())))
         tasksService.staticDataRepo.withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
 
-        `when`(tasksService.raiderIoClient.getExpansionSeasons(10))
+        `when`(raiderIoClient.getExpansionSeasons(10))
             .thenReturn(Either.Right(expected))
 
         val id = UUID.randomUUID().toString()
@@ -115,8 +120,8 @@ class TasksServiceTest {
             EntitiesState(listOf(basicWowEntity), listOf(), listOf())
         )
 
-        `when`(tasksService.raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
-        `when`(tasksService.raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
+        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
 
         val id = UUID.randomUUID().toString()
 
@@ -135,12 +140,12 @@ class TasksServiceTest {
             EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
         )
 
-        `when`(tasksService.riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
-        `when`(tasksService.riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt()))
+        `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
+        `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt()))
             .thenReturn(RiotMockHelper.matches)
-        `when`(tasksService.riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt()))
+        `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt()))
             .thenReturn(RiotMockHelper.matches)
-        `when`(tasksService.riotClient.getMatchById(RiotMockHelper.matchId))
+        `when`(riotClient.getMatchById(RiotMockHelper.matchId))
             .thenReturn(Either.Right(RiotMockHelper.match))
 
         val id = UUID.randomUUID().toString()
@@ -157,9 +162,9 @@ class TasksServiceTest {
             EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
         )
 
-        `when`(tasksService.riotClient.getSummonerByPuuid(basicLolEntity.puuid))
+        `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid))
             .thenReturn(Either.Right(EntitiesTestHelper.basicGetSummonerResponse))
-        `when`(tasksService.riotClient.getAccountByPUUID(basicLolEntity.puuid))
+        `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid))
             .thenReturn(Either.Right(EntitiesTestHelper.basicGetAccountResponse))
 
         val id = UUID.randomUUID().toString()
@@ -204,11 +209,6 @@ class TasksServiceTest {
     }
 
     private data class TaskServiceTestComponents(
-        val raiderIoClient: RaiderIoClient,
-        val riotClient: RiotClient,
-        val blizzardClient: BlizzardClient,
-        val blizzardDatabaseClient: BlizzardDatabaseClient,
-
         val dataCacheRepo: DataCacheInMemoryRepository,
         val entitiesRepo: EntitiesInMemoryRepository,
         val eventStore: EventStoreInMemory,
@@ -234,12 +234,6 @@ class TasksServiceTest {
     )
 
     private fun createTaskService(): TaskServiceTestComponents {
-        val raiderIoClient = mock(RaiderIoClient::class.java)
-        val riotClient = mock(RiotClient::class.java)
-        val blizzardClient = mock(BlizzardClient::class.java)
-        val blizzardDbClient = mock(BlizzardDatabaseClient::class.java)
-
-        val retryConfig = RetryConfig(1, 1)
 
         val dataCacheRepo = DataCacheInMemoryRepository()
         val entitiesRepo = EntitiesInMemoryRepository()
@@ -283,11 +277,6 @@ class TasksServiceTest {
             TasksService(tasksRepo, dataCacheService, entitiesService, authService, seasonService)
 
         return TaskServiceTestComponents(
-            raiderIoClient,
-            riotClient,
-            blizzardClient,
-            blizzardDbClient,
-
             dataCacheRepo,
             entitiesRepo,
             eventStore,

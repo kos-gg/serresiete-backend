@@ -1,19 +1,28 @@
 package com.kos.staticdata.repository
 
+import com.kos.staticdata.WowExpansion
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
+import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import kotlin.test.assertEquals
 
 abstract class StaticDataRepositoryTestCommon {
     abstract val repository: StaticDataRepository
 
     @Test
     fun `I can retrieve wow expansions`() {
-        TODO()
+        runBlocking {
+            val staticDataRepository =
+                repository.withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
+
+            assertEquals(staticDataRepository.getExpansions()[0].id, 10)
+        }
+
     }
 }
 

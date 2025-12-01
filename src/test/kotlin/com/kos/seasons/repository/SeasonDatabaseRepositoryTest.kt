@@ -2,6 +2,11 @@ package com.kos.seasons.repository
 
 import com.kos.assertTrue
 import com.kos.seasons.WowSeason
+import com.kos.staticdata.WowExpansion
+import com.kos.staticdata.repository.StaticDataDatabaseRepository
+import com.kos.staticdata.repository.StaticDataInMemoryRepository
+import com.kos.staticdata.repository.StaticDataRepository
+import com.kos.staticdata.repository.StaticDataState
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
@@ -15,12 +20,14 @@ import kotlin.test.fail
 
 abstract class SeasonDatabaseRepositoryTestCommon {
     abstract val repository: SeasonRepository
+    abstract val staticDataRepository: StaticDataRepository
 
     private val wowSeason = WowSeason(15, "TWW3", 10, "{}")
 
     @Test
     open fun `given an empty repository I can insert a wow season`() {
         runBlocking {
+            staticDataRepository.withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
             val result = repository.insert(wowSeason)
             result.onLeft { fail() }
             result.onRight {
@@ -29,20 +36,11 @@ abstract class SeasonDatabaseRepositoryTestCommon {
             assertEquals(SeasonsState(listOf(wowSeason)), repository.state())
         }
     }
-
-    @Test
-    open fun `given an existing repository I can retrieve it by calling state()`() {
-        TODO()
-    }
-
-    @Test
-    open fun `i can change the repository state succesfully`() {
-        TODO()
-    }
 }
 
 class SeasonInMemoryRepositoryTest : SeasonDatabaseRepositoryTestCommon() {
     override val repository = SeasonInMemoryRepository()
+    override val staticDataRepository = StaticDataInMemoryRepository()
 
     @BeforeEach
     fun beforeEach() {
@@ -62,6 +60,7 @@ class SeasonDatabaseRepositoryTest : SeasonDatabaseRepositoryTestCommon() {
         .load()
 
     override val repository = SeasonDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
+    override val staticDataRepository = StaticDataDatabaseRepository(Database.connect(embeddedPostgres.postgresDatabase))
 
     @BeforeEach
     fun beforeEach() {
