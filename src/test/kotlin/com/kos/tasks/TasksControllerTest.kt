@@ -5,10 +5,10 @@ import com.kos.activities.Activity
 import com.kos.auth.AuthService
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthInMemoryRepository
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
 import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
@@ -19,11 +19,14 @@ import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.datacache.DataCache
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
-import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -74,11 +77,35 @@ class TasksControllerTest {
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
-        val dataCacheService = DataCacheService(dataCacheRepositoryWithState, entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient, retryConfig, eventStore)
+        val dataCacheService = DataCacheService(
+            dataCacheRepositoryWithState,
+            entitiesRepositoryWithState,
+            eventStore
+        )
         val entitiesService = EntitiesService(entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
-        val tasksService = TasksService(tasksRepositoryWithState, dataCacheService, entitiesService, authService)
+        val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+            listOf(
+                LolEntityCacheService(dataCacheRepository, entitiesRepositoryWithState, riotClient, retryConfig),
+                WowHardcoreEntityCacheService(
+                    dataCacheRepository,
+                    entitiesRepositoryWithState,
+                    raiderIoClient,
+                    blizzardClient,
+                    blizzardDatabaseClient,
+                    retryConfig
+                ),
+                WowEntityCacheService(dataCacheRepository, entitiesRepositoryWithState, raiderIoClient, retryConfig)
+            )
+        )
+        val tasksService = TasksService(
+            tasksRepositoryWithState,
+            dataCacheService,
+            entitiesService,
+            authService,
+            entityCacheServiceRegistry
+        )
 
         return TasksController(tasksService)
     }

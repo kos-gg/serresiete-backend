@@ -1,11 +1,6 @@
 package com.kos.eventsourcing
 
 import arrow.core.Either
-import com.kos.entities.Entity
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
@@ -15,12 +10,19 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.ControllerError
 import com.kos.common.RetryConfig
 import com.kos.datacache.BlizzardMockHelper
-import com.kos.datacache.DataCacheService
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper
+import com.kos.entities.Entity
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
@@ -29,20 +31,20 @@ import io.mockk.coVerify
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class SyncCharactersSubscriptionTest {
     private val retryConfig = RetryConfig(1, 1)
-    private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
-    private val riotClient = Mockito.mock(RiotClient::class.java)
-    private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val riotClient = mock(RiotClient::class.java)
+    private val blizzardClient = mock(BlizzardClient::class.java)
     private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
 
-    private suspend fun createService(): Triple<EntitiesService, DataCacheService, DataCacheRepository> {
+    private suspend fun createService(): Triple<EntitiesService, EntityCacheServiceRegistry, DataCacheRepository> {
         val charactersRepository = EntitiesInMemoryRepository().withState(
             EntitiesState(
                 listOf(EntitiesTestHelper.basicWowEntity),
@@ -50,13 +52,26 @@ class SyncCharactersSubscriptionTest {
                 listOf(EntitiesTestHelper.basicLolEntity)
             )
         )
-        val eventStore = EventStoreInMemory()
         val dataCacheRepository = DataCacheInMemoryRepository()
         val entitiesService =
             EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
-        val dataCacheService =
-            DataCacheService(dataCacheRepository, charactersRepository, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient, retryConfig, eventStore)
-        return Triple(entitiesService, spyk(dataCacheService), dataCacheRepository)
+        val entitiesInMemoryRepository = EntitiesInMemoryRepository()
+        val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+            listOf(
+                LolEntityCacheService(dataCacheRepository, entitiesInMemoryRepository, riotClient, retryConfig),
+                WowHardcoreEntityCacheService(
+                    dataCacheRepository,
+                    entitiesInMemoryRepository,
+                    raiderIoClient,
+                    blizzardClient,
+                    blizzardDatabaseClient,
+                    retryConfig
+                ),
+                WowEntityCacheService(dataCacheRepository, entitiesInMemoryRepository, raiderIoClient, retryConfig)
+            )
+        )
+
+        return Triple(entitiesService, spyk(entityCacheServiceRegistry), dataCacheRepository)
     }
 
     private fun createEventWithVersion(eventType: EventData, game: Game): EventWithVersion {
@@ -70,29 +85,29 @@ class SyncCharactersSubscriptionTest {
     }
 
     private suspend fun assertCacheInvocation(
-        processor: suspend (EventWithVersion, EntitiesService, DataCacheService) -> Either<ControllerError, Unit>,
+        processor: suspend (EventWithVersion, EntitiesService, EntityCacheServiceRegistry) -> Either<ControllerError, Unit>,
         gameToVerify: Game,
         entityToVerify: Entity,
         eventWithVersion: EventWithVersion,
         entitiesService: EntitiesService,
-        dataCacheService: DataCacheService,
+        entityCacheServiceRegistry: EntityCacheServiceRegistry,
         dataCacheRepository: DataCacheRepository,
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
         val result =
-            processor(eventWithVersion, entitiesService, dataCacheService)
+            processor(eventWithVersion, entitiesService, entityCacheServiceRegistry)
         result.fold(
             { fail("Expected success") },
             {
+                val cacheService = entityCacheServiceRegistry.serviceFor(gameToVerify)
                 if (shouldCache) coVerify {
-                    dataCacheService.cache(
-                        eq(listOf(entityToVerify)), eq(
-                            gameToVerify
-                        )
+
+                    cacheService.cache(
+                        eq(listOf(entityToVerify))
                     )
                 }
-                else coVerify(exactly = 0) { dataCacheService.cache(any(), any()) }
+                else coVerify(exactly = 0) { cacheService.cache(any()) }
             }
         )
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
@@ -103,7 +118,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_CREATED with LOL game`() = runBlocking {
-            Mockito.`when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
+            `when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
 
             val (charactersService, spiedService, dataCacheRepository) = createService()
@@ -119,6 +134,7 @@ class SyncCharactersSubscriptionTest {
                     null
                 ), Game.LOL
             )
+
 
             assertCacheInvocation(
                 EventSubscription::syncLolEntitiesProcessor,
@@ -150,6 +166,9 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
+                val entitiesInMemoryRepository = EntitiesInMemoryRepository()
+
+
                 assertCacheInvocation(
                     EventSubscription::syncLolEntitiesProcessor,
                     Game.LOL,
@@ -165,7 +184,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_EDITED with LOL game`() = runBlocking {
-            Mockito.`when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
+            `when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
             val (charactersService, spiedService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(
@@ -222,7 +241,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_PATCHED with LOL game`() = runBlocking {
-            Mockito.`when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
+            `when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
             val (charactersService, spiedService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(
@@ -314,8 +333,8 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncWowCharactersProcessor calls cache on VIEW_CREATED with WOW game`() = runBlocking {
-            Mockito.`when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
-            Mockito.`when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
+            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
                 .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
 
             val (charactersService, spiedService, dataCacheRepository) = createService()
@@ -347,8 +366,8 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncWowCharactersProcessor calls cache on VIEW_EDITED with WOW game`() = runBlocking {
-            Mockito.`when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
-            Mockito.`when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
+            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
                 .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
             val (charactersService, spiedService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(
@@ -377,8 +396,8 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncWowCharactersProcessor calls cache on VIEW_PATCHED with WOW game`() = runBlocking {
-            Mockito.`when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
-            Mockito.`when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
+            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
                 .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
             val (charactersService, spiedService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(
@@ -422,6 +441,7 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
+
                 assertCacheInvocation(
                     EventSubscription::syncWowEntitiesProcessor,
                     Game.WOW,
@@ -441,7 +461,7 @@ class SyncCharactersSubscriptionTest {
     inner class BehaviorOfSyncWowHardcoreProcessor {
         @Test
         fun `syncWowHcCharactersProcessor calls cache on VIEW_CREATED with WOW_HC game`() = runBlocking {
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterProfile(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -452,7 +472,7 @@ class SyncCharactersSubscriptionTest {
                     EntitiesTestHelper.basicWowEntity
                 )
             )
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterMedia(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -463,7 +483,7 @@ class SyncCharactersSubscriptionTest {
                     EntitiesTestHelper.basicWowEntity
                 )
             )
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterEquipment(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -471,7 +491,7 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterEquipment())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterStats(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -479,7 +499,7 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterStats())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterSpecializations(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -487,21 +507,21 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterSpecializations())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getItemMedia(
                     EntitiesTestHelper.basicWowEntity.region,
                     18421
                 )
             ).thenReturn(BlizzardMockHelper.getItemMedia())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getItem(
                     EntitiesTestHelper.basicWowEntity.region,
                     18421
                 )
             ).thenReturn(BlizzardMockHelper.getWowItemResponse())
 
-            Mockito.`when`(
+            `when`(
                 raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
@@ -534,7 +554,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncWowHcCharactersProcessor calls cache on VIEW_EDITED with WOW game`() = runBlocking {
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterProfile(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -545,7 +565,7 @@ class SyncCharactersSubscriptionTest {
                     EntitiesTestHelper.basicWowEntity
                 )
             )
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterMedia(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -556,7 +576,7 @@ class SyncCharactersSubscriptionTest {
                     EntitiesTestHelper.basicWowEntity
                 )
             )
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterEquipment(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -564,7 +584,7 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterEquipment())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterStats(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -572,7 +592,7 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterStats())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterSpecializations(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -580,21 +600,21 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterSpecializations())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getItemMedia(
                     EntitiesTestHelper.basicWowEntity.region,
                     18421
                 )
             ).thenReturn(BlizzardMockHelper.getItemMedia())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getItem(
                     EntitiesTestHelper.basicWowEntity.region,
                     18421
                 )
             ).thenReturn(BlizzardMockHelper.getWowItemResponse())
 
-            Mockito.`when`(
+            `when`(
                 raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
@@ -625,7 +645,7 @@ class SyncCharactersSubscriptionTest {
 
         @Test
         fun `syncWowHcCharactersProcessor calls cache on VIEW_PATCHED with WOW game`() = runBlocking {
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterProfile(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -636,7 +656,7 @@ class SyncCharactersSubscriptionTest {
                     EntitiesTestHelper.basicWowEntity
                 )
             )
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterMedia(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -647,7 +667,7 @@ class SyncCharactersSubscriptionTest {
                     EntitiesTestHelper.basicWowEntity
                 )
             )
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterEquipment(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -655,7 +675,7 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterEquipment())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterStats(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -663,7 +683,7 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterStats())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getCharacterSpecializations(
                     EntitiesTestHelper.basicWowEntity.region,
                     EntitiesTestHelper.basicWowEntity.realm,
@@ -671,21 +691,21 @@ class SyncCharactersSubscriptionTest {
                 )
             ).thenReturn(BlizzardMockHelper.getCharacterSpecializations())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getItemMedia(
                     EntitiesTestHelper.basicWowEntity.region,
                     18421
                 )
             ).thenReturn(BlizzardMockHelper.getItemMedia())
 
-            Mockito.`when`(
+            `when`(
                 blizzardClient.getItem(
                     EntitiesTestHelper.basicWowEntity.region,
                     18421
                 )
             ).thenReturn(BlizzardMockHelper.getWowItemResponse())
 
-            Mockito.`when`(
+            `when`(
                 raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
