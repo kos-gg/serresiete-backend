@@ -963,11 +963,6 @@ class ViewsServiceTest {
             DataCacheService(
                 dataCacheRepository,
                 charactersRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
         val service =

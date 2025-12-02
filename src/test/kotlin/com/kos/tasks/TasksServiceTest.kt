@@ -21,6 +21,10 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
@@ -31,7 +35,6 @@ import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.time.OffsetDateTime
@@ -40,9 +43,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class TasksServiceTest {
-    private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
-    private val riotClient = Mockito.mock(RiotClient::class.java)
-    private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
+    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val riotClient = mock(RiotClient::class.java)
+    private val blizzardClient = mock(BlizzardClient::class.java)
     private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
@@ -55,11 +58,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -80,7 +78,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             val id = UUID.randomUUID().toString()
 
@@ -105,11 +124,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
 
@@ -123,12 +137,33 @@ class TasksServiceTest {
             val authRepository = AuthInMemoryRepository()
             val authService =
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
 
             val now = OffsetDateTime.now()
             val expectedRemainingTask = task(now)
             val tasksRepository =
                 TasksInMemoryRepository().withState(listOf(expectedRemainingTask, task(now.minusDays(8))))
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             val id = UUID.randomUUID().toString()
 
@@ -154,11 +189,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -173,7 +203,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
@@ -202,11 +253,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -221,7 +267,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
             `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt())).thenReturn(
@@ -256,11 +323,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -275,7 +337,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid)).thenReturn(Either.Right(EntitiesTestHelper.basicGetSummonerResponse))
             `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid)).thenReturn(Either.Right(EntitiesTestHelper.basicGetAccountResponse))
@@ -302,11 +385,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -321,7 +399,29 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             val id = UUID.randomUUID().toString()
 
@@ -345,11 +445,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -364,7 +459,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
 
@@ -390,11 +506,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -409,7 +520,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository()
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
 
             val id = UUID.randomUUID().toString()
 
@@ -436,11 +568,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -456,7 +583,28 @@ class TasksServiceTest {
 
 
             val tasksRepository = TasksInMemoryRepository().withState(listOf(task))
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
             assertEquals(listOf(task), service.getTasks(null))
         }
     }
@@ -474,11 +622,6 @@ class TasksServiceTest {
             val dataCacheService = DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
             val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
@@ -493,7 +636,28 @@ class TasksServiceTest {
                 AuthService(authRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
             val tasksRepository = TasksInMemoryRepository().withState(listOf(task))
-            val service = TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+            val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+                listOf(
+                    LolEntityCacheService(dataCacheRepository, entitiesRepository, riotClient, retryConfig),
+                    WowHardcoreEntityCacheService(
+                        dataCacheRepository,
+                        entitiesRepository,
+                        raiderIoClient,
+                        blizzardClient,
+                        blizzardDatabaseClient,
+                        retryConfig
+                    ),
+                    WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoClient, retryConfig)
+                )
+            )
+            val service =
+                TasksService(
+                    tasksRepository,
+                    dataCacheService,
+                    entitiesService,
+                    authService,
+                    entityCacheServiceRegistry
+                )
             assertEquals(task, service.getTask(knownId))
         }
     }

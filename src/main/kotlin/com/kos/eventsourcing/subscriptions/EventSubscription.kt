@@ -2,13 +2,13 @@ package com.kos.eventsourcing.subscriptions
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.entities.EntitiesService
 import com.kos.common.ControllerError
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.Retry.retryEitherWithExponentialBackoff
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
-import com.kos.datacache.DataCacheService
+import com.kos.entities.EntitiesService
+import com.kos.entities.cache.EntityCacheServiceRegistry
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
@@ -145,7 +145,7 @@ class EventSubscription(
         suspend fun syncLolEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            entityCacheServiceRegistry: EntityCacheServiceRegistry
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -159,7 +159,9 @@ class EventSubscription(
                                     Game.LOL
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            entityCacheServiceRegistry
+                                .serviceFor(payload.game)
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -181,7 +183,9 @@ class EventSubscription(
                                     Game.LOL
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            entityCacheServiceRegistry
+                                .serviceFor(payload.game)
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -198,7 +202,9 @@ class EventSubscription(
                         Game.LOL -> {
                             syncLolEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.LOL) }?.let {
-                                dataCacheService.cache(it, payload.game)
+                                entityCacheServiceRegistry
+                                    .serviceFor(payload.game)
+                                    .cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -220,7 +226,9 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                dataCacheService.cache(newEntity.map { it.first }, payload.game)
+                                entityCacheServiceRegistry
+                                    .serviceFor(payload.game)
+                                    .cache(newEntity.map { it.first })
                             }
                         }
 
@@ -245,7 +253,7 @@ class EventSubscription(
         suspend fun syncWowEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            entityCacheServiceRegistry: EntityCacheServiceRegistry
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -259,7 +267,9 @@ class EventSubscription(
                                     Game.WOW
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            entityCacheServiceRegistry
+                                .serviceFor(payload.game)
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -281,7 +291,9 @@ class EventSubscription(
                                     Game.WOW
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            entityCacheServiceRegistry
+                                .serviceFor(payload.game)
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -298,7 +310,9 @@ class EventSubscription(
                         Game.WOW -> {
                             syncWowEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW) }?.let {
-                                dataCacheService.cache(it, payload.game)
+                                entityCacheServiceRegistry
+                                    .serviceFor(payload.game)
+                                    .cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -320,7 +334,9 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                dataCacheService.cache(newEntity.map { it.first }, payload.game)
+                                entityCacheServiceRegistry
+                                    .serviceFor(payload.game)
+                                    .cache(newEntity.map { it.first })
                             }
                         }
 
@@ -345,7 +361,8 @@ class EventSubscription(
         suspend fun syncWowHardcoreEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            entityCacheServiceRegistry: EntityCacheServiceRegistry
+
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -359,7 +376,9 @@ class EventSubscription(
                                     Game.WOW_HC
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            entityCacheServiceRegistry
+                                .serviceFor(payload.game)
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -381,7 +400,9 @@ class EventSubscription(
                                     Game.WOW_HC
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            entityCacheServiceRegistry
+                                .serviceFor(payload.game)
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -398,7 +419,9 @@ class EventSubscription(
                         Game.WOW_HC -> {
                             syncWowHardcoreEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW_HC) }?.let {
-                                dataCacheService.cache(it, payload.game)
+                                entityCacheServiceRegistry
+                                    .serviceFor(payload.game)
+                                    .cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -420,7 +443,9 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                dataCacheService.cache(newEntity.map{ it.first }, payload.game)
+                                entityCacheServiceRegistry
+                                    .serviceFor(payload.game)
+                                    .cache(newEntity.map { it.first })
                             }
                         }
 
@@ -449,18 +474,18 @@ class EventSubscription(
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_DELETED -> {
                     val payload = eventWithVersion.event.eventData as ViewDeletedEvent
-                    Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }.forEach {
-                        if (it.second.isEmpty()) {
-                            entitiesProcessorLogger.debug("Deleting entity ${it.first}")
-                            entitiesService.delete(it.first)
-                        }
-                        else entitiesProcessorLogger.debug(
-                            "Not deleting character {} because it's still in {}",
-                            it.first,
-                            it.second
-                        )
+                    Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }
+                        .forEach {
+                            if (it.second.isEmpty()) {
+                                entitiesProcessorLogger.debug("Deleting entity ${it.first}")
+                                entitiesService.delete(it.first)
+                            } else entitiesProcessorLogger.debug(
+                                "Not deleting character {} because it's still in {}",
+                                it.first,
+                                it.second
+                            )
 
-                    })
+                        })
                 }
 
                 else -> {

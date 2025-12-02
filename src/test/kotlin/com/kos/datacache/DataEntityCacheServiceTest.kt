@@ -44,7 +44,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class DataCacheServiceTest {
+class DataEntityCacheServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
