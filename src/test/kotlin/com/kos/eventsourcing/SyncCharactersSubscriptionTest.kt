@@ -13,11 +13,20 @@ import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper
+import com.kos.entities.LolEntity
+import com.kos.entities.WowEntity
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.subscriptions.EventSubscription
@@ -768,16 +777,40 @@ class SyncCharactersSubscriptionTest {
     }
 
     private suspend fun createService(): Pair<EntitiesService, DataCacheRepository> {
-        val charactersRepository = EntitiesInMemoryRepository().withState(
+        val entitiesRepository = EntitiesInMemoryRepository().withState(
             EntitiesState(
                 listOf(EntitiesTestHelper.basicWowEntity),
                 listOf(EntitiesTestHelper.basicWowEntity),
                 listOf(EntitiesTestHelper.basicLolEntity)
             )
         )
+
+        val wowGuildsRepository = WowGuildsInMemoryRepository()
+        val viewsRepository = ViewsInMemoryRepository()
+
+        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+        val entitiesResolver = mapOf(
+            Game.WOW to wowResolver,
+            Game.WOW_HC to wowHardcoreResolver,
+            Game.LOL to lolResolver
+        )
+
+        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+
         val dataCacheRepository = DataCacheInMemoryRepository()
         val entitiesService =
-            EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
 
         return Pair(entitiesService, dataCacheRepository)
     }

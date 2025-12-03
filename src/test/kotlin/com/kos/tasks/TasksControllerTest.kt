@@ -19,25 +19,20 @@ import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.datacache.DataCache
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
-import com.kos.entities.repository.WowGuildsInMemoryRepository
-import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.cache.EntityCacheServiceRegistry
 import com.kos.entities.cache.LolEntityCacheService
 import com.kos.entities.cache.WowEntityCacheService
 import com.kos.entities.cache.WowHardcoreEntityCacheService
+import com.kos.entities.entitiesResolvers.LolResolver
+import com.kos.entities.entitiesResolvers.WowHardcoreResolver
+import com.kos.entities.entitiesResolvers.WowResolver
+import com.kos.entities.entitiesUpdaters.LolUpdater
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
+import com.kos.entities.repository.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -110,7 +105,14 @@ class TasksControllerTest {
             entitiesRepositoryWithState,
             eventStore
         )
-        val entitiesService = EntitiesService(entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
+        val entitiesService =
+            EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
         val entityCacheServiceRegistry = EntityCacheServiceRegistry(

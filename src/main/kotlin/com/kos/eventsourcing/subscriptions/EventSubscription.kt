@@ -232,7 +232,7 @@ class EventSubscription(
                                 val entities = inserted.zip(resolved.entities.map { it.second }) +
                                         resolved.existing
 
-                                dataCacheService.cache(entities.map { it.first }, payload.game)
+                                lolEntityCacheService.cache(entities.map { it.first })
                             }
                         }
 
@@ -343,7 +343,7 @@ class EventSubscription(
 
                                 val entities = inserted.zip(resolved.entities.map { it.second }) +
                                         resolved.existing
-                                dataCacheService.cache(entities.map { it.first }, payload.game)
+                                wowEntityCacheService.cache(entities.map { it.first })
                             }
                         }
 
@@ -454,7 +454,7 @@ class EventSubscription(
 
                                 val entities = inserted.zip(resolved.entities.map { it.second }) +
                                         resolved.existing
-                                dataCacheService.cache(entities.map { it.first }, payload.game)
+                                wowHardcoreEntityCacheService.cache(entities.map { it.first })
                             }
                         }
 

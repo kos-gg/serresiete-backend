@@ -16,17 +16,17 @@ import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.datacache.DataCache
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper
+import com.kos.entities.WowEntity
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
-import com.kos.entities.repository.WowGuildsInMemoryRepository
-import com.kos.entities.EntitiesService
-import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.WowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
+import com.kos.entities.repository.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
@@ -55,7 +55,6 @@ class EventSubscriptionTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val riotClient = Mockito.mock(RiotClient::class.java)
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
 
     @Nested
     inner class BehaviorOfProcessPendingEvents {
@@ -453,7 +452,8 @@ class EventSubscriptionTest {
             val lolResolver = LolResolver(entitiesRepository, riotClient)
 
             val lolUpdater = LolUpdater(riotClient, entitiesRepository)
-            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+            val wowHardcoreGuildUpdater =
+                WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
             val entitiesResolver = mapOf(
                 Game.WOW to wowResolver,
@@ -462,11 +462,17 @@ class EventSubscriptionTest {
             )
 
             val credentialsService = CredentialsService(credentialsRepository)
-            val entitiesService = EntitiesService(entitiesRepository, wowGuildsRepository, entitiesResolver, lolUpdater, wowHardcoreGuildUpdater)
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val dataCacheService =
                 DataCacheService(
                     dataCacheRepository,
-                    charactersRepository,
+                    entitiesRepository,
                     eventStore
                 )
             val service =
@@ -544,7 +550,8 @@ class EventSubscriptionTest {
                 val lolResolver = LolResolver(entitiesRepository, riotClient)
 
                 val lolUpdater = LolUpdater(riotClient, entitiesRepository)
-                val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+                val wowHardcoreGuildUpdater =
+                    WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
                 val entitiesResolver = mapOf(
                     Game.WOW to wowResolver,
@@ -553,7 +560,13 @@ class EventSubscriptionTest {
                 )
 
 
-                val service = EntitiesService(entitiesRepository, wowGuildsRepository, entitiesResolver, lolUpdater, wowHardcoreGuildUpdater)
+                val service = EntitiesService(
+                    entitiesRepository,
+                    wowGuildsRepository,
+                    entitiesResolver,
+                    lolUpdater,
+                    wowHardcoreGuildUpdater
+                )
 
                 val eventData =
                     ViewDeletedEvent(
