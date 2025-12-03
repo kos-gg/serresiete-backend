@@ -1,12 +1,9 @@
 package com.kos.tasks
 
 import com.kos.auth.AuthService
-import com.kos.entities.EntitiesService
-import com.kos.entities.LolEntity
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
-import com.kos.entities.repository.WowGuildsDatabaseRepository
+import com.kos.entities.EntitiesService
 import com.kos.tasks.repository.TasksRepository
 import com.kos.views.Game
 import java.time.OffsetDateTime
@@ -75,7 +72,7 @@ data class TasksService(
             tasksRepository.insertTask(
                 Task(
                     id,
-                    TaskType.UPDATE_LOL_ENTITIES_TASK,
+                    TaskType.UPDATE_WOW_HARDCORE_GUILDS,
                     TaskStatus(Status.SUCCESSFUL, null),
                     OffsetDateTime.now()
                 )
@@ -84,7 +81,7 @@ data class TasksService(
             tasksRepository.insertTask(
                 Task(
                     id,
-                    TaskType.UPDATE_LOL_ENTITIES_TASK,
+                    TaskType.UPDATE_WOW_HARDCORE_GUILDS,
                     TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
                     OffsetDateTime.now()
                 )
