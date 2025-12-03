@@ -115,10 +115,7 @@ data class TasksService(
         val entities = entitiesService.getEntitiesToSync(game, 30)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
 
-        val errors =
-            entityCacheServiceRegistry
-                .serviceFor(game)
-                .cache(entities)
+        val errors = entityCacheServiceRegistry.serviceFor(game).cache(entities)
 
         //TODO: improve the check of excluded error from being flagged as error
         if (errors.isEmpty() || errors.all { it is WowHardcoreCharacterIsDead }) {

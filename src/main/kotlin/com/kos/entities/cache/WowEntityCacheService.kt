@@ -11,7 +11,6 @@ import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.Entity
 import com.kos.entities.WowEntity
-import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

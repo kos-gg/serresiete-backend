@@ -1,9 +1,9 @@
 package com.kos.entities.repository
 
 import arrow.core.Either
-import com.kos.entities.*
 import com.kos.common.InsertError
 import com.kos.common.WithState
+import com.kos.entities.*
 import com.kos.views.Game
 
 data class EntitiesState(

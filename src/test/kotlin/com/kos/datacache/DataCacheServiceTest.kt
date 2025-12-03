@@ -15,16 +15,11 @@ import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsState
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DataCacheServiceTest {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
 
     //TODO - this class will need to be more exhaustive
 
