@@ -22,6 +22,12 @@ import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
+import com.kos.entities.entitiesResolvers.LolResolver
+import com.kos.entities.entitiesResolvers.WowHardcoreResolver
+import com.kos.entities.entitiesResolvers.WowResolver
+import com.kos.entities.entitiesUpdaters.LolUpdater
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.repository.WowGuildsDatabaseRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.cache.EntityCacheServiceRegistry
 import com.kos.entities.cache.LolEntityCacheService
@@ -42,6 +48,7 @@ import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
+import com.kos.views.Game
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -105,6 +112,18 @@ fun Application.module() {
     val authController = AuthController(authService)
 
     val entitiesRepository = EntitiesDatabaseRepository(db)
+    val wowGuildsDatabaseRepository = WowGuildsDatabaseRepository(db)
+
+    val wowResolver = WowResolver(entitiesRepository, raiderIoHTTPClient)
+    val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+    val lolResolver = LolResolver(entitiesRepository, riotHTTPClient)
+    val entitiesResolvers = mapOf(
+        Game.LOL to lolResolver,
+        Game.WOW to wowResolver,
+        Game.WOW_HC to wowHardcoreResolver
+    )
+
+    val lolUpdater = LolUpdater(riotHTTPClient, entitiesRepository)
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
@@ -116,7 +135,15 @@ fun Application.module() {
             eventStore
         )
 
-    val entitiesService = EntitiesService(entitiesRepository, raiderIoHTTPClient, riotHTTPClient, blizzardClient)
+    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+    val entitiesService = EntitiesService(
+        entitiesRepository,
+        wowGuildsDatabaseRepository,
+        entitiesResolvers,
+        lolUpdater,
+        wowHardcoreGuildUpdater
+    )
     //TODO: This feels weird. Probably the responsibility of getOrSync should be on EntitiesService rather than DataCacheService
     val entitiesController = EntitiesController(dataCacheService)
 

@@ -1,199 +1,62 @@
 package com.kos.entities
 
 import arrow.core.Either
-import arrow.core.raise.either
-import arrow.core.raise.ensure
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetWowRealmResponse
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
-import com.kos.common.*
+import com.kos.common.ControllerError
+import com.kos.common.InsertError
+import com.kos.common.NotFound
+import com.kos.common.WithLogger
+import com.kos.common.fold
+import com.kos.entities.entitiesResolvers.EntityResolver
+import com.kos.entities.entitiesUpdaters.LolUpdater
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.repository.WowGuildsRepository
 import com.kos.views.Game
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import com.kos.views.ViewExtraArguments
 
 data class EntitiesService(
     private val entitiesRepository: EntitiesRepository,
-    private val raiderioClient: RaiderIoClient,
-    private val riotClient: RiotClient,
-    private val blizzardClient: BlizzardClient
+    private val wowGuildsRepository: WowGuildsRepository,
+    private val entitiesResolver: Map<Game, EntityResolver>,
+    private val lolUpdater: LolUpdater,
+    private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater
 ) : WithLogger("EntitiesService") {
-    suspend fun createAndReturnIds(
+
+    suspend fun resolveEntities(
         requestedEntities: List<CreateEntityRequest>,
-        game: Game
-    ): Either<InsertError, List<Pair<Entity, String?>>> {
-        suspend fun getCurrentAndNewEntities(
-            requestedEntities: List<CreateEntityRequest>,
-            game: Game,
-            entitiesRepository: EntitiesRepository
-        ): Pair<List<EntityWithAlias>, List<CreateEntityRequest>> = coroutineScope {
-
-            val entities: List<Either<EntityWithAlias, CreateEntityRequest>> = requestedEntities.asFlow()
-                .map { requestedEntity ->
-                    async {
-                        when (val maybeFound = entitiesRepository.get(requestedEntity, game)) {
-                            null -> Either.Right(requestedEntity)
-                            else -> Either.Left(EntityWithAlias(maybeFound, requestedEntity.alias))
-                        }
-                    }
-                }
-                .buffer(3)
-                .toList()
-                .awaitAll()
-
-            entities.split()
-        }
-
-        val existentAndNew: Pair<List<EntityWithAlias>, List<CreateEntityRequest>> =
-            getCurrentAndNewEntities(requestedEntities, game, entitiesRepository)
-
-        existentAndNew.second.forEach { logger.info("Entity new found: $it") }
-
-        val newThatExist: List<InsertEntityRequestWithAlias> = when (game) {
-            Game.WOW -> {
-                coroutineScope {
-                    existentAndNew.second.map { initialRequest ->
-                        async {
-                            initialRequest as WowEntityRequest
-                            initialRequest to raiderioClient.exists(initialRequest)
-                        }
-                    }
-                        .awaitAll()
-                }.collect({ it.second }) { it.first.withAlias(it.first.alias) }
-            }
-
-            Game.WOW_HC -> {
-                coroutineScope {
-                    val errorsAndValidated = existentAndNew.second.map { initialRequest ->
-                        async {
-                            either {
-                                initialRequest as WowEntityRequest
-                                val characterResponse =
-                                    blizzardClient.getCharacterProfile(
-                                        initialRequest.region,
-                                        initialRequest.realm,
-                                        initialRequest.name
-                                    ).bind()
-                                val realm: GetWowRealmResponse =
-                                    blizzardClient.getRealm(initialRequest.region, characterResponse.realm.id).bind()
-                                //TODO: Anniversary can be also non hardcore. Try to find another way to decide if its hardcore or not
-                                ensure(realm.category == "Hardcore" || realm.category == "Anniversary") {
-                                    NonHardcoreCharacter(
-                                        initialRequest
-                                    )
-                                }
-                                WowEnrichedEntityRequest(
-                                    initialRequest.name,
-                                    initialRequest.region,
-                                    initialRequest.realm,
-                                    characterResponse.id
-                                ).withAlias(initialRequest.alias)
-                            }
-                        }
-                    }.awaitAll().split()
-                    errorsAndValidated.first.forEach { logger.error(it.error()) }
-                    errorsAndValidated.second
-                }
-            }
-
-            Game.LOL -> coroutineScope {
-                existentAndNew.second.asFlow()
-                    .buffer(40)
-                    .mapNotNull { initialRequest ->
-                        either {
-                            initialRequest as LolEntityRequest
-                            val puuid = riotClient.getPUUIDByRiotId(initialRequest.name, initialRequest.tag)
-                                .onLeft { error -> logger.error(error.error()) }
-                                .bind()
-                            val summonerResponse = riotClient.getSummonerByPuuid(puuid.puuid)
-                                .onLeft { error -> logger.error(error.error()) }
-                                .bind()
-                            LolEnrichedEntityRequest(
-                                initialRequest.name,
-                                initialRequest.tag,
-                                summonerResponse.puuid,
-                                summonerResponse.profileIconId,
-                                summonerResponse.summonerLevel
-                            ).withAlias(initialRequest.alias)
-                        }.getOrNull()
-                    }
-                    .buffer(3)
-                    .filterNot { entityToInsert -> entitiesRepository.get(entityToInsert.value, game).isDefined() }
-                    .toList()
-            }
-        }
-
-        return entitiesRepository.insert(newThatExist.map { it.value }, game)
-            .map { list ->
-                list.zip(newThatExist.map { it.alias })
-                    .map { it.first to it.second } + existentAndNew.first.map { it.value to it.alias }
-            }
+        game: Game,
+        extraArguments: ViewExtraArguments? = null
+    ): Either<ControllerError, ResolvedEntities> {
+        return entitiesResolver[game].fold(
+            left = { Either.Left(NotFound("resolver for game: $game")) },
+            right = { it.resolve(requestedEntities, extraArguments) }
+        )
     }
 
-    suspend fun updateLolEntities(entities: List<LolEntity>): List<ControllerError> =
-        coroutineScope {
-            val errorsChannel = Channel<ControllerError>()
-            val dataChannel = Channel<Pair<LolEnrichedEntityRequest, Long>>()
-            val errorsList = mutableListOf<ControllerError>()
-
-            val errorsCollector = launch {
-                errorsChannel.consumeAsFlow().collect { error ->
-                    logger.error(error.toString())
-                    errorsList.add(error)
-                }
-            }
-
-            val dataCollector = launch {
-                dataChannel.consumeAsFlow()
-                    .buffer(40)
-                    .collect { entityWithId ->
-                        entitiesRepository.update(entityWithId.second, entityWithId.first, Game.LOL)
-                        logger.info("updated eEntity ${entityWithId.second}")
-                    }
-            }
-
-            entities.asFlow()
-                .buffer(40)
-                .collect { lolEntity ->
-                    val result = retrieveUpdatedLolEntity(lolEntity)
-                    result.fold(
-                        ifLeft = { error -> errorsChannel.send(error) },
-                        ifRight = { dataChannel.send(Pair(it, lolEntity.id)) }
-                    )
-                }
-            dataChannel.close()
-            errorsChannel.close()
-
-            errorsCollector.join()
-            dataCollector.join()
-
-            logger.info("Finished Updating Lol entities")
-            errorsList
+    suspend fun updateEntities(
+        game: Game
+    ): List<ControllerError> {
+        @Suppress("UNCHECKED_CAST")
+        return when (game) {
+            Game.LOL -> lolUpdater.update(entitiesRepository.get(game) as List<LolEntity>)
+            Game.WOW -> listOf()
+            Game.WOW_HC -> listOf()
         }
+    }
 
-    private suspend fun retrieveUpdatedLolEntity(lolEntity: LolEntity): Either<HttpError, LolEnrichedEntityRequest> =
-        either {
-            val summoner = riotClient.getSummonerByPuuid(lolEntity.puuid).bind()
-            val account = riotClient.getAccountByPUUID(lolEntity.puuid).bind()
-            LolEnrichedEntityRequest(
-                name = account.gameName,
-                tag = account.tagLine,
-                puuid = lolEntity.puuid,
-                summonerIconId = summoner.profileIconId,
-                summonerLevel = summoner.summonerLevel
-            )
-        }
-
+    suspend fun updateWowHardcoreGuilds(): List<ControllerError> {
+        val guildsWithViewId = wowGuildsRepository.getGuilds()
+        return wowHardcoreGuildUpdater.update(guildsWithViewId)
+    }
 
     suspend fun get(id: Long, game: Game): Entity? = entitiesRepository.get(id, game)
     suspend fun get(game: Game): List<Entity> = entitiesRepository.get(game)
     suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long) =
         entitiesRepository.getEntitiesToSync(game, olderThanMinutes)
+
+    suspend fun insert(entities: List<InsertEntityRequest>, game: Game) = entitiesRepository.insert(entities, game)
+    suspend fun insertGuild(payload: GuildPayload, viewId: String): Either<InsertError, Unit> =
+        wowGuildsRepository.insertGuild(payload.blizzardId, payload.name, payload.realm, payload.region, viewId)
 
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =
         entitiesRepository.getViewsFromEntity(id, game)

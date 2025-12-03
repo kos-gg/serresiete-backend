@@ -1,7 +1,27 @@
 package com.kos.entities
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.Data
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.common.HttpError
+import com.kos.common.NonHardcoreCharacter
+import com.kos.common.collect
+import com.kos.common.split
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.eventsourcing.events.Operation
+import com.kos.views.Game
+import com.kos.views.ViewExtraArguments
+import com.kos.views.WowHardcoreExtraArguments
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -70,3 +90,17 @@ fun <T> T.withAlias(alias: String?): WithAlias<T> = WithAlias(this, alias)
 
 @Serializable
 data class EntityDataResponse(val data: Data?, val operation: Operation?)
+
+data class GuildPayload(
+    val name: String,
+    val realm: String,
+    val region: String,
+    val blizzardId: Long
+)
+
+data class ResolvedEntities(
+    val entities: List<Pair<InsertEntityRequest, String?>>,
+    val existing: List<Pair<Entity, String?>>,
+    val guild: GuildPayload?
+)
+

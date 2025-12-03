@@ -218,11 +218,21 @@ class EventSubscription(
                         Game.LOL -> {
                             either {
                                 syncLolEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
-                                val newEntity = entitiesService.createAndReturnIds(
-                                    listOf(payload.request),
-                                    payload.game
-                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                lolEntityCacheService.cache(newEntity.map { it.first })
+
+                                val resolved =
+                                    entitiesService.resolveEntities(
+                                        listOf(payload.request),
+                                        payload.game
+                                    ).bind()
+
+                                val inserted = entitiesService
+                                    .insert(resolved.entities.map { it.first }, payload.game)
+                                    .bind()
+
+                                val entities = inserted.zip(resolved.entities.map { it.second }) +
+                                        resolved.existing
+
+                                dataCacheService.cache(entities.map { it.first }, payload.game)
                             }
                         }
 
@@ -321,12 +331,19 @@ class EventSubscription(
                         Game.WOW -> {
                             either {
                                 syncWowEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
-                                val newEntity = entitiesService.createAndReturnIds(
-                                    listOf(payload.request),
-                                    payload.game
-                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                wowEntityCacheService
-                                    .cache(newEntity.map { it.first })
+                                val resolved =
+                                    entitiesService.resolveEntities(
+                                        listOf(payload.request),
+                                        payload.game
+                                    ).bind()
+
+                                val inserted = entitiesService
+                                    .insert(resolved.entities.map { it.first }, payload.game)
+                                    .bind()
+
+                                val entities = inserted.zip(resolved.entities.map { it.second }) +
+                                        resolved.existing
+                                dataCacheService.cache(entities.map { it.first }, payload.game)
                             }
                         }
 
@@ -425,12 +442,19 @@ class EventSubscription(
                         Game.WOW_HC -> {
                             either {
                                 syncWowHardcoreEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
-                                val newEntity = entitiesService.createAndReturnIds(
-                                    listOf(payload.request),
-                                    payload.game
-                                ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                wowHardcoreEntityCacheService
-                                    .cache(newEntity.map { it.first })
+                                val resolved =
+                                    entitiesService.resolveEntities(
+                                        listOf(payload.request),
+                                        payload.game
+                                    ).bind()
+
+                                val inserted = entitiesService
+                                    .insert(resolved.entities.map { it.first }, payload.game)
+                                    .bind()
+
+                                val entities = inserted.zip(resolved.entities.map { it.second }) +
+                                        resolved.existing
+                                dataCacheService.cache(entities.map { it.first }, payload.game)
                             }
                         }
 

@@ -1,0 +1,1 @@
+ALTER TABLE view_entities ADD CONSTRAINT unique_view_entity UNIQUE (view_id, entity_id);

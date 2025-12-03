@@ -21,12 +21,18 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.entitiesResolvers.LolResolver
+import com.kos.entities.entitiesResolvers.WowHardcoreResolver
+import com.kos.entities.entitiesResolvers.WowResolver
+import com.kos.entities.entitiesUpdaters.LolUpdater
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.cache.EntityCacheServiceRegistry
 import com.kos.entities.cache.LolEntityCacheService
 import com.kos.entities.cache.WowEntityCacheService
 import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
+import com.kos.entities.repository.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
@@ -34,6 +40,7 @@ import com.kos.roles.repository.RolesInMemoryRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
+import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -60,7 +67,30 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
+
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
 
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -127,7 +157,29 @@ class TasksServiceTest {
                 eventStore
             )
 
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
+
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
 
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
@@ -191,7 +243,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
+
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
 
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
@@ -255,8 +329,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -325,8 +420,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -387,8 +503,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -447,8 +584,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -508,8 +666,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -570,8 +749,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
@@ -624,8 +824,29 @@ class TasksServiceTest {
                 entitiesRepository,
                 eventStore
             )
-            val entitiesService = EntitiesService(entitiesRepository, raiderIoClient, riotClient, blizzardClient)
+            val wowGuildsRepository = WowGuildsInMemoryRepository()
+            val viewsRepository = ViewsInMemoryRepository()
 
+            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+            val entitiesResolver = mapOf(
+                Game.WOW to wowResolver,
+                Game.WOW_HC to wowHardcoreResolver,
+                Game.LOL to lolResolver
+            )
+
+            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+            val entitiesService = EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
             val credentialsRepository = CredentialsInMemoryRepository()
             val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
             val rolesRepository = RolesInMemoryRepository()
