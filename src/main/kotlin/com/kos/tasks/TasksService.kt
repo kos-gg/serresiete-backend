@@ -2,6 +2,7 @@ package com.kos.tasks
 
 import com.kos.auth.AuthService
 import com.kos.common.WithLogger
+import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
 import com.kos.tasks.repository.TasksRepository
@@ -136,7 +137,8 @@ data class TasksService(
         val entities = entitiesService.getEntitiesToSync(game, 30)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
         val errors = dataCacheService.cache(entities, game)
-        if (errors.isEmpty()) {
+        //TODO: improve the check of excluded error from being flagged as error
+        if (errors.isEmpty() || errors.all { it is WowHardcoreCharacterIsDead }) {
             tasksRepository.insertTask(
                 Task(
                     id,
@@ -146,6 +148,7 @@ data class TasksService(
                 )
             )
         } else {
+            //TODO: depending on the error, decide what to do with the task (not a true error, etc)
             tasksRepository.insertTask(
                 Task(
                     id,

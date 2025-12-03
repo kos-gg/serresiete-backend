@@ -1,11 +1,6 @@
 package com.kos.datacache
 
 import arrow.core.Either
-import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.*
@@ -14,13 +9,25 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.JsonParseError
 import com.kos.common.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
-import com.kos.common.WowHardcoreCharacterIsDead
+import com.kos.common.UnableToSyncEntityError
+import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
+import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
+import com.kos.datacache.BlizzardMockHelper.getCharacterSpecializations
+import com.kos.datacache.BlizzardMockHelper.getCharacterStats
+import com.kos.datacache.BlizzardMockHelper.getItemMedia
+import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
+import com.kos.datacache.BlizzardMockHelper.getWowItemResponse
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
 import com.kos.views.ViewEntity
@@ -63,18 +70,23 @@ class DataCacheServiceTest {
             )
 
             val dataCacheService = createService(dataCacheRepository)
-            val cacheResult = dataCacheService.cache(
+            dataCacheService.cache(
                 listOf(
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult[0] is WowHardcoreCharacterIsDead)
+
+            dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertTrue(expectedHardcoreData.isDead)
+            }
+            assertEquals(1, dataCacheRepository.state().size)
         }
     }
 
 
     @Test
-    fun `the wow hardcore cache service deletes the wow hardcore character if not found in the datacache repository `() {
+    fun `the wow hardcore cache service deletes the wow hardcore entity if not found neither in api or data cache repository`() {
         runBlocking {
             val expectedNotFoundHardcoreCharacter = NotFoundHardcoreCharacter(basicWowHardcoreEntity.name)
 
@@ -125,7 +137,7 @@ class DataCacheServiceTest {
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
+            cacheResult.any { it is UnableToSyncEntityError }
             assertNull(entitiesRepository.get(1, Game.WOW_HC))
         }
     }
@@ -143,6 +155,33 @@ class DataCacheServiceTest {
                 )
             ).thenReturn(Either.Left(expectedNotFoundHardcoreCharacter))
 
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf(wowHardcoreDataCache))
+            val dataCacheService = createService(dataCacheRepository)
+            dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+            dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertTrue(expectedHardcoreData.isDead)
+            }
+            assertEquals(2, dataCacheRepository.state().size)
+        }
+    }
+
+    @Test
+    fun `the wow hardcore cache service marks a character as dead when it is found but with different blizzard id`() {
+        runBlocking {
+
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(Either.Right(getWowCharacterResponse))
+
             val dataCacheRepository = DataCacheInMemoryRepository().withState(
                 listOf(
                     wowHardcoreDataCache
@@ -151,17 +190,91 @@ class DataCacheServiceTest {
 
             val dataCacheService = createService(dataCacheRepository)
 
-            val cacheResult = dataCacheService.cache(
+            dataCacheService.cache(
                 listOf(
                     basicWowHardcoreEntity
                 ), Game.WOW_HC
             )
-            assertTrue(cacheResult.contains(expectedNotFoundHardcoreCharacter))
-            dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
+
+            dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
                 val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(2, dataCacheRepository.state().size)
+        }
+    }
+
+    @Test
+    fun `the wow hardcore cache service inserts a new cache entry when there is no recent data and character is found in blizzard api`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(Either.Right(getWowCharacterResponse.copy(id = 12345)))
+            `when`(
+                blizzardClient.getCharacterMedia(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterMedia(basicWowHardcoreEntity))
+            `when`(
+                blizzardClient.getCharacterEquipment(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterEquipment())
+            `when`(
+                blizzardClient.getCharacterStats(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterStats())
+            `when`(
+                blizzardClient.getCharacterSpecializations(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            ).thenReturn(getCharacterSpecializations())
+            `when`(
+                blizzardClient.getItemMedia(
+                    basicWowHardcoreEntity.region,
+                    18421
+                )
+            ).thenReturn(getItemMedia())
+            `when`(
+                blizzardClient.getItem(
+                    basicWowHardcoreEntity.region,
+                    18421
+                )
+            ).thenReturn(getWowItemResponse())
+            `when`(
+                raiderIoClient.wowheadEmbeddedCalculator(basicWowHardcoreEntity)
+            ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+
+            val dataCacheRepository = DataCacheInMemoryRepository().withState(
+                listOf()
+            )
+
+            val dataCacheService = createService(dataCacheRepository)
+
+            dataCacheService.cache(
+                listOf(
+                    basicWowHardcoreEntity
+                ), Game.WOW_HC
+            )
+
+            dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
+                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                assertFalse(expectedHardcoreData.isDead)
+            }
+            assertEquals(1, dataCacheRepository.state().size)
         }
     }
 

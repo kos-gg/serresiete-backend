@@ -67,7 +67,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 .map { resultRowToViewEntity(it).entityId },
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured],
-            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it) }
+            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it)}
         )
     }
 
