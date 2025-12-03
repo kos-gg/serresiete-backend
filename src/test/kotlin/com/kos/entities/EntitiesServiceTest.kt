@@ -1,8 +1,6 @@
 package com.kos.entities
 
 import arrow.core.Either
-import arrow.core.right
-import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
 import com.kos.entities.EntitiesTestHelper.basicGetPuuidResponse
 import com.kos.entities.EntitiesTestHelper.basicGetSummonerResponse
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
@@ -16,13 +14,21 @@ import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.InsertError
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
+import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.entitiesResolvers.LolResolver
+import com.kos.entities.entitiesResolvers.WowHardcoreResolver
+import com.kos.entities.entitiesResolvers.WowResolver
+import com.kos.entities.entitiesUpdaters.LolUpdater
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.repository.WowGuildsInMemoryRepository
 import com.kos.views.Game
+import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
 import java.util.*
@@ -35,8 +41,9 @@ class EntitiesServiceTest {
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
 
+
     @Test
-    fun `inserting two characters over an empty repository returns the ids of both new characters`() {
+    fun `resolving two characters over an empty repository resolves both as new`() {
         runBlocking {
             val request1 =
                 WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
@@ -45,19 +52,24 @@ class EntitiesServiceTest {
             `when`(raiderIoClient.exists(request1)).thenReturn(true)
             `when`(raiderIoClient.exists(request2)).thenReturn(true)
 
-            val charactersRepository = EntitiesInMemoryRepository()
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+
+            val entitiesService = createService(emptyEntitiesState)
 
             val request = listOf(request1, request2)
-            val expected: List<Long> = listOf(1, 2)
+            val expected = ResolvedEntities(
+                entities = listOf(request1 to null, request2 to null),
+                existing = listOf(),
+                guild = null,
+            )
 
-            entitiesService.createAndReturnIds(request, Game.WOW)
-                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
+            entitiesService.resolveEntities(request, Game.WOW)
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
     @Test
-    fun `inserting two characters over an empty wow hardcore repository returns the ids of both new characters`() {
+    fun `resolving two characters over an empty wow hardcore repository resolves both as new`() {
         runBlocking {
             val request1 =
                 WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
@@ -72,19 +84,24 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
             `when`(blizzardClient.getRealm(request2.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
 
-            val charactersRepository = EntitiesInMemoryRepository()
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = createService(emptyEntitiesState)
 
             val request = listOf(request1, request2)
-            val expected: List<Long> = listOf(1, 2)
 
-            entitiesService.createAndReturnIds(request, Game.WOW_HC)
-                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
+            val expected = ResolvedEntities(
+                entities = listOf(request1 to null, request2 to null),
+                existing = listOf(),
+                guild = null,
+            )
+
+            entitiesService.resolveEntities(request, Game.WOW_HC)
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
     @Test
-    fun `inserting a character from a non hardcore realm does not get inserted over an empty wow hardcore repository`() {
+    fun `resolving a character from a non hardcore realm does not get inserted over an empty wow hardcore repository`() {
         runBlocking {
             val request1 =
                 WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
@@ -94,19 +111,23 @@ class EntitiesServiceTest {
             )
             `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm))
 
-            val charactersRepository = EntitiesInMemoryRepository()
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = createService(emptyEntitiesState)
 
             val request = listOf(request1)
-            val expected: List<Long> = listOf()
+            val expected = ResolvedEntities(
+                listOf(),
+                listOf(),
+                null
+            )
 
-            entitiesService.createAndReturnIds(request, Game.WOW_HC)
-                .fold({ fail(it.message) }) { res -> assertEquals(expected, res.map { it.first.id }) }
+            entitiesService.resolveEntities(request, Game.WOW_HC)
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
     @Test
-    fun `inserting a character that does not exist does not get inserted`() {
+    fun `resolving a character that does not exist does not get inserted`() {
         runBlocking {
             val request1 =
                 WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
@@ -115,38 +136,59 @@ class EntitiesServiceTest {
             `when`(raiderIoClient.exists(request1)).thenReturn(true)
             `when`(raiderIoClient.exists(request2)).thenReturn(false)
 
-            val charactersRepository = EntitiesInMemoryRepository()
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = createService(emptyEntitiesState)
 
             val request = listOf(request1, request2)
-            val expected: List<Long> = listOf(1)
-            entitiesService.createAndReturnIds(request, Game.WOW)
-                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
+            val expected = ResolvedEntities(
+                listOf(request1 to null),
+                listOf(),
+                null
+            )
+
+            entitiesService.resolveEntities(request, Game.WOW)
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
     @Test
-    fun `inserting a character with same blizzard id does not get inserted`() {
+    fun `resolving a character with same blizzard id does not get inserted`() {
         runBlocking {
-            val request = WowEntityRequest(basicWowHardcoreEntity.name, basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm)
+            val request = WowEntityRequest(
+                basicWowHardcoreEntity.name,
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm
+            )
 
-            `when`(blizzardClient.getCharacterProfile(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
-                .thenReturn(BlizzardMockHelper.getCharacterProfile(request)
-                    .map { it.copy(id = basicWowHardcoreEntity.blizzardId ?: 12345) })
+            `when`(
+                blizzardClient.getCharacterProfile(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
+            )
+                .thenReturn(
+                    BlizzardMockHelper.getCharacterProfile(request)
+                        .map { it.copy(id = basicWowHardcoreEntity.blizzardId ?: 12345) })
             `when`(blizzardClient.getRealm(request.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
 
-            val charactersRepository = EntitiesInMemoryRepository().withState(
-                EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val initialState = EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf())
 
-            val expected: List<Long> = listOf(1)
-            entitiesService.createAndReturnIds(listOf(request), Game.WOW_HC)
-                .fold({ fail() }) { res -> assertEquals(expected, res.map { it.first.id }) }
+            val entitiesService = createService(initialState)
+
+            val expected = ResolvedEntities(
+                listOf(),
+                listOf(basicWowHardcoreEntity to null),
+                null
+            )
+            entitiesService.resolveEntities(listOf(request), Game.WOW_HC)
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
     @Test
-    fun `inserting a lof of characters where half exists half doesn't`() {
+    fun `resolving a lof of characters where half exists half doesn't must split them correctly`() {
         runBlocking {
             val state = EntitiesState(listOf(), listOf(), gigaLolEntityList)
 
@@ -167,13 +209,124 @@ class EntitiesServiceTest {
                 )
             }
 
-            val charactersRepository = EntitiesInMemoryRepository().withState(state)
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = createService(state)
+            val resolvedEntities = entitiesService.resolveEntities(gigaLolCharacterRequestList, Game.LOL)
+            val expected = ResolvedEntities(
+                entities = listOf(
+                    LolEnrichedEntityRequest(
+                        name = "sanxei7",
+                        tag = "euw7",
+                        puuid = "be5213a7-4546-4a94-86db-3f607cf0fa04",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null,
+                    LolEnrichedEntityRequest(
+                        name = "sanxei8",
+                        tag = "euw8",
+                        puuid = "7cf45999-05ef-4473-b245-2028e4169111",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null,
+                    LolEnrichedEntityRequest(
+                        name = "sanxei9",
+                        tag = "euw9",
+                        puuid = "262b2d4e-ba6c-4e3b-a13c-e168b278164f",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null,
+                    LolEnrichedEntityRequest(
+                        name = "sanxei10",
+                        tag = "euw10",
+                        puuid = "2f06cb6f-d9ac-4962-84a5-ca77c5376711",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null,
+                    LolEnrichedEntityRequest(
+                        name = "sanxei11",
+                        tag = "euw11",
+                        puuid = "e1d0d3d1-69b2-41b5-9951-161132b52912",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null,
+                    LolEnrichedEntityRequest(
+                        name = "sanxei12",
+                        tag = "euw12",
+                        puuid = "45fc6752-d210-44fd-a02a-cb146fc9d8ec",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null,
+                    LolEnrichedEntityRequest(
+                        name = "sanxei13",
+                        tag = "euw13",
+                        puuid = "68b7f23a-5c9d-4904-82b2-409322dd6713",
+                        summonerIconId = 10,
+                        summonerLevel = 200
+                    ) to null
+                ),
+                existing = listOf(
+                    LolEntity(
+                        id = 0,
+                        name = "sanxei0",
+                        tag = "euw0",
+                        puuid = "0",
+                        summonerIcon = 0,
+                        summonerLevel = 400
+                    ) to null,
+                    LolEntity(
+                        id = 1,
+                        name = "sanxei1",
+                        tag = "euw1",
+                        puuid = "1",
+                        summonerIcon = 1,
+                        summonerLevel = 400
+                    ) to null,
+                    LolEntity(
+                        id = 2,
+                        name = "sanxei2",
+                        tag = "euw2",
+                        puuid = "2",
+                        summonerIcon = 2,
+                        summonerLevel = 400
+                    ) to null,
+                    LolEntity(
+                        id = 3,
+                        name = "sanxei3",
+                        tag = "euw3",
+                        puuid = "3",
+                        summonerIcon = 3,
+                        summonerLevel = 400
+                    ) to null,
+                    LolEntity(
+                        id = 4,
+                        name = "sanxei4",
+                        tag = "euw4",
+                        puuid = "4",
+                        summonerIcon = 4,
+                        summonerLevel = 400
+                    ) to null,
+                    LolEntity(
+                        id = 5,
+                        name = "sanxei5",
+                        tag = "euw5",
+                        puuid = "5",
+                        summonerIcon = 5,
+                        summonerLevel = 400
+                    ) to null,
+                    LolEntity(
+                        id = 6,
+                        name = "sanxei6",
+                        tag = "euw6",
+                        puuid = "6",
+                        summonerIcon = 6,
+                        summonerLevel = 400
+                    ) to null
+                ),
+                guild = null
+            )
 
-            val createAndReturnIds = entitiesService.createAndReturnIds(gigaLolCharacterRequestList, Game.LOL)
-            val expectedReturnedIds = listOf<Long>(7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6)
-
-            createAndReturnIds.fold({ fail() }) { res -> assertEquals(expectedReturnedIds, res.map { it.first.id }) }
+            resolvedEntities
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -187,20 +340,26 @@ class EntitiesServiceTest {
             `when`(riotClient.getPUUIDByRiotId("R7 Disney Girl", "EUW")).thenReturn(Either.Right(basicGetPuuidResponse))
             `when`(riotClient.getSummonerByPuuid("1")).thenReturn(Either.Right(basicGetSummonerResponse))
 
-            val charactersRepository = EntitiesInMemoryRepository().withState(state)
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = createService(state)
+            val expected = ResolvedEntities(
+                listOf(),
+                listOf(),
+                null
+            )
 
-            val createAndReturnIds = entitiesService.createAndReturnIds(listOf(request), Game.LOL)
-            createAndReturnIds.fold({ fail() }) { assertEquals(listOf(), it) }
+            val resolvedEntities = entitiesService.resolveEntities(listOf(request), Game.LOL)
+            resolvedEntities
+                .onLeft { fail() }
+                .onRight { res -> assertResolvedEntities(expected, res) }
         }
     }
 
     @Test
     fun `i can get a wow character`() {
         runBlocking {
-            val charactersRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val initialState = EntitiesState(listOf(basicWowEntity), listOf(), listOf())
+
+            val entitiesService = createService(initialState)
 
             assertEquals(basicWowEntity, entitiesService.get(basicWowEntity.id, Game.WOW))
         }
@@ -209,9 +368,8 @@ class EntitiesServiceTest {
     @Test
     fun `i can get a lol character`() {
         runBlocking {
-            val charactersRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val initialState = EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
+            val entitiesService = createService(initialState)
 
             assertEquals(basicLolEntity, entitiesService.get(basicLolEntity.id, Game.LOL))
         }
@@ -220,16 +378,13 @@ class EntitiesServiceTest {
     @Test
     fun `i can get all wow characters`() {
         runBlocking {
-            val charactersRepository =
-                EntitiesInMemoryRepository().withState(
-                    EntitiesState(
-                        listOf(basicWowEntity),
-                        listOf(),
-                        listOf(basicLolEntity)
-                    )
-                )
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val initialState = EntitiesState(
+                listOf(basicWowEntity),
+                listOf(),
+                listOf(basicLolEntity)
+            )
 
+            val entitiesService = createService(initialState)
             assertEquals(listOf(basicWowEntity), entitiesService.get(Game.WOW))
         }
     }
@@ -237,27 +392,24 @@ class EntitiesServiceTest {
     @Test
     fun `i can get all lol characters`() {
         runBlocking {
-            val charactersRepository =
-                EntitiesInMemoryRepository().withState(
-                    EntitiesState(
-                        listOf(basicWowEntity),
-                        listOf(),
-                        listOf(basicLolEntity)
-                    )
-                )
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val initialState = EntitiesState(
+                listOf(basicWowEntity),
+                listOf(),
+                listOf(basicLolEntity)
+            )
 
+            val entitiesService = createService(initialState)
             assertEquals(listOf(basicLolEntity), entitiesService.get(Game.LOL))
         }
     }
 
+
+    //TODO: Move wherever it belongs
     @Test
     fun `i can update lol characters`() {
         runBlocking {
-            val charactersRepository =
-                EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
-
+            val initialState = EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
+            val entitiesService = createService(initialState)
             `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid)).thenReturn(
                 Either.Right(
                     basicGetSummonerResponse
@@ -269,7 +421,7 @@ class EntitiesServiceTest {
                 )
             )
 
-            val res = entitiesService.updateLolEntities(listOf(basicLolEntity))
+            val res = entitiesService.updateEntities(Game.LOL)
             assertEquals(listOf(), res)
         }
     }
@@ -279,14 +431,12 @@ class EntitiesServiceTest {
         runBlocking {
             val alias = "kako"
             val alias2 = "sancho"
-            val charactersRepository = EntitiesInMemoryRepository().withState(
-                EntitiesState(
-                    listOf(),
-                    listOf(),
-                    listOf(basicLolEntity)
-                )
+            val initialState = EntitiesState(
+                listOf(),
+                listOf(),
+                listOf(basicLolEntity)
             )
-            val entitiesService = EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+            val entitiesService = createService(initialState)
 
             val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag, alias)
             val requestNotInState = LolEntityRequest(basicLolEntity2.name, basicLolEntity2.tag, alias2)
@@ -308,10 +458,63 @@ class EntitiesServiceTest {
                 )
             )
 
-            val result = entitiesService.createAndReturnIds(listOf(request, requestNotInState), Game.LOL)
+            val insertRequest = LolEnrichedEntityRequest(name=basicLolEntity2.name, tag=basicLolEntity2.tag, puuid=basicLolEntity2.puuid, summonerIconId=basicLolEntity2.summonerIcon, summonerLevel=basicLolEntity2.summonerLevel)
 
-            result.onLeft { fail(it.message) }
-                .onRight { assertEquals(listOf(basicLolEntity2 to alias2, basicLolEntity to alias), it) }
+            val expected = ResolvedEntities(
+                listOf(insertRequest to alias2),
+                listOf(basicLolEntity to alias),
+                null
+            )
+            val result = entitiesService.resolveEntities(listOf(request, requestNotInState), Game.LOL)
+
+
+            result
+                .onLeft { fail() }
+                .onRight { res ->
+                    assertResolvedEntities(expected, res)
+                    assertEquals(expected.entities.map { it.second }, res.entities.map { it.second })
+                    assertEquals(expected.existing.map { it.second }, res.existing.map { it.second })
+                }
+
         }
+    }
+
+    fun `insert`() {
+
+    }
+
+    private suspend fun createService(entitiesState: EntitiesState): EntitiesService {
+        val entitiesRepository = EntitiesInMemoryRepository().withState(entitiesState)
+        val wowGuildsRepository = WowGuildsInMemoryRepository()
+        val viewsRepository = ViewsInMemoryRepository()
+
+        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+        val entitiesResolver = mapOf(
+            Game.WOW to wowResolver,
+            Game.WOW_HC to wowHardcoreResolver,
+            Game.LOL to lolResolver
+        )
+
+        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+
+        return EntitiesService(
+            entitiesRepository,
+            wowGuildsRepository,
+            entitiesResolver,
+            lolUpdater,
+            wowHardcoreGuildUpdater
+        )
+    }
+
+    private fun assertResolvedEntities(expected: ResolvedEntities, actual: ResolvedEntities) {
+        println("expected: $expected")
+        println("actual: $actual")
+        assertEquals(expected.entities.size, actual.entities.size)
+        assertEquals(expected.existing, actual.existing)
+        assertEquals(expected.guild, actual.guild)
     }
 }

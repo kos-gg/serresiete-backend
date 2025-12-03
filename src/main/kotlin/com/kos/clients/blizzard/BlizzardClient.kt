@@ -13,4 +13,5 @@ interface BlizzardClient {
     suspend fun getItemMedia(region: String, id: Long): Either<HttpError, GetWowMediaResponse>
     suspend fun getItem(region: String, id: Long): Either<HttpError, GetWowItemResponse>
     suspend fun getRealm(region: String, id: Long): Either<HttpError, GetWowRealmResponse>
+    suspend fun getGuildRoster(region: String, realm: String, guild: String): Either<HttpError, GetWowRosterResponse>
 }

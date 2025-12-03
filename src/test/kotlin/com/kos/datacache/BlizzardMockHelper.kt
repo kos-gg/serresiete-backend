@@ -917,7 +917,8 @@ object BlizzardMockHelper {
                             Talent(TalentInfo(id = 1310), talentRank = 3)
                         )
                     )
-                )
+                ),
+                isActive = true
             )
         )
     )

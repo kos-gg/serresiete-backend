@@ -41,4 +41,6 @@ interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
     suspend fun getViews(game: Game?, featured: Boolean, page: Int?, limit: Int?): Pair<ViewMetadata, List<SimpleView>>
 
     suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity?
+
+    suspend fun associateEntitiesIdsToView(entities: List<Pair<Long, String?>>, id: String)
 }
