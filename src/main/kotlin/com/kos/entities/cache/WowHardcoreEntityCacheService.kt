@@ -22,14 +22,13 @@ import java.time.OffsetDateTime
 
 class WowHardcoreEntityCacheService(
     dataCacheRepository: DataCacheRepository,
-    entitiesRepository: EntitiesRepository,
+    private val entitiesRepository: EntitiesRepository,
     private val raiderIoClient: RaiderIoClient,
     private val blizzardClient: BlizzardClient,
     private val blizzardDatabaseClient: BlizzardDatabaseClient,
     private val retryConfig: RetryConfig,
 ) : EntityCacheService(
-    dataCacheRepository,
-    entitiesRepository
+    dataCacheRepository
 ) {
 
     override val game: Game = Game.WOW_HC

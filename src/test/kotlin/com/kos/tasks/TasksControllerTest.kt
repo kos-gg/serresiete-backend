@@ -87,7 +87,7 @@ class TasksControllerTest {
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
         val entityCacheServiceRegistry = EntityCacheServiceRegistry(
             listOf(
-                LolEntityCacheService(dataCacheRepository, entitiesRepositoryWithState, riotClient, retryConfig),
+                LolEntityCacheService(dataCacheRepository, riotClient, retryConfig),
                 WowHardcoreEntityCacheService(
                     dataCacheRepository,
                     entitiesRepositoryWithState,
@@ -96,7 +96,7 @@ class TasksControllerTest {
                     blizzardDatabaseClient,
                     retryConfig
                 ),
-                WowEntityCacheService(dataCacheRepository, entitiesRepositoryWithState, raiderIoClient, retryConfig)
+                WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
             )
         )
         val tasksService = TasksService(

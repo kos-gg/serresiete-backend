@@ -13,7 +13,6 @@ import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.Entity
 import com.kos.entities.LolEntity
-import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -29,12 +28,10 @@ import java.time.OffsetDateTime
 
 class LolEntityCacheService(
     dataCacheRepository: DataCacheRepository,
-    entitiesRepository: EntitiesRepository,
     private val riotClient: RiotClient,
     private val retryConfig: RetryConfig,
 ) : EntityCacheService(
-    dataCacheRepository,
-    entitiesRepository
+    dataCacheRepository
 ) {
 
     override val game: Game = Game.LOL

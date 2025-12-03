@@ -58,7 +58,7 @@ class SyncCharactersSubscriptionTest {
         val entitiesInMemoryRepository = EntitiesInMemoryRepository()
         val entityCacheServiceRegistry = EntityCacheServiceRegistry(
             listOf(
-                LolEntityCacheService(dataCacheRepository, entitiesInMemoryRepository, riotClient, retryConfig),
+                LolEntityCacheService(dataCacheRepository, riotClient, retryConfig),
                 WowHardcoreEntityCacheService(
                     dataCacheRepository,
                     entitiesInMemoryRepository,
@@ -67,7 +67,7 @@ class SyncCharactersSubscriptionTest {
                     blizzardDatabaseClient,
                     retryConfig
                 ),
-                WowEntityCacheService(dataCacheRepository, entitiesInMemoryRepository, raiderIoClient, retryConfig)
+                WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
             )
         )
 

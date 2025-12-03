@@ -108,7 +108,7 @@ fun Application.module() {
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
-    val dataCacheRetryConfig = RetryConfig(3, 1200)
+    val defaultRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
         DataCacheService(
             dataCacheRepository,
@@ -136,16 +136,16 @@ fun Application.module() {
     val entityCacheServiceRegistry =
         EntityCacheServiceRegistry(
             listOf(
-                LolEntityCacheService(dataCacheRepository, entitiesRepository, riotHTTPClient, dataCacheRetryConfig),
+                LolEntityCacheService(dataCacheRepository, riotHTTPClient, defaultRetryConfig),
                 WowHardcoreEntityCacheService(
                     dataCacheRepository,
                     entitiesRepository,
                     raiderIoHTTPClient,
                     blizzardClient,
                     blizzardDatabaseClient,
-                    dataCacheRetryConfig
+                    defaultRetryConfig
                 ),
-                WowEntityCacheService(dataCacheRepository, entitiesRepository, raiderIoHTTPClient, dataCacheRetryConfig)
+                WowEntityCacheService(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
             )
         )
 

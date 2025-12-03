@@ -8,16 +8,14 @@ import com.kos.common.HttpError
 import com.kos.common.WithLogger
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.Entity
-import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
 abstract class EntityCacheService(
-    protected val dataCacheRepository: DataCacheRepository,
-    protected val entitiesRepository: EntitiesRepository,
-) : WithLogger("DataCacheService") {
+    protected val dataCacheRepository: DataCacheRepository
+) : WithLogger("EntityCacheService") {
 
     protected val json = Json {
         serializersModule = SerializersModule {

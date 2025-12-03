@@ -23,10 +23,9 @@ import java.time.OffsetDateTime
 
 class WowEntityCacheService(
     dataCacheRepository: DataCacheRepository,
-    entitiesRepository: EntitiesRepository,
     private val raiderIoClient: RaiderIoClient,
     private val retryConfig: RetryConfig
-) : EntityCacheService(dataCacheRepository, entitiesRepository) {
+) : EntityCacheService(dataCacheRepository) {
 
     override val game: Game = Game.WOW
 
