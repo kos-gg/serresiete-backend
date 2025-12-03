@@ -129,7 +129,7 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                     }
                 }
 
-                if (response.status.value == 404) raise(NotFoundHardcoreCharacter(name))
+                if (response.status.value == 404) raise(NotFoundHardcoreCharacter(character))
 
                 val jsonString = response.body<String>()
                 try {
@@ -187,11 +187,11 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
     ): Either<HttpError, GetWowSpecializationsResponse> {
         return throttleRequest {
             either {
-                logger.debug("getCharacterEquipment for $region $realm $character")
+                logger.debug("getCharacterSpecialitzation for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
                 val namespace = "profile-classic1x"
                 val partialURI =
-                    URI("/profile/wow/character/$realm/${encodedName(character)}/specializations?locale=en_US")
+                    URI("/profile/wow/character/$realm/${encodedName(character)}/specializations?namespace=profile-classic1x-eu&locale=en_US")
                 fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
                     json.decodeFromString<GetWowSpecializationsResponse>(it)
                 }.bind()
@@ -259,6 +259,23 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 val namespace = "dynamic-classic1x"
                 fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
                     json.decodeFromString<GetWowRealmResponse>(it)
+                }.bind()
+            }
+        }
+    }
+
+    override suspend fun getGuildRoster(
+        region: String,
+        realm: String,
+        guild: String
+    ): Either<HttpError, GetWowRosterResponse> {
+        return throttleRequest {
+            either {
+                val tokenResponse = getAndUpdateToken().bind()
+                val partialURI = URI("/data/wow/guild/$realm/$guild/roster?namespace=profile-classic1x-eu&locale=en_US")
+                val namespace = "profile-classic1x-eu"
+                fetchFromApi(region, partialURI, namespace, tokenResponse.tokenResponse) {
+                    json.decodeFromString<GetWowRosterResponse>(it)
                 }.bind()
             }
         }

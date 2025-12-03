@@ -109,6 +109,13 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         return viewEntities.firstOrNull { it.entityId == entityId && it.viewId == viewId }
     }
 
+    override suspend fun associateEntitiesIdsToView(
+        entities: List<Pair<Long, String?>>,
+        id: String
+    ) {
+        entities.forEach { viewEntities.add(ViewEntity(it.first, id, it.second)) }
+    }
+
     override suspend fun state(): ViewsState {
         return ViewsState(views, viewEntities)
     }
@@ -123,14 +130,5 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
     override fun clear() {
         views.clear()
         viewEntities.clear()
-    }
-
-    //TODO: this operation will be removed upon having parent character table implemented
-    fun deleteCharacterFromViews(characterId: Long) {
-        val viewsWithoutDeletedCharacter =
-            views.map { view -> view.copy(entitiesIds = view.entitiesIds.filterNot { it == characterId }) }
-
-        views.clear()
-        views.addAll(viewsWithoutDeletedCharacter)
     }
 }

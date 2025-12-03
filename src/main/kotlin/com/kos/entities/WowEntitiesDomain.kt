@@ -46,6 +46,7 @@ data class WowEntity(
     val blizzardId: Long?
 ) : Entity {
     fun specsWithName(`class`: String): List<Spec> = classes.find { it.`class` == `class` }?.specs.orEmpty()
+    fun toRequest(): WowEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
 }
 
 val classes: List<Class> = listOf(
