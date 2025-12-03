@@ -1,10 +1,13 @@
 package com.kos.entities.repository
 
+import arrow.core.Either
+import com.kos.common.InsertError
 import com.kos.entities.GuildPayload
 import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.sql.SQLException
 
 class WowGuildsDatabaseRepository(private val db: Database): WowGuildsRepository {
 
@@ -25,17 +28,23 @@ class WowGuildsDatabaseRepository(private val db: Database): WowGuildsRepository
         ) to row[WowHardcoreGuilds.viewId]
     }
 
-    override suspend fun insertGuild(blizzardId: Long, name: String, realm: String, region: String, viewId: String) {
+    override suspend fun insertGuild(blizzardId: Long, name: String, realm: String, region: String, viewId: String): Either<InsertError, Unit> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            WowHardcoreGuilds.insert {
-                it[WowHardcoreGuilds.blizzardId] = blizzardId
-                it[WowHardcoreGuilds.name] = name
-                it[WowHardcoreGuilds.realm] = realm
-                it[WowHardcoreGuilds.region] = region
-                it[WowHardcoreGuilds.viewId] = viewId
+            try {
+                WowHardcoreGuilds.insert {
+                    it[WowHardcoreGuilds.blizzardId] = blizzardId
+                    it[WowHardcoreGuilds.name] = name
+                    it[WowHardcoreGuilds.realm] = realm
+                    it[WowHardcoreGuilds.region] = region
+                    it[WowHardcoreGuilds.viewId] = viewId
+                }
+                Either.Right(Unit)
+            }
+            catch (e: SQLException) {
+                if (e.sqlState == "23505") Either.Left(InsertError("Duplicated guild $name $realm $region"))
+                else Either.Left(InsertError(e.message?:e.stackTraceToString()))
             }
         }
-        //TODO: If pkey error, return error so ppl understand this guild is already tracked no need to make 2 views
     }
 
     override suspend fun getGuilds(): List<Pair<GuildPayload, String>> {

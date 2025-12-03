@@ -2,6 +2,7 @@ package com.kos.entities
 
 import arrow.core.Either
 import com.kos.common.ControllerError
+import com.kos.common.InsertError
 import com.kos.common.NotFound
 import com.kos.common.WithLogger
 import com.kos.common.fold
@@ -54,7 +55,7 @@ data class EntitiesService(
         entitiesRepository.getEntitiesToSync(game, olderThanMinutes)
 
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game) = entitiesRepository.insert(entities, game)
-    suspend fun insertGuild(payload: GuildPayload, viewId: String) =
+    suspend fun insertGuild(payload: GuildPayload, viewId: String): Either<InsertError, Unit> =
         wowGuildsRepository.insertGuild(payload.blizzardId, payload.name, payload.realm, payload.region, viewId)
 
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =

@@ -24,8 +24,15 @@ class WowGuildsInMemoryRepository() :
         realm: String,
         region: String,
         viewId: String
-    ) {
-        guilds.add(GuildPayload(name, realm, region, blizzardId) to viewId)
+    ): Either<InsertError, Unit> {
+        val guildPayload = GuildPayload(name, realm, region, blizzardId)
+        return if (guilds.map { it.first }.indexOf(guildPayload) > 0) {
+            Either.Left(InsertError("Duplicated guild $name $realm $region"))
+
+        } else {
+            guilds.add(guildPayload to viewId)
+            Either.Right(Unit)
+        }
     }
 
     override suspend fun getGuilds(): List<Pair<GuildPayload, String>> {

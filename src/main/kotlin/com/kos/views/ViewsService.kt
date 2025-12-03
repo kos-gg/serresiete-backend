@@ -113,7 +113,7 @@ class ViewsService(
                 viewToBeCreatedEvent.extraArguments
             )
 
-            resolved.guild?.let { entitiesService.insertGuild(it, view.id) }
+            resolved.guild?.let { entitiesService.insertGuild(it, view.id).bind() }
 
             val event = Event(
                 aggregateRoot,
