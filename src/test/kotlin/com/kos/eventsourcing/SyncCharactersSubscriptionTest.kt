@@ -15,8 +15,8 @@ import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.Entity
-import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.LolEntity
+import com.kos.entities.WowEntity
 import com.kos.entities.cache.LolEntityCacheService
 import com.kos.entities.cache.WowEntityCacheService
 import com.kos.entities.cache.WowHardcoreEntityCacheService
@@ -44,84 +44,16 @@ class SyncCharactersSubscriptionTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
 
-    private suspend fun createService(): Triple<EntitiesService, EntityCacheServiceRegistry, DataCacheRepository> {
-        val charactersRepository = EntitiesInMemoryRepository().withState(
-            EntitiesState(
-                listOf(EntitiesTestHelper.basicWowEntity),
-                listOf(EntitiesTestHelper.basicWowEntity),
-                listOf(EntitiesTestHelper.basicLolEntity)
-            )
-        )
-        val dataCacheRepository = DataCacheInMemoryRepository()
-        val entitiesService =
-            EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
-        val entitiesInMemoryRepository = EntitiesInMemoryRepository()
-        val entityCacheServiceRegistry = EntityCacheServiceRegistry(
-            listOf(
-                LolEntityCacheService(dataCacheRepository, riotClient, retryConfig),
-                WowHardcoreEntityCacheService(
-                    dataCacheRepository,
-                    entitiesInMemoryRepository,
-                    raiderIoClient,
-                    blizzardClient,
-                    blizzardDatabaseClient,
-                    retryConfig
-                ),
-                WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
-            )
-        )
-
-        return Triple(entitiesService, spyk(entityCacheServiceRegistry), dataCacheRepository)
-    }
-
-    private fun createEventWithVersion(eventType: EventData, game: Game): EventWithVersion {
-        val payload = when (eventType) {
-            is ViewCreatedEvent -> eventType.copy(game = game)
-            is ViewEditedEvent -> eventType.copy(game = game)
-            is ViewPatchedEvent -> eventType.copy(game = game)
-            else -> eventType
-        }
-        return EventWithVersion(1L, Event("/credentials/owner", ViewsTestHelper.id, payload))
-    }
-
-    private suspend fun assertCacheInvocation(
-        processor: suspend (EventWithVersion, EntitiesService, EntityCacheServiceRegistry) -> Either<ControllerError, Unit>,
-        gameToVerify: Game,
-        entityToVerify: Entity,
-        eventWithVersion: EventWithVersion,
-        entitiesService: EntitiesService,
-        entityCacheServiceRegistry: EntityCacheServiceRegistry,
-        dataCacheRepository: DataCacheRepository,
-        shouldCache: Boolean,
-        expectedCacheSize: Int
-    ) {
-        val result =
-            processor(eventWithVersion, entitiesService, entityCacheServiceRegistry)
-        result.fold(
-            { fail("Expected success") },
-            {
-                val cacheService = entityCacheServiceRegistry.serviceFor(gameToVerify)
-                if (shouldCache) coVerify {
-
-                    cacheService.cache(
-                        eq(listOf(entityToVerify))
-                    )
-                }
-                else coVerify(exactly = 0) { cacheService.cache(any()) }
-            }
-        )
-        assertEquals(expectedCacheSize, dataCacheRepository.state().size)
-    }
-
     @Nested
     inner class BehaviorOfSyncLolProcessor {
 
         @Test
-        fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_CREATED with LOL game`() = runBlocking {
+        fun `syncLolCharactersProcessor calls cache on VIEW_CREATED for LOL`() = runBlocking {
             `when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
 
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewCreatedEvent(
                     ViewsTestHelper.id,
@@ -132,27 +64,30 @@ class SyncCharactersSubscriptionTest {
                     Game.LOL,
                     ViewsTestHelper.featured,
                     null
-                ), Game.LOL
+                ),
+                Game.LOL
             )
 
+            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val spied = spyk(service)
 
-            assertCacheInvocation(
+            assertLolCacheInvocation(
                 EventSubscription::syncLolEntitiesProcessor,
-                Game.LOL,
                 EntitiesTestHelper.basicLolEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
-                true,
-                1
+                spied,
+                shouldCache = true,
+                expectedCacheSize = 1
             )
         }
+
 
         @Test
         fun `syncLolCharactersProcessor does not call updateLolCharacters on VIEW_CREATED with WOW game`() =
             runBlocking {
-                val (charactersService, spiedService, dataCacheRepository) = createService()
+                val (charactersService, dataCacheRepository) = createService()
                 val eventWithVersion = createEventWithVersion(
                     ViewCreatedEvent(
                         ViewsTestHelper.id,
@@ -166,19 +101,18 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                val entitiesInMemoryRepository = EntitiesInMemoryRepository()
+                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val spied = spyk(service)
 
-
-                assertCacheInvocation(
+                assertLolCacheInvocation(
                     EventSubscription::syncLolEntitiesProcessor,
-                    Game.LOL,
                     EntitiesTestHelper.basicLolEntity,
                     eventWithVersion,
                     charactersService,
-                    spiedService,
                     dataCacheRepository,
-                    false,
-                    0
+                    spied,
+                    shouldCache = false,
+                    expectedCacheSize = 0
                 )
             }
 
@@ -186,7 +120,8 @@ class SyncCharactersSubscriptionTest {
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_EDITED with LOL game`() = runBlocking {
             `when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewEditedEvent(
                     ViewsTestHelper.id,
@@ -198,23 +133,26 @@ class SyncCharactersSubscriptionTest {
                 ), Game.LOL
             )
 
-            assertCacheInvocation(
+            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val spied = spyk(service)
+
+            assertLolCacheInvocation(
                 EventSubscription::syncLolEntitiesProcessor,
-                Game.LOL,
                 EntitiesTestHelper.basicLolEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
-                true,
-                1
+                spied,
+                shouldCache = true,
+                expectedCacheSize = 1
             )
         }
 
         @Test
         fun `syncLolCharactersProcessor does not call updateLolCharacters on VIEW_EDITED with WOW game`() =
             runBlocking {
-                val (charactersService, spiedService, dataCacheRepository) = createService()
+                val (charactersService, dataCacheRepository) = createService()
+
                 val eventWithVersion = createEventWithVersion(
                     ViewEditedEvent(
                         ViewsTestHelper.id,
@@ -226,16 +164,18 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                assertCacheInvocation(
+                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val spied = spyk(service)
+
+                assertLolCacheInvocation(
                     EventSubscription::syncLolEntitiesProcessor,
-                    Game.LOL,
                     EntitiesTestHelper.basicLolEntity,
                     eventWithVersion,
                     charactersService,
-                    spiedService,
                     dataCacheRepository,
-                    false,
-                    0
+                    spied,
+                    shouldCache = false,
+                    expectedCacheSize = 0
                 )
             }
 
@@ -243,7 +183,8 @@ class SyncCharactersSubscriptionTest {
         fun `syncLolCharactersProcessor calls updateLolCharacters on VIEW_PATCHED with LOL game`() = runBlocking {
             `when`(riotClient.getLeagueEntriesByPUUID(EntitiesTestHelper.basicLolEntity.puuid))
                 .thenReturn(Either.Right(listOf()))
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewPatchedEvent(
                     ViewsTestHelper.id,
@@ -255,23 +196,27 @@ class SyncCharactersSubscriptionTest {
                 ), Game.LOL
             )
 
-            assertCacheInvocation(
+            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val spied = spyk(service)
+
+
+            assertLolCacheInvocation(
                 EventSubscription::syncLolEntitiesProcessor,
-                Game.LOL,
                 EntitiesTestHelper.basicLolEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
-                true,
-                1
+                spied,
+                shouldCache = true,
+                expectedCacheSize = 1
             )
         }
 
         @Test
         fun `syncLolCharactersProcessor does not call updateLolCharacters on VIEW_PATCHED with WOW game`() =
             runBlocking {
-                val (charactersService, spiedService, dataCacheRepository) = createService()
+                val (charactersService, dataCacheRepository) = createService()
+
                 val eventWithVersion = createEventWithVersion(
                     ViewPatchedEvent(
                         ViewsTestHelper.id,
@@ -283,23 +228,26 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                assertCacheInvocation(
+                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val spied = spyk(service)
+
+                assertLolCacheInvocation(
                     EventSubscription::syncLolEntitiesProcessor,
-                    Game.LOL,
                     EntitiesTestHelper.basicLolEntity,
                     eventWithVersion,
                     charactersService,
-                    spiedService,
                     dataCacheRepository,
-                    false,
-                    0
+                    spied,
+                    shouldCache = false,
+                    expectedCacheSize = 0
                 )
             }
 
         @Test
         fun `should ignore not related events`() {
             runBlocking {
-                val (charactersService, spiedService, dataCacheRepository) = createService()
+                val (charactersService, dataCacheRepository) = createService()
+
                 val eventWithVersion = createEventWithVersion(
                     ViewToBeCreatedEvent(
                         ViewsTestHelper.id,
@@ -313,16 +261,19 @@ class SyncCharactersSubscriptionTest {
                     ), Game.LOL
                 )
 
-                assertCacheInvocation(
+                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val spied = spyk(service)
+
+
+                assertLolCacheInvocation(
                     EventSubscription::syncLolEntitiesProcessor,
-                    Game.LOL,
-                    EntitiesTestHelper.basicWowEntity,
+                    EntitiesTestHelper.basicLolEntity,
                     eventWithVersion,
                     charactersService,
-                    spiedService,
                     dataCacheRepository,
-                    false,
-                    0
+                    spied,
+                    shouldCache = false,
+                    expectedCacheSize = 0
                 )
             }
         }
@@ -337,7 +288,8 @@ class SyncCharactersSubscriptionTest {
             `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
                 .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
 
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewCreatedEvent(
                     ViewsTestHelper.id,
@@ -351,14 +303,16 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW
             )
 
-            assertCacheInvocation(
+            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val spied = spyk(service)
+
+            assertWowCacheInvocation(
                 EventSubscription::syncWowEntitiesProcessor,
-                Game.WOW,
                 EntitiesTestHelper.basicWowEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
+                spied,
                 true,
                 1
             )
@@ -369,7 +323,8 @@ class SyncCharactersSubscriptionTest {
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
             `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
                 .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewEditedEvent(
                     ViewsTestHelper.id,
@@ -381,17 +336,20 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW
             )
 
-            assertCacheInvocation(
+            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val spied = spyk(service)
+
+            assertWowCacheInvocation(
                 EventSubscription::syncWowEntitiesProcessor,
-                Game.WOW,
                 EntitiesTestHelper.basicWowEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
+                spied,
                 true,
                 1
             )
+
         }
 
         @Test
@@ -399,7 +357,8 @@ class SyncCharactersSubscriptionTest {
             `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
             `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
                 .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewPatchedEvent(
                     ViewsTestHelper.id,
@@ -411,23 +370,27 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW
             )
 
-            assertCacheInvocation(
+            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val spied = spyk(service)
+
+            assertWowCacheInvocation(
                 EventSubscription::syncWowEntitiesProcessor,
-                Game.WOW,
                 EntitiesTestHelper.basicWowEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
+                spied,
                 true,
                 1
             )
+
         }
 
         @Test
         fun `should ignore not related events`() {
             runBlocking {
-                val (charactersService, spiedService, dataCacheRepository) = createService()
+                val (charactersService, dataCacheRepository) = createService()
+
                 val eventWithVersion = createEventWithVersion(
                     ViewToBeCreatedEvent(
                         ViewsTestHelper.id,
@@ -441,15 +404,16 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
+                val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+                val spied = spyk(service)
 
-                assertCacheInvocation(
+                assertWowCacheInvocation(
                     EventSubscription::syncWowEntitiesProcessor,
-                    Game.WOW,
                     EntitiesTestHelper.basicWowEntity,
                     eventWithVersion,
                     charactersService,
-                    spiedService,
                     dataCacheRepository,
+                    spied,
                     false,
                     0
                 )
@@ -525,7 +489,8 @@ class SyncCharactersSubscriptionTest {
                 raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewCreatedEvent(
                     ViewsTestHelper.id,
@@ -539,14 +504,22 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW_HC
             )
 
-            assertCacheInvocation(
+            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+                dataCacheRepository,
+                entitiesRepository = EntitiesInMemoryRepository(),
+                raiderIoClient,
+                blizzardClient,
+                blizzardDatabaseClient,
+                retryConfig
+            )
+            val spied = spyk(wowHardcoreEntityCacheService)
+            assertWowHardcoreCacheInvocation(
                 EventSubscription::syncWowHardcoreEntitiesProcessor,
-                Game.WOW_HC,
                 EntitiesTestHelper.basicWowEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
+                spied,
                 true,
                 1
             )
@@ -618,7 +591,8 @@ class SyncCharactersSubscriptionTest {
                 raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewEditedEvent(
                     ViewsTestHelper.id,
@@ -630,17 +604,26 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW_HC
             )
 
-            assertCacheInvocation(
+            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+                dataCacheRepository,
+                entitiesRepository = EntitiesInMemoryRepository(),
+                raiderIoClient,
+                blizzardClient,
+                blizzardDatabaseClient,
+                retryConfig
+            )
+            val spied = spyk(wowHardcoreEntityCacheService)
+            assertWowHardcoreCacheInvocation(
                 EventSubscription::syncWowHardcoreEntitiesProcessor,
-                Game.WOW_HC,
                 EntitiesTestHelper.basicWowEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
+                spied,
                 true,
                 1
             )
+
         }
 
         @Test
@@ -709,7 +692,8 @@ class SyncCharactersSubscriptionTest {
                 raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
-            val (charactersService, spiedService, dataCacheRepository) = createService()
+            val (charactersService, dataCacheRepository) = createService()
+
             val eventWithVersion = createEventWithVersion(
                 ViewPatchedEvent(
                     ViewsTestHelper.id,
@@ -721,14 +705,23 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW_HC
             )
 
-            assertCacheInvocation(
+
+            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+                dataCacheRepository,
+                entitiesRepository = EntitiesInMemoryRepository(),
+                raiderIoClient,
+                blizzardClient,
+                blizzardDatabaseClient,
+                retryConfig
+            )
+            val spied = spyk(wowHardcoreEntityCacheService)
+            assertWowHardcoreCacheInvocation(
                 EventSubscription::syncWowHardcoreEntitiesProcessor,
-                Game.WOW_HC,
                 EntitiesTestHelper.basicWowEntity,
                 eventWithVersion,
                 charactersService,
-                spiedService,
                 dataCacheRepository,
+                spied,
                 true,
                 1
             )
@@ -737,7 +730,8 @@ class SyncCharactersSubscriptionTest {
         @Test
         fun `should ignore not related events`() {
             runBlocking {
-                val (charactersService, spiedService, dataCacheRepository) = createService()
+                val (charactersService, dataCacheRepository) = createService()
+
                 val eventWithVersion = createEventWithVersion(
                     ViewToBeCreatedEvent(
                         ViewsTestHelper.id,
@@ -751,18 +745,150 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW_HC
                 )
 
-                assertCacheInvocation(
+
+                val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+                    dataCacheRepository,
+                    entitiesRepository = EntitiesInMemoryRepository(),
+                    raiderIoClient,
+                    blizzardClient,
+                    blizzardDatabaseClient,
+                    retryConfig
+                )
+                val spied = spyk(wowHardcoreEntityCacheService)
+                assertWowHardcoreCacheInvocation(
                     EventSubscription::syncWowHardcoreEntitiesProcessor,
-                    Game.WOW_HC,
                     EntitiesTestHelper.basicWowEntity,
                     eventWithVersion,
                     charactersService,
-                    spiedService,
                     dataCacheRepository,
+                    spied,
                     false,
                     0
                 )
             }
         }
     }
+
+    private suspend fun createService(): Pair<EntitiesService, DataCacheRepository> {
+        val charactersRepository = EntitiesInMemoryRepository().withState(
+            EntitiesState(
+                listOf(EntitiesTestHelper.basicWowEntity),
+                listOf(EntitiesTestHelper.basicWowEntity),
+                listOf(EntitiesTestHelper.basicLolEntity)
+            )
+        )
+        val dataCacheRepository = DataCacheInMemoryRepository()
+        val entitiesService =
+            EntitiesService(charactersRepository, raiderIoClient, riotClient, blizzardClient)
+
+        return Pair(entitiesService, dataCacheRepository)
+    }
+
+    private fun createEventWithVersion(eventType: EventData, game: Game): EventWithVersion {
+        val payload = when (eventType) {
+            is ViewCreatedEvent -> eventType.copy(game = game)
+            is ViewEditedEvent -> eventType.copy(game = game)
+            is ViewPatchedEvent -> eventType.copy(game = game)
+            else -> eventType
+        }
+        return EventWithVersion(1L, Event("/credentials/owner", ViewsTestHelper.id, payload))
+    }
+
+    private suspend fun assertLolCacheInvocation(
+        processor: suspend (
+            EventWithVersion,
+            EntitiesService,
+            LolEntityCacheService
+        ) -> Either<ControllerError, Unit>,
+        entityToVerify: LolEntity,
+        eventWithVersion: EventWithVersion,
+        entitiesService: EntitiesService,
+        dataCacheRepository: DataCacheRepository,
+        lolEntityCacheService: LolEntityCacheService,
+        shouldCache: Boolean,
+        expectedCacheSize: Int
+    ) {
+        val result = processor(eventWithVersion, entitiesService, lolEntityCacheService)
+
+        result.fold(
+            { fail("Expected success") },
+            {
+                if (shouldCache) {
+                    coVerify {
+                        lolEntityCacheService.cache(eq(listOf(entityToVerify)))
+                    }
+                } else {
+                    coVerify(exactly = 0) { lolEntityCacheService.cache(any()) }
+                }
+            }
+        )
+
+        assertEquals(expectedCacheSize, dataCacheRepository.state().size)
+    }
+
+
+    private suspend fun assertWowCacheInvocation(
+        processor: suspend (
+            EventWithVersion,
+            EntitiesService,
+            WowEntityCacheService
+        ) -> Either<ControllerError, Unit>,
+        entityToVerify: WowEntity,
+        eventWithVersion: EventWithVersion,
+        entitiesService: EntitiesService,
+        dataCacheRepository: DataCacheRepository,
+        wowEntityCacheService: WowEntityCacheService,
+        shouldCache: Boolean,
+        expectedCacheSize: Int
+    ) {
+        val result = processor(eventWithVersion, entitiesService, wowEntityCacheService)
+
+        result.fold(
+            { fail("Expected success") },
+            {
+                if (shouldCache) {
+                    coVerify {
+                        wowEntityCacheService.cache(eq(listOf(entityToVerify)))
+                    }
+                } else {
+                    coVerify(exactly = 0) { wowEntityCacheService.cache(any()) }
+                }
+            }
+        )
+
+        assertEquals(expectedCacheSize, dataCacheRepository.state().size)
+    }
+
+    private suspend fun assertWowHardcoreCacheInvocation(
+        processor: suspend (
+            EventWithVersion,
+            EntitiesService,
+            WowHardcoreEntityCacheService
+        ) -> Either<ControllerError, Unit>,
+        entityToVerify: WowEntity,
+        eventWithVersion: EventWithVersion,
+        entitiesService: EntitiesService,
+        dataCacheRepository: DataCacheRepository,
+        wowHardcoreEntityCacheService: WowHardcoreEntityCacheService,
+        shouldCache: Boolean,
+        expectedCacheSize: Int
+    ) {
+        val result = processor(eventWithVersion, entitiesService, wowHardcoreEntityCacheService)
+
+        result.fold(
+            { fail("Expected success") },
+            {
+                if (shouldCache) {
+                    coVerify {
+                        wowHardcoreEntityCacheService.cache(eq(listOf(entityToVerify)))
+                    }
+                } else {
+                    coVerify(exactly = 0) { wowHardcoreEntityCacheService.cache(any()) }
+                }
+            }
+        )
+
+        assertEquals(expectedCacheSize, dataCacheRepository.state().size)
+    }
+
 }

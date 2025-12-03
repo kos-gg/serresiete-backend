@@ -8,7 +8,9 @@ import com.kos.common.Retry.retryEitherWithExponentialBackoff
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
-import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
@@ -145,7 +147,7 @@ class EventSubscription(
         suspend fun syncLolEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            entityCacheServiceRegistry: EntityCacheServiceRegistry
+            lolEntityCacheService: LolEntityCacheService
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -159,9 +161,7 @@ class EventSubscription(
                                     Game.LOL
                                 )
                             }
-                            entityCacheServiceRegistry
-                                .serviceFor(payload.game)
-                                .cache(entities)
+                            lolEntityCacheService.cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -183,9 +183,7 @@ class EventSubscription(
                                     Game.LOL
                                 )
                             }
-                            entityCacheServiceRegistry
-                                .serviceFor(payload.game)
-                                .cache(entities)
+                            lolEntityCacheService.cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -202,9 +200,7 @@ class EventSubscription(
                         Game.LOL -> {
                             syncLolEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.LOL) }?.let {
-                                entityCacheServiceRegistry
-                                    .serviceFor(payload.game)
-                                    .cache(it)
+                                lolEntityCacheService.cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -226,9 +222,7 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                entityCacheServiceRegistry
-                                    .serviceFor(payload.game)
-                                    .cache(newEntity.map { it.first })
+                                lolEntityCacheService.cache(newEntity.map { it.first })
                             }
                         }
 
@@ -253,7 +247,7 @@ class EventSubscription(
         suspend fun syncWowEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            entityCacheServiceRegistry: EntityCacheServiceRegistry
+            wowEntityCacheService: WowEntityCacheService
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -267,8 +261,7 @@ class EventSubscription(
                                     Game.WOW
                                 )
                             }
-                            entityCacheServiceRegistry
-                                .serviceFor(payload.game)
+                            wowEntityCacheService
                                 .cache(entities)
                             Either.Right(Unit)
                         }
@@ -291,8 +284,7 @@ class EventSubscription(
                                     Game.WOW
                                 )
                             }
-                            entityCacheServiceRegistry
-                                .serviceFor(payload.game)
+                            wowEntityCacheService
                                 .cache(entities)
                             Either.Right(Unit)
                         }
@@ -310,8 +302,7 @@ class EventSubscription(
                         Game.WOW -> {
                             syncWowEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW) }?.let {
-                                entityCacheServiceRegistry
-                                    .serviceFor(payload.game)
+                                wowEntityCacheService
                                     .cache(it)
                             }
                             Either.Right(Unit)
@@ -334,8 +325,7 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                entityCacheServiceRegistry
-                                    .serviceFor(payload.game)
+                                wowEntityCacheService
                                     .cache(newEntity.map { it.first })
                             }
                         }
@@ -361,8 +351,7 @@ class EventSubscription(
         suspend fun syncWowHardcoreEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            entityCacheServiceRegistry: EntityCacheServiceRegistry
-
+            wowHardcoreEntityCacheService: WowHardcoreEntityCacheService
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -376,8 +365,7 @@ class EventSubscription(
                                     Game.WOW_HC
                                 )
                             }
-                            entityCacheServiceRegistry
-                                .serviceFor(payload.game)
+                            wowHardcoreEntityCacheService
                                 .cache(entities)
                             Either.Right(Unit)
                         }
@@ -400,8 +388,7 @@ class EventSubscription(
                                     Game.WOW_HC
                                 )
                             }
-                            entityCacheServiceRegistry
-                                .serviceFor(payload.game)
+                            wowHardcoreEntityCacheService
                                 .cache(entities)
                             Either.Right(Unit)
                         }
@@ -419,8 +406,7 @@ class EventSubscription(
                         Game.WOW_HC -> {
                             syncWowHardcoreEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW_HC) }?.let {
-                                entityCacheServiceRegistry
-                                    .serviceFor(payload.game)
+                                wowHardcoreEntityCacheService
                                     .cache(it)
                             }
                             Either.Right(Unit)
@@ -443,8 +429,7 @@ class EventSubscription(
                                     listOf(payload.request),
                                     payload.game
                                 ).bind() //TODO: Maybe we should implement not for a list but for a single element
-                                entityCacheServiceRegistry
-                                    .serviceFor(payload.game)
+                                wowHardcoreEntityCacheService
                                     .cache(newEntity.map { it.first })
                             }
                         }

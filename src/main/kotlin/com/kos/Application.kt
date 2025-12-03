@@ -133,19 +133,23 @@ fun Application.module() {
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
 
+    val lolEntityCacheService = LolEntityCacheService(dataCacheRepository, riotHTTPClient, defaultRetryConfig)
+    val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+        dataCacheRepository,
+        entitiesRepository,
+        raiderIoHTTPClient,
+        blizzardClient,
+        blizzardDatabaseClient,
+        defaultRetryConfig
+    )
+    val wowEntityCacheService = WowEntityCacheService(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
+
     val entityCacheServiceRegistry =
         EntityCacheServiceRegistry(
             listOf(
-                LolEntityCacheService(dataCacheRepository, riotHTTPClient, defaultRetryConfig),
-                WowHardcoreEntityCacheService(
-                    dataCacheRepository,
-                    entitiesRepository,
-                    raiderIoHTTPClient,
-                    blizzardClient,
-                    blizzardDatabaseClient,
-                    defaultRetryConfig
-                ),
-                WowEntityCacheService(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
+                lolEntityCacheService,
+                wowHardcoreEntityCacheService,
+                wowEntityCacheService
             )
         )
 
@@ -174,21 +178,21 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, entityCacheServiceRegistry) }
+    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, lolEntityCacheService) }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, entityCacheServiceRegistry) }
+    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, wowEntityCacheService) }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, entityCacheServiceRegistry) }
+    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, wowHardcoreEntityCacheService) }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
