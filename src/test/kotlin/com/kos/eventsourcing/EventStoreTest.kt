@@ -18,7 +18,6 @@ import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 abstract class EventStoreTest {
 
     abstract val store: EventStore

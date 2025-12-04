@@ -3,20 +3,17 @@ package com.kos.eventsourcing.subscriptions.sync
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.common.ControllerError
+import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.entities.cache.LolEntityCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.views.Game
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class LolSyncProcessor(
     private val eventWithVersion: EventWithVersion,
     private val entitiesService: EntitiesService,
     private val lolEntityCacheService: LolEntityCacheService
-) : SyncProcessor {
-
-    override val logger: Logger = LoggerFactory.getLogger("eventSubscription.syncLolEntitiesProcessor")
+) : SyncProcessor, WithLogger("eventSubscription.syncLolEntitiesProcessor") {
 
     override suspend fun sync(): Either<ControllerError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
