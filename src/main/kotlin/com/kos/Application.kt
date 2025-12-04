@@ -39,6 +39,7 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
+import com.kos.eventsourcing.subscriptions.sync.*
 import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
@@ -213,35 +214,35 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.viewsProcessor(it, viewsService) }
+    ) { ViewsSyncProcessor(it, viewsService).sync() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, lolEntityCacheService) }
+    ) { LolSyncProcessor(it, entitiesService, lolEntityCacheService).sync() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, wowEntityCacheService) }
+    ) { WowSyncProcessor(it, entitiesService, wowEntityCacheService).sync() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, wowHardcoreEntityCacheService) }
+    ) { WowHardcoreSyncProcessor(it, entitiesService, wowHardcoreEntityCacheService).sync() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.entitiesProcessor(it, entitiesService) }
+    ) { EntitiesSyncProcessor(it, entitiesService).sync() }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)
