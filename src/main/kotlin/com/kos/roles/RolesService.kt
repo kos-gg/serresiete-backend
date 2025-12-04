@@ -1,8 +1,8 @@
 package com.kos.roles
 
-import com.kos.roles.repository.RolesRepository
 import com.kos.activities.Activity
 import com.kos.roles.repository.RolesActivitiesRepository
+import com.kos.roles.repository.RolesRepository
 
 class RolesService(
     private val rolesRepository: RolesRepository,

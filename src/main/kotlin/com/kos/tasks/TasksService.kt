@@ -5,7 +5,6 @@ import com.kos.common.WithLogger
 import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
-import com.kos.entities.LolEntity
 import com.kos.seasons.SeasonService
 import com.kos.tasks.repository.TasksRepository
 import com.kos.views.Game

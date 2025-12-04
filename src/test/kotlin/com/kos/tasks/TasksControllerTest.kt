@@ -21,19 +21,14 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
-import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
-import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.riot.RiotClient
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.WowGuildsInMemoryRepository
-import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -47,7 +42,6 @@ import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import java.time.OffsetDateTime
 import kotlin.test.Test
@@ -69,6 +63,49 @@ class TasksControllerTest {
     private val authRepository = AuthInMemoryRepository()
     private val staticDataRepository = StaticDataInMemoryRepository()
     private val seasonDatabaseRepository = SeasonInMemoryRepository()
+
+    @Test
+    fun `i can get tasks`() {
+        runBlocking {
+            val now = OffsetDateTime.now()
+
+            val task = task(now)
+            val controller = createController(
+                emptyCredentialsState,
+                listOf(task),
+                emptyEntitiesState,
+                listOf(),
+                listOf(),
+                listOf(),
+                mapOf()
+            )
+            assertEquals(listOf(task), controller.getTasks("owner", setOf(Activities.getTasks), null).getOrNull())
+        }
+    }
+
+    @Test
+    fun `i can get task by id`() {
+        runBlocking {
+            val now = OffsetDateTime.now()
+            val credentialsState = CredentialsRepositoryState(
+                listOf(CredentialsTestHelper.basicCredentials.copy(userName = "owner")),
+                mapOf(Pair("owner", listOf(Role.USER)))
+            )
+
+            val knownId = "1"
+            val task = task(now).copy(id = knownId)
+            val controller = createController(
+                credentialsState,
+                listOf(task),
+                emptyEntitiesState,
+                listOf(),
+                listOf(),
+                listOf(),
+                mapOf()
+            )
+            assertEquals(task, controller.getTask("owner", knownId, setOf(Activities.getTask)).getOrNull())
+        }
+    }
 
     private suspend fun createController(
         credentialsState: CredentialsRepositoryState,
@@ -116,7 +153,13 @@ class TasksControllerTest {
             retryConfig,
             eventStore
         )
-        val entitiesService = EntitiesService(entitiesRepositoryWithState, raiderIoClient, riotClient, blizzardClient)
+        val entitiesService = EntitiesService(
+            entitiesRepositoryWithState,
+            wowGuildsRepository,
+            entitiesResolver,
+            lolUpdater,
+            wowHardcoreGuildUpdater
+        )
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
         val seasonService = SeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient, retryConfig)
@@ -124,48 +167,5 @@ class TasksControllerTest {
             TasksService(tasksRepositoryWithState, dataCacheService, entitiesService, authService, seasonService)
 
         return TasksController(tasksService)
-    }
-
-    @Test
-    fun `i can get tasks`() {
-        runBlocking {
-            val now = OffsetDateTime.now()
-
-            val task = task(now)
-            val controller = createController(
-                emptyCredentialsState,
-                listOf(task),
-                emptyEntitiesState,
-                listOf(),
-                listOf(),
-                listOf(),
-                mapOf()
-            )
-            assertEquals(listOf(task), controller.getTasks("owner", setOf(Activities.getTasks), null).getOrNull())
-        }
-    }
-
-    @Test
-    fun `i can get task by id`() {
-        runBlocking {
-            val now = OffsetDateTime.now()
-            val credentialsState = CredentialsRepositoryState(
-                listOf(CredentialsTestHelper.basicCredentials.copy(userName = "owner")),
-                mapOf(Pair("owner", listOf(Role.USER)))
-            )
-
-            val knownId = "1"
-            val task = task(now).copy(id = knownId)
-            val controller = createController(
-                credentialsState,
-                listOf(task),
-                emptyEntitiesState,
-                listOf(),
-                listOf(),
-                listOf(),
-                mapOf()
-            )
-            assertEquals(task, controller.getTask("owner", knownId, setOf(Activities.getTask)).getOrNull())
-        }
     }
 }

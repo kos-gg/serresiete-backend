@@ -22,14 +22,14 @@ import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
+import com.kos.entities.EntitiesService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
-import com.kos.entities.repository.WowGuildsDatabaseRepository
-import com.kos.entities.EntitiesService
 import com.kos.entities.repository.EntitiesDatabaseRepository
+import com.kos.entities.repository.WowGuildsDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
