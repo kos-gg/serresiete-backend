@@ -1,5 +1,15 @@
 # Changelog
+
 ## [4.5.0] - 18-11-2025
+
+### Added
+- **Mythic+ Season Sync Task**:
+    - Implemented a new task that can be **manually triggered via controller** to retrieve the **current Mythic+ season** of the active World of Warcraft expansion.
+    - When executed, the task updates the database with season-related information, including:
+        - The **current dungeon pool**
+        - Any additional season metadata exposed by the Blizzard API
+    - Ensures that tracked Mythic+ data remains aligned with the official live season.
+
 
 ### Added
 - **Extra Arguments Support for WoW & WoW Hardcore Views**:

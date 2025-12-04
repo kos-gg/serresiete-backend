@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 
+//TODO - Classes that extend from this need testing suite
 interface EntityResolver {
     suspend fun resolve(
         requested: List<CreateEntityRequest>,
