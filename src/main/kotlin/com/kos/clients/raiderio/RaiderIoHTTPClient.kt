@@ -2,11 +2,6 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.domain.*
-import com.kos.common.HttpError
-import com.kos.common.JsonParseError
-import com.kos.common.RaiderIoError
-import com.kos.common.WithLogger
-import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI

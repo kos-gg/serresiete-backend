@@ -3,7 +3,6 @@ package com.kos.clients.domain
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
-import arrow.core.traverse
 import com.kos.common.JsonParseError
 import com.kos.entities.Spec
 import kotlinx.serialization.KSerializer

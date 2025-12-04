@@ -1,10 +1,8 @@
 package com.kos.eventsourcing
 
-
 import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.NotFound
@@ -26,9 +24,6 @@ import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.WowGuildsInMemoryRepository
-import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
@@ -47,7 +42,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
-import org.mockito.Mockito.mock
 import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals

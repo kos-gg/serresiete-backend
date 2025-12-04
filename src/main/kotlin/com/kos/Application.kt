@@ -23,6 +23,10 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
@@ -30,13 +34,6 @@ import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
-import com.kos.entities.repository.WowGuildsDatabaseRepository
-import com.kos.entities.EntitiesService
-import com.kos.entities.cache.EntityCacheServiceRegistry
-import com.kos.entities.cache.LolEntityCacheService
-import com.kos.entities.cache.WowEntityCacheService
-import com.kos.entities.cache.WowHardcoreEntityCacheService
-import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
@@ -192,7 +189,14 @@ fun Application.module() {
         )
 
     val tasksService =
-        TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService, entityCacheServiceRegistry)
+        TasksService(
+            tasksRepository,
+            dataCacheService,
+            entitiesService,
+            authService,
+            seasonService,
+            entityCacheServiceRegistry
+        )
     val tasksLauncher =
         TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
     val tasksController = TasksController(tasksService)

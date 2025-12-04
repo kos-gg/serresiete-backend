@@ -5,7 +5,6 @@ import com.kos.common.WithLogger
 import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
-import com.kos.entities.LolEntity
 import com.kos.entities.cache.EntityCacheServiceRegistry
 import com.kos.seasons.SeasonService
 import com.kos.tasks.repository.TasksRepository
@@ -41,6 +40,7 @@ data class TasksService(
                     ?.getOrNull()
                 cacheCleanup(game, taskType, taskId)
             }
+
             TaskType.UPDATE_WOW_HARDCORE_GUILDS -> updateWowGuildEntities(taskId)
 
             TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON -> taskMythicPlusSeason(taskId, taskType)

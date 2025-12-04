@@ -2,12 +2,10 @@ package com.kos.views
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.RetryConfig
 import com.kos.common.TooMuchEntities
 import com.kos.common.TooMuchViews
 import com.kos.common.UserWithoutRoles
