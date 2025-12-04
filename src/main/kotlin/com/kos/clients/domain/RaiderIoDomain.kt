@@ -2,6 +2,8 @@ package com.kos.clients.domain
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
+import arrow.core.traverse
 import com.kos.common.JsonParseError
 import com.kos.entities.Spec
 import kotlinx.serialization.KSerializer
@@ -50,33 +52,35 @@ object RaiderIoProtocol {
             .jsonObject["mythic_plus_ranks"]
             ?.jsonObject
 
-        return specs.let<Iterable<Spec>, Either<JsonParseError, List<MythicPlusRankWithSpecName>>> { l ->
-            either {
-                l.map {
-                    val ranks = mythicPlusRanks
-                        ?.get("spec_${it.externalSpec}")
-                        ?.jsonObject
-                    val world = ranks?.get("world")?.jsonPrimitive?.int
-                    val region = ranks?.get("region")?.jsonPrimitive?.int
-                    val realm = ranks?.get("realm")?.jsonPrimitive?.int
-                    val specScore = when (it.internalSpec) {
-                        0 -> scores.spec0
-                        1 -> scores.spec1
-                        2 -> scores.spec2
-                        3 -> scores.spec3
-                        else -> 0.0
-                    }
-                    (if (world != null && region != null && realm != null) Either.Right(
-                        MythicPlusRankWithSpecName(
-                            it.name,
-                            specScore,
-                            world,
-                            region,
-                            realm
-                        )
-                    )
-                    else Either.Left(JsonParseError(jsonString, "/mythic_plus_ranks/spec_$it"))).bind()
+        return either {
+            specs.map { spec ->
+                val ranks = mythicPlusRanks
+                    ?.get("spec_${spec.externalSpec}")
+                    ?.jsonObject
+
+                val world = ranks?.get("world")?.jsonPrimitive?.int
+                val region = ranks?.get("region")?.jsonPrimitive?.int
+                val realm = ranks?.get("realm")?.jsonPrimitive?.int
+
+                val specScore = when (spec.internalSpec) {
+                    0 -> scores.spec0
+                    1 -> scores.spec1
+                    2 -> scores.spec2
+                    3 -> scores.spec3
+                    else -> 0.0
                 }
+
+                ensureNotNull(world) {
+                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
+                }
+                ensureNotNull(region) {
+                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
+                }
+                ensureNotNull(realm) {
+                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
+                }
+
+                MythicPlusRankWithSpecName(spec.name, specScore, world, region, realm)
             }
         }
     }
