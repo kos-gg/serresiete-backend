@@ -29,7 +29,7 @@ import com.kos.entities.entitiesResolvers.WowResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesDatabaseRepository
-import com.kos.entities.repository.WowGuildsDatabaseRepository
+import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController

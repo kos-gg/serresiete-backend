@@ -6,15 +6,14 @@ import com.kos.auth.AuthTestHelper.basicAuthorization
 import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.BlizzardDatabaseClient
-import com.kos.clients.domain.ExpansionSeasons
-import com.kos.clients.domain.QueueType
-import com.kos.clients.domain.Season
+import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
 import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsInMemoryRepository
+import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.RiotMockHelper
@@ -23,6 +22,7 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.GuildPayload
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
@@ -30,7 +30,9 @@ import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.WowGuildsInMemoryRepository
+import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
+import com.kos.entities.repository.wowguilds.WowGuildsRepository
+import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
@@ -44,6 +46,7 @@ import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
+import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -59,23 +62,62 @@ class TasksServiceTest {
     private val blizzardDbClient = mock(BlizzardDatabaseClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
+    @Test
+    fun `task update wow hardcore guilds is successful`(): Unit {
+        runBlocking {
+            val testComponents = createTaskService()
+
+            val realm = "Soulseeker"
+            val guild = "Balast"
+            val region = "Nolase"
+            val blizzardId: Long = 1
+            val character = "Surmana"
+
+            testComponents.wowGuildsRepository.withState(
+                WowGuildsState(listOf(Pair(GuildPayload(guild, realm, region, blizzardId), "1")))
+            )
+
+            `when`(blizzardClient.getGuildRoster(region, realm, guild))
+                .thenReturn(
+                    Either.Right(
+                        GetWowRosterResponse(
+                            listOf(WowMemberResponse(WowCharacterResponse(character, 60))),
+                            WowGuildResponse(blizzardId)
+                        )
+                    )
+                )
+            `when`(blizzardClient.getCharacterProfile(region, realm, character.toLowerCasePreservingASCIIRules()))
+                .thenReturn(
+                    Either.Right(getWowCharacterResponse.copy(name = character, guild = guild))
+                )
+            `when`(blizzardClient.getRealm(region, 5220))
+                .thenReturn(Either.Right(GetWowRealmResponse("Hardcore")))
+
+            val id = UUID.randomUUID().toString()
+            testComponents.tasksService.runTask(TaskType.UPDATE_WOW_HARDCORE_GUILDS, id, emptyMap())
+
+            val inserted = testComponents.tasksRepo.state().first()
+            assertEquals(id, inserted.id)
+            assertEquals(Status.SUCCESSFUL, inserted.taskStatus.status)
+        }
+    }
 
     @Test
     fun `task update mythic plus dungeon season is successful`() = runBlocking {
-        val tasksService = createTaskService()
+        val testComponents = createTaskService()
 
         val expected = ExpansionSeasons(listOf(Season(true, "TWW3", 15, listOf())))
-        tasksService.staticDataRepo.withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
+        testComponents.staticDataRepo.withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
 
         `when`(raiderIoClient.getExpansionSeasons(10))
             .thenReturn(Either.Right(expected))
 
         val id = UUID.randomUUID().toString()
 
-        tasksService.tasksService.runTask(TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON, id, emptyMap())
+        testComponents.tasksService.runTask(TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON, id, emptyMap())
 
-        val inserted = tasksService.tasksRepo.state().first()
-        assertEquals(15, tasksService.seasonRepo.state().wowSeasons[0].id)
+        val inserted = testComponents.tasksRepo.state().first()
+        assertEquals(15, testComponents.seasonRepo.state().wowSeasons[0].id)
         assertEquals(id, inserted.id)
         assertEquals(Status.SUCCESSFUL, inserted.taskStatus.status)
     }
@@ -272,6 +314,8 @@ class TasksServiceTest {
         val entitiesRepo: EntitiesInMemoryRepository,
         val eventStore: EventStoreInMemory,
 
+        val wowGuildsRepository: WowGuildsRepository,
+
         val dataCacheService: DataCacheService,
         val entitiesService: EntitiesService,
 
@@ -356,6 +400,8 @@ class TasksServiceTest {
             dataCacheRepo,
             entitiesRepository,
             eventStore,
+
+            wowGuildsRepository,
 
             dataCacheService,
             entitiesService,

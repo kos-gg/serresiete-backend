@@ -1,4 +1,4 @@
-package com.kos.entities.repository
+package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
 import com.kos.common.InMemoryRepository
@@ -33,5 +33,16 @@ class WowGuildsInMemoryRepository() :
 
     override suspend fun getGuilds(): List<Pair<GuildPayload, String>> {
         return guilds
+    }
+
+    override suspend fun state(): WowGuildsState {
+        return WowGuildsState(
+            getGuilds()
+        )
+    }
+
+    override suspend fun withState(initialState: WowGuildsState): WowGuildsRepository {
+        guilds.addAll(initialState.guilds)
+        return this
     }
 }
