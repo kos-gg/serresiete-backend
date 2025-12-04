@@ -1,4 +1,4 @@
-package com.kos.entities.repository
+package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
 import com.kos.common.InsertError
@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.sql.SQLException
 
-class WowGuildsDatabaseRepository(private val db: Database): WowGuildsRepository {
+class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepository {
 
     object WowHardcoreGuilds : Table("wow_hardcore_guilds") {
         val blizzardId = long("blizzard_id")
@@ -28,7 +28,13 @@ class WowGuildsDatabaseRepository(private val db: Database): WowGuildsRepository
         ) to row[WowHardcoreGuilds.viewId]
     }
 
-    override suspend fun insertGuild(blizzardId: Long, name: String, realm: String, region: String, viewId: String): Either<InsertError, Unit> {
+    override suspend fun insertGuild(
+        blizzardId: Long,
+        name: String,
+        realm: String,
+        region: String,
+        viewId: String
+    ): Either<InsertError, Unit> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             try {
                 WowHardcoreGuilds.insert {
@@ -39,10 +45,9 @@ class WowGuildsDatabaseRepository(private val db: Database): WowGuildsRepository
                     it[WowHardcoreGuilds.viewId] = viewId
                 }
                 Either.Right(Unit)
-            }
-            catch (e: SQLException) {
+            } catch (e: SQLException) {
                 if (e.sqlState == "23505") Either.Left(InsertError("Duplicated guild $name $realm $region"))
-                else Either.Left(InsertError(e.message?:e.stackTraceToString()))
+                else Either.Left(InsertError(e.message ?: e.stackTraceToString()))
             }
         }
     }
@@ -51,5 +56,27 @@ class WowGuildsDatabaseRepository(private val db: Database): WowGuildsRepository
         return newSuspendedTransaction(Dispatchers.IO, db) {
             WowHardcoreGuilds.selectAll().map { rowToGuildPayload(it) }
         }
+    }
+
+    override suspend fun state(): WowGuildsState {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            WowGuildsState(
+                getGuilds()
+            )
+        }
+    }
+
+    override suspend fun withState(initialState: WowGuildsState): WowGuildsRepository {
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            WowHardcoreGuilds.batchInsert(initialState.guilds) {
+                this[WowHardcoreGuilds.blizzardId] = it.first.blizzardId
+                this[WowHardcoreGuilds.name] = it.first.name
+                this[WowHardcoreGuilds.realm] = it.first.realm
+                this[WowHardcoreGuilds.region] = it.first.region
+                this[WowHardcoreGuilds.viewId] = it.second
+            }
+        }
+
+        return this
     }
 }

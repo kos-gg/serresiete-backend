@@ -30,12 +30,19 @@ interface HttpError : ControllerError {
     fun error(): String
 }
 
+class UnableToAddNewMythicPlusSeason(
+    override val message: String
+) : RuntimeException(message), HttpError {
+    override fun error(): String = message
+}
+
 class UnableToSyncEntityError(private val entityId: Long, private val game: Game) : HttpError {
     override fun error(): String = "Entity with id [$entityId] from game [$game] could not be synced"
 }
 
 class WowHardcoreCharacterIsDead(private val character: String, private val characterId: Long) : HttpError {
-    override fun error(): String = "Character with name [$character] and id [$characterId] could not be sync because it is dead"
+    override fun error(): String =
+        "Character with name [$character] and id [$characterId] could not be sync because it is dead"
 }
 
 class NotFoundHardcoreCharacter(private val name: String) : HttpError {

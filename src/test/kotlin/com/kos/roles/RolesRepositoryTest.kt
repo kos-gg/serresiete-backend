@@ -1,8 +1,8 @@
 package com.kos.roles
 
-import com.kos.roles.repository.RolesRepository
 import com.kos.roles.repository.RolesDatabaseRepository
 import com.kos.roles.repository.RolesInMemoryRepository
+import com.kos.roles.repository.RolesRepository
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
@@ -10,7 +10,8 @@ import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 abstract class RolesRepositoryTestCommon {
 

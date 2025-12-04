@@ -1,16 +1,12 @@
 package com.kos.entities
 
 import arrow.core.Either
-import com.kos.common.ControllerError
-import com.kos.common.InsertError
-import com.kos.common.NotFound
-import com.kos.common.WithLogger
-import com.kos.common.fold
+import com.kos.common.*
 import com.kos.entities.entitiesResolvers.EntityResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesRepository
-import com.kos.entities.repository.WowGuildsRepository
+import com.kos.entities.repository.wowguilds.WowGuildsRepository
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
 

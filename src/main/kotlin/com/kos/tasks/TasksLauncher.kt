@@ -4,11 +4,7 @@ import com.kos.auth.AuthService
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
 import com.kos.tasks.repository.TasksRepository
-import com.kos.tasks.runnables.CacheGameDataRunnable
-import com.kos.tasks.runnables.TasksCleanupRunnable
-import com.kos.tasks.runnables.TokenCleanupRunnable
-import com.kos.tasks.runnables.UpdateLolEntitiesRunnable
-import com.kos.tasks.runnables.UpdateWowGuildsRunnable
+import com.kos.tasks.runnables.*
 import com.kos.views.Game
 import kotlinx.coroutines.CoroutineScope
 import java.time.Duration
