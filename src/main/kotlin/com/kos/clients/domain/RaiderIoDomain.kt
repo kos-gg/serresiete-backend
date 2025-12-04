@@ -1,9 +1,11 @@
 package com.kos.clients.domain
 
 import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import arrow.core.traverse
-import com.kos.entities.Spec
 import com.kos.common.JsonParseError
+import com.kos.entities.Spec
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -41,34 +43,73 @@ object RaiderIoProtocol {
         }
     }
 
-    fun parseMythicPlusRanks(jsonString: String, specs: List<Spec>, scores: SeasonScores): Either<JsonParseError, List<MythicPlusRankWithSpecName>> {
+    fun parseMythicPlusRanks(
+        jsonString: String,
+        specs: List<Spec>,
+        scores: SeasonScores
+    ): Either<JsonParseError, List<MythicPlusRankWithSpecName>> {
         val mythicPlusRanks = json.parseToJsonElement(jsonString)
             .jsonObject["mythic_plus_ranks"]
             ?.jsonObject
 
-        return specs.traverse {
-            val ranks = mythicPlusRanks
-                ?.get("spec_${it.externalSpec}")
-                ?.jsonObject
+        return either {
+            specs.map { spec ->
+                val ranks = mythicPlusRanks
+                    ?.get("spec_${spec.externalSpec}")
+                    ?.jsonObject
 
-            val world = ranks?.get("world")?.jsonPrimitive?.int
-            val region = ranks?.get("region")?.jsonPrimitive?.int
-            val realm = ranks?.get("realm")?.jsonPrimitive?.int
+                val world = ranks?.get("world")?.jsonPrimitive?.int
+                val region = ranks?.get("region")?.jsonPrimitive?.int
+                val realm = ranks?.get("realm")?.jsonPrimitive?.int
 
-            val specScore = when(it.internalSpec) {
-                0 -> scores.spec0
-                1 -> scores.spec1
-                2 -> scores.spec2
-                3 -> scores.spec3
-                else -> 0.0
+                val specScore = when (spec.internalSpec) {
+                    0 -> scores.spec0
+                    1 -> scores.spec1
+                    2 -> scores.spec2
+                    3 -> scores.spec3
+                    else -> 0.0
+                }
+
+                ensureNotNull(world) {
+                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
+                }
+                ensureNotNull(region) {
+                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
+                }
+                ensureNotNull(realm) {
+                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
+                }
+
+                MythicPlusRankWithSpecName(spec.name, specScore, world, region, realm)
             }
-
-            if (world != null && region != null && realm != null) Either.Right(MythicPlusRankWithSpecName(it.name, specScore, world, region, realm))
-            else Either.Left(JsonParseError(jsonString, "/mythic_plus_ranks/spec_$it"))
         }
     }
 }
 
+@Serializable
+data class Season(
+    @SerialName("is_main_season")
+    val isCurrentSeason: Boolean,
+    val name: String,
+    @SerialName("blizzard_season_id")
+    val blizzardSeasonId: Int,
+    val dungeons: List<Dungeon>
+)
+
+@Serializable
+data class Dungeon(
+    val name: String,
+    @SerialName("short_name")
+    val shortName: String,
+    @SerialName("challenge_mode_id")
+    val dungeonId: Int
+)
+
+@Serializable
+data class ExpansionSeasons(
+    @Serializable
+    val seasons: List<Season>
+)
 
 @Serializable
 data class SeasonScores(
@@ -205,5 +246,5 @@ data class RaiderIoData(
     val quantile: Double,
     val mythicPlusRanks: MythicPlusRanksWithSpecs,
     val mythicPlusBestRuns: List<MythicPlusRun>
-): Data
+) : Data
 
