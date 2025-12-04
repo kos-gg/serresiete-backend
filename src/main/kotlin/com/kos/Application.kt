@@ -7,8 +7,6 @@ import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.clients.blizzard.BlizzardDatabaseClient
-import com.kos.entities.EntitiesService
-import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
@@ -24,12 +22,18 @@ import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
+import com.kos.entities.EntitiesService
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
-import com.kos.entities.repository.WowGuildsDatabaseRepository
+import com.kos.entities.repository.EntitiesDatabaseRepository
+import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
@@ -40,6 +44,9 @@ import com.kos.roles.RolesController
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesDatabaseRepository
 import com.kos.roles.repository.RolesDatabaseRepository
+import com.kos.seasons.SeasonService
+import com.kos.seasons.repository.SeasonDatabaseRepository
+import com.kos.staticdata.repository.StaticDataDatabaseRepository
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
@@ -123,16 +130,16 @@ fun Application.module() {
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
-    val dataCacheRetryConfig = RetryConfig(3, 1200)
+
+    val seasonRepository = SeasonDatabaseRepository(db)
+    val staticDataRepository = StaticDataDatabaseRepository(db)
+    val seasonService = SeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient, RetryConfig(3, 1200))
+
+    val defaultRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
         DataCacheService(
             dataCacheRepository,
             entitiesRepository,
-            raiderIoHTTPClient,
-            riotHTTPClient,
-            blizzardClient,
-            blizzardDatabaseClient,
-            dataCacheRetryConfig,
             eventStore
         )
 
@@ -160,8 +167,36 @@ fun Application.module() {
 
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
+
+    val lolEntityCacheService = LolEntityCacheService(dataCacheRepository, riotHTTPClient, defaultRetryConfig)
+    val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+        dataCacheRepository,
+        entitiesRepository,
+        raiderIoHTTPClient,
+        blizzardClient,
+        blizzardDatabaseClient,
+        defaultRetryConfig
+    )
+    val wowEntityCacheService = WowEntityCacheService(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
+
+    val entityCacheServiceRegistry =
+        EntityCacheServiceRegistry(
+            listOf(
+                lolEntityCacheService,
+                wowHardcoreEntityCacheService,
+                wowEntityCacheService
+            )
+        )
+
     val tasksService =
-        TasksService(tasksRepository, dataCacheService, entitiesService, authService)
+        TasksService(
+            tasksRepository,
+            dataCacheService,
+            entitiesService,
+            authService,
+            seasonService,
+            entityCacheServiceRegistry
+        )
     val tasksLauncher =
         TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
     val tasksController = TasksController(tasksService)
@@ -185,21 +220,21 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, lolEntityCacheService) }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, wowEntityCacheService) }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, wowHardcoreEntityCacheService) }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",

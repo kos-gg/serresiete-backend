@@ -2,13 +2,15 @@ package com.kos.eventsourcing.subscriptions
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.entities.EntitiesService
 import com.kos.common.ControllerError
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.Retry.retryEitherWithExponentialBackoff
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
-import com.kos.datacache.DataCacheService
+import com.kos.entities.EntitiesService
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
@@ -145,7 +147,7 @@ class EventSubscription(
         suspend fun syncLolEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            lolEntityCacheService: LolEntityCacheService
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -159,7 +161,7 @@ class EventSubscription(
                                     Game.LOL
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            lolEntityCacheService.cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -181,7 +183,7 @@ class EventSubscription(
                                     Game.LOL
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            lolEntityCacheService.cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -198,7 +200,7 @@ class EventSubscription(
                         Game.LOL -> {
                             syncLolEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.LOL) }?.let {
-                                dataCacheService.cache(it, payload.game)
+                                lolEntityCacheService.cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -230,7 +232,7 @@ class EventSubscription(
                                 val entities = inserted.zip(resolved.entities.map { it.second }) +
                                         resolved.existing
 
-                                dataCacheService.cache(entities.map { it.first }, payload.game)
+                                lolEntityCacheService.cache(entities.map { it.first })
                             }
                         }
 
@@ -255,7 +257,7 @@ class EventSubscription(
         suspend fun syncWowEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            wowEntityCacheService: WowEntityCacheService
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -269,7 +271,8 @@ class EventSubscription(
                                     Game.WOW
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            wowEntityCacheService
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -291,7 +294,8 @@ class EventSubscription(
                                     Game.WOW
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            wowEntityCacheService
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -308,7 +312,8 @@ class EventSubscription(
                         Game.WOW -> {
                             syncWowEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW) }?.let {
-                                dataCacheService.cache(it, payload.game)
+                                wowEntityCacheService
+                                    .cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -338,7 +343,7 @@ class EventSubscription(
 
                                 val entities = inserted.zip(resolved.entities.map { it.second }) +
                                         resolved.existing
-                                dataCacheService.cache(entities.map { it.first }, payload.game)
+                                wowEntityCacheService.cache(entities.map { it.first })
                             }
                         }
 
@@ -363,7 +368,7 @@ class EventSubscription(
         suspend fun syncWowHardcoreEntitiesProcessor(
             eventWithVersion: EventWithVersion,
             entitiesService: EntitiesService,
-            dataCacheService: DataCacheService
+            wowHardcoreEntityCacheService: WowHardcoreEntityCacheService
         ): Either<ControllerError, Unit> {
             return when (eventWithVersion.event.eventData.eventType) {
                 EventType.VIEW_CREATED -> {
@@ -377,7 +382,8 @@ class EventSubscription(
                                     Game.WOW_HC
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            wowHardcoreEntityCacheService
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -399,7 +405,8 @@ class EventSubscription(
                                     Game.WOW_HC
                                 )
                             }
-                            dataCacheService.cache(entities, payload.game)
+                            wowHardcoreEntityCacheService
+                                .cache(entities)
                             Either.Right(Unit)
                         }
 
@@ -416,7 +423,8 @@ class EventSubscription(
                         Game.WOW_HC -> {
                             syncWowHardcoreEntitiesProcessorLogger.debug("processing event v${eventWithVersion.version}")
                             payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW_HC) }?.let {
-                                dataCacheService.cache(it, payload.game)
+                                wowHardcoreEntityCacheService
+                                    .cache(it)
                             }
                             Either.Right(Unit)
                         }
@@ -446,7 +454,7 @@ class EventSubscription(
 
                                 val entities = inserted.zip(resolved.entities.map { it.second }) +
                                         resolved.existing
-                                dataCacheService.cache(entities.map { it.first }, payload.game)
+                                wowHardcoreEntityCacheService.cache(entities.map { it.first })
                             }
                         }
 

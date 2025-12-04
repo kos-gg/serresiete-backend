@@ -1,12 +1,7 @@
 package com.kos.eventsourcing.events
 
 import com.kos.entities.CreateEntityRequest
-import com.kos.views.Game
-import com.kos.views.SimpleView
-import com.kos.views.ViewExtraArguments
-import com.kos.views.ViewModified
-import com.kos.views.ViewPatched
-import com.kos.views.WowExtraArguments
+import com.kos.views.*
 import kotlinx.serialization.Serializable
 
 enum class EventType {

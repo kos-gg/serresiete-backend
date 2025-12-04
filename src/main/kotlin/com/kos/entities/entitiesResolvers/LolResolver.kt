@@ -6,7 +6,10 @@ import com.kos.clients.riot.RiotClient
 import com.kos.common.HttpError
 import com.kos.common.WithLogger
 import com.kos.common.isDefined
-import com.kos.entities.*
+import com.kos.entities.CreateEntityRequest
+import com.kos.entities.LolEnrichedEntityRequest
+import com.kos.entities.LolEntityRequest
+import com.kos.entities.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
