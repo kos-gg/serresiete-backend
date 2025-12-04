@@ -1,8 +1,4 @@
 # Changelog
-## [4.5.1] - 2025-11-20
-### Added
-- New endpoint to retrieve information about the seasons of an expansion:
-    - URL: `https://raider.io/api/v1/mythic-plus/static-data?expansion_id=10`
 
 ## [4.5.0] - 18-11-2025
 
