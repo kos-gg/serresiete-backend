@@ -23,6 +23,17 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.riot.RiotClient
+import com.kos.entities.entitiesResolvers.LolResolver
+import com.kos.entities.entitiesResolvers.WowHardcoreResolver
+import com.kos.entities.entitiesResolvers.WowResolver
+import com.kos.entities.entitiesUpdaters.LolUpdater
+import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.repository.WowGuildsInMemoryRepository
+import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -33,6 +44,8 @@ import com.kos.seasons.repository.SeasonInMemoryRepository
 import com.kos.staticdata.repository.StaticDataInMemoryRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
+import com.kos.views.Game
+import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
@@ -74,6 +87,22 @@ class TasksControllerTest {
         val authRepositoryWithState = authRepository.withState(authState)
         val rolesRepositoryWithState = rolesRepository.withState(rolesState)
         val eventStore = EventStoreInMemory()
+
+        val wowGuildsRepository = WowGuildsInMemoryRepository()
+        val viewsRepository = ViewsInMemoryRepository()
+
+        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolResolver(entitiesRepository, riotClient)
+
+        val entitiesResolver = mapOf(
+            Game.WOW to wowResolver,
+            Game.WOW_HC to wowHardcoreResolver,
+            Game.LOL to lolResolver
+        )
+
+        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)

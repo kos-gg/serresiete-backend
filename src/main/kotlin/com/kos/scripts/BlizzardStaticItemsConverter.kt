@@ -33,9 +33,18 @@ fun main() = runBlocking {
     val fullJson = json.parseToJsonElement(jsonString).jsonArray
 
     val equippableItems: List<String> = fullJson.filter { item ->
-        (item.jsonObject["class"]?.jsonPrimitive?.content == "Weapon" ||
-                item.jsonObject["class"]?.jsonPrimitive?.content == "Armor") &&
-                item.jsonObject["contentPhase"]?.jsonPrimitive?.intOrNull == 1
+        val obj = item.jsonObject
+
+        val isMisc = obj["class"]?.jsonPrimitive?.content == "Miscellaneous"
+        val isJunk = obj["subclass"]?.jsonPrimitive?.content == "Junk"
+
+        val hasMaxStack200 = obj["tooltip"]
+            ?.jsonArray
+            ?.any { tip ->
+                tip.jsonObject["label"]?.jsonPrimitive?.content == "Max Stack: 200"
+            } == true
+
+        isMisc && isJunk && hasMaxStack200
     }.map { item ->
         val staticItem = json.decodeFromJsonElement<StaticWowItem>(item)
         val obj = Json.encodeToString(staticItem.toBlizzard())

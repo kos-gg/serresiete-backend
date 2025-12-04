@@ -87,10 +87,22 @@ class ViewsService(
         operationId: String,
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
-    ): Either<InsertError, Operation> {
+    ): Either<ControllerError, Operation> {
         return either {
-            val entities =
-                entitiesService.createAndReturnIds(viewToBeCreatedEvent.entities, viewToBeCreatedEvent.game).bind()
+            val resolved =
+                entitiesService.resolveEntities(
+                    viewToBeCreatedEvent.entities,
+                    viewToBeCreatedEvent.game,
+                    viewToBeCreatedEvent.extraArguments
+                ).bind()
+
+            val inserted = entitiesService
+                .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
+                .bind()
+
+            val entities = inserted.zip(resolved.entities.map { it.second }) +
+                    resolved.existing
+
             val view = viewsRepository.create(
                 viewToBeCreatedEvent.id,
                 viewToBeCreatedEvent.name,
@@ -100,6 +112,9 @@ class ViewsService(
                 viewToBeCreatedEvent.featured,
                 viewToBeCreatedEvent.extraArguments
             )
+
+            resolved.guild?.let { entitiesService.insertGuild(it, view.id).bind() }
+
             val event = Event(
                 aggregateRoot,
                 operationId,
@@ -136,8 +151,18 @@ class ViewsService(
         viewToBeEditedEvent: ViewToBeEditedEvent
     ): Either<ControllerError, Operation> {
         return either {
-            val entities =
-                entitiesService.createAndReturnIds(viewToBeEditedEvent.entities, viewToBeEditedEvent.game).bind()
+            val resolved =
+                entitiesService.resolveEntities(
+                    viewToBeEditedEvent.entities,
+                    viewToBeEditedEvent.game
+                ).bind()
+
+            val inserted = entitiesService
+                .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
+                .bind()
+
+            val entities = inserted.zip(resolved.entities.map { it.second }) +
+                    resolved.existing
             val viewModified =
                 viewsRepository.edit(
                     viewToBeEditedEvent.id,
@@ -182,10 +207,21 @@ class ViewsService(
         operationId: String,
         aggregateRoot: String,
         viewToBePatchedEvent: ViewToBePatchedEvent
-    ): Either<InsertError, Operation> {
+    ): Either<ControllerError, Operation> {
         return either {
             val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
-                entitiesService.createAndReturnIds(entitiesToInsert, viewToBePatchedEvent.game).bind()
+                val resolved =
+                    entitiesService.resolveEntities(
+                        entitiesToInsert,
+                        viewToBePatchedEvent.game
+                    ).bind()
+
+                val inserted = entitiesService
+                    .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)
+                    .bind()
+
+                inserted.zip(resolved.entities.map { it.second }) +
+                        resolved.existing
             }
             val patchedView = viewsRepository.patch(
                 viewToBePatchedEvent.id,
@@ -263,12 +299,20 @@ class ViewsService(
 
     private fun ensureRequest(
         request: ViewRequest
-    ): Either<ControllerError, Unit> {
-        return either {
+    ): Either<ControllerError, Unit> = either {
+        request.extraArguments?.let { extra ->
             when (request.game) {
-                Game.WOW_HC -> ensure(request.extraArguments == null || request.extraArguments is WowHardcoreExtraArguments) { ExtraArgumentsWrongType }
-                Game.LOL -> Either.Right(Unit)
-                Game.WOW -> ensure(request.extraArguments == null || request.extraArguments is WowExtraArguments) { ExtraArgumentsWrongType }
+                Game.WOW_HC -> {
+                    ensure(extra is WowHardcoreExtraArguments) { ExtraArgumentsWrongType }
+                    if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanTwoEntities }
+                }
+
+                Game.WOW -> {
+                    ensure(extra is WowExtraArguments) { ExtraArgumentsWrongType }
+                    if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanTwoEntities }
+                }
+
+                Game.LOL -> Unit
             }
         }
     }

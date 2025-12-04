@@ -337,7 +337,9 @@ data class GetWowSpecializationsResponse(
 
 @Serializable
 data class SpecializationGroup(
-    val specializations: List<Specialization>,
+    val specializations: List<Specialization>? = null,
+    @SerialName("is_active")
+    val isActive: Boolean
 )
 
 @Serializable
@@ -600,7 +602,7 @@ data class HardcoreData(
             WowStats.apply(statsResponse),
             WowTalents(
                 wowHeadEmbeddedTalents = wowHeadEmbeddedResponse?.talentLoadout?.wowheadCalculator,
-                specializations = specializationsResponse.specializationGroups.firstOrNull()?.specializations?.map { specialization ->
+                specializations = specializationsResponse.specializationGroups.firstOrNull { it.isActive }?.specializations?.map { specialization ->
                     WowSpecialization.apply(specialization)
                 }.orEmpty()
             ),
@@ -608,3 +610,25 @@ data class HardcoreData(
         )
     }
 }
+
+@Serializable
+data class WowCharacterResponse(
+    val name: String,
+    val level: Int
+)
+
+@Serializable
+data class WowMemberResponse(
+    val character: WowCharacterResponse
+)
+
+@Serializable
+data class WowGuildResponse(
+    val id: Long
+)
+
+@Serializable
+data class GetWowRosterResponse(
+    val members: List<WowMemberResponse>,
+    val guild: WowGuildResponse
+)
