@@ -11,7 +11,8 @@ import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 abstract class ActivitiesRepositoryTestCommon {
 

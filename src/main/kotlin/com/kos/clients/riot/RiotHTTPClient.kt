@@ -1,10 +1,10 @@
 package com.kos.clients.riot
 
 import arrow.core.Either
+import com.kos.clients.domain.*
 import com.kos.common.HttpError
 import com.kos.common.JsonParseError
 import com.kos.common.WithLogger
-import com.kos.clients.domain.*
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -150,10 +150,10 @@ data class RiotHTTPClient(val client: HttpClient, val apiKey: String) : RiotClie
         }
     }
 
-    override suspend fun getLeagueEntriesByPUUID(puuid: String): Either<HttpError, List<LeagueEntryResponse>> {
+    override suspend fun getLeagueEntriesByPUUID(ppuid: String): Either<HttpError, List<LeagueEntryResponse>> {
         return throttleRequest {
-            logger.debug("Getting league entries for $puuid")
-            val partialURI = URI("/lol/league/v4/entries/by-puuid/$puuid")
+            logger.debug("Getting league entries for $ppuid")
+            val partialURI = URI("/lol/league/v4/entries/by-puuid/$ppuid")
             val response = client.get(baseURI("euw1").toString() + partialURI.toString()) {
                 headers {
                     append(HttpHeaders.Accept, "*/*")

@@ -5,6 +5,7 @@ import com.kos.common.WithLogger
 import com.kos.common.WowHardcoreCharacterIsDead
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
+import com.kos.seasons.SeasonService
 import com.kos.tasks.repository.TasksRepository
 import com.kos.views.Game
 import java.time.OffsetDateTime
@@ -13,7 +14,8 @@ data class TasksService(
     private val tasksRepository: TasksRepository,
     private val dataCacheService: DataCacheService,
     private val entitiesService: EntitiesService,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val seasonService: SeasonService
 ) : WithLogger("tasksService") {
 
     private val olderThanDays: Long = 7
@@ -37,6 +39,8 @@ data class TasksService(
                 cacheCleanup(game, taskType, taskId)
             }
             TaskType.UPDATE_WOW_HARDCORE_GUILDS -> updateWowGuildEntities(taskId)
+
+            TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON -> taskMythicPlusSeason(taskId, taskType)
         }
     }
 
@@ -88,6 +92,31 @@ data class TasksService(
                 )
             )
         }
+    }
+
+    suspend fun taskMythicPlusSeason(id: String, taskType: TaskType) {
+        logger.info("Running $taskType with id=$id")
+        seasonService.addNewMythicPlusSeason()
+            .onLeft {
+                tasksRepository.insertTask(
+                    Task(
+                        id,
+                        taskType,
+                        TaskStatus(Status.ERROR, it.error()),
+                        OffsetDateTime.now()
+                    )
+                )
+            }
+            .onRight {
+                tasksRepository.insertTask(
+                    Task(
+                        id,
+                        TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON,
+                        TaskStatus(Status.SUCCESSFUL, "Updated Wow Season to season ${it.id} - ${it.name}"),
+                        OffsetDateTime.now()
+                    )
+                )
+            }
     }
 
     suspend fun taskCleanup(id: String) {

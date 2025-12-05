@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
 import com.kos.common.*
-import com.kos.roles.Role
 
 class CredentialsController(val credentialsService: CredentialsService) {
     suspend fun createCredential(
