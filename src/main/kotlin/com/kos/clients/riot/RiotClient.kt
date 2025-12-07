@@ -9,6 +9,6 @@ interface RiotClient {
     suspend fun getSummonerByPuuid(puuid: String): Either<HttpError, GetSummonerResponse>
     suspend fun getMatchesByPuuid(puuid: String, queue: Int): Either<HttpError, List<String>>
     suspend fun getMatchById(matchId: String): Either<HttpError, GetMatchResponse>
-    suspend fun getLeagueEntriesByPUUID(summonerId: String): Either<HttpError, List<LeagueEntryResponse>>
+    suspend fun getLeagueEntriesByPUUID(ppuid: String): Either<HttpError, List<LeagueEntryResponse>>
     suspend fun getAccountByPUUID(puuid: String): Either<HttpError, GetAccountResponse>
 }

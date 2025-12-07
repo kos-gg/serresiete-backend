@@ -118,7 +118,7 @@ class TasksServiceTest {
 
         val id = UUID.randomUUID().toString()
 
-        testComponents.tasksService.runTask(TaskType.TASK_UPDATE_MYTHIC_PLUS_SEASON, id, emptyMap())
+        testComponents.tasksService.runTask(TaskType.UPDATE_MYTHIC_PLUS_SEASON, id, emptyMap())
 
         val inserted = testComponents.tasksRepo.state().first()
         assertEquals(15, testComponents.seasonRepo.state().wowSeasons[0].id)
