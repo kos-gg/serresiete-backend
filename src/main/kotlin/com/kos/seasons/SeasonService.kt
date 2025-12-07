@@ -20,10 +20,6 @@ data class SeasonService(
     private val retryConfig: RetryConfig,
 ) : WithLogger("SeasonService") {
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
-
     suspend fun addNewMythicPlusSeason(): Either<HttpError, GameSeason> {
         val currentExpansion = getCurrentExpansion()
 
@@ -47,8 +43,8 @@ data class SeasonService(
                     WowSeason(
                         currentSeason.blizzardSeasonId,
                         currentSeason.name,
-                        10,
-                        json.encodeToString(currentSeason)
+                        10, //TODO: SUS HARDCODE
+                        currentSeason
                     )
 
                 seasonRepository.insert(wowSeason).fold(

@@ -94,7 +94,7 @@ data class Season(
     @SerialName("blizzard_season_id")
     val blizzardSeasonId: Int,
     val dungeons: List<Dungeon>
-)
+): Data
 
 @Serializable
 data class Dungeon(

@@ -8,6 +8,7 @@ import com.kos.seasons.WowSeason
 
 interface SeasonRepository : WithState<SeasonsState, SeasonRepository> {
     suspend fun insert(season: GameSeason): Either<InsertError, Boolean>
+    suspend fun get(): List<WowSeason>
 }
 
 data class SeasonsState(

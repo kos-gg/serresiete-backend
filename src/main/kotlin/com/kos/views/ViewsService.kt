@@ -12,6 +12,7 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.seasons.SeasonService
 import com.kos.views.repository.ViewsRepository
 import java.util.*
 
@@ -20,6 +21,7 @@ class ViewsService(
     private val entitiesService: EntitiesService,
     private val dataCacheService: DataCacheService,
     private val credentialsService: CredentialsService,
+    private val seasonsService: SeasonService,
     private val eventStore: EventStore
 ) {
 

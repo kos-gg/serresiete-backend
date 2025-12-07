@@ -16,6 +16,7 @@ import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.Operation
 import com.kos.eventsourcing.events.RequestToBeSynced
 import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.staticdata.repository.StaticDataRepository
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -477,4 +478,6 @@ data class DataCacheService(
             }
         }
     }
+
+    suspend fun getWowMythicPlusSeasonData() = staticDataRepository.getExpansions()
 }
