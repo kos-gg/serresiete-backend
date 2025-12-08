@@ -2,12 +2,10 @@ package com.kos.views
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.RetryConfig
 import com.kos.common.TooMuchEntities
 import com.kos.common.TooMuchViews
 import com.kos.common.UserWithoutRoles
@@ -72,8 +70,6 @@ class ViewsServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     private val aggregateRoot = "/credentials/owner"
     private val defaultCredentialsState = CredentialsRepositoryState(
@@ -992,11 +988,6 @@ class ViewsServiceTest {
             DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
         val service =

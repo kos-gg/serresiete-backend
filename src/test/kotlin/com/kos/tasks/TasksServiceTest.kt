@@ -23,6 +23,10 @@ import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.GuildPayload
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
@@ -63,7 +67,7 @@ class TasksServiceTest {
     private val retryConfig = RetryConfig(1, 1)
 
     @Test
-    fun `task update wow hardcore guilds is successful`(): Unit {
+    fun `task update wow hardcore guilds is successful`() {
         runBlocking {
             val testComponents = createTaskService()
 
@@ -345,11 +349,6 @@ class TasksServiceTest {
         val dataCacheService = DataCacheService(
             dataCacheRepo,
             entitiesRepository,
-            raiderIoClient,
-            riotClient,
-            blizzardClient,
-            blizzardDbClient,
-            retryConfig,
             eventStore
         )
 
@@ -393,8 +392,36 @@ class TasksServiceTest {
         val seasonService = SeasonService(staticDataRepo, seasonRepo, raiderIoClient, retryConfig)
 
         val tasksRepo = TasksInMemoryRepository()
+
+        val lolEntityCacheService = LolEntityCacheService(dataCacheRepo, riotClient, retryConfig)
+        val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+            dataCacheRepo,
+            entitiesRepository,
+            raiderIoClient,
+            blizzardClient,
+            blizzardDbClient,
+            retryConfig
+        )
+        val wowEntityCacheService = WowEntityCacheService(dataCacheRepo, raiderIoClient, retryConfig)
+
+        val entityCacheServiceRegistry =
+            EntityCacheServiceRegistry(
+                listOf(
+                    lolEntityCacheService,
+                    wowHardcoreEntityCacheService,
+                    wowEntityCacheService
+                )
+            )
+
         val tasksService =
-            TasksService(tasksRepo, dataCacheService, entitiesService, authService, seasonService)
+            TasksService(
+                tasksRepo,
+                dataCacheService,
+                entitiesService,
+                authService,
+                seasonService,
+                entityCacheServiceRegistry
+            )
 
         return TaskServiceTestComponents(
             dataCacheRepo,

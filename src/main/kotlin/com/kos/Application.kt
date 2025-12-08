@@ -23,6 +23,10 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
@@ -35,6 +39,7 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
+import com.kos.eventsourcing.subscriptions.sync.*
 import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
@@ -131,16 +136,11 @@ fun Application.module() {
     val staticDataRepository = StaticDataDatabaseRepository(db)
     val seasonService = SeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient, RetryConfig(3, 1200))
 
-    val dataCacheRetryConfig = RetryConfig(3, 1200)
+    val defaultRetryConfig = RetryConfig(3, 1200)
     val dataCacheService =
         DataCacheService(
             dataCacheRepository,
             entitiesRepository,
-            raiderIoHTTPClient,
-            riotHTTPClient,
-            blizzardClient,
-            blizzardDatabaseClient,
-            dataCacheRetryConfig,
             eventStore
         )
 
@@ -168,8 +168,36 @@ fun Application.module() {
 
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
+
+    val lolEntityCacheService = LolEntityCacheService(dataCacheRepository, riotHTTPClient, defaultRetryConfig)
+    val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+        dataCacheRepository,
+        entitiesRepository,
+        raiderIoHTTPClient,
+        blizzardClient,
+        blizzardDatabaseClient,
+        defaultRetryConfig
+    )
+    val wowEntityCacheService = WowEntityCacheService(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
+
+    val entityCacheServiceRegistry =
+        EntityCacheServiceRegistry(
+            listOf(
+                lolEntityCacheService,
+                wowHardcoreEntityCacheService,
+                wowEntityCacheService
+            )
+        )
+
     val tasksService =
-        TasksService(tasksRepository, dataCacheService, entitiesService, authService, seasonService)
+        TasksService(
+            tasksRepository,
+            dataCacheService,
+            entitiesService,
+            authService,
+            seasonService,
+            entityCacheServiceRegistry
+        )
     val tasksLauncher =
         TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
     val tasksController = TasksController(tasksService)
@@ -186,35 +214,35 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.viewsProcessor(it, viewsService) }
+    ) { ViewsSyncProcessor(it, viewsService).sync() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { LolSyncProcessor(it, entitiesService, lolEntityCacheService).sync() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { WowSyncProcessor(it, entitiesService, wowEntityCacheService).sync() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, dataCacheService) }
+    ) { WowHardcoreSyncProcessor(it, entitiesService, wowHardcoreEntityCacheService).sync() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.entitiesProcessor(it, entitiesService) }
+    ) { EntitiesSyncProcessor(it, entitiesService).sync() }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)

@@ -3,7 +3,6 @@ package com.kos.views
 import com.kos.activities.Activities
 import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.*
@@ -59,8 +58,6 @@ class ViewsControllerTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
-    private val retryConfig = RetryConfig(1, 1)
     private val viewsRepository = ViewsInMemoryRepository()
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val dataCacheRepository = DataCacheInMemoryRepository()
@@ -80,7 +77,11 @@ class ViewsControllerTest {
         val credentialsRepositoryWithState = credentialsRepository.withState(credentialsState)
 
         val dataCacheService =
-            DataCacheService(dataCacheRepositoryWithState, charactersRepositoryWithState, raiderIoClient, riotClient, blizzardClient, blizzardDatabaseClient,retryConfig, eventStore)
+            DataCacheService(
+                dataCacheRepositoryWithState,
+                charactersRepositoryWithState,
+                eventStore
+            )
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
@@ -95,7 +96,8 @@ class ViewsControllerTest {
         )
 
         val lolUpdater = LolUpdater(riotClient, entitiesRepository)
-        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
+        val wowHardcoreGuildUpdater =
+            WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
@@ -366,7 +368,9 @@ class ViewsControllerTest {
             val viewWithEntities = basicSimpleWowView.copy(entitiesIds = listOf(1))
             val controller = createController(
                 emptyCredentialsState,
-                ViewsState(listOf(viewWithEntities), viewWithEntities.entitiesIds.map { ViewEntity(it, viewWithEntities.id, "alias") }),
+                ViewsState(
+                    listOf(viewWithEntities),
+                    viewWithEntities.entitiesIds.map { ViewEntity(it, viewWithEntities.id, "alias") }),
                 EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
                 listOf(DataCache(basicWowEntity.id, raiderIoDataString, OffsetDateTime.now(), Game.WOW))
             )
@@ -388,7 +392,9 @@ class ViewsControllerTest {
             val viewWithEntities = basicSimpleLolView.copy(entitiesIds = listOf(2))
             val controller = createController(
                 emptyCredentialsState,
-                ViewsState(listOf(viewWithEntities), viewWithEntities.entitiesIds.map { ViewEntity(it, viewWithEntities.id, "alias") }),
+                ViewsState(
+                    listOf(viewWithEntities),
+                    viewWithEntities.entitiesIds.map { ViewEntity(it, viewWithEntities.id, "alias") }),
                 EntitiesState(listOf(), listOf(), listOf(basicLolEntity.copy(id = 2))),
                 listOf(lolDataCache)
             )

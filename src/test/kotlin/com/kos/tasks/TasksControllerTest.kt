@@ -21,6 +21,10 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.cache.EntityCacheServiceRegistry
+import com.kos.entities.cache.LolEntityCacheService
+import com.kos.entities.cache.WowEntityCacheService
+import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.entitiesResolvers.LolResolver
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver
 import com.kos.entities.entitiesResolvers.WowResolver
@@ -143,28 +147,47 @@ class TasksControllerTest {
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
         val credentialsService = CredentialsService(credentialsRepositoryWithState)
+
         val dataCacheService = DataCacheService(
             dataCacheRepositoryWithState,
             entitiesRepositoryWithState,
-            raiderIoClient,
-            riotClient,
-            blizzardClient,
-            blizzardDatabaseClient,
-            retryConfig,
             eventStore
         )
-        val entitiesService = EntitiesService(
-            entitiesRepositoryWithState,
-            wowGuildsRepository,
-            entitiesResolver,
-            lolUpdater,
-            wowHardcoreGuildUpdater
-        )
+        val entitiesService =
+            EntitiesService(
+                entitiesRepository,
+                wowGuildsRepository,
+                entitiesResolver,
+                lolUpdater,
+                wowHardcoreGuildUpdater
+            )
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
+        val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+            listOf(
+                LolEntityCacheService(dataCacheRepository, riotClient, retryConfig),
+                WowHardcoreEntityCacheService(
+                    dataCacheRepository,
+                    entitiesRepositoryWithState,
+                    raiderIoClient,
+                    blizzardClient,
+                    blizzardDatabaseClient,
+                    retryConfig
+                ),
+                WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            )
+        )
+
         val seasonService = SeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient, retryConfig)
         val tasksService =
-            TasksService(tasksRepositoryWithState, dataCacheService, entitiesService, authService, seasonService)
+            TasksService(
+                tasksRepositoryWithState,
+                dataCacheService,
+                entitiesService,
+                authService,
+                seasonService,
+                entityCacheServiceRegistry
+            )
 
         return TasksController(tasksService)
     }
