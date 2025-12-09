@@ -1,6 +1,6 @@
 package com.kos.common
 
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.views.Game
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -16,7 +16,10 @@ data object CantFeatureView : ControllerError
 data object NotAuthorized : ControllerError
 data class NotEnoughPermissions(val user: String) : ControllerError
 data class CantDeleteYourself(val user: String, val userToRemove: String) : ControllerError
-data class NotFound(val id: String) : ControllerError
+data class NotFound(val id: String) : HttpError {
+    override fun error(): String = "Not found $id"
+}
+
 class BadRequest(val problem: String) : ControllerError
 class InvalidQueryParameter(param: String, value: String, allowed: List<String>?) : ControllerError {
     private val baseMessage = "invalid query param[$param]: $value"

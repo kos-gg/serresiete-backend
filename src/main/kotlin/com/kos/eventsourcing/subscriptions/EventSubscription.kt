@@ -6,9 +6,12 @@ import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.Retry.retryEitherWithExponentialBackoff
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
-import com.kos.eventsourcing.events.EventWithVersion
+import com.kos.entities.EntitiesService
+import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
+import com.kos.views.Game
+import com.kos.views.ViewsService
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 

@@ -7,9 +7,9 @@ import com.kos.clients.domain.Data
 import com.kos.common.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
-import com.kos.entities.CreateEntityRequest
+import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.EntitiesService
-import com.kos.entities.EntityWithAlias
+import com.kos.entities.domain.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository

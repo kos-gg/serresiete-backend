@@ -19,14 +19,19 @@ import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.gigaLolCharacterRequestList
 import com.kos.entities.EntitiesTestHelper.gigaLolEntityList
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.domain.LolEnrichedEntityRequest
+import com.kos.entities.domain.LolEntity
+import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.ResolvedEntities
+import com.kos.entities.domain.WowEntityRequest
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -458,7 +463,13 @@ class EntitiesServiceTest {
                 )
             )
 
-            val insertRequest = LolEnrichedEntityRequest(name=basicLolEntity2.name, tag=basicLolEntity2.tag, puuid=basicLolEntity2.puuid, summonerIconId=basicLolEntity2.summonerIcon, summonerLevel=basicLolEntity2.summonerLevel)
+            val insertRequest = LolEnrichedEntityRequest(
+                name = basicLolEntity2.name,
+                tag = basicLolEntity2.tag,
+                puuid = basicLolEntity2.puuid,
+                summonerIconId = basicLolEntity2.summonerIcon,
+                summonerLevel = basicLolEntity2.summonerLevel
+            )
 
             val expected = ResolvedEntities(
                 listOf(insertRequest to alias2),
@@ -488,23 +499,25 @@ class EntitiesServiceTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
         val viewsRepository = ViewsInMemoryRepository()
 
-        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-        val lolResolver = LolResolver(entitiesRepository, riotClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-        val entitiesResolver = mapOf(
-            Game.WOW to wowResolver,
-            Game.WOW_HC to wowHardcoreResolver,
-            Game.LOL to lolResolver
+        val entitiesResolverProvider = EntityResolverProvider(
+            listOf(
+                wowResolver,
+                wowHardcoreResolver,
+                lolResolver
+            )
         )
 
-        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
         return EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
-            entitiesResolver,
+            entitiesResolverProvider,
             lolUpdater,
             wowHardcoreGuildUpdater
         )

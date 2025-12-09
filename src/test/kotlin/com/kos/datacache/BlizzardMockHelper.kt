@@ -3,8 +3,8 @@ package com.kos.datacache
 import arrow.core.Either
 import com.kos.clients.domain.*
 import com.kos.common.HttpError
-import com.kos.entities.WowEntity
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.WowEntity
+import com.kos.entities.domain.WowEntityRequest
 import kotlin.random.Random
 
 object BlizzardMockHelper {

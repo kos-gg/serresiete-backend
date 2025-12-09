@@ -2,19 +2,24 @@ package com.kos.entities
 
 import arrow.core.Either
 import com.kos.common.*
-import com.kos.entities.entitiesResolvers.EntityResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.Entity
+import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.InsertEntityRequest
+import com.kos.entities.domain.LolEntity
+import com.kos.entities.domain.ResolvedEntities
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
+import com.kos.sources.lol.LolEntityUpdater
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
 
 data class EntitiesService(
     private val entitiesRepository: EntitiesRepository,
     private val wowGuildsRepository: WowGuildsRepository,
-    private val entitiesResolver: Map<Game, EntityResolver>,
-    private val lolUpdater: LolUpdater,
+    private val entitiesResolverProvider: EntityResolverProvider,
+    private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater
 ) : WithLogger("EntitiesService") {
 
@@ -23,10 +28,12 @@ data class EntitiesService(
         game: Game,
         extraArguments: ViewExtraArguments? = null
     ): Either<ControllerError, ResolvedEntities> {
-        return entitiesResolver[game].fold(
-            left = { Either.Left(NotFound("resolver for game: $game")) },
-            right = { it.resolve(requestedEntities, extraArguments) }
-        )
+        return entitiesResolverProvider
+            .resolverFor(game)
+            .fold(
+                left = { Either.Left(NotFound("resolver for game: $game")) },
+                right = { it.resolve(requestedEntities, extraArguments) }
+            )
     }
 
     suspend fun updateEntities(
