@@ -2,7 +2,7 @@ package com.kos.eventsourcing
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient
@@ -15,21 +15,22 @@ import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.LolEntity
-import com.kos.entities.WowEntity
-import com.kos.entities.cache.LolEntityCacheService
-import com.kos.entities.cache.WowEntityCacheService
-import com.kos.entities.cache.WowHardcoreEntityCacheService
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.EntityResolverProvider
+import com.kos.entities.domain.LolEntity
+import com.kos.entities.domain.WowEntity
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.subscriptions.EventSubscription
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner
@@ -49,7 +50,7 @@ class SyncCharactersSubscriptionTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
+    private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
 
     @Nested
     inner class BehaviorOfSyncLolProcessor {
@@ -75,7 +76,7 @@ class SyncCharactersSubscriptionTest {
                 Game.LOL
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -108,7 +109,7 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
                 val spied = spyk(service)
 
                 assertLolCacheInvocation(
@@ -140,7 +141,7 @@ class SyncCharactersSubscriptionTest {
                 ), Game.LOL
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -171,7 +172,7 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
                 val spied = spyk(service)
 
                 assertLolCacheInvocation(
@@ -203,7 +204,7 @@ class SyncCharactersSubscriptionTest {
                 ), Game.LOL
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
 
@@ -235,7 +236,7 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
                 val spied = spyk(service)
 
                 assertLolCacheInvocation(
@@ -268,7 +269,7 @@ class SyncCharactersSubscriptionTest {
                     ), Game.LOL
                 )
 
-                val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+                val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
                 val spied = spyk(service)
 
 
@@ -310,7 +311,7 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW
             )
 
-            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
             val spied = spyk(service)
 
             assertWowCacheInvocation(
@@ -343,7 +344,7 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW
             )
 
-            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
             val spied = spyk(service)
 
             assertWowCacheInvocation(
@@ -377,7 +378,7 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW
             )
 
-            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
             val spied = spyk(service)
 
             assertWowCacheInvocation(
@@ -411,7 +412,7 @@ class SyncCharactersSubscriptionTest {
                     ), Game.WOW
                 )
 
-                val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+                val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
                 val spied = spyk(service)
 
                 assertWowCacheInvocation(
@@ -511,12 +512,12 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW_HC
             )
 
-            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+            val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 entitiesRepository = EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
             )
             val spied = spyk(wowHardcoreEntityCacheService)
@@ -611,12 +612,12 @@ class SyncCharactersSubscriptionTest {
                 ), Game.WOW_HC
             )
 
-            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+            val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 entitiesRepository = EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
             )
             val spied = spyk(wowHardcoreEntityCacheService)
@@ -713,12 +714,12 @@ class SyncCharactersSubscriptionTest {
             )
 
 
-            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+            val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 entitiesRepository = EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
             )
             val spied = spyk(wowHardcoreEntityCacheService)
@@ -753,12 +754,12 @@ class SyncCharactersSubscriptionTest {
                 )
 
 
-                val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+                val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
                     dataCacheRepository,
                     entitiesRepository = EntitiesInMemoryRepository(),
                     raiderIoClient,
                     blizzardClient,
-                    blizzardDatabaseClient,
+                    wowItemsDatabaseRepository,
                     retryConfig
                 )
                 val spied = spyk(wowHardcoreEntityCacheService)
@@ -788,17 +789,17 @@ class SyncCharactersSubscriptionTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
         val viewsRepository = ViewsInMemoryRepository()
 
-        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-        val lolResolver = LolResolver(entitiesRepository, riotClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-        val entitiesResolver = mapOf(
-            Game.WOW to wowResolver,
-            Game.WOW_HC to wowHardcoreResolver,
-            Game.LOL to lolResolver
-        )
+        val entitiesResolver = EntityResolverProvider(listOf(
+            wowResolver,
+            wowHardcoreResolver,
+            lolResolver
+        ))
 
-        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
 
@@ -829,13 +830,13 @@ class SyncCharactersSubscriptionTest {
         processor: suspend (
             EventWithVersion,
             EntitiesService,
-            LolEntityCacheService
+            LolEntitySynchronizer
         ) -> Either<ControllerError, Unit>,
         entityToVerify: LolEntity,
         eventWithVersion: EventWithVersion,
         entitiesService: EntitiesService,
         dataCacheRepository: DataCacheRepository,
-        lolEntityCacheService: LolEntityCacheService,
+        lolEntityCacheService: LolEntitySynchronizer,
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
@@ -846,10 +847,10 @@ class SyncCharactersSubscriptionTest {
             {
                 if (shouldCache) {
                     coVerify {
-                        lolEntityCacheService.cache(eq(listOf(entityToVerify)))
+                        lolEntityCacheService.synchronize(eq(listOf(entityToVerify)))
                     }
                 } else {
-                    coVerify(exactly = 0) { lolEntityCacheService.cache(any()) }
+                    coVerify(exactly = 0) { lolEntityCacheService.synchronize(any()) }
                 }
             }
         )
@@ -862,13 +863,13 @@ class SyncCharactersSubscriptionTest {
         processor: suspend (
             EventWithVersion,
             EntitiesService,
-            WowEntityCacheService
+            WowEntitySynchronizer
         ) -> Either<ControllerError, Unit>,
         entityToVerify: WowEntity,
         eventWithVersion: EventWithVersion,
         entitiesService: EntitiesService,
         dataCacheRepository: DataCacheRepository,
-        wowEntityCacheService: WowEntityCacheService,
+        wowEntityCacheService: WowEntitySynchronizer,
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
@@ -879,10 +880,10 @@ class SyncCharactersSubscriptionTest {
             {
                 if (shouldCache) {
                     coVerify {
-                        wowEntityCacheService.cache(eq(listOf(entityToVerify)))
+                        wowEntityCacheService.synchronize(eq(listOf(entityToVerify)))
                     }
                 } else {
-                    coVerify(exactly = 0) { wowEntityCacheService.cache(any()) }
+                    coVerify(exactly = 0) { wowEntityCacheService.synchronize(any()) }
                 }
             }
         )
@@ -894,13 +895,13 @@ class SyncCharactersSubscriptionTest {
         processor: suspend (
             EventWithVersion,
             EntitiesService,
-            WowHardcoreEntityCacheService
+            WowHardcoreEntitySynchronizer
         ) -> Either<ControllerError, Unit>,
         entityToVerify: WowEntity,
         eventWithVersion: EventWithVersion,
         entitiesService: EntitiesService,
         dataCacheRepository: DataCacheRepository,
-        wowHardcoreEntityCacheService: WowHardcoreEntityCacheService,
+        wowHardcoreEntityCacheService: WowHardcoreEntitySynchronizer,
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
@@ -911,10 +912,10 @@ class SyncCharactersSubscriptionTest {
             {
                 if (shouldCache) {
                     coVerify {
-                        wowHardcoreEntityCacheService.cache(eq(listOf(entityToVerify)))
+                        wowHardcoreEntityCacheService.synchronize(eq(listOf(entityToVerify)))
                     }
                 } else {
-                    coVerify(exactly = 0) { wowHardcoreEntityCacheService.cache(any()) }
+                    coVerify(exactly = 0) { wowHardcoreEntityCacheService.synchronize(any()) }
                 }
             }
         )

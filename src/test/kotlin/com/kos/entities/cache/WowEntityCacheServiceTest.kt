@@ -6,6 +6,7 @@ import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.sources.wow.WowEntitySynchronizer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.mockito.Mockito.mock
@@ -29,8 +30,8 @@ class WowEntityCacheServiceTest {
             val repo = DataCacheInMemoryRepository().withState(listOf(wowDataCache))
             assertEquals(listOf(wowDataCache), repo.state())
 
-            WowEntityCacheService(repo, raiderIoClient, retryConfig)
-                .cache(listOf(basicWowEntity, basicWowEntity.copy(id = 2)))
+            WowEntitySynchronizer(repo, raiderIoClient, retryConfig)
+                .synchronize(listOf(basicWowEntity, basicWowEntity.copy(id = 2)))
             assertEquals(3, repo.state().size)
         }
     }

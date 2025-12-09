@@ -10,10 +10,14 @@ import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
+import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsState
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -112,6 +116,7 @@ class DataCacheServiceTest {
             )
 
         val eventsStore = EventStoreInMemory()
+
 
         return DataCacheService(
             dataCacheRepository,

@@ -1,9 +1,9 @@
 package com.kos.eventsourcing.events.repository
 
 import com.kos.common._fold
-import com.kos.entities.CreateEntityRequest
-import com.kos.entities.LolEntityRequest
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.encodeToString
