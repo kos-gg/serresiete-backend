@@ -13,6 +13,12 @@ import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.EntitiesTestHelper.basicWowRequest2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
+import com.kos.entities.domain.InsertEntityRequest
+import com.kos.entities.domain.LolEnrichedEntityRequest
+import com.kos.entities.domain.LolEntity
+import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.WowEnrichedEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesRepository
@@ -264,7 +270,14 @@ abstract class EntitiesRepositoryTestCommon {
     fun `whatever`() {
         runBlocking {
             repository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
-            repository.insert(listOf(WowEnrichedEntityRequest(basicWowHardcoreEntity.name, basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.blizzardId)), Game.WOW_HC)
+            repository.insert(listOf(
+                WowEnrichedEntityRequest(
+                    basicWowHardcoreEntity.name,
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.blizzardId
+                )
+            ), Game.WOW_HC)
                 .onRight { fail() }
                 .onLeft { print(it.message) }
         }

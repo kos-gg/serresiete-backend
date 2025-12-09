@@ -2,12 +2,10 @@ package com.kos.views
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.RetryConfig
 import com.kos.common.TooMuchEntities
 import com.kos.common.TooMuchViews
 import com.kos.common.UserWithoutRoles
@@ -30,11 +28,12 @@ import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.EntityWithAlias
+import com.kos.entities.domain.WowEntityRequest
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -42,6 +41,9 @@ import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.views.ViewsTestHelper.basicSimpleGameViews
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
 import com.kos.views.ViewsTestHelper.basicSimpleLolViews
@@ -72,8 +74,6 @@ class ViewsServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     private val aggregateRoot = "/credentials/owner"
     private val defaultCredentialsState = CredentialsRepositoryState(
@@ -967,17 +967,19 @@ class ViewsServiceTest {
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-        val lolResolver = LolResolver(entitiesRepository, riotClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-        val entitiesResolver = mapOf(
-            Game.WOW to wowResolver,
-            Game.WOW_HC to wowHardcoreResolver,
-            Game.LOL to lolResolver
+        val entitiesResolver = EntityResolverProvider(
+            listOf(
+                wowResolver,
+                wowHardcoreResolver,
+                lolResolver
+            )
         )
 
-        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
         val entitiesService = EntitiesService(
@@ -992,11 +994,6 @@ class ViewsServiceTest {
             DataCacheService(
                 dataCacheRepository,
                 entitiesRepository,
-                raiderIoClient,
-                riotClient,
-                blizzardClient,
-                blizzardDatabaseClient,
-                retryConfig,
                 eventStore
             )
         val service =

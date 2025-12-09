@@ -5,7 +5,7 @@ import com.kos.auth.AuthService
 import com.kos.auth.AuthTestHelper.basicAuthorization
 import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -15,6 +15,7 @@ import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.DataCacheService
+import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
@@ -22,12 +23,10 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.GuildPayload
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.EntityResolverProvider
+import com.kos.entities.domain.GuildPayload
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -37,11 +36,18 @@ import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
-import com.kos.seasons.SeasonService
-import com.kos.seasons.repository.SeasonInMemoryRepository
-import com.kos.staticdata.WowExpansion
-import com.kos.staticdata.repository.StaticDataInMemoryRepository
-import com.kos.staticdata.repository.StaticDataState
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
+import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
@@ -59,11 +65,11 @@ class TasksServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDbClient = mock(BlizzardDatabaseClient::class.java)
+    private val blizzardDbClient = mock(WowItemsDatabaseRepository::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
     @Test
-    fun `task update wow hardcore guilds is successful`(): Unit {
+    fun `task update wow hardcore guilds is successful`() {
         runBlocking {
             val testComponents = createTaskService()
 
@@ -107,7 +113,7 @@ class TasksServiceTest {
         val testComponents = createTaskService()
 
         val expected = ExpansionSeasons(listOf(Season(true, "TWW3", 15, listOf())))
-        testComponents.staticDataRepo.withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
+        testComponents.wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
 
         `when`(raiderIoClient.getExpansionSeasons(10))
             .thenReturn(Either.Right(expected))
@@ -328,9 +334,9 @@ class TasksServiceTest {
         val authRepo: AuthInMemoryRepository,
         val authService: AuthService,
 
-        val staticDataRepo: StaticDataInMemoryRepository,
-        val seasonRepo: SeasonInMemoryRepository,
-        val seasonService: SeasonService,
+        val wowExpansionRepository: WowExpansionInMemoryRepository,
+        val seasonRepo: WowSeasonRepository,
+        val seasonService: WowSeasonService,
 
         val tasksRepo: TasksInMemoryRepository,
         val tasksService: TasksService
@@ -345,28 +351,25 @@ class TasksServiceTest {
         val dataCacheService = DataCacheService(
             dataCacheRepo,
             entitiesRepository,
-            raiderIoClient,
-            riotClient,
-            blizzardClient,
-            blizzardDbClient,
-            retryConfig,
             eventStore
         )
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
         val viewsRepository = ViewsInMemoryRepository()
 
-        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-        val lolResolver = LolResolver(entitiesRepository, riotClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-        val entitiesResolver = mapOf(
-            Game.WOW to wowResolver,
-            Game.WOW_HC to wowHardcoreResolver,
-            Game.LOL to lolResolver
+        val entitiesResolver = EntityResolverProvider(
+            listOf(
+                wowResolver,
+                wowHardcoreResolver,
+                lolResolver
+            )
         )
 
-        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
         val entitiesService = EntitiesService(
@@ -388,13 +391,41 @@ class TasksServiceTest {
         val authService =
             AuthService(authRepo, credentialsService, rolesService, JWTConfig("issuer", "secret"))
 
-        val staticDataRepo = StaticDataInMemoryRepository()
-        val seasonRepo = SeasonInMemoryRepository()
-        val seasonService = SeasonService(staticDataRepo, seasonRepo, raiderIoClient, retryConfig)
+        val wowExpansionRepository = WowExpansionInMemoryRepository()
+        val wowSeasonsRepository = WowSeasonInMemoryRepository()
+        val wowSeasonsService = WowSeasonService(wowExpansionRepository, wowSeasonsRepository, raiderIoClient, retryConfig)
 
         val tasksRepo = TasksInMemoryRepository()
+
+        val lolEntityCacheService = LolEntitySynchronizer(dataCacheRepo, riotClient, retryConfig)
+        val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
+            dataCacheRepo,
+            entitiesRepository,
+            raiderIoClient,
+            blizzardClient,
+            blizzardDbClient,
+            retryConfig
+        )
+        val wowEntityCacheService = WowEntitySynchronizer(dataCacheRepo, raiderIoClient, retryConfig)
+
+        val entityCacheServiceRegistry =
+            EntitySynchronizerProvider(
+                listOf(
+                    lolEntityCacheService,
+                    wowHardcoreEntityCacheService,
+                    wowEntityCacheService
+                )
+            )
+
         val tasksService =
-            TasksService(tasksRepo, dataCacheService, entitiesService, authService, seasonService)
+            TasksService(
+                tasksRepo,
+                dataCacheService,
+                entitiesService,
+                authService,
+                wowSeasonsService,
+                entityCacheServiceRegistry
+            )
 
         return TaskServiceTestComponents(
             dataCacheRepo,
@@ -415,9 +446,9 @@ class TasksServiceTest {
             authRepo,
             authService,
 
-            staticDataRepo,
-            seasonRepo,
-            seasonService,
+            wowExpansionRepository,
+            wowSeasonsRepository,
+            wowSeasonsService,
 
             tasksRepo,
             tasksService

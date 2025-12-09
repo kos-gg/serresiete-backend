@@ -11,8 +11,8 @@ import com.kos.common.HttpError
 import com.kos.common.JsonParseError
 import com.kos.common.RaiderIoError
 import com.kos.common.WithLogger
-import com.kos.entities.WowEntity
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.WowEntity
+import com.kos.entities.domain.WowEntityRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

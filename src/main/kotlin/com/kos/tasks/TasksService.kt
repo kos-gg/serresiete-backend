@@ -1,11 +1,14 @@
 package com.kos.tasks
 
 import com.kos.auth.AuthService
+import com.kos.common.NotFound
 import com.kos.common.WithLogger
 import com.kos.common.WowHardcoreCharacterIsDead
+import com.kos.common.fold
 import com.kos.datacache.DataCacheService
+import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.entities.EntitiesService
-import com.kos.seasons.SeasonService
+import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.tasks.repository.TasksRepository
 import com.kos.views.Game
 import java.time.OffsetDateTime
@@ -15,7 +18,8 @@ data class TasksService(
     private val dataCacheService: DataCacheService,
     private val entitiesService: EntitiesService,
     private val authService: AuthService,
-    private val seasonService: SeasonService
+    private val wowSeasonsService: WowSeasonService,
+    private val entitySynchronizerProvider: EntitySynchronizerProvider
 ) : WithLogger("tasksService") {
 
     private val olderThanDays: Long = 7
@@ -38,6 +42,7 @@ data class TasksService(
                     ?.getOrNull()
                 cacheCleanup(game, taskType, taskId)
             }
+
             TaskType.UPDATE_WOW_HARDCORE_GUILDS -> updateWowGuildEntities(taskId)
 
             TaskType.UPDATE_MYTHIC_PLUS_SEASON -> taskMythicPlusSeason(taskId, taskType)
@@ -96,7 +101,7 @@ data class TasksService(
 
     suspend fun taskMythicPlusSeason(id: String, taskType: TaskType) {
         logger.info("Running $taskType with id=$id")
-        seasonService.addNewMythicPlusSeason()
+        wowSeasonsService.addNewMythicPlusSeason()
             .onLeft {
                 tasksRepository.insertTask(
                     Task(
@@ -165,7 +170,13 @@ data class TasksService(
         logger.info("Running $taskType")
         val entities = entitiesService.getEntitiesToSync(game, 30)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
-        val errors = dataCacheService.cache(entities, game)
+
+        val errors = entitySynchronizerProvider.synchronizerFor(game).fold(
+            left = { listOf(NotFound("synchronizer for game: $game")) },
+            right = { it.synchronize(entities) }
+        )
+
+
         //TODO: improve the check of excluded error from being flagged as error
         if (errors.isEmpty() || errors.all { it is WowHardcoreCharacterIsDead }) {
             tasksRepository.insertTask(
