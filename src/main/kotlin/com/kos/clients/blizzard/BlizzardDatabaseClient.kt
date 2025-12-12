@@ -1,6 +1,7 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.GetWowItemResponse
 import com.kos.clients.domain.GetWowMediaResponse
 import com.kos.clients.domain.RiotError
@@ -67,5 +68,17 @@ class BlizzardDatabaseClient(private val db: Database) {
                     }
             }
         }
+    }
+
+    suspend fun getItemMediaV2(
+        id: Long
+    ): Either<ClientError, GetWowMediaResponse> {
+        TODO()
+    }
+
+    suspend fun getItemV2(
+        id: Long
+    ): Either<ClientError, GetWowItemResponse> {
+        TODO()
     }
 }

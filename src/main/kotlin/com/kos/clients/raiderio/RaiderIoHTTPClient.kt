@@ -1,6 +1,7 @@
 package com.kos.clients.raiderio
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
@@ -88,6 +89,10 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
         }
         val jsonString = response.body<String>()
         return RaiderIoProtocol.parseCutoffJson(jsonString)
+    }
+
+    override suspend fun wowheadEmbeddedCalculatorV2(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse> {
+        TODO()
     }
 
     override suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<HttpError, RaiderioWowHeadEmbeddedResponse> {

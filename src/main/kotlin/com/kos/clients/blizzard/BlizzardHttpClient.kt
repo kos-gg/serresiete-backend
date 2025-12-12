@@ -1,7 +1,10 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.raise.either
+import com.kos.clients.ClientError
+import com.kos.clients.NetworkError
 import com.kos.clients.domain.*
 import com.kos.common.HttpError
 import com.kos.common.JsonParseError
@@ -13,6 +16,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -31,6 +35,7 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
         ignoreUnknownKeys = true
     }
     private var token: Either<HttpError, TokenState>? = null
+    private var tokenV2: Either<ClientError, TokenState>? = null
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 
@@ -70,6 +75,41 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
         return newTokenState
     }
 
+    private suspend fun getAndUpdateTokenV2(): Either<ClientError, TokenState> {
+        val newTokenState = when (token) {
+            null -> {
+                logger.debug("null token state")
+                blizzardAuthClient.getAccessTokenV2()
+            }
+
+            else -> token!!.fold(
+                ifLeft = {
+                    logger.debug("token state with httpError: {}", it.error())
+                    blizzardAuthClient.getAccessTokenV2()
+                },
+                ifRight = {
+                    if (it.obtainedAt.plusSeconds(it.tokenResponse.expiresIn)
+                            .minusSeconds(10)
+                            .isBefore(OffsetDateTime.now())
+                    ) {
+                        logger.debug(
+                            "token state expired: expiresIn - {} obtainedAt - {} ",
+                            it.tokenResponse.expiresIn,
+                            it.obtainedAt
+                        )
+                        blizzardAuthClient.getAccessTokenV2()
+                    } else {
+                        logger.debug("token in good state")
+                        Either.Right(it.tokenResponse)
+                    }
+                }
+            )
+        }.map {
+            TokenState(OffsetDateTime.now(), it)
+        }
+        tokenV2 = newTokenState
+        return newTokenState
+    }
 
     private val perSecondRateLimiter = RateLimiter.of(
         "perSecondLimiter",
@@ -99,6 +139,7 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 append("Battlenet-Namespace", "$namespace-$region")
             }
         }
+
         val jsonString = response.body<String>()
         return try {
             Either.Right(parseResponse(jsonString))
@@ -108,6 +149,48 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             Either.Left(json.decodeFromString<RiotError>(jsonString))
         }
     }
+
+    override suspend fun <T> fetchFromApi(
+        path: String,
+        namespace: String,
+        tokenResponse: TokenResponse,
+        parseResponse: (String) -> T
+    ): Either<ClientError, T> {
+
+        return Either.catch {
+            client.get(path) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer ${tokenResponse.accessToken}")
+                    append(HttpHeaders.Accept, "*/*")
+                    append("Battlenet-Namespace", namespace)
+                }
+            }
+        }.mapLeft {
+            NetworkError(it.message ?: "Unknown network error")
+        }.flatMap { response ->
+            if (response.status.isSuccess()) {
+                val jsonString = response.body<String>()
+
+                Either
+                    .catch { parseResponse(jsonString) }
+                    .mapLeft { e ->
+                        com.kos.clients.JsonParseError(
+                            raw = jsonString,
+                            error = e.stackTraceToString()
+                        )
+                    }
+
+            } else {
+                Either.Left(
+                    com.kos.clients.HttpError(
+                        status = response.status.value,
+                        body = response.bodyAsText()
+                    )
+                )
+            }
+        }
+    }
+
 
     override suspend fun getCharacterProfile(
         region: String,
@@ -141,6 +224,60 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 }
             }
         }
+    }
+
+    //TODO: handle the 404 (character is dead in wowhardcore at service lvl)
+    override suspend fun getCharacterProfileV2(
+        region: String,
+        realm: String,
+        character: String
+    ): Either<ClientError, GetWowCharacterResponse> {
+        return throttleRequest {
+            either {
+                logger.debug("getCharacterMedia for $region $realm $character")
+                val tokenResponse = getAndUpdateTokenV2().bind()
+                val namespace = "profile-classic1x"
+                val partialURI =
+                    URI("/profile/wow/character/$realm/${encodedName(character)}/character-media?locale=en_US")
+                val path = (baseURI(region).toString() + partialURI.toString()).lowercase()
+
+                fetchFromApi(path, namespace, tokenResponse.tokenResponse) {
+                    json.decodeFromString<GetWowCharacterResponse>(it)
+                }.bind()
+            }
+        }
+    }
+
+    override suspend fun getCharacterMediaV2(
+        region: String,
+        realm: String,
+        character: String
+    ): Either<ClientError, GetWowMediaResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getCharacterEquipmentV2(
+        region: String,
+        realm: String,
+        character: String
+    ): Either<ClientError, GetWowEquipmentResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getCharacterSpecializationsV2(
+        region: String,
+        realm: String,
+        character: String
+    ): Either<ClientError, GetWowSpecializationsResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getCharacterStatsV2(
+        region: String,
+        realm: String,
+        character: String
+    ): Either<ClientError, GetWowCharacterStatsResponse> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getCharacterMedia(
@@ -280,4 +417,6 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             }
         }
     }
+
+
 }

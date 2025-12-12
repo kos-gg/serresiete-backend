@@ -69,8 +69,8 @@ class NotPublished(val id: String) : ControllerError
 data object TooMuchViews : ControllerError
 data object TooMuchEntities : ControllerError
 data object UserWithoutRoles : ControllerError
-data object ExtraArgumentsWrongType: ControllerError
-data object GuildViewMoreThanTwoEntities: ControllerError
+data object ExtraArgumentsWrongType : ControllerError
+data object GuildViewMoreThanTwoEntities : ControllerError
 
 interface DatabaseError : ControllerError
 data class InsertError(val message: String) : DatabaseError
