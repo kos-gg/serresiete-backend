@@ -7,8 +7,8 @@ import com.kos.clients.NetworkError
 import com.kos.clients.domain.BlizzardCredentials
 import com.kos.clients.domain.RiotError
 import com.kos.clients.domain.TokenResponse
-import com.kos.common.HttpError
-import com.kos.common.JsonParseError
+import com.kos.common.error.HttpError
+import com.kos.common.error.JsonParseError
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

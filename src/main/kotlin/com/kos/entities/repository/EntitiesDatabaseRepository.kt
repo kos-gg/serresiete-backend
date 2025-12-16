@@ -1,7 +1,7 @@
 package com.kos.entities.repository
 
 import arrow.core.Either
-import com.kos.common.InsertError
+import com.kos.common.error.InsertError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.*
 import com.kos.views.Game

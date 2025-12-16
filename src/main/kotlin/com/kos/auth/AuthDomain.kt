@@ -1,6 +1,6 @@
 package com.kos.auth
 
-import com.kos.common.AuthError
+import com.kos.common.error.AuthError
 import com.kos.common.OffsetDateTimeSerializer
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime

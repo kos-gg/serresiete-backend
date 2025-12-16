@@ -5,9 +5,9 @@ import arrow.core.raise.either
 import com.kos.clients.domain.*
 import com.kos.clients.riot.RiotClient
 import com.kos.common.DynamicCache
-import com.kos.common.HttpError
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
+import com.kos.common.error.ServiceError
 import com.kos.common._fold
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
@@ -37,17 +37,18 @@ class LolEntityCacheService(
     override val game: Game = Game.LOL
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun cache(entities: List<Entity>): List<HttpError> =
+    override suspend fun cache(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
-            val lolEntities = entities as List<LolEntity>
-            val errorsChannel = Channel<HttpError>()
             val dataChannel = Channel<DataCache>()
-            val errorsList = mutableListOf<HttpError>()
-            val matchCache = DynamicCache<Either<HttpError, GetMatchResponse>>()
+            val errorsChannel = Channel<ServiceError>()
+            val errorsList = mutableListOf<ServiceError>()
+            val matchCache = DynamicCache<Either<ServiceError, GetMatchResponse>>()
+
+            entities as List<LolEntity>
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
-                    logger.error(error.error())
+                    logger.error(error.toString())
                     errorsList.add(error)
                 }
             }
@@ -62,7 +63,7 @@ class LolEntityCacheService(
             }
 
             val start = OffsetDateTime.now()
-            lolEntities.asFlow()
+            entities.asFlow()
                 .buffer(10)
                 .collect { lolEntity ->
                     val result = cacheLolEntity(lolEntity, matchCache)
@@ -89,7 +90,7 @@ class LolEntityCacheService(
 
             logger.info("Finished Caching Lol entities")
             logger.debug(
-                "cached ${lolEntities.size} entities in ${
+                "cached ${entities.size} entities in ${
                     Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
                 } minutes"
             )
@@ -99,8 +100,8 @@ class LolEntityCacheService(
 
     private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
-        matchCache: DynamicCache<Either<HttpError, GetMatchResponse>>
-    ): Either<HttpError, Pair<Long, RiotData>> =
+        matchCache: DynamicCache<Either<ServiceError, GetMatchResponse>>
+    ): Either<ServiceError, Pair<Long, RiotData>> =
         either {
 
             val newestDataCacheEntry: RiotData? =
@@ -117,8 +118,10 @@ class LolEntityCacheService(
                 }
 
             val leagues: List<LeagueEntryResponse> =
-                retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesByPUUID") {
-                    riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
+                execute("getLeagueEntriesByPUUID") {
+                    retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesByPUUID") {
+                        riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
+                    }
                 }.bind()
 
             val leagueWithMatches: List<LeagueMatchData> =
@@ -126,8 +129,10 @@ class LolEntityCacheService(
                     leagues.map { leagueEntry ->
                         async {
                             val lastMatchesForLeague: List<String> =
-                                retryEitherWithFixedDelay(retryConfig, "getMatchesByPuuid") {
-                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
+                                execute("getMatchesByPuuid") {
+                                    retryEitherWithFixedDelay(retryConfig, "getMatchesByPuuid") {
+                                        riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
+                                    }
                                 }.bind()
 
                             val matchesToRequest = newestDataCacheEntry._fold(
@@ -143,8 +148,10 @@ class LolEntityCacheService(
 
                             val matchResponses: List<GetMatchResponse> = matchesToRequest.map { matchId ->
                                 matchCache.get(matchId) {
-                                    retryEitherWithFixedDelay(retryConfig, "getMatchById") {
-                                        riotClient.getMatchById(matchId)
+                                    execute("getMatchById") {
+                                        retryEitherWithFixedDelay(retryConfig, "getMatchById") {
+                                            riotClient.getMatchById(matchId)
+                                        }
                                     }
                                 }.bind()
                             }

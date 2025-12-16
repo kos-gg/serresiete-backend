@@ -3,7 +3,7 @@ package com.kos.clients.blizzard
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.clients.domain.GetWowCharacterResponse
-import com.kos.common.HttpError
+import com.kos.common.error.HttpError
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import kotlinx.coroutines.runBlocking

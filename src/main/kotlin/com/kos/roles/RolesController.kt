@@ -3,9 +3,9 @@ package com.kos.roles
 import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
-import com.kos.common.ControllerError
-import com.kos.common.NotAuthorized
-import com.kos.common.NotEnoughPermissions
+import com.kos.common.error.ControllerError
+import com.kos.common.error.NotAuthorized
+import com.kos.common.error.NotEnoughPermissions
 
 class RolesController(private val rolesService: RolesService) {
     suspend fun getRoles(client: String?, activities: Set<Activity>): Either<ControllerError, List<Role>> {

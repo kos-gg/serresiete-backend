@@ -3,7 +3,7 @@ package com.kos.entities.entitiesResolvers
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.riot.RiotClient
-import com.kos.common.HttpError
+import com.kos.common.error.HttpError
 import com.kos.common.WithLogger
 import com.kos.common.isDefined
 import com.kos.entities.CreateEntityRequest
@@ -35,11 +35,11 @@ class LolResolver(
                         req as LolEntityRequest
 
                         val puuid = riotClient.getPUUIDByRiotId(req.name, req.tag)
-                            .onLeft { logger.error(it.error()) }
+                            .onLeft { logger.error(it.toString()) }
                             .bind()
 
                         val summoner = riotClient.getSummonerByPuuid(puuid.puuid)
-                            .onLeft { logger.error(it.error()) }
+                            .onLeft { logger.error(it.toString()) }
                             .bind()
 
                         LolEnrichedEntityRequest(

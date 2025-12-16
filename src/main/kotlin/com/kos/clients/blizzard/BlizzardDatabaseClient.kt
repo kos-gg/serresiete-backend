@@ -5,8 +5,8 @@ import com.kos.clients.ClientError
 import com.kos.clients.domain.GetWowItemResponse
 import com.kos.clients.domain.GetWowMediaResponse
 import com.kos.clients.domain.RiotError
-import com.kos.common.HttpError
-import com.kos.common.JsonParseError
+import com.kos.common.error.HttpError
+import com.kos.common.error.JsonParseError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json

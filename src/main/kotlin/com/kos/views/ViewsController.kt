@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
-import com.kos.common.*
+import com.kos.common.error.*
 import com.kos.eventsourcing.events.Operation
 
 class ViewsController(

@@ -2,10 +2,10 @@ package com.kos.seasons
 
 import arrow.core.Either
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.HttpError
+import com.kos.common.error.HttpError
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
-import com.kos.common.UnableToAddNewMythicPlusSeason
+import com.kos.common.error.UnableToAddNewMythicPlusSeason
 import com.kos.common.WithLogger
 import com.kos.seasons.repository.SeasonRepository
 import com.kos.staticdata.WowExpansion

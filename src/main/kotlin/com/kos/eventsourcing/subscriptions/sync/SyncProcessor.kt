@@ -1,7 +1,7 @@
 package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
-import com.kos.common.ControllerError
+import com.kos.common.error.ControllerError
 
 interface SyncProcessor {
 

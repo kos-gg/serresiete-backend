@@ -1,7 +1,7 @@
 package com.kos.clients
 
-import com.kos.common.ServiceError
-import com.kos.common.SyncProcessingError
+import com.kos.common.error.ServiceError
+import com.kos.common.error.SyncProcessingError
 
 
 sealed class ClientError

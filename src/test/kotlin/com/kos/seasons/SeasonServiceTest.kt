@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.RaiderIoError
+import com.kos.common.error.RaiderIoError
 import com.kos.common.RetryConfig
 import com.kos.seasons.repository.SeasonInMemoryRepository
 import com.kos.seasons.repository.SeasonsState

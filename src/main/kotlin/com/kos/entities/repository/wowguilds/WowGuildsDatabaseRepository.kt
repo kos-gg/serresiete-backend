@@ -1,7 +1,7 @@
 package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
-import com.kos.common.InsertError
+import com.kos.common.error.InsertError
 import com.kos.entities.GuildPayload
 import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers

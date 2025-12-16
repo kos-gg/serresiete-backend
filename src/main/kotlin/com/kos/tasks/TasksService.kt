@@ -2,7 +2,7 @@ package com.kos.tasks
 
 import com.kos.auth.AuthService
 import com.kos.common.WithLogger
-import com.kos.common.WowHardcoreCharacterIsDead
+import com.kos.common.error.WowHardcoreCharacterIsDead
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
 import com.kos.entities.cache.EntityCacheServiceRegistry
@@ -187,7 +187,7 @@ data class TasksService(
                 Task(
                     id,
                     taskType,
-                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.error() }),
+                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
                     OffsetDateTime.now()
                 )
             )

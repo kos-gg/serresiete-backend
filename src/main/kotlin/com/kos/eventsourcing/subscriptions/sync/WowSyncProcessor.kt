@@ -2,7 +2,7 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.common.ControllerError
+import com.kos.common.error.ControllerError
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.entities.cache.WowEntityCacheService

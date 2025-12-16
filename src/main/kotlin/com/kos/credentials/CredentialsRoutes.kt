@@ -1,6 +1,6 @@
 package com.kos.credentials
 
-import com.kos.common.respondWithHandledError
+import com.kos.common.error.respondWithHandledError
 import com.kos.plugins.UserWithActivities
 import io.ktor.http.*
 import io.ktor.server.application.*

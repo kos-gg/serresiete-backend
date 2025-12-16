@@ -6,9 +6,9 @@ import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.TooMuchEntities
-import com.kos.common.TooMuchViews
-import com.kos.common.UserWithoutRoles
+import com.kos.common.error.TooMuchEntities
+import com.kos.common.error.TooMuchViews
+import com.kos.common.error.UserWithoutRoles
 import com.kos.credentials.Credentials
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRolesInitialState

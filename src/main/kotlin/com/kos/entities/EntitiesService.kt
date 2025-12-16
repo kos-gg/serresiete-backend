@@ -2,6 +2,9 @@ package com.kos.entities
 
 import arrow.core.Either
 import com.kos.common.*
+import com.kos.common.error.ControllerError
+import com.kos.common.error.InsertError
+import com.kos.common.error.NotFound
 import com.kos.entities.entitiesResolvers.EntityResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater

@@ -2,7 +2,7 @@ package com.kos.views
 
 import arrow.core.Either
 import com.kos.clients.domain.Data
-import com.kos.common.InvalidGameType
+import com.kos.common.error.InvalidGameType
 import com.kos.entities.CreateEntityRequest
 import com.kos.entities.EntityWithAlias
 import kotlinx.serialization.Serializable

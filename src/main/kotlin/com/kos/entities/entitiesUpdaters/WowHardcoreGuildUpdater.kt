@@ -1,6 +1,6 @@
 package com.kos.entities.entitiesUpdaters
 
-import com.kos.common.ControllerError
+import com.kos.common.error.ControllerError
 import com.kos.common.split
 import com.kos.entities.GuildPayload
 import com.kos.entities.entitiesResolvers.WowHardcoreResolver

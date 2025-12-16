@@ -5,7 +5,7 @@ import com.kos.assertTrue
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.raiderioProfileResponse
-import com.kos.common.HttpError
+import com.kos.common.error.HttpError
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.WowEntity
 import com.kos.entities.WowEntityRequest

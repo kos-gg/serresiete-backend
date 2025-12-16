@@ -3,7 +3,7 @@ package com.kos.credentials
 import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
-import com.kos.common.*
+import com.kos.common.error.*
 
 class CredentialsController(val credentialsService: CredentialsService) {
     suspend fun createCredential(

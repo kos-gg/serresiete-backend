@@ -2,7 +2,6 @@ package com.kos.entities.cache
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.BlizzardDatabaseClient
@@ -11,6 +10,7 @@ import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toServiceError
 import com.kos.common.*
 import com.kos.common.Retry.retryEitherWithFixedDelay
+import com.kos.common.error.*
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.Entity
@@ -37,12 +37,12 @@ class WowHardcoreEntityCacheService(
     override val game: Game = Game.WOW_HC
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun cache(entities: List<Entity>): List<com.kos.common.HttpError> =
+    override suspend fun cache(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
-            val wowHardcoreEntities = entities as List<WowEntity>
+            entities as List<WowEntity>
 
-            val errorsAndData: Pair<List<com.kos.common.HttpError>, List<Pair<Long, HardcoreData>>> =
-                wowHardcoreEntities.map { wowEntity ->
+            val errorsAndData: Pair<List<ServiceError>, List<Pair<Long, HardcoreData>>> =
+                entities.map { wowEntity ->
                     async {
                         either {
                             val newestDataCacheEntry: HardcoreData? =
@@ -59,7 +59,7 @@ class WowHardcoreEntityCacheService(
                                     }
                                 }
                             if (newestDataCacheEntry?.isDead != true) {
-                                syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
+                                syncWowHardcoreEntityV2(wowEntity, newestDataCacheEntry).bind()
                             } else {
                                 raise(WowHardcoreCharacterIsDead(wowEntity.name, wowEntity.id))
                             }
@@ -207,7 +207,7 @@ class WowHardcoreEntityCacheService(
     private suspend fun syncWowHardcoreEntity(
         wowEntity: WowEntity,
         newestDataCacheEntry: HardcoreData?
-    ): Either<com.kos.common.HttpError, Pair<Long, HardcoreData>> {
+    ): Either<com.kos.common.error.HttpError, Pair<Long, HardcoreData>> {
         return either {
             retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
                 blizzardClient.getCharacterProfile(
@@ -330,7 +330,7 @@ class WowHardcoreEntityCacheService(
     private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: HardcoreData?,
         wowEntity: WowEntity
-    ): Either<com.kos.common.HttpError, Pair<Long, HardcoreData>> {
+    ): Either<com.kos.common.error.HttpError, Pair<Long, HardcoreData>> {
         return newestCharacterDataCacheEntry.fold(
             {
                 entitiesRepository.delete(wowEntity.id)
@@ -368,11 +368,5 @@ class WowHardcoreEntityCacheService(
     ): Pair<Long, HardcoreData> {
         return wowEntity.id to newestCharacterDataCacheEntry.copy(isDead = true)
     }
-
-    private suspend fun <A> execute(
-        operation: String,
-        block: suspend () -> Either<ClientError, A>
-    ): Either<ServiceError, A> =
-        block().mapLeft { it.toServiceError(operation) }
 
 }

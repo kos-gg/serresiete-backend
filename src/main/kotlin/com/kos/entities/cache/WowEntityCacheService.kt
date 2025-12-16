@@ -3,9 +3,9 @@ package com.kos.entities.cache
 import arrow.core.raise.either
 import com.kos.clients.domain.Data
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.HttpError
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
+import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
@@ -29,22 +29,25 @@ class WowEntityCacheService(
     override val game: Game = Game.WOW
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun cache(entities: List<Entity>): List<HttpError> =
+    override suspend fun cache(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
-            val wowEntities = entities as List<WowEntity>
+            entities as List<WowEntity>
 
             val cutoffErrorOrMaybeErrors = either {
-                val cutoff = raiderIoClient.cutoff().bind()
+                val cutoff = execute("raiderIoCutoff") {
+                    raiderIoClient.cutoff()
+                }.bind()
                 val errorsAndData =
-                    wowEntities.map {
+                    entities.map {
                         async {
-                            retryEitherWithFixedDelay(retryConfig, "raiderIoGet") {
-                                raiderIoClient.get(it).map { r -> Pair(it.id, r) }
+                            execute("raiderIoGet") {
+                                retryEitherWithFixedDelay(retryConfig, "raiderIoGet") {
+                                    raiderIoClient.get(it).map { r -> Pair(it.id, r) }
+                                }
                             }
                         }
-                    }
-                        .awaitAll()
-                        .split()
+                    }.awaitAll().split()
+
                 val data = errorsAndData.second.map {
                     DataCache(
                         it.first,
@@ -67,6 +70,10 @@ class WowEntityCacheService(
                 data.forEach { logger.info("Cached entity ${it.entityId}") }
                 errorsAndData.first
             }
-            cutoffErrorOrMaybeErrors.mapLeft { listOf(it) }.fold({ it }, { it })
+            cutoffErrorOrMaybeErrors.mapLeft { listOf(it) }
+                .fold(
+                    { it },
+                    { it }
+                )
         }
 }

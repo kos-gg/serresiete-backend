@@ -5,8 +5,8 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRosterResponse
-import com.kos.common.HttpError
-import com.kos.common.NonHardcoreCharacter
+import com.kos.common.error.HttpError
+import com.kos.common.error.NonHardcoreCharacter
 import com.kos.common.WithLogger
 import com.kos.common.split
 import com.kos.entities.*

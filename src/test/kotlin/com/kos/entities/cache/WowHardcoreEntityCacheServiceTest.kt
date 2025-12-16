@@ -7,9 +7,9 @@ import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.NotFoundHardcoreCharacter
+import com.kos.common.error.NotFoundHardcoreCharacter
 import com.kos.common.RetryConfig
-import com.kos.common.UnableToSyncEntityError
+import com.kos.common.error.UnableToSyncEntityError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
 import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
 import com.kos.datacache.BlizzardMockHelper.getCharacterSpecializations

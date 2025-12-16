@@ -1,7 +1,7 @@
 package com.kos.seasons.repository
 
 import arrow.core.Either
-import com.kos.common.InsertError
+import com.kos.common.error.InsertError
 import com.kos.common.WithState
 import com.kos.seasons.GameSeason
 import com.kos.seasons.WowSeason

@@ -3,8 +3,8 @@ package com.kos.entities.entitiesUpdaters
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.riot.RiotClient
-import com.kos.common.ControllerError
-import com.kos.common.HttpError
+import com.kos.common.error.ControllerError
+import com.kos.common.error.HttpError
 import com.kos.common.WithLogger
 import com.kos.entities.LolEnrichedEntityRequest
 import com.kos.entities.LolEntity

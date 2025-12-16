@@ -1,5 +1,6 @@
-package com.kos.common
+package com.kos.common.error
 
+import com.kos.common._fold
 import com.kos.entities.WowEntityRequest
 import com.kos.views.Game
 import io.ktor.http.*
@@ -40,10 +41,7 @@ class UnableToSyncEntityError(private val entityId: Long, private val game: Game
     override fun error(): String = "Entity with id [$entityId] from game [$game] could not be synced"
 }
 
-class WowHardcoreCharacterIsDead(private val character: String, private val characterId: Long) : HttpError {
-    override fun error(): String =
-        "Character with name [$character] and id [$characterId] could not be sync because it is dead"
-}
+
 
 class NotFoundHardcoreCharacter(private val name: String) : HttpError {
     override fun error(): String = "$name not found in Blizzard Api"

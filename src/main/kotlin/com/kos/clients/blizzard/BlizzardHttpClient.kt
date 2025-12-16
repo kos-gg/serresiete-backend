@@ -6,9 +6,9 @@ import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.NetworkError
 import com.kos.clients.domain.*
-import com.kos.common.HttpError
-import com.kos.common.JsonParseError
-import com.kos.common.NotFoundHardcoreCharacter
+import com.kos.common.error.HttpError
+import com.kos.common.error.JsonParseError
+import com.kos.common.error.NotFoundHardcoreCharacter
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
@@ -277,6 +277,26 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
         realm: String,
         character: String
     ): Either<ClientError, GetWowCharacterStatsResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getItemMediaV2(region: String, id: Long): Either<ClientError, GetWowMediaResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getItemV2(region: String, id: Long): Either<ClientError, GetWowItemResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getRealmV2(region: String, id: Long): Either<ClientError, GetWowRealmResponse> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getGuildRosteV2r(
+        region: String,
+        realm: String,
+        guild: String
+    ): Either<ClientError, GetWowRosterResponse> {
         TODO("Not yet implemented")
     }
 

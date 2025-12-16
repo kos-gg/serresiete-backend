@@ -6,16 +6,21 @@ import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.RaiderIoCutoff
 import com.kos.clients.domain.RaiderIoResponse
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.common.HttpError
 import com.kos.entities.WowEntity
 import com.kos.entities.WowEntityRequest
+import io.ktor.client.request.*
 
 interface RaiderIoClient {
-    suspend fun get(wowEntity: WowEntity): Either<HttpError, RaiderIoResponse>
-    suspend fun getExpansionSeasons(expansionId: Int): Either<HttpError, ExpansionSeasons>
+    suspend fun get(wowEntity: WowEntity): Either<ClientError, RaiderIoResponse>
+    suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, ExpansionSeasons>
 
     suspend fun exists(wowEntityRequest: WowEntityRequest): Boolean
-    suspend fun cutoff(): Either<HttpError, RaiderIoCutoff>
-    suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<HttpError, RaiderioWowHeadEmbeddedResponse>
-    suspend fun wowheadEmbeddedCalculatorV2(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse>
+    suspend fun cutoff(): Either<ClientError, RaiderIoCutoff>
+    suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse>
+
+    suspend fun <T> fetchFromApi(
+        path: String,
+        parameters: HttpRequestBuilder.() -> Unit = {},
+        parseResponse: (String) -> T
+    ): Either<ClientError, T>
 }

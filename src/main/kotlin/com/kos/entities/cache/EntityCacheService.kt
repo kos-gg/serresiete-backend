@@ -1,10 +1,13 @@
 package com.kos.entities.cache
 
+import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.Data
 import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderIoData
 import com.kos.clients.domain.RiotData
-import com.kos.common.HttpError
+import com.kos.clients.toServiceError
+import com.kos.common.error.ServiceError
 import com.kos.common.WithLogger
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.Entity
@@ -30,5 +33,11 @@ abstract class EntityCacheService(
     }
 
     abstract val game: Game
-    abstract suspend fun cache(entities: List<Entity>): List<HttpError>
+    abstract suspend fun cache(entities: List<Entity>): List<ServiceError>
+
+    suspend fun <A> execute(
+        operation: String,
+        block: suspend () -> Either<ClientError, A>
+    ): Either<ServiceError, A> =
+        block().mapLeft { it.toServiceError(operation) }
 }

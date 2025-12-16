@@ -8,7 +8,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTCreationException
 import com.kos.activities.Activity
 import com.kos.auth.repository.AuthRepository
-import com.kos.common.ControllerError
+import com.kos.common.error.ControllerError
 import com.kos.common.JWTConfig
 import com.kos.credentials.CredentialsService
 import com.kos.roles.Role

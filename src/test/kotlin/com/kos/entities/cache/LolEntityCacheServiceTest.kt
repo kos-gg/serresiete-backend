@@ -3,7 +3,7 @@ package com.kos.entities.cache
 import arrow.core.Either
 import com.kos.clients.domain.QueueType
 import com.kos.clients.riot.RiotClient
-import com.kos.common.JsonParseError
+import com.kos.common.error.JsonParseError
 import com.kos.common.RetryConfig
 import com.kos.datacache.DataCache
 import com.kos.datacache.RiotMockHelper

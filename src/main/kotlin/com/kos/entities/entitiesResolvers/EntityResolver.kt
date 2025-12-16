@@ -1,7 +1,7 @@
 package com.kos.entities.entitiesResolvers
 
 import arrow.core.Either
-import com.kos.common.HttpError
+import com.kos.common.error.HttpError
 import com.kos.common.split
 import com.kos.entities.CreateEntityRequest
 import com.kos.entities.EntityWithAlias

@@ -2,7 +2,7 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.clients.domain.*
-import com.kos.common.HttpError
+import com.kos.common.error.HttpError
 import com.kos.entities.WowEntity
 
 object RaiderIoMockHelper {
