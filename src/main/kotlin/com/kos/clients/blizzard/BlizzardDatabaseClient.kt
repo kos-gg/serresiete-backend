@@ -4,9 +4,6 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.domain.GetWowItemResponse
 import com.kos.clients.domain.GetWowMediaResponse
-import com.kos.clients.domain.RiotError
-import com.kos.common.error.HttpError
-import com.kos.common.error.JsonParseError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -30,20 +27,17 @@ class BlizzardDatabaseClient(private val db: Database) {
 
     suspend fun getItemMedia(
         id: Long
-    ): Either<HttpError, GetWowMediaResponse> {
+    ): Either<ClientError, GetWowMediaResponse> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val itemString = WowClassicStaticItems.selectAll().where { WowClassicStaticItems.id.eq(id) }
                 .map { it[WowClassicStaticItems.media] }.singleOrNull()
             when (itemString) {
-                null -> Either.Left(JsonParseError("", ""))
+                null -> Either.Left(com.kos.clients.JsonParseError("", ""))
                 else ->
                     try {
                         Either.Right(json.decodeFromString<GetWowMediaResponse>(itemString))
                     } catch (e: SerializationException) {
-                        Either.Left(JsonParseError(itemString, e.stackTraceToString()))
-                    } catch (e: IllegalArgumentException) {
-                        val error = json.decodeFromString<RiotError>(itemString)
-                        Either.Left(error)
+                        Either.Left(com.kos.clients.JsonParseError(itemString, e.stackTraceToString()))
                     }
             }
         }
@@ -51,34 +45,19 @@ class BlizzardDatabaseClient(private val db: Database) {
 
     suspend fun getItem(
         id: Long
-    ): Either<HttpError, GetWowItemResponse> {
+    ): Either<ClientError, GetWowItemResponse> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val itemString = WowClassicStaticItems.selectAll().where { WowClassicStaticItems.id.eq(id) }
                 .map { it[WowClassicStaticItems.item] }.singleOrNull()
             when (itemString) {
-                null -> Either.Left(JsonParseError("", ""))
+                null -> Either.Left(com.kos.clients.JsonParseError("", ""))
                 else ->
                     try {
                         Either.Right(json.decodeFromString<GetWowItemResponse>(itemString))
                     } catch (e: SerializationException) {
-                        Either.Left(JsonParseError(itemString, e.stackTraceToString()))
-                    } catch (e: IllegalArgumentException) {
-                        val error = json.decodeFromString<RiotError>(itemString)
-                        Either.Left(error)
+                        Either.Left(com.kos.clients.JsonParseError(itemString, e.stackTraceToString()))
                     }
             }
         }
-    }
-
-    suspend fun getItemMediaV2(
-        id: Long
-    ): Either<ClientError, GetWowMediaResponse> {
-        TODO()
-    }
-
-    suspend fun getItemV2(
-        id: Long
-    ): Either<ClientError, GetWowItemResponse> {
-        TODO()
     }
 }

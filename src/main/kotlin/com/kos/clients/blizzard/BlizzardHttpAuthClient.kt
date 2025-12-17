@@ -26,31 +26,7 @@ class BlizzardHttpAuthClient(private val client: HttpClient, private val credent
         ignoreUnknownKeys = true
     }
 
-    override suspend fun getAccessToken(): Either<HttpError, TokenResponse> {
-        val uri = URI("https://oauth.battle.net/token")
-        val auth = "${credentials.client}:${credentials.secret}".encodeBase64()
-        val response = client.post(uri.toString()) {
-            contentType(ContentType.Application.FormUrlEncoded)
-            setBody(FormDataContent(Parameters.build {
-                append("grant_type", "client_credentials")
-            }))
-            headers {
-                append(HttpHeaders.Accept, "*/*")
-                header(HttpHeaders.Authorization, "Basic $auth")
-            }
-        }
-        val jsonString = response.body<String>()
-        return try {
-            Either.Right(json.decodeFromString<TokenResponse>(jsonString))
-        } catch (e: SerializationException) {
-            Either.Left(JsonParseError(jsonString, e.stackTraceToString()))
-        } catch (e: IllegalArgumentException) {
-            val error = json.decodeFromString<RiotError>(jsonString)
-            Either.Left(error)
-        }
-    }
-
-    override suspend fun getAccessTokenV2(): Either<ClientError, TokenResponse> {
+    override suspend fun getAccessToken(): Either<ClientError, TokenResponse> {
         val uri = URI("https://oauth.battle.net/token")
         val auth = "${credentials.client}:${credentials.secret}".encodeBase64()
 
