@@ -1,10 +1,11 @@
 package com.kos.entities
 
 import arrow.core.Either
-import com.kos.common.*
-import com.kos.common.error.ControllerError
+import com.kos.common.WithLogger
 import com.kos.common.error.InsertError
-import com.kos.common.error.NotFound
+import com.kos.common.error.ResolverNotFound
+import com.kos.common.error.ServiceError
+import com.kos.common.fold
 import com.kos.entities.entitiesResolvers.EntityResolver
 import com.kos.entities.entitiesUpdaters.LolUpdater
 import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
@@ -25,16 +26,16 @@ data class EntitiesService(
         requestedEntities: List<CreateEntityRequest>,
         game: Game,
         extraArguments: ViewExtraArguments? = null
-    ): Either<ControllerError, ResolvedEntities> {
+    ): Either<ServiceError, ResolvedEntities> {
         return entitiesResolver[game].fold(
-            left = { Either.Left(NotFound("resolver for game: $game")) },
+            left = { Either.Left(ResolverNotFound(game)) },
             right = { it.resolve(requestedEntities, extraArguments) }
         )
     }
 
     suspend fun updateEntities(
         game: Game
-    ): List<ControllerError> {
+    ): List<ServiceError> {
         @Suppress("UNCHECKED_CAST")
         return when (game) {
             Game.LOL -> lolUpdater.update(entitiesRepository.get(game) as List<LolEntity>)
@@ -43,7 +44,7 @@ data class EntitiesService(
         }
     }
 
-    suspend fun updateWowHardcoreGuilds(): List<ControllerError> {
+    suspend fun updateWowHardcoreGuilds(): List<ServiceError> {
         val guildsWithViewId = wowGuildsRepository.getGuilds()
         return wowHardcoreGuildUpdater.update(guildsWithViewId)
     }

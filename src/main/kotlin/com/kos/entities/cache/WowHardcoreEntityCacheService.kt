@@ -64,7 +64,7 @@ class WowHardcoreEntityCacheService(
                                     }
                                 }
                             if (newestDataCacheEntry?.isDead != true) {
-                                syncWowHardcoreEntityV2(wowEntity, newestDataCacheEntry).bind()
+                                syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
                             } else {
                                 raise(WowHardcoreCharacterIsDead(wowEntity.name, wowEntity.id))
                             }
@@ -87,7 +87,7 @@ class WowHardcoreEntityCacheService(
         }
 
 
-    private suspend fun syncWowHardcoreEntityV2(
+    private suspend fun syncWowHardcoreEntity(
         wowEntity: WowEntity,
         newestDataCacheEntry: HardcoreData?
     ): Either<ServiceError, Pair<Long, HardcoreData>> {
@@ -102,10 +102,10 @@ class WowHardcoreEntityCacheService(
                 ifLeft = { error ->
                     when {
                         error is HttpError && error.status == 404 ->
-                            handleNotFoundHardcoreCharacterV2(newestDataCacheEntry, wowEntity)
+                            handleNotFoundHardcoreCharacter(newestDataCacheEntry, wowEntity)
 
                         else ->
-                            Either.Left(error.toServiceError("getCharacterProfileV2"))
+                            Either.Left(error.toServiceError("getCharacterProfile"))
                     }.bind()
                 },
                 ifRight = { response ->
@@ -113,7 +113,7 @@ class WowHardcoreEntityCacheService(
                         markWowHardcoreCharacterAsDead(wowEntity, newestDataCacheEntry)
                     } else {
 
-                        val mediaResponse = execute("getCharacterMediaV2") {
+                        val mediaResponse = execute("getCharacterMedia") {
                             retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
                                 blizzardClient.getCharacterMedia(
                                     wowEntity.region,
@@ -123,7 +123,7 @@ class WowHardcoreEntityCacheService(
                             }
                         }.bind()
 
-                        val equipmentResponse = execute("getCharacterEquipmentV2") {
+                        val equipmentResponse = execute("getCharacterEquipment") {
                             retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
                                 blizzardClient.getCharacterEquipment(
                                     wowEntity.region,
@@ -133,7 +133,7 @@ class WowHardcoreEntityCacheService(
                             }
                         }.bind()
 
-                        val stats = execute("getCharacterStatsV2") {
+                        val stats = execute("getCharacterStats") {
                             retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
                                 blizzardClient.getCharacterStats(
                                     wowEntity.region,
@@ -143,7 +143,7 @@ class WowHardcoreEntityCacheService(
                             }
                         }.bind()
 
-                        val specializations = execute("getCharacterSpecializationsV2") {
+                        val specializations = execute("getCharacterSpecializations") {
                             retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
                                 blizzardClient.getCharacterSpecializations(
                                     wowEntity.region,
@@ -153,7 +153,7 @@ class WowHardcoreEntityCacheService(
                             }
                         }.bind()
 
-                        val wowHeadEmbeddedResponse = execute("wowheadEmbeddedCalculatorV2") {
+                        val wowHeadEmbeddedResponse = execute("wowheadEmbeddedCalculator") {
                             retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
                                 raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
                             }
@@ -189,7 +189,7 @@ class WowHardcoreEntityCacheService(
             either {
                 val item = blizzardClient.getItem(wowEntity.region, equippedItem.item.id).fold(
                     ifLeft = {
-                        execute("getItemV2") {
+                        execute("getItem") {
                             blizzardDatabaseClient.getItem(equippedItem.item.id)
                         }
                     },
@@ -200,7 +200,7 @@ class WowHardcoreEntityCacheService(
                     wowEntity.region,
                     equippedItem.item.id,
                 ).fold(ifLeft = {
-                    execute("getItemMediaV2") {
+                    execute("getItemMedia") {
                         blizzardDatabaseClient.getItemMedia(equippedItem.item.id)
                     }
                 }, ifRight = { Either.Right(it) }).getOrNull()
@@ -225,7 +225,7 @@ class WowHardcoreEntityCacheService(
             }
         }).split()
 
-    private suspend fun handleNotFoundHardcoreCharacterV2(
+    private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: HardcoreData?,
         wowEntity: WowEntity
     ): Either<ServiceError, Pair<Long, HardcoreData>> {

@@ -13,9 +13,11 @@ import org.mockito.Mockito.`when`
 import kotlin.test.Test
 
 class WowEntityCacheServiceTest {
+
+    //TODO - this could ne more exhaustive
+
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val retryConfig = RetryConfig(1, 1)
-
 
     @Test
     fun `i can cache wow data`() {

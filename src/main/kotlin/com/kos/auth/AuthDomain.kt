@@ -23,6 +23,7 @@ data class LoginResponse(
 )
 
 data class JWTCreationError(override val message: String) : AuthError
+data class InsertAuthToken(override val message: String): AuthError
 
 enum class TokenMode {
     ACCESS {

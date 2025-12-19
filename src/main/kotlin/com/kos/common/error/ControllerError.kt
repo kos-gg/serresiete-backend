@@ -1,7 +1,6 @@
 package com.kos.common.error
 
 import com.kos.common._fold
-import com.kos.entities.WowEntityRequest
 import com.kos.views.Game
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -31,26 +30,6 @@ interface HttpError : ControllerError {
     fun error(): String
 }
 
-class UnableToAddNewMythicPlusSeason(
-    override val message: String
-) : RuntimeException(message), HttpError {
-    override fun error(): String = message
-}
-
-class UnableToSyncEntityError(private val entityId: Long, private val game: Game) : HttpError {
-    override fun error(): String = "Entity with id [$entityId] from game [$game] could not be synced"
-}
-
-
-
-class NotFoundHardcoreCharacter(private val name: String) : HttpError {
-    override fun error(): String = "$name not found in Blizzard Api"
-}
-
-class NonHardcoreCharacter(private val wowEntity: WowEntityRequest) : HttpError {
-    override fun error(): String = "${wowEntity.realm} is not hardcore"
-}
-
 data class JsonParseError(val json: String, val path: String, val error: String? = null) : HttpError {
     override fun error(): String = "ParsedJson: ${json}\nPath: $path Error: $error"
 }
@@ -69,9 +48,6 @@ data object TooMuchEntities : ControllerError
 data object UserWithoutRoles : ControllerError
 data object ExtraArgumentsWrongType : ControllerError
 data object GuildViewMoreThanTwoEntities : ControllerError
-
-interface DatabaseError : ControllerError
-data class InsertError(val message: String) : DatabaseError
 
 interface AuthError : ControllerError {
     val message: String
@@ -97,7 +73,6 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is JsonParseError -> respondLogging(error.error())
         is RaiderIoError -> respondLogging(error.error())
         is InvalidQueryParameter -> respond(BadRequest, error.message)
-        is InsertError -> respondLogging(error.message)
         is AuthError -> respond(Unauthorized, error.message)
         is DatabaseError -> respondLogging(error.toString()) //TODO: improve
         is HttpError -> TODO()

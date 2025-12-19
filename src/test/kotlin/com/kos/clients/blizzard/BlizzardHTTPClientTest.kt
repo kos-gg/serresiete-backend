@@ -1,9 +1,9 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.clients.domain.GetWowCharacterResponse
-import com.kos.common.error.HttpError
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import kotlinx.coroutines.runBlocking
@@ -14,6 +14,8 @@ import kotlin.test.assertEquals
 
 class BlizzardHTTPClientTest {
 
+    //TODO - this class should me more exhaustive
+
     private val blizzardAuthClient = mock(BlizzardAuthClient::class.java)
     private val blizzardClient = BlizzardHttpClient(client, blizzardAuthClient)
 
@@ -22,7 +24,7 @@ class BlizzardHTTPClientTest {
         runBlocking {
             `when`(blizzardAuthClient.getAccessToken()).thenReturn(BlizzardMockHelper.getToken())
 
-            val result: Either<HttpError, GetWowCharacterResponse> = blizzardClient.getCharacterProfile(
+            val result: Either<ClientError, GetWowCharacterResponse> = blizzardClient.getCharacterProfile(
                 "region", "realm", "name"
             )
             assertEquals(Either.Right(getWowCharacterResponse), result)

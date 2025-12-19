@@ -2,9 +2,10 @@ package com.kos.entities.entitiesResolvers
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.kos.clients.ClientError
 import com.kos.clients.riot.RiotClient
-import com.kos.common.error.HttpError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.common.isDefined
 import com.kos.entities.CreateEntityRequest
 import com.kos.entities.LolEnrichedEntityRequest
@@ -24,7 +25,7 @@ class LolResolver(
     override suspend fun resolve(
         requested: List<CreateEntityRequest>,
         extra: ViewExtraArguments?
-    ): Either<HttpError, ResolvedEntities> = either {
+    ): Either<ServiceError, ResolvedEntities> = either {
         val (existing, newRequests) = getCurrentAndNewEntities(repo, requested, Game.LOL)
 
         val validated = coroutineScope {

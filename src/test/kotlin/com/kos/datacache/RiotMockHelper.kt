@@ -1,8 +1,8 @@
 package com.kos.datacache
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.*
-import com.kos.common.error.HttpError
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 
 object RiotMockHelper {
@@ -15,7 +15,7 @@ object RiotMockHelper {
         14,
         false
     )
-    val leagueEntries: Either<HttpError, List<LeagueEntryResponse>> =
+    val leagueEntries: Either<ClientError, List<LeagueEntryResponse>> =
         Either.Right(
             listOf(
                 flexQEntryResponse,

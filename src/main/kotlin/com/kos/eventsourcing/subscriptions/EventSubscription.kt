@@ -1,11 +1,11 @@
 package com.kos.eventsourcing.subscriptions
 
 import arrow.core.Either
-import com.kos.common.error.ControllerError
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.Retry.retryEitherWithExponentialBackoff
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
@@ -32,7 +32,7 @@ class EventSubscription(
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository,
     private val retryConfig: RetryConfig,
-    private val process: suspend (EventWithVersion) -> Either<ControllerError, Unit>,
+    private val process: suspend (EventWithVersion) -> Either<ServiceError, Unit>,
 ) : WithLogger("event-subscription-$subscriptionName") {
 
     init {

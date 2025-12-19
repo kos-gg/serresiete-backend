@@ -68,7 +68,7 @@ object RaiderioHttpClientHelper {
                 "Warlock",
                 "Affliction",
                 listOf(MythicPlusSeasonScore("season-df-3", SeasonScores(2708.4, 2708.4, 0.0, 0.0, 0.0))),
-                MythicPlusRanks(MythicPlusRank(43389, 24021, 887), MythicPlusRank(1989, 1077, 58)),
+                MythicPlusRanks(MythicPlusRank(43389, 24021, 887), MythicPlusRank(1989, 1077, 58), mapOf()),
                 listOf(
                     MythicPlusRun(
                         "Throne of the Tides",

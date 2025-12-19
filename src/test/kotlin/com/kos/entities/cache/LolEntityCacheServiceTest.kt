@@ -3,8 +3,8 @@ package com.kos.entities.cache
 import arrow.core.Either
 import com.kos.clients.domain.QueueType
 import com.kos.clients.riot.RiotClient
-import com.kos.common.error.JsonParseError
 import com.kos.common.RetryConfig
+import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
@@ -77,7 +77,7 @@ class LolEntityCacheServiceTest {
     fun `caching lol data returns an error when retrieving match data fails`() {
         runBlocking {
 
-            val jsonParseError = Either.Left(JsonParseError("{}", ""))
+            val jsonParseError = Either.Left(com.kos.clients.JsonParseError("{}", ""))
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(jsonParseError)
 
@@ -85,7 +85,10 @@ class LolEntityCacheServiceTest {
             val errors = LolEntityCacheService(repo, riotClient, retryConfig)
                 .cache(listOf(basicLolEntity))
 
-            assertEquals(listOf(jsonParseError.value), errors)
+            errors.forEach { error ->
+                error as SyncProcessingError
+                assertTrue((error.type == "JSON_PARSE_ERROR"))
+            }
         }
     }
 

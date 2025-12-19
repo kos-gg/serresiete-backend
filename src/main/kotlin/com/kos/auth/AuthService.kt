@@ -8,8 +8,9 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTCreationException
 import com.kos.activities.Activity
 import com.kos.auth.repository.AuthRepository
-import com.kos.common.error.ControllerError
 import com.kos.common.JWTConfig
+import com.kos.common.error.ControllerError
+import com.kos.common.error.toAuthError
 import com.kos.credentials.CredentialsService
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -31,7 +32,9 @@ class AuthService(
         } else {
             either {
                 val refreshToken = generateUserToken(userName, TokenMode.REFRESH).bind()
-                authRepository.insertToken(userName, refreshToken, isAccess = false).bind()
+                authRepository.insertToken(userName, refreshToken, isAccess = false)
+                    .mapLeft { it.toAuthError(it.message) }
+                    .bind()
                 LoginResponse(
                     generateUserToken(userName, TokenMode.ACCESS).bind(),
                     refreshToken

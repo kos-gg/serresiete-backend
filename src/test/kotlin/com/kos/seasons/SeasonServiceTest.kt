@@ -1,10 +1,10 @@
 package com.kos.seasons
 
 import arrow.core.Either
+import com.kos.clients.HttpError
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.error.RaiderIoError
 import com.kos.common.RetryConfig
 import com.kos.seasons.repository.SeasonInMemoryRepository
 import com.kos.seasons.repository.SeasonsState
@@ -75,7 +75,7 @@ class SeasonServiceTest {
     fun `i can not add a new mythic plus dungeon season because the raider io client is not available`() {
         runBlocking {
             `when`(raiderIoClient.getExpansionSeasons(10))
-                .thenReturn(Either.Left(RaiderIoError(500, "Internal server error", "error from server")))
+                .thenReturn(Either.Left(HttpError(500, "Internal server error")))
 
             val staticDataInMemoryRepository =
                 StaticDataInMemoryRepository()

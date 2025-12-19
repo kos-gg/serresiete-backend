@@ -5,9 +5,10 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRosterResponse
-import com.kos.common.error.HttpError
-import com.kos.common.error.NonHardcoreCharacter
+import com.kos.clients.toServiceError
 import com.kos.common.WithLogger
+import com.kos.common.error.NonHardcoreCharacter
+import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.*
 import com.kos.entities.repository.EntitiesRepository
@@ -26,7 +27,7 @@ class WowHardcoreResolver(
     override suspend fun resolve(
         requested: List<CreateEntityRequest>,
         extra: ViewExtraArguments?
-    ): Either<HttpError, ResolvedEntities> = either {
+    ): Either<ServiceError, ResolvedEntities> = either {
         val args = extra as? WowHardcoreExtraArguments
         val (effectiveRequests, guildPayload) = if (args?.isGuild == true) {
             val guildReq = requested.first() as WowEntityRequest
@@ -73,7 +74,7 @@ class WowHardcoreResolver(
                 }
             }.awaitAll().split()
 
-            errors.forEach { logger.error(it.error()) }
+            errors.forEach { logger.error(it.toString()) }
             oks
         }
 
@@ -88,17 +89,21 @@ class WowHardcoreResolver(
         region: String,
         realm: String,
         name: String
-    ): Either<HttpError, Pair<GetWowRosterResponse, List<WowEntityRequest>>> {
+    ): Either<ServiceError, Pair<GetWowRosterResponse, List<WowEntityRequest>>> {
         return either {
-            val rosterEither = blizzardClient.getGuildRoster(region, realm, name)
-            val roster = rosterEither.bind()
+            val roster = blizzardClient
+                .getGuildRoster(region, realm, name)
+                .mapLeft { it.toServiceError("GetGuildRoster") }
+                .bind()
 
             val memberReqs = roster.members
                 .asSequence()
                 .filter { it.character.level >= 10 }
                 .map { m -> WowEntityRequest(m.character.name.lowercase(), region, realm) }
                 .toList()
+
             Pair(roster, memberReqs)
         }
+
     }
 }

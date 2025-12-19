@@ -105,7 +105,7 @@ data class TasksService(
                     Task(
                         id,
                         taskType,
-                        TaskStatus(Status.ERROR, it.error()),
+                        TaskStatus(Status.ERROR, it.toString()),
                         OffsetDateTime.now()
                     )
                 )

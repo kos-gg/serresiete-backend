@@ -87,7 +87,7 @@ class ViewsService(
         operationId: String,
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
-    ): Either<ControllerError, Operation> {
+    ): Either<ServiceError, Operation> {
         return either {
             val resolved =
                 entitiesService.resolveEntities(
@@ -98,6 +98,7 @@ class ViewsService(
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
+                .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message) }
                 .bind()
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
@@ -113,7 +114,11 @@ class ViewsService(
                 viewToBeCreatedEvent.extraArguments
             )
 
-            resolved.guild?.let { entitiesService.insertGuild(it, view.id).bind() }
+            resolved.guild?.let {
+                entitiesService.insertGuild(it, view.id)
+                    .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message) }
+                    .bind()
+            }
 
             val event = Event(
                 aggregateRoot,
@@ -149,7 +154,7 @@ class ViewsService(
         operationId: String,
         aggregateRoot: String,
         viewToBeEditedEvent: ViewToBeEditedEvent
-    ): Either<ControllerError, Operation> {
+    ): Either<ServiceError, Operation> {
         return either {
             val resolved =
                 entitiesService.resolveEntities(
@@ -159,6 +164,7 @@ class ViewsService(
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
+                .mapLeft { ViewEditError(viewToBeEditedEvent, it.message) }
                 .bind()
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
@@ -207,7 +213,7 @@ class ViewsService(
         operationId: String,
         aggregateRoot: String,
         viewToBePatchedEvent: ViewToBePatchedEvent
-    ): Either<ControllerError, Operation> {
+    ): Either<ServiceError, Operation> {
         return either {
             val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
                 val resolved =
@@ -218,6 +224,7 @@ class ViewsService(
 
                 val inserted = entitiesService
                     .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)
+                    .mapLeft { ViewPatchError(viewToBePatchedEvent, it.message) }
                     .bind()
 
                 inserted.zip(resolved.entities.map { it.second }) +
