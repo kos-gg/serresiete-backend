@@ -45,8 +45,7 @@ data class LolUpdater(private val riotClient: RiotClient, private val repository
             entities.asFlow()
                 .buffer(40)
                 .collect { lolEntity ->
-                    val result = retrieveUpdatedLolEntity(lolEntity)
-                    result.fold(
+                    retrieveUpdatedLolEntity(lolEntity).fold(
                         ifLeft = { error -> errorsChannel.send(error.toServiceError("Retrieve Updated Lol Entity")) },
                         ifRight = { dataChannel.send(Pair(it, lolEntity.id)) }
                     )

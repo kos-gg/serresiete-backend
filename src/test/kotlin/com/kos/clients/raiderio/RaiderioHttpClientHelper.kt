@@ -64,12 +64,25 @@ object RaiderioHttpClientHelper {
     val raiderioProfileResponse =
         RaiderIoResponse(
             RaiderIoProfile(
-                "Nareez",
-                "Warlock",
-                "Affliction",
-                listOf(MythicPlusSeasonScore("season-df-3", SeasonScores(2708.4, 2708.4, 0.0, 0.0, 0.0))),
-                MythicPlusRanks(MythicPlusRank(43389, 24021, 887), MythicPlusRank(1989, 1077, 58), mapOf()),
-                listOf(
+                name = "Nareez",
+                `class` = "Warlock",
+                spec = "Affliction",
+                seasonScores = listOf(
+                    MythicPlusSeasonScore(
+                        "season-df-3",
+                        SeasonScores(2708.4, 2708.4, 0.0, 0.0, 0.0)
+                    )
+                ),
+                mythicPlusRanks = MythicPlusRanks(
+                    overall = MythicPlusRank(43389, 24021, 887),
+                    `class` = MythicPlusRank(1989, 1077, 58),
+                    specs = mapOf(
+                        "spec_265" to MythicPlusRank(4, 2, 2),
+                        "spec_266" to MythicPlusRank(0, 0, 0),
+                        "spec_267" to MythicPlusRank(0, 0, 0)
+                    )
+                ),
+                mythicPlusBestRuns = listOf(
                     MythicPlusRun(
                         "Throne of the Tides",
                         "TOTT",
@@ -77,7 +90,7 @@ object RaiderioHttpClientHelper {
                         2,
                         174.0F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4462779-20-throne-of-the-tides",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting")),
+                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         "Atal'Dazar",
@@ -143,10 +156,13 @@ object RaiderioHttpClientHelper {
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     )
                 )
-            ), listOf(
+
+            ),
+            specs = listOf(
                 MythicPlusRankWithSpecName("Affliction", 2708.4, 4, 2, 2),
                 MythicPlusRankWithSpecName("Demonology", 0.0, 0, 0, 0),
                 MythicPlusRankWithSpecName("Destruction", 0.0, 0, 0, 0)
             )
         )
+
 }

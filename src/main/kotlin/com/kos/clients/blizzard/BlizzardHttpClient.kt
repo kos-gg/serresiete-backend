@@ -39,14 +39,16 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
     ): Either<ClientError, GetWowCharacterResponse> {
         return throttleRequest {
             either {
-                logger.debug("getCharacterMedia for $region $realm $character")
+                logger.debug("getCharacterProfile for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
+                val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")
                 val namespace = "profile-classic1x"
-                val partialURI =
-                    URI("/profile/wow/character/$realm/${encodedName(character)}/character-media?locale=en_US")
-                val path = (baseURI(region).toString() + partialURI.toString()).lowercase()
 
-                fetchFromApi(path, namespace, tokenResponse.tokenResponse) {
+                fetchFromApi(
+                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
+                    namespace,
+                    tokenResponse.tokenResponse
+                ) {
                     json.decodeFromString<GetWowCharacterResponse>(it)
                 }.bind()
             }
