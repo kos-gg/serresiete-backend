@@ -3,7 +3,7 @@ package com.kos.seasons
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.toServiceError
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
@@ -42,7 +42,7 @@ data class SeasonService(
                     raiderIoClient.getExpansionSeasons(expansionId)
                 }.mapLeft {
                     logger.error("Failed to fetch expansion seasons: $it")
-                    it.toServiceError("GetWowExpansions")
+                    it.toSyncProcessingError("GetWowExpansions")
                 }.bind()
 
             val currentSeason = expansionSeasons.seasons

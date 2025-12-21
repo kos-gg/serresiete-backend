@@ -1,7 +1,6 @@
 package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
-import com.kos.common.error.ControllerError
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.entities.EntitiesService

@@ -1,8 +1,8 @@
 package com.kos.credentials.repository
 
 import arrow.core.Either
-import com.kos.common.error.InsertError
 import com.kos.common.WithState
+import com.kos.common.error.InsertError
 import com.kos.credentials.Credentials
 import com.kos.credentials.PatchCredentialRequest
 import com.kos.roles.Role

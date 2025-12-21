@@ -10,7 +10,7 @@ data class HttpError(val status: Int, val body: String?) : ClientError()
 data class NetworkError(val details: String) : ClientError()
 data class JsonParseError(val raw: String, val error: String) : ClientError()
 
-fun ClientError.toServiceError(operation: String): ServiceError =
+fun ClientError.toSyncProcessingError(operation: String): ServiceError =
     when (this) {
         is HttpError -> SyncProcessingError("HTTP_ERROR", "Failed $operation: $status $body")
         is NetworkError -> SyncProcessingError("NETWORK_ERROR", "Network error on $operation: $details")

@@ -2,8 +2,8 @@ package com.kos.views
 
 import arrow.core.raise.either
 import com.kos.common.error.InvalidQueryParameter
-import com.kos.common.recoverToEither
 import com.kos.common.error.respondWithHandledError
+import com.kos.common.recoverToEither
 import com.kos.plugins.UserWithActivities
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*

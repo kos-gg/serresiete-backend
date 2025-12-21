@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.riot.RiotClient
-import com.kos.clients.toServiceError
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.entities.LolEnrichedEntityRequest
@@ -46,7 +46,7 @@ data class LolUpdater(private val riotClient: RiotClient, private val repository
                 .buffer(40)
                 .collect { lolEntity ->
                     retrieveUpdatedLolEntity(lolEntity).fold(
-                        ifLeft = { error -> errorsChannel.send(error.toServiceError("Retrieve Updated Lol Entity")) },
+                        ifLeft = { error -> errorsChannel.send(error.toSyncProcessingError("Retrieve Updated Lol Entity")) },
                         ifRight = { dataChannel.send(Pair(it, lolEntity.id)) }
                     )
                 }

@@ -6,9 +6,9 @@ import com.kos.clients.domain.Data
 import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderIoData
 import com.kos.clients.domain.RiotData
-import com.kos.clients.toServiceError
-import com.kos.common.error.ServiceError
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.Entity
 import com.kos.views.Game
@@ -39,5 +39,5 @@ abstract class EntityCacheService(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        block().mapLeft { it.toServiceError(operation) }
+        block().mapLeft { it.toSyncProcessingError(operation) }
 }

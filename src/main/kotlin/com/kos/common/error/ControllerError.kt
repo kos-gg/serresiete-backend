@@ -1,7 +1,6 @@
 package com.kos.common.error
 
 import com.kos.common._fold
-import com.kos.views.Game
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
@@ -17,6 +16,7 @@ data object NotAuthorized : ControllerError
 data class NotEnoughPermissions(val user: String) : ControllerError
 data class CantDeleteYourself(val user: String, val userToRemove: String) : ControllerError
 data class NotFound(val id: String) : ControllerError
+data class AuthenticationError(val message: String) : ControllerError
 class BadRequest(val problem: String) : ControllerError
 class InvalidQueryParameter(param: String, value: String, allowed: List<String>?) : ControllerError {
     private val baseMessage = "invalid query param[$param]: $value"
@@ -49,10 +49,6 @@ data object UserWithoutRoles : ControllerError
 data object ExtraArgumentsWrongType : ControllerError
 data object GuildViewMoreThanTwoEntities : ControllerError
 
-interface AuthError : ControllerError {
-    val message: String
-}
-
 suspend fun ApplicationCall.respondLogging(error: String) {
     val logger = LoggerFactory.getLogger("ktor.application")
     logger.error(error)
@@ -73,7 +69,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is JsonParseError -> respondLogging(error.error())
         is RaiderIoError -> respondLogging(error.error())
         is InvalidQueryParameter -> respond(BadRequest, error.message)
-        is AuthError -> respond(Unauthorized, error.message)
+        is AuthenticationError -> respond(Unauthorized, error.message)
         is DatabaseError -> respondLogging(error.toString()) //TODO: improve
         is HttpError -> TODO()
         is CantDeleteYourself -> respond(BadRequest, "can't delete your credentials")

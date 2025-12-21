@@ -21,6 +21,8 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
+//TODO - this tests should be more exhaustive
+
 class AuthControllerTest {
     private val credentialsRepository = CredentialsInMemoryRepository()
     private val rolesRepository = RolesInMemoryRepository()

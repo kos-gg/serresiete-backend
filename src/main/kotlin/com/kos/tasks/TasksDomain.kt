@@ -1,8 +1,8 @@
 package com.kos.tasks
 
 import arrow.core.Either
-import com.kos.common.error.InvalidTaskType
 import com.kos.common.OffsetDateTimeSerializer
+import com.kos.common.error.InvalidTaskType
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 

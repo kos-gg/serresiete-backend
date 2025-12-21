@@ -7,7 +7,7 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.BlizzardDatabaseClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.toServiceError
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
 import com.kos.common._fold
@@ -105,7 +105,7 @@ class WowHardcoreEntityCacheService(
                             handleNotFoundHardcoreCharacter(newestDataCacheEntry, wowEntity)
 
                         else ->
-                            Either.Left(error.toServiceError("getCharacterProfile"))
+                            Either.Left(error.toSyncProcessingError("getCharacterProfile"))
                     }.bind()
                 },
                 ifRight = { response ->

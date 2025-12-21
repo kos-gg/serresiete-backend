@@ -2,8 +2,8 @@ package com.kos.auth.repository
 
 import arrow.core.Either
 import com.kos.auth.Authorization
-import com.kos.common.error.InsertError
 import com.kos.common.WithState
+import com.kos.common.error.InsertError
 
 //TODO: This should disappear at some point. We should self-contain auth in jwt token.
 interface AuthRepository : WithState<List<Authorization>, AuthRepository> {

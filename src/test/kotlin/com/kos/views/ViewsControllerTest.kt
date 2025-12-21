@@ -5,11 +5,11 @@ import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.*
 import com.kos.common.error.CantFeatureView
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.common.error.NotFound
 import com.kos.common.error.TooMuchViews
+import com.kos.common.getLeftOrNull
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
 import com.kos.credentials.CredentialsTestHelper.emptyCredentialsState

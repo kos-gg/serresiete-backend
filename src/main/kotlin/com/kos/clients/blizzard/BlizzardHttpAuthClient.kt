@@ -5,10 +5,7 @@ import arrow.core.flatMap
 import com.kos.clients.ClientError
 import com.kos.clients.NetworkError
 import com.kos.clients.domain.BlizzardCredentials
-import com.kos.clients.domain.RiotError
 import com.kos.clients.domain.TokenResponse
-import com.kos.common.error.HttpError
-import com.kos.common.error.JsonParseError
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -16,7 +13,6 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import java.net.URI
 
