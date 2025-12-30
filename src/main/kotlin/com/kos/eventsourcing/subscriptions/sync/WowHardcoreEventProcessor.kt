@@ -5,30 +5,32 @@ import arrow.core.raise.either
 import com.kos.common.ControllerError
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
-import com.kos.entities.cache.LolEntityCacheService
 import com.kos.eventsourcing.events.*
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.views.Game
 
-class LolSyncProcessor(
+
+class WowHardcoreEventProcessor(
     private val eventWithVersion: EventWithVersion,
     private val entitiesService: EntitiesService,
-    private val lolEntityCacheService: LolEntityCacheService
-) : SyncProcessor, WithLogger("eventSubscription.syncLolEntitiesProcessor") {
+    private val wowHardcoreEntityCacheService: WowHardcoreEntitySynchronizer
+) : EventProcessor, WithLogger("eventSubscription.syncWowHardcoreEntitiesProcessor") {
 
-    override suspend fun sync(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ControllerError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_CREATED -> {
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
                 return when (payload.game) {
-                    Game.LOL -> {
+                    Game.WOW_HC -> {
                         logger.debug("processing event v${eventWithVersion.version}")
                         val entities = payload.entities.mapNotNull {
                             entitiesService.get(
                                 it,
-                                Game.LOL
+                                Game.WOW_HC
                             )
                         }
-                        lolEntityCacheService.cache(entities)
+                        wowHardcoreEntityCacheService
+                            .synchronize(entities)
                         Either.Right(Unit)
                     }
 
@@ -42,15 +44,16 @@ class LolSyncProcessor(
             EventType.VIEW_EDITED -> {
                 val payload = eventWithVersion.event.eventData as ViewEditedEvent
                 return when (payload.game) {
-                    Game.LOL -> {
+                    Game.WOW_HC -> {
                         logger.debug("processing event v${eventWithVersion.version}")
                         val entities = payload.entities.mapNotNull {
                             entitiesService.get(
                                 it,
-                                Game.LOL
+                                Game.WOW_HC
                             )
                         }
-                        lolEntityCacheService.cache(entities)
+                        wowHardcoreEntityCacheService
+                            .synchronize(entities)
                         Either.Right(Unit)
                     }
 
@@ -64,10 +67,11 @@ class LolSyncProcessor(
             EventType.VIEW_PATCHED -> {
                 val payload = eventWithVersion.event.eventData as ViewPatchedEvent
                 return when (payload.game) {
-                    Game.LOL -> {
+                    Game.WOW_HC -> {
                         logger.debug("processing event v${eventWithVersion.version}")
-                        payload.entities?.mapNotNull { entitiesService.get(it, Game.LOL) }?.let {
-                            lolEntityCacheService.cache(it)
+                        payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW_HC) }?.let {
+                            wowHardcoreEntityCacheService
+                                .synchronize(it)
                         }
                         Either.Right(Unit)
                     }
@@ -82,10 +86,9 @@ class LolSyncProcessor(
             EventType.REQUEST_TO_BE_SYNCED -> {
                 val payload = eventWithVersion.event.eventData as RequestToBeSynced
                 return when (payload.game) {
-                    Game.LOL -> {
+                    Game.WOW_HC -> {
                         either {
                             logger.debug("processing event v${eventWithVersion.version}")
-
                             val resolved =
                                 entitiesService.resolveEntities(
                                     listOf(payload.request),
@@ -98,8 +101,7 @@ class LolSyncProcessor(
 
                             val entities = inserted.zip(resolved.entities.map { it.second }) +
                                     resolved.existing
-
-                            lolEntityCacheService.cache(entities.map { it.first })
+                            wowHardcoreEntityCacheService.synchronize(entities.map { it.first })
                         }
                     }
 
@@ -120,5 +122,5 @@ class LolSyncProcessor(
             }
         }
     }
-
 }
+

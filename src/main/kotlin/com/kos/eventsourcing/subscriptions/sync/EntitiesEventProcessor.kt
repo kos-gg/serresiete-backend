@@ -8,12 +8,12 @@ import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.ViewDeletedEvent
 
-class EntitiesSyncProcessor(
+class EntitiesEventProcessor(
     private val eventWithVersion: EventWithVersion,
     private val entitiesService: EntitiesService,
-) : SyncProcessor, WithLogger("eventSubscription.entitiesProcessor") {
+) : EventProcessor, WithLogger("eventSubscription.entitiesProcessor") {
 
-    override suspend fun sync(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ControllerError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_DELETED -> {
                 val payload = eventWithVersion.event.eventData as ViewDeletedEvent

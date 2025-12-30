@@ -4,18 +4,19 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesService
-import com.kos.entities.WowEntity
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.EntityResolverProvider
+import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.ViewDeletedEvent
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
 import com.kos.views.SimpleView
 import com.kos.views.ViewEntity
@@ -63,18 +64,20 @@ class EntitiesSyncProcessorTest {
 
             val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-            val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-            val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-            val lolResolver = LolResolver(entitiesRepository, riotClient)
+            val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+            val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+            val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-            val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+            val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
             val wowHardcoreGuildUpdater =
                 WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
-            val entitiesResolver = mapOf(
-                Game.WOW to wowResolver,
-                Game.WOW_HC to wowHardcoreResolver,
-                Game.LOL to lolResolver
+            val entitiesResolver = EntityResolverProvider(
+                listOf(
+                    wowResolver,
+                    wowHardcoreResolver,
+                    lolResolver
+                )
             )
 
 
@@ -102,7 +105,7 @@ class EntitiesSyncProcessorTest {
                 Event(aggregateRoot, ViewsTestHelper.id, eventData)
             )
 
-            EntitiesSyncProcessor(eventWithVersion, service).sync()
+            EntitiesEventProcessor(eventWithVersion, service).process()
             kotlin.test.assertEquals(
                 expectedRemainingCharacters,
                 entitiesRepository.state().wowHardcoreEntities.map { it.id })

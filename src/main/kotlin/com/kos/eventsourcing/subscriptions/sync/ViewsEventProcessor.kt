@@ -7,12 +7,12 @@ import com.kos.common.WithLogger
 import com.kos.eventsourcing.events.*
 import com.kos.views.ViewsService
 
-class ViewsSyncProcessor(
+class ViewsEventProcessor(
     private val eventWithVersion: EventWithVersion,
     private val viewsService: ViewsService
-) : SyncProcessor, WithLogger("eventSubscription.viewsProcessor") {
+) : EventProcessor, WithLogger("eventSubscription.viewsProcessor") {
 
-    override suspend fun sync(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ControllerError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_TO_BE_CREATED -> {
                 either {

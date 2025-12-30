@@ -217,35 +217,35 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { ViewsSyncProcessor(it, viewsService).sync() }
+    ) { ViewsEventProcessor(it, viewsService).process() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { LolSyncProcessor(it, entitiesService, lolEntitySynchronizer).sync() }
+    ) { LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowSyncProcessor(it, entitiesService, wowEntitySynchronizer).sync() }
+    ) { WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowHardcoreSyncProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).sync() }
+    ) { WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EntitiesSyncProcessor(it, entitiesService).sync() }
+    ) { EntitiesEventProcessor(it, entitiesService).process() }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)

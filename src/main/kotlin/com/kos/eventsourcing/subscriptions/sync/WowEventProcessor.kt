@@ -5,17 +5,17 @@ import arrow.core.raise.either
 import com.kos.common.ControllerError
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
-import com.kos.entities.cache.WowEntityCacheService
 import com.kos.eventsourcing.events.*
+import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.views.Game
 
-class WowSyncProcessor(
+class WowEventProcessor(
     private val eventWithVersion: EventWithVersion,
     private val entitiesService: EntitiesService,
-    private val wowEntityCacheService: WowEntityCacheService
-) : SyncProcessor, WithLogger("eventSubscription.syncWowEntitiesProcessor") {
+    private val wowEntityCacheService: WowEntitySynchronizer
+) : EventProcessor, WithLogger("eventSubscription.syncWowEntitiesProcessor") {
 
-    override suspend fun sync(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ControllerError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_CREATED -> {
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
@@ -29,7 +29,7 @@ class WowSyncProcessor(
                             )
                         }
                         wowEntityCacheService
-                            .cache(entities)
+                            .synchronize(entities)
                         Either.Right(Unit)
                     }
 
@@ -52,7 +52,7 @@ class WowSyncProcessor(
                             )
                         }
                         wowEntityCacheService
-                            .cache(entities)
+                            .synchronize(entities)
                         Either.Right(Unit)
                     }
 
@@ -70,7 +70,7 @@ class WowSyncProcessor(
                         logger.debug("processing event v${eventWithVersion.version}")
                         payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW) }?.let {
                             wowEntityCacheService
-                                .cache(it)
+                                .synchronize(it)
                         }
                         Either.Right(Unit)
                     }
@@ -100,7 +100,7 @@ class WowSyncProcessor(
 
                             val entities = inserted.zip(resolved.entities.map { it.second }) +
                                     resolved.existing
-                            wowEntityCacheService.cache(entities.map { it.first })
+                            wowEntityCacheService.synchronize(entities.map { it.first })
                         }
                     }
 
