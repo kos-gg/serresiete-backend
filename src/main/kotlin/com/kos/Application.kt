@@ -34,6 +34,7 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
+import com.kos.eventsourcing.subscriptions.sync.*
 import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
@@ -216,35 +217,35 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.viewsProcessor(it, viewsService) }
+    ) { ViewsEventProcessor(it, viewsService).process() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncLolEntitiesProcessor(it, entitiesService, lolEntitySynchronizer) }
+    ) { LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowEntitiesProcessor(it, entitiesService, wowEntitySynchronizer) }
+    ) { WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.syncWowHardcoreEntitiesProcessor(it, entitiesService, wowHardcoreEntitySynchronizer) }
+    ) { WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EventSubscription.entitiesProcessor(it, entitiesService) }
+    ) { EntitiesEventProcessor(it, entitiesService).process() }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)
