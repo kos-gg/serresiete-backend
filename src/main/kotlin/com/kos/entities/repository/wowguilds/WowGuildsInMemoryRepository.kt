@@ -4,6 +4,8 @@ import arrow.core.Either
 import com.kos.common.InMemoryRepository
 import com.kos.common.error.InsertError
 import com.kos.entities.GuildPayload
+import com.kos.common.InsertError
+import com.kos.entities.domain.GuildPayload
 
 class WowGuildsInMemoryRepository() :
     WowGuildsRepository,

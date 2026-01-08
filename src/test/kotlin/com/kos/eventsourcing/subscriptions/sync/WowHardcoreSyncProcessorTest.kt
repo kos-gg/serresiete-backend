@@ -5,12 +5,12 @@ import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.cache.WowHardcoreEntityCacheService
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.eventsourcing.events.ViewCreatedEvent
 import com.kos.eventsourcing.events.ViewEditedEvent
 import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner
@@ -101,7 +101,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW_HC
         )
 
-        val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+        val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
             dataCacheRepository,
             entitiesRepository = EntitiesInMemoryRepository(),
             raiderIoClient,
@@ -201,7 +201,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW_HC
         )
 
-        val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+        val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
             dataCacheRepository,
             entitiesRepository = EntitiesInMemoryRepository(),
             raiderIoClient,
@@ -303,7 +303,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
         )
 
 
-        val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+        val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
             dataCacheRepository,
             entitiesRepository = EntitiesInMemoryRepository(),
             raiderIoClient,
@@ -343,7 +343,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
             )
 
 
-            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+            val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 entitiesRepository = EntitiesInMemoryRepository(),
                 raiderIoClient,

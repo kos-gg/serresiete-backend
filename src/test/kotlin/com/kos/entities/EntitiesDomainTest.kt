@@ -3,6 +3,8 @@ package com.kos.entities
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntityEnrichedRequest
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.domain.WowEnrichedEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

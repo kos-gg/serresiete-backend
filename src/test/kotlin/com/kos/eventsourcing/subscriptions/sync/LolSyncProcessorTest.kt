@@ -2,11 +2,11 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
 import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.cache.LolEntityCacheService
 import com.kos.eventsourcing.events.ViewCreatedEvent
 import com.kos.eventsourcing.events.ViewEditedEvent
 import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
+import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner
@@ -38,7 +38,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
             Game.LOL
         )
 
-        val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+        val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
         val spied = spyk(service)
 
         assertLolCacheInvocation(
@@ -70,7 +70,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -102,7 +102,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.LOL
         )
 
-        val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+        val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
         val spied = spyk(service)
 
         assertLolCacheInvocation(
@@ -133,7 +133,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -165,7 +165,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.LOL
         )
 
-        val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+        val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
         val spied = spyk(service)
 
 
@@ -197,7 +197,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -230,7 +230,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.LOL
             )
 
-            val service = LolEntityCacheService(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
             val spied = spyk(service)
 
 

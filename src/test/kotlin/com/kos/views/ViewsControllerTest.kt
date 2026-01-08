@@ -31,11 +31,9 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowRequest2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.lolEntityRequest
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.EntityResolverProvider
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -43,6 +41,9 @@ import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.roles.Role
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.views.ViewsTestHelper.basicSimpleGameViews
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
@@ -89,17 +90,19 @@ class ViewsControllerTest {
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-        val lolResolver = LolResolver(entitiesRepository, riotClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-        val entitiesResolver = mapOf(
-            Game.WOW to wowResolver,
-            Game.WOW_HC to wowHardcoreResolver,
-            Game.LOL to lolResolver
+        val entitiesResolver = EntityResolverProvider(
+            listOf(
+                wowResolver,
+                wowHardcoreResolver,
+                lolResolver
+            )
         )
 
-        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
             WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
 

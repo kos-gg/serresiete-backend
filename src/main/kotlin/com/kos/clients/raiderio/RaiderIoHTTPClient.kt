@@ -11,8 +11,8 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.C
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_CUTOFFS_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.WithLogger
-import com.kos.entities.WowEntity
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.WowEntity
+import com.kos.entities.domain.WowEntityRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

@@ -6,11 +6,13 @@ import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.RetryConfig
-import com.kos.seasons.repository.SeasonInMemoryRepository
-import com.kos.seasons.repository.SeasonsState
-import com.kos.staticdata.WowExpansion
-import com.kos.staticdata.repository.StaticDataInMemoryRepository
-import com.kos.staticdata.repository.StaticDataState
+import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
+import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -31,14 +33,9 @@ class SeasonServiceTest {
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
-            val staticDataInMemoryRepository =
-                StaticDataInMemoryRepository()
-                    .withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
-            val seasonInMemoryRepository = SeasonInMemoryRepository()
-
-            val seasonService =
-                SeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
-
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val wowSeasonsState = WowSeasonsState(listOf())
+            val seasonService = createService(wowExpansionState, wowSeasonsState)
             seasonService.addNewMythicPlusSeason()
                 .onLeft { fail() }
                 .onRight {
@@ -55,14 +52,9 @@ class SeasonServiceTest {
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
-            val staticDataInMemoryRepository =
-                StaticDataInMemoryRepository()
-                    .withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
-            val seasonInMemoryRepository = SeasonInMemoryRepository()
-                .withState(SeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, ""))))
-
-            val seasonService =
-                SeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))
+            val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
                 seasonService.addNewMythicPlusSeason()
@@ -77,15 +69,9 @@ class SeasonServiceTest {
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Left(HttpError(500, "Internal server error")))
 
-            val staticDataInMemoryRepository =
-                StaticDataInMemoryRepository()
-                    .withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
-            val seasonInMemoryRepository =
-                SeasonInMemoryRepository()
-                    .withState(SeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, ""))))
-
-            val seasonService =
-                SeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))
+            val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
                 seasonService.addNewMythicPlusSeason()
@@ -101,20 +87,28 @@ class SeasonServiceTest {
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
-            val staticDataInMemoryRepository =
-                StaticDataInMemoryRepository()
-                    .withState(StaticDataState(listOf(WowExpansion(10, "TWW", true))))
-            val seasonInMemoryRepository = SeasonInMemoryRepository()
-                .withState(SeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, ""))))
-
-            val seasonService =
-                SeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))
+            val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
                 seasonService.addNewMythicPlusSeason()
                     .isLeft()
             )
         }
+    }
+
+    private suspend fun createService(
+        expansionsState: WowExpansionState,
+        seasonsState: WowSeasonsState
+    ): WowSeasonService {
+        val staticDataInMemoryRepository =
+            WowExpansionInMemoryRepository()
+                .withState(expansionsState)
+        val seasonInMemoryRepository = WowSeasonInMemoryRepository()
+            .withState(seasonsState)
+
+        return WowSeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
     }
 
 }

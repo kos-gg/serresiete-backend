@@ -3,7 +3,7 @@ package com.kos.entities.cache
 import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
@@ -23,6 +23,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.views.Game
 import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
@@ -38,7 +39,7 @@ import kotlin.test.Test
 class WowHardcoreEntityCacheServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
+    private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
     private val json = Json {
@@ -59,16 +60,16 @@ class WowHardcoreEntityCacheServiceTest {
                 )
             )
 
-            val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
+            val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
             )
 
-            wowHardcoreEntityCacheService.cache(
+            wowHardcoreEntityCacheService.synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -121,14 +122,14 @@ class WowHardcoreEntityCacheServiceTest {
                     )
                 )
 
-            val cacheResult = WowHardcoreEntityCacheService(
+            val cacheResult = WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 entitiesRepository,
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
-            ).cache(
+            ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -156,14 +157,14 @@ class WowHardcoreEntityCacheServiceTest {
             )
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf(wowHardcoreDataCache))
-            WowHardcoreEntityCacheService(
+            WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
-            ).cache(
+            ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -194,14 +195,14 @@ class WowHardcoreEntityCacheServiceTest {
                 )
             )
 
-            WowHardcoreEntityCacheService(
+            WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
-            ).cache(
+            ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -273,14 +274,14 @@ class WowHardcoreEntityCacheServiceTest {
                 listOf()
             )
 
-            WowHardcoreEntityCacheService(
+            WowHardcoreEntitySynchronizer(
                 dataCacheRepository,
                 EntitiesInMemoryRepository(),
                 raiderIoClient,
                 blizzardClient,
-                blizzardDatabaseClient,
+                wowItemsDatabaseRepository,
                 retryConfig
-            ).cache(
+            ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )

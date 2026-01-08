@@ -6,7 +6,7 @@ import com.kos.auth.AuthService
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
@@ -18,18 +18,13 @@ import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.datacache.DataCache
 import com.kos.datacache.DataCacheService
+import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
-import com.kos.entities.cache.EntityCacheServiceRegistry
-import com.kos.entities.cache.LolEntityCacheService
-import com.kos.entities.cache.WowEntityCacheService
-import com.kos.entities.cache.WowHardcoreEntityCacheService
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.EntityResolverProvider
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -38,12 +33,17 @@ import com.kos.roles.Role
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
-import com.kos.seasons.SeasonService
-import com.kos.seasons.repository.SeasonInMemoryRepository
-import com.kos.staticdata.repository.StaticDataInMemoryRepository
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
-import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
@@ -55,7 +55,7 @@ class TasksControllerTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val blizzardDatabaseClient = mock(BlizzardDatabaseClient::class.java)
+    private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
     private val retryConfig = RetryConfig(1, 1)
 
     private val entitiesRepository = EntitiesInMemoryRepository()
@@ -65,8 +65,8 @@ class TasksControllerTest {
     private val rolesActivitiesRepository = RolesActivitiesInMemoryRepository()
     private val tasksRepository = TasksInMemoryRepository()
     private val authRepository = AuthInMemoryRepository()
-    private val staticDataRepository = StaticDataInMemoryRepository()
-    private val seasonDatabaseRepository = SeasonInMemoryRepository()
+    private val staticDataRepository = WowExpansionInMemoryRepository()
+    private val seasonDatabaseRepository = WowSeasonInMemoryRepository()
 
     @Test
     fun `i can get tasks`() {
@@ -132,17 +132,19 @@ class TasksControllerTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
         val viewsRepository = ViewsInMemoryRepository()
 
-        val wowResolver = WowResolver(entitiesRepository, raiderIoClient)
-        val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-        val lolResolver = LolResolver(entitiesRepository, riotClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
-        val entitiesResolver = mapOf(
-            Game.WOW to wowResolver,
-            Game.WOW_HC to wowHardcoreResolver,
-            Game.LOL to lolResolver
+        val entitiesResolver = EntityResolverProvider(
+            listOf(
+                wowResolver,
+                wowHardcoreResolver,
+                lolResolver
+            )
         )
 
-        val lolUpdater = LolUpdater(riotClient, entitiesRepository)
+        val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
 
         val rolesService = RolesService(rolesRepositoryWithState, rolesActivitiesRepositoryWithState)
@@ -163,22 +165,23 @@ class TasksControllerTest {
             )
         val authService =
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
-        val entityCacheServiceRegistry = EntityCacheServiceRegistry(
+        val entityCacheServiceRegistry = EntitySynchronizerProvider(
             listOf(
-                LolEntityCacheService(dataCacheRepository, riotClient, retryConfig),
-                WowHardcoreEntityCacheService(
+                LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig),
+                WowHardcoreEntitySynchronizer(
                     dataCacheRepository,
                     entitiesRepositoryWithState,
                     raiderIoClient,
                     blizzardClient,
-                    blizzardDatabaseClient,
+                    wowItemsDatabaseRepository,
                     retryConfig
                 ),
-                WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+                WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
             )
         )
 
-        val seasonService = SeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient, retryConfig)
+        val seasonService =
+            WowSeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient, retryConfig)
         val tasksService =
             TasksService(
                 tasksRepositoryWithState,

@@ -9,8 +9,8 @@ import com.kos.clients.domain.RiotData
 import com.kos.common.WithLogger
 import com.kos.common.error.JsonParseError
 import com.kos.datacache.repository.DataCacheRepository
-import com.kos.entities.CreateEntityRequest
-import com.kos.entities.EntityDataResponse
+import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityDataResponse
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.Operation

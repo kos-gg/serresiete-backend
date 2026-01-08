@@ -3,6 +3,11 @@ package com.kos.entities
 import com.kos.clients.domain.GetAccountResponse
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
+import com.kos.entities.domain.LolEnrichedEntityRequest
+import com.kos.entities.domain.LolEntity
+import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.WowEnrichedEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesState
 
 object EntitiesTestHelper {
@@ -11,7 +16,7 @@ object EntitiesTestHelper {
     val basicWowEnrichedRequest = WowEnrichedEntityRequest("kakarona", "eu", "zuljin", 12345)
     val basicWowRequest2 = WowEntityRequest("layser", "eu", "zuljin")
     val basicLolEntity = LolEntity(1, "GTP ZeroMVPs", "WOW", "1", 1, 1)
-    val basicLolEntity2 = LolEntity(2, "Sanxei", "EUW", "2", 2,  2)
+    val basicLolEntity2 = LolEntity(2, "Sanxei", "EUW", "2", 2, 2)
     val basicLolEntityEnrichedRequest = LolEnrichedEntityRequest(
         basicLolEntity.name,
         basicLolEntity.tag,

@@ -3,7 +3,7 @@ package com.kos.views
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.WowEntity
+import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesRepository

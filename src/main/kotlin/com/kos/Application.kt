@@ -6,7 +6,7 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
-import com.kos.clients.blizzard.BlizzardDatabaseClient
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
@@ -20,18 +20,13 @@ import com.kos.credentials.CredentialsController
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
+import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
-import com.kos.entities.cache.EntityCacheServiceRegistry
-import com.kos.entities.cache.LolEntityCacheService
-import com.kos.entities.cache.WowEntityCacheService
-import com.kos.entities.cache.WowHardcoreEntityCacheService
-import com.kos.entities.entitiesResolvers.LolResolver
-import com.kos.entities.entitiesResolvers.WowHardcoreResolver
-import com.kos.entities.entitiesResolvers.WowResolver
-import com.kos.entities.entitiesUpdaters.LolUpdater
-import com.kos.entities.entitiesUpdaters.WowHardcoreGuildUpdater
+import com.kos.entities.EntityResolverProvider
+import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
@@ -45,14 +40,19 @@ import com.kos.roles.RolesController
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesDatabaseRepository
 import com.kos.roles.repository.RolesDatabaseRepository
-import com.kos.seasons.SeasonService
-import com.kos.seasons.repository.SeasonDatabaseRepository
-import com.kos.staticdata.repository.StaticDataDatabaseRepository
+import com.kos.sources.lol.LolEntityResolver
+import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
+import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
+import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
-import com.kos.views.Game
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -94,7 +94,7 @@ fun Application.module() {
     val riotHTTPClient = RiotHTTPClient(client, riotApiKey)
     val blizzardAuthClient = BlizzardHttpAuthClient(client, blizzardCredentials)
     val blizzardClient = BlizzardHttpClient(client, blizzardAuthClient)
-    val blizzardDatabaseClient = BlizzardDatabaseClient(db)
+    val wowItemsDatabaseRepository = WowItemsDatabaseRepository(db)
 
     val eventStore = EventStoreDatabase(db)
 
@@ -118,25 +118,48 @@ fun Application.module() {
     val entitiesRepository = EntitiesDatabaseRepository(db)
     val wowGuildsDatabaseRepository = WowGuildsDatabaseRepository(db)
 
-    val wowResolver = WowResolver(entitiesRepository, raiderIoHTTPClient)
-    val wowHardcoreResolver = WowHardcoreResolver(entitiesRepository, blizzardClient)
-    val lolResolver = LolResolver(entitiesRepository, riotHTTPClient)
-    val entitiesResolvers = mapOf(
-        Game.LOL to lolResolver,
-        Game.WOW to wowResolver,
-        Game.WOW_HC to wowHardcoreResolver
+    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient)
+    val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+    val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
+    val entityResolverProvider = EntityResolverProvider(
+        listOf(
+            lolResolver,
+            wowResolver,
+            wowHardcoreResolver
+        )
     )
 
-    val lolUpdater = LolUpdater(riotHTTPClient, entitiesRepository)
+    val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
 
-    val seasonRepository = SeasonDatabaseRepository(db)
-    val staticDataRepository = StaticDataDatabaseRepository(db)
-    val seasonService = SeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient, RetryConfig(3, 1200))
+    val seasonRepository = WowSeasonDatabaseRepository(db)
+    val staticDataRepository = WowExpansionDatabaseRepository(db)
+    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient, RetryConfig(3, 1200))
 
     val defaultRetryConfig = RetryConfig(3, 1200)
+
+    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient, defaultRetryConfig)
+    val wowHardcoreEntitySynchronizer = WowHardcoreEntitySynchronizer(
+        dataCacheRepository,
+        entitiesRepository,
+        raiderIoHTTPClient,
+        blizzardClient,
+        wowItemsDatabaseRepository,
+        defaultRetryConfig
+    )
+    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
+
+    val entitySynchronizerProvider =
+        EntitySynchronizerProvider(
+            listOf(
+                lolEntitySynchronizer,
+                wowHardcoreEntitySynchronizer,
+                wowEntitySynchronizer
+            )
+        )
+
     val dataCacheService =
         DataCacheService(
             dataCacheRepository,
@@ -149,7 +172,7 @@ fun Application.module() {
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
-        entitiesResolvers,
+        entityResolverProvider,
         lolUpdater,
         wowHardcoreGuildUpdater
     )
@@ -169,34 +192,14 @@ fun Application.module() {
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
 
-    val lolEntityCacheService = LolEntityCacheService(dataCacheRepository, riotHTTPClient, defaultRetryConfig)
-    val wowHardcoreEntityCacheService = WowHardcoreEntityCacheService(
-        dataCacheRepository,
-        entitiesRepository,
-        raiderIoHTTPClient,
-        blizzardClient,
-        blizzardDatabaseClient,
-        defaultRetryConfig
-    )
-    val wowEntityCacheService = WowEntityCacheService(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
-
-    val entityCacheServiceRegistry =
-        EntityCacheServiceRegistry(
-            listOf(
-                lolEntityCacheService,
-                wowHardcoreEntityCacheService,
-                wowEntityCacheService
-            )
-        )
-
     val tasksService =
         TasksService(
             tasksRepository,
             dataCacheService,
             entitiesService,
             authService,
-            seasonService,
-            entityCacheServiceRegistry
+            wowSeasonService,
+            entitySynchronizerProvider
         )
     val tasksLauncher =
         TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
@@ -214,35 +217,35 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { ViewsSyncProcessor(it, viewsService).sync() }
+    ) { ViewsEventProcessor(it, viewsService).process() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { LolSyncProcessor(it, entitiesService, lolEntityCacheService).sync() }
+    ) { LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowSyncProcessor(it, entitiesService, wowEntityCacheService).sync() }
+    ) { WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowHardcoreSyncProcessor(it, entitiesService, wowHardcoreEntityCacheService).sync() }
+    ) { WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { EntitiesSyncProcessor(it, entitiesService).sync() }
+    ) { EntitiesEventProcessor(it, entitiesService).process() }
 
     launchSubscription(viewsEventSubscription)
     launchSubscription(syncLolEventSubscription)

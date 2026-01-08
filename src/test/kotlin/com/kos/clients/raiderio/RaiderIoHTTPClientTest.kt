@@ -7,8 +7,8 @@ import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderioHttpClientHelper.raiderioProfileResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.WowEntity
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.WowEntity
+import com.kos.entities.domain.WowEntityRequest
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals

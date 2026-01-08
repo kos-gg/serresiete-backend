@@ -6,9 +6,9 @@ import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.RaiderIoCutoff
 import com.kos.clients.domain.RaiderIoResponse
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.entities.WowEntity
-import com.kos.entities.WowEntityRequest
-import io.ktor.client.request.*
+import com.kos.common.HttpError
+import com.kos.entities.domain.WowEntity
+import com.kos.entities.domain.WowEntityRequest
 
 interface RaiderIoClient {
     suspend fun get(wowEntity: WowEntity): Either<ClientError, RaiderIoResponse>

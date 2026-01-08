@@ -4,6 +4,11 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
+import com.kos.common.BadRequest
+import com.kos.common.respondWithHandledError
+import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.plugins.UserWithActivities
 import com.kos.views.Game
 import io.ktor.http.*

@@ -1,6 +1,6 @@
 package com.kos.eventsourcing.events
 
-import com.kos.entities.CreateEntityRequest
+import com.kos.entities.domain.CreateEntityRequest
 import com.kos.views.*
 import kotlinx.serialization.Serializable
 

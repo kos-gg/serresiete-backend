@@ -3,6 +3,8 @@ package com.kos.datacache
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.domain.*
+import com.kos.common.HttpError
+import com.kos.entities.domain.WowEntity
 import com.kos.entities.WowEntity
 
 object RaiderIoMockHelper {

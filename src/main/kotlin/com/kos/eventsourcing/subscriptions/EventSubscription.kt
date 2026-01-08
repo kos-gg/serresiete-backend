@@ -9,6 +9,8 @@ import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
+import com.kos.views.Game
+import com.kos.views.ViewsService
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 

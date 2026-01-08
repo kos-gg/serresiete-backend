@@ -2,11 +2,11 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.entities.EntitiesTestHelper
-import com.kos.entities.cache.WowEntityCacheService
 import com.kos.eventsourcing.events.ViewCreatedEvent
 import com.kos.eventsourcing.events.ViewEditedEvent
 import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
+import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner
@@ -28,7 +28,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ViewCreatedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
-                ViewsTestHelper.owner,
+                owner,
                 listOf(EntitiesTestHelper.basicWowEntity.id),
                 true,
                 Game.WOW,
@@ -37,7 +37,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -70,7 +70,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -104,7 +104,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -138,7 +138,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = WowEntityCacheService(dataCacheRepository, raiderIoClient, retryConfig)
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
             val spied = spyk(service)
 
             assertWowCacheInvocation(
