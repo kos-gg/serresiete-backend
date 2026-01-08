@@ -1,6 +1,6 @@
 package com.kos.common.error
 
-import com.kos.entities.WowEntityRequest
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.ViewToBeEditedEvent
 import com.kos.eventsourcing.events.ViewToBePatchedEvent
@@ -45,6 +45,13 @@ data class ResolverNotFound(
 ) : ServiceError() {
     override fun error(): String =
         "No resolver found for game [$game]"
+}
+
+data class SynchronizerNotFound(
+    val game: Game
+) : ServiceError() {
+    override fun error(): String =
+        "No synchronizer found for game [$game]"
 }
 
 class ViewCreateError(

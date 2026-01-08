@@ -2,9 +2,6 @@ package com.kos.clients.domain
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.entities.Spec
-import arrow.core.raise.ensureNotNull
-import com.kos.common.JsonParseError
 import com.kos.entities.domain.Spec
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName

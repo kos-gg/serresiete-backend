@@ -5,11 +5,8 @@ import arrow.core.raise.either
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.collect
 import com.kos.common.error.ServiceError
-import com.kos.entities.CreateEntityRequest
-import com.kos.entities.ResolvedEntities
-import com.kos.entities.WowEntityRequest
-import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.EntityResolver
+import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesRepository

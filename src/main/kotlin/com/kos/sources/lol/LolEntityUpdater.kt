@@ -6,8 +6,10 @@ import com.kos.clients.ClientError
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.entities.LolEnrichedEntityRequest
-import com.kos.entities.LolEntity
+import com.kos.common.error.ServiceError
+import com.kos.entities.EntityUpdater
+import com.kos.entities.domain.LolEnrichedEntityRequest
+import com.kos.entities.domain.LolEntity
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import kotlinx.coroutines.channels.Channel
@@ -17,7 +19,8 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 
-data class LolEntityUpdater(private val riotClient: RiotClient, private val repository: EntitiesRepository): EntityUpdater<LolEntity>, WithLogger("LolUpdater") {
+data class LolEntityUpdater(private val riotClient: RiotClient, private val repository: EntitiesRepository) :
+    EntityUpdater<LolEntity>, WithLogger("LolUpdater") {
     override suspend fun update(entities: List<LolEntity>): List<ServiceError> =
         coroutineScope {
             val dataChannel = Channel<Pair<LolEnrichedEntityRequest, Long>>()

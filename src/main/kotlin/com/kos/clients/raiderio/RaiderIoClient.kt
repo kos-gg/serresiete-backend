@@ -6,7 +6,6 @@ import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.RaiderIoCutoff
 import com.kos.clients.domain.RaiderIoResponse
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.common.HttpError
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 
@@ -17,10 +16,4 @@ interface RaiderIoClient {
     suspend fun exists(wowEntityRequest: WowEntityRequest): Boolean
     suspend fun cutoff(): Either<ClientError, RaiderIoCutoff>
     suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse>
-
-    suspend fun <T> fetchFromApi(
-        path: String,
-        parameters: HttpRequestBuilder.() -> Unit = {},
-        parseResponse: (String) -> T
-    ): Either<ClientError, T>
 }

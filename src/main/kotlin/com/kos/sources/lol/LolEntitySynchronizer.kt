@@ -2,16 +2,12 @@ package com.kos.sources.lol
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.domain.Data
-import com.kos.clients.domain.GetMatchResponse
-import com.kos.clients.domain.LeagueEntryResponse
-import com.kos.clients.domain.LeagueMatchData
-import com.kos.clients.domain.RiotData
+import com.kos.clients.ClientError
+import com.kos.clients.domain.*
 import com.kos.clients.riot.RiotClient
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
 import com.kos.common.Retry.retryEitherWithFixedDelay
-import com.kos.common.HttpError
-import com.kos.common.Retry
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.common._fold
@@ -186,4 +182,10 @@ class LolEntitySynchronizer(
 
             Pair(lolEntity.id, RiotData.Companion.apply(lolEntity, leagueWithMatches))
         }
+
+    private suspend fun <A> execute(
+        operation: String,
+        block: suspend () -> Either<ClientError, A>
+    ): Either<ServiceError, A> =
+        block().mapLeft { it.toSyncProcessingError(operation) }
 }

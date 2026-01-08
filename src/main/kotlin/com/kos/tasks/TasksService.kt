@@ -1,11 +1,10 @@
 package com.kos.tasks
 
 import com.kos.auth.AuthService
-import com.kos.common.NotFound
 import com.kos.common.WithLogger
-import com.kos.common.WowHardcoreCharacterIsDead
-import com.kos.common.fold
+import com.kos.common.error.SynchronizerNotFound
 import com.kos.common.error.WowHardcoreCharacterIsDead
+import com.kos.common.fold
 import com.kos.datacache.DataCacheService
 import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.entities.EntitiesService
@@ -173,7 +172,7 @@ data class TasksService(
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
 
         val errors = entitySynchronizerProvider.synchronizerFor(game).fold(
-            left = { listOf(NotFound("synchronizer for game: $game")) },
+            left = { listOf(SynchronizerNotFound(game)) },
             right = { it.synchronize(entities) }
         )
 

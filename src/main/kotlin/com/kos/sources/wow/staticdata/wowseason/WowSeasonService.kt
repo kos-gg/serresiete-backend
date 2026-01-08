@@ -7,9 +7,11 @@ import com.kos.clients.toSyncProcessingError
 import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
-import com.kos.seasons.repository.SeasonRepository
-import com.kos.staticdata.WowExpansion
-import com.kos.staticdata.repository.StaticDataRepository
+import com.kos.common.error.ServiceError
+import com.kos.common.error.UnableToAddNewMythicPlusSeason
+import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
+import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -58,7 +60,7 @@ data class WowSeasonService(
                 json.encodeToString(currentSeason)
             )
 
-            seasonRepository.insert(wowSeason)
+            wowSeasonRepository.insert(wowSeason)
                 .mapLeft { UnableToAddNewMythicPlusSeason(it.message) }
                 .bind()
 
@@ -67,7 +69,7 @@ data class WowSeasonService(
 
 
     private suspend fun getCurrentExpansion(): WowExpansion? {
-        return staticDataRepository.getExpansions()
+        return wowExpansionRepository.getExpansions()
             .firstOrNull { it.isCurrentExpansion }
     }
 }

@@ -3,9 +3,6 @@ package com.kos.views
 import arrow.core.Either
 import com.kos.clients.domain.Data
 import com.kos.common.error.InvalidGameType
-import com.kos.entities.CreateEntityRequest
-import com.kos.entities.EntityWithAlias
-import com.kos.common.InvalidGameType
 import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.EntityWithAlias
 import kotlinx.serialization.Serializable
@@ -39,12 +36,12 @@ sealed interface ViewExtraArguments
 data class WowExtraArguments(
     val isGuild: Boolean,
     val season: Int
-): ViewExtraArguments
+) : ViewExtraArguments
 
 @Serializable
 data class WowHardcoreExtraArguments(
     val isGuild: Boolean
-): ViewExtraArguments
+) : ViewExtraArguments
 
 @Serializable
 data class GetViewsResponse(val metadata: ViewMetadata? = null, val records: List<SimpleView>)

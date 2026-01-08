@@ -1,15 +1,16 @@
 package com.kos.sources.wow
 
+import arrow.core.Either
 import arrow.core.raise.either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.Data
 import com.kos.clients.domain.RaiderIoData
 import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.Retry.retryEitherWithFixedDelay
-import com.kos.common.HttpError
-import com.kos.common.Retry
 import com.kos.common.RetryConfig
-import com.kos.common.error.ServiceError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.datacache.DataCache
 import com.kos.datacache.EntitySynchronizer
@@ -93,4 +94,10 @@ class WowEntitySynchronizer(
                     { it }
                 )
         }
+
+    private suspend fun <A> execute(
+        operation: String,
+        block: suspend () -> Either<ClientError, A>
+    ): Either<ServiceError, A> =
+        block().mapLeft { it.toSyncProcessingError(operation) }
 }

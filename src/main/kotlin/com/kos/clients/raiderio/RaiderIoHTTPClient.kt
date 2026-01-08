@@ -127,7 +127,7 @@ data class RaiderIoHTTPClient(val client: HttpClient) : RaiderIoClient, WithLogg
             }
         }
 
-    override suspend fun <T> fetchFromApi(
+    private suspend fun <T> fetchFromApi(
         path: String,
         parameters: HttpRequestBuilder.() -> Unit,
         parseResponse: (String) -> T
