@@ -6,7 +6,6 @@ import com.kos.auth.AuthService
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
@@ -23,8 +22,6 @@ import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
-import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -36,12 +33,15 @@ import com.kos.roles.repository.RolesInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.repository.ViewsInMemoryRepository

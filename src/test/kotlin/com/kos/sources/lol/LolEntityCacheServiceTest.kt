@@ -1,4 +1,4 @@
-package com.kos.entities.cache
+package com.kos.sources.lol
 
 import arrow.core.Either
 import com.kos.clients.domain.QueueType
@@ -11,7 +11,6 @@ import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.ArgumentMatchers.anyString

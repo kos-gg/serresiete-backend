@@ -1,9 +1,8 @@
-package com.kos.entities.cache
+package com.kos.sources.wowhc
 
 import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
@@ -23,7 +22,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.views.Game
 import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper.basicSimpleWowHardcoreView
@@ -36,7 +35,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 
-class WowHardcoreEntityCacheServiceTest {
+class WowHardcoreCacheServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)

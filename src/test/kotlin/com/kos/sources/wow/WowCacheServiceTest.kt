@@ -1,4 +1,4 @@
-package com.kos.entities.cache
+package com.kos.sources.wow
 
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.RetryConfig
@@ -6,14 +6,13 @@ import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.sources.wow.WowEntitySynchronizer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 
-class WowEntityCacheServiceTest {
+class WowCacheServiceTest {
 
     //TODO - this could ne more exhaustive
 

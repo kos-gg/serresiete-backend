@@ -1,4 +1,4 @@
-package com.kos.eventsourcing.subscriptions.sync
+package com.kos.sources.wowhc
 
 import arrow.core.Either
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
@@ -10,7 +10,7 @@ import com.kos.eventsourcing.events.ViewCreatedEvent
 import com.kos.eventsourcing.events.ViewEditedEvent
 import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
-import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
+import com.kos.sources.SyncGameCharactersTestCommon
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner

@@ -1,8 +1,6 @@
 package com.kos.common.error
 
 import com.kos.common._fold
-import com.kos.entities.domain.WowEntityRequest
-import com.kos.views.Game
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.Forbidden

@@ -1,4 +1,4 @@
-package com.kos.seasons
+package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
 import com.kos.clients.HttpError
@@ -9,10 +9,8 @@ import com.kos.common.RetryConfig
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
-import com.kos.sources.wow.staticdata.wowseason.WowSeason
-import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -21,7 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-class SeasonServiceTest {
+class WowSeasonServiceTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val retryConfig = RetryConfig(1, 1000)
 

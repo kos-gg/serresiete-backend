@@ -1,4 +1,4 @@
-package com.kos.eventsourcing.subscriptions.sync
+package com.kos.sources.lol
 
 import arrow.core.Either
 import com.kos.entities.EntitiesTestHelper
@@ -6,7 +6,7 @@ import com.kos.eventsourcing.events.ViewCreatedEvent
 import com.kos.eventsourcing.events.ViewEditedEvent
 import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
-import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.SyncGameCharactersTestCommon
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner
@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 
-class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
+class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `syncLolCharactersProcessor calls cache on VIEW_CREATED for LOL`() = runBlocking {

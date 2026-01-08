@@ -3,11 +3,7 @@ package com.kos.entities
 import com.kos.clients.domain.GetAccountResponse
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
-import com.kos.entities.domain.LolEnrichedEntityRequest
-import com.kos.entities.domain.LolEntity
-import com.kos.entities.domain.LolEntityRequest
-import com.kos.entities.domain.WowEnrichedEntityRequest
-import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesState
 
 object EntitiesTestHelper {
