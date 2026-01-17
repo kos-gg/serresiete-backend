@@ -19,7 +19,10 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 
-data class LolEntityUpdater(private val riotClient: RiotClient, private val repository: EntitiesRepository) :
+data class LolEntityUpdater(
+    private val riotClient: RiotClient,
+    private val repository: EntitiesRepository
+) :
     EntityUpdater<LolEntity>, WithLogger("LolUpdater") {
     override suspend fun update(entities: List<LolEntity>): List<ServiceError> =
         coroutineScope {
