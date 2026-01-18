@@ -8,7 +8,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 
-suspend inline fun <reified A> httpCall(
+suspend inline fun <reified A> fetchFromApi(
     crossinline request: suspend () -> HttpResponse
 ): Either<ClientError, A> =
     either {
