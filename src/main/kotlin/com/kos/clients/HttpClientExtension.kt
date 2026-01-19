@@ -8,6 +8,10 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 
+val json = Json {
+    ignoreUnknownKeys = true
+}
+
 suspend inline fun <reified A> fetchFromApi(
     crossinline request: suspend () -> HttpResponse
 ): Either<ClientError, A> =
@@ -24,7 +28,7 @@ suspend inline fun <reified A> fetchFromApi(
         val rawBody = response.body<String>()
 
         try {
-            Json.decodeFromString<A>(rawBody)
+            json.decodeFromString<A>(rawBody)
         } catch (e: Exception) {
             raise(
                 JsonParseError(

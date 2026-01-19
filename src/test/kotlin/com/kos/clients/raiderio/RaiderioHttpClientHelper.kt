@@ -7,7 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 
-object RaiderioHttpClientHelper {
+object RaiderIoHttpClientHelper {
 
     object ResourceLoader {
         fun readResource(path: String): String =

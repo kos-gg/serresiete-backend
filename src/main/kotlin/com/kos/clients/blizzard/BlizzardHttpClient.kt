@@ -1,21 +1,17 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.clients.NetworkError
 import com.kos.clients.domain.*
+import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.serialization.json.Json
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -24,12 +20,17 @@ import java.time.OffsetDateTime
 
 data class TokenState(val obtainedAt: OffsetDateTime, val tokenResponse: TokenResponse)
 
-class BlizzardHttpClient(private val client: HttpClient, private val blizzardAuthClient: BlizzardAuthClient) :
-    BlizzardClient, WithLogger("blizzardClient") {
+private const val PROFILE_CLASSIC1X_NAMESPACE = "profile-classic1x"
+private const val BATTLENET_NAMESPACE = "Battlenet-Namespace"
+private const val STATIC_CLASSIC_NAMESPACE = "static-classic"
+private const val DYNAMIC_CLASSIC1X_NANESPACE = "dynamic-classic1x"
+private const val PROFILE_CLASSIC1X_EU_NAMESPACE = "profile-classic1x-eu"
+
+class BlizzardHttpClient(
+    private val client: HttpClient,
+    private val blizzardAuthClient: BlizzardAuthClient
+) : BlizzardClient, WithLogger("blizzardClient") {
     private val baseURI: (String) -> URI = { region -> URI("https://$region.api.blizzard.com") }
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
     private var token: Either<ClientError, TokenState>? = null
 
     override suspend fun getCharacterProfile(
@@ -42,14 +43,15 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 logger.debug("getCharacterProfile for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
                 val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")
-                val namespace = "profile-classic1x"
 
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowCharacterResponse>(it)
+                fetchFromApi<GetWowCharacterResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -64,15 +66,17 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 logger.debug("getCharacterMedia for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-classic1x"
                 val partialURI =
                     URI("/profile/wow/character/$realm/${encodedName(character)}/character-media?locale=en_US")
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowMediaResponse>(it)
+
+                fetchFromApi<GetWowMediaResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -87,14 +91,16 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 logger.debug("getCharacterEquipment for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-classic1x"
                 val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}/equipment?locale=en_US")
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowEquipmentResponse>(it)
+
+                fetchFromApi<GetWowEquipmentResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -109,15 +115,17 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 logger.debug("getCharacterSpecialitzation for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-classic1x"
                 val partialURI =
                     URI("/profile/wow/character/$realm/${encodedName(character)}/specializations?namespace=profile-classic1x-eu&locale=en_US")
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowSpecializationsResponse>(it)
+
+                fetchFromApi<GetWowSpecializationsResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -132,14 +140,16 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 logger.debug("getCharacterStats for $region $realm $character")
                 val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-classic1x"
                 val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}/statistics?locale=en_US")
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowCharacterStatsResponse>(it)
+
+                fetchFromApi<GetWowCharacterStatsResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -153,14 +163,16 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 logger.debug("getItemMedia for $id")
                 val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "static-classic"
                 val partialURI = URI("/data/wow/media/item/$id?locale=en_US")
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowMediaResponse>(it)
+
+                fetchFromApi<GetWowMediaResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, STATIC_CLASSIC_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -172,13 +184,15 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
                 logger.debug("getItem for $id")
                 val tokenResponse = getAndUpdateToken().bind()
                 val partialURI = URI("/data/wow/item/$id?locale=en_US")
-                val namespace = "static-classic"
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowItemResponse>(it)
+
+                fetchFromApi<GetWowItemResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, STATIC_CLASSIC_NAMESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -192,13 +206,15 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 val tokenResponse = getAndUpdateToken().bind()
                 val partialURI = URI("/data/wow/realm/$id?locale=en_US")
-                val namespace = "dynamic-classic1x"
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowRealmResponse>(it)
+
+                fetchFromApi<GetWowRealmResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, DYNAMIC_CLASSIC1X_NANESPACE)
+                        }
+                    }
                 }.bind()
             }
         }
@@ -213,55 +229,16 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
             either {
                 val tokenResponse = getAndUpdateToken().bind()
                 val partialURI = URI("/data/wow/guild/$realm/$guild/roster?namespace=profile-classic1x-eu&locale=en_US")
-                val namespace = "profile-classic1x-eu"
-                fetchFromApi(
-                    (baseURI(region).toString() + partialURI.toString()).lowercase(),
-                    namespace,
-                    tokenResponse.tokenResponse
-                ) {
-                    json.decodeFromString<GetWowRosterResponse>(it)
-                }.bind()
-            }
-        }
-    }
 
-    override suspend fun <T> fetchFromApi(
-        path: String,
-        namespace: String,
-        tokenResponse: TokenResponse,
-        parseResponse: (String) -> T
-    ): Either<ClientError, T> {
-
-        return Either.catch {
-            client.get(path) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer ${tokenResponse.accessToken}")
-                    append(HttpHeaders.Accept, "*/*")
-                    append("Battlenet-Namespace", namespace)
-                }
-            }
-        }.mapLeft {
-            NetworkError(it.message ?: "Unknown network error")
-        }.flatMap { response ->
-            if (response.status.isSuccess()) {
-                val jsonString = response.body<String>()
-
-                Either
-                    .catch { parseResponse(jsonString) }
-                    .mapLeft { e ->
-                        com.kos.clients.JsonParseError(
-                            raw = jsonString,
-                            error = e.stackTraceToString()
-                        )
+                fetchFromApi<GetWowRosterResponse> {
+                    client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                            append(HttpHeaders.Accept, "*/*")
+                            append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_EU_NAMESPACE)
+                        }
                     }
-
-            } else {
-                Either.Left(
-                    com.kos.clients.HttpError(
-                        status = response.status.value,
-                        body = response.bodyAsText()
-                    )
-                )
+                }.bind()
             }
         }
     }
@@ -317,5 +294,4 @@ class BlizzardHttpClient(private val client: HttpClient, private val blizzardAut
     }
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
-
 }

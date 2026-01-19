@@ -105,6 +105,18 @@ object BlizzardMockHelper {
         lastLogin = 1703019625000
     )
 
+    val getWowGuildRosterResponse =
+        GetWowRosterResponse(
+            listOf(WowMemberResponse(WowCharacterResponse("kumiko", 60))),
+            WowGuildResponse(1)
+        )
+
+    val getWowCharacterMediaResponse =
+        GetWowMediaResponse(listOf(AssetKeyValue("avatar", "1")))
+
+    val getWowItemMediaResponse =
+        GetWowMediaResponse(listOf(AssetKeyValue("icon", "1.jpg")))
+
     val getWowCharacterResponseString = """
             {
                 "_links": {

@@ -39,11 +39,5 @@ interface BlizzardClient {
     suspend fun getItem(region: String, id: Long): Either<ClientError, GetWowItemResponse>
     suspend fun getRealm(region: String, id: Long): Either<ClientError, GetWowRealmResponse>
     suspend fun getGuildRoster(region: String, realm: String, guild: String): Either<ClientError, GetWowRosterResponse>
-    suspend fun <T> fetchFromApi(
-        path: String,
-        namespace: String,
-        tokenResponse: TokenResponse,
-        parseResponse: (String) -> T
-    ): Either<ClientError, T>
 
 }
