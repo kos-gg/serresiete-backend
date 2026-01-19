@@ -37,7 +37,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient)
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -70,7 +70,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient)
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -104,7 +104,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient)
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -138,7 +138,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient)
             val spied = spyk(service)
 
             assertWowCacheInvocation(

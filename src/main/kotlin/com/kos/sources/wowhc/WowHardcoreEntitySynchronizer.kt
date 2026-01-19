@@ -8,11 +8,13 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
-import com.kos.common.*
-import com.kos.common.Retry.retryEitherWithFixedDelay
+import com.kos.common.WithLogger
+import com.kos.common._fold
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 import com.kos.common.error.WowHardcoreCharacterIsDead
+import com.kos.common.fold
+import com.kos.common.split
 import com.kos.datacache.DataCache
 import com.kos.datacache.EntitySynchronizer
 import com.kos.datacache.repository.DataCacheRepository
@@ -36,7 +38,6 @@ class WowHardcoreEntitySynchronizer(
     private val raiderIoClient: RaiderIoClient,
     private val blizzardClient: BlizzardClient,
     private val wowItemsDatabaseRepository: WowItemsDatabaseRepository,
-    private val retryConfig: RetryConfig,
 ) : EntitySynchronizer, WithLogger("WowHardcoreEntitySynchronizer") {
 
     override val game: Game = Game.WOW_HC
@@ -101,13 +102,11 @@ class WowHardcoreEntitySynchronizer(
         newestDataCacheEntry: HardcoreData?
     ): Either<ServiceError, Pair<Long, HardcoreData>> {
         return either {
-            retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
-                blizzardClient.getCharacterProfile(
-                    wowEntity.region,
-                    wowEntity.realm,
-                    wowEntity.name
-                )
-            }.fold(
+            blizzardClient.getCharacterProfile(
+                wowEntity.region,
+                wowEntity.realm,
+                wowEntity.name
+            ).fold(
                 ifLeft = { error ->
                     when {
                         error is HttpError && error.status == 404 ->
@@ -123,49 +122,40 @@ class WowHardcoreEntitySynchronizer(
                     } else {
 
                         val mediaResponse = execute("getCharacterMedia") {
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterMedia") {
-                                blizzardClient.getCharacterMedia(
-                                    wowEntity.region,
-                                    wowEntity.realm,
-                                    wowEntity.name
-                                )
-                            }
+                            blizzardClient.getCharacterMedia(
+                                wowEntity.region,
+                                wowEntity.realm,
+                                wowEntity.name
+                            )
                         }.bind()
 
                         val equipmentResponse = execute("getCharacterEquipment") {
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacterEquipment") {
-                                blizzardClient.getCharacterEquipment(
-                                    wowEntity.region,
-                                    wowEntity.realm,
-                                    wowEntity.name
-                                )
-                            }
+                            blizzardClient.getCharacterEquipment(
+                                wowEntity.region,
+                                wowEntity.realm,
+                                wowEntity.name
+                            )
                         }.bind()
 
                         val stats = execute("getCharacterStats") {
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetStats") {
-                                blizzardClient.getCharacterStats(
-                                    wowEntity.region,
-                                    wowEntity.realm,
-                                    wowEntity.name
-                                )
-                            }
+                            blizzardClient.getCharacterStats(
+                                wowEntity.region,
+                                wowEntity.realm,
+                                wowEntity.name
+                            )
                         }.bind()
 
                         val specializations = execute("getCharacterSpecializations") {
-                            retryEitherWithFixedDelay(retryConfig, "blizzardGetSpecializations") {
-                                blizzardClient.getCharacterSpecializations(
-                                    wowEntity.region,
-                                    wowEntity.realm,
-                                    wowEntity.name
-                                )
-                            }
+                            blizzardClient.getCharacterSpecializations(
+                                wowEntity.region,
+                                wowEntity.realm,
+                                wowEntity.name
+                            )
+
                         }.bind()
 
                         val wowHeadEmbeddedResponse = execute("wowheadEmbeddedCalculator") {
-                            retryEitherWithFixedDelay(retryConfig, "raiderioWowheadEmbedded") {
-                                raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
-                            }
+                            raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
                         }.getOrNull()
 
                         val existentItemsAndItemsToRequest =

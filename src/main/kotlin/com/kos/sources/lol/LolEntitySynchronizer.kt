@@ -7,8 +7,6 @@ import com.kos.clients.domain.*
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
-import com.kos.common.Retry.retryEitherWithFixedDelay
-import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.common._fold
 import com.kos.common.error.ServiceError
@@ -36,7 +34,6 @@ import java.time.OffsetDateTime
 class LolEntitySynchronizer(
     private val dataCacheRepository: DataCacheRepository,
     private val riotClient: RiotClient,
-    private val retryConfig: RetryConfig,
 ) : EntitySynchronizer, WithLogger("LolEntitySynchronizer") {
 
     override val game: Game = Game.LOL
@@ -133,9 +130,7 @@ class LolEntitySynchronizer(
 
             val leagues: List<LeagueEntryResponse> =
                 execute("getLeagueEntriesByPUUID") {
-                    retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesByPUUID") {
-                        riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
-                    }
+                    riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
                 }.bind()
 
             val leagueWithMatches: List<LeagueMatchData> =
@@ -144,9 +139,7 @@ class LolEntitySynchronizer(
                         async {
                             val lastMatchesForLeague: List<String> =
                                 execute("getMatchesByPuuid") {
-                                    retryEitherWithFixedDelay(retryConfig, "getMatchesByPuuid") {
-                                        riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
-                                    }
+                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
                                 }.bind()
 
                             val matchesToRequest = newestDataCacheEntry._fold(
@@ -163,9 +156,7 @@ class LolEntitySynchronizer(
                             val matchResponses: List<GetMatchResponse> = matchesToRequest.map { matchId ->
                                 matchCache.get(matchId) {
                                     execute("getMatchById") {
-                                        retryEitherWithFixedDelay(retryConfig, "getMatchById") {
-                                            riotClient.getMatchById(matchId)
-                                        }
+                                        riotClient.getMatchById(matchId)
                                     }
                                 }.bind()
                             }

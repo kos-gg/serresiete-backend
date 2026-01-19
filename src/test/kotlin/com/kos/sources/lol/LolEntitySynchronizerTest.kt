@@ -38,7 +38,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
             Game.LOL
         )
 
-        val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+        val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
         val spied = spyk(service)
 
         assertLolCacheInvocation(
@@ -70,7 +70,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -102,7 +102,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
             ), Game.LOL
         )
 
-        val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+        val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
         val spied = spyk(service)
 
         assertLolCacheInvocation(
@@ -133,7 +133,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -165,7 +165,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
             ), Game.LOL
         )
 
-        val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+        val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
         val spied = spyk(service)
 
 
@@ -197,7 +197,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
             val spied = spyk(service)
 
             assertLolCacheInvocation(
@@ -230,7 +230,7 @@ class LolEntitySynchronizerTest : SyncGameCharactersTestCommon() {
                 ), Game.LOL
             )
 
-            val service = LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig)
+            val service = LolEntitySynchronizer(dataCacheRepository, riotClient)
             val spied = spyk(service)
 
 

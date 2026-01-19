@@ -6,6 +6,8 @@ import com.kos.clients.ClientError
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
+import com.kos.clients.Retry.retryEitherWithFixedDelay
+import com.kos.clients.RetryConfig
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
@@ -20,7 +22,9 @@ import java.time.Duration
 
 
 data class RiotHTTPClient(
-    val client: HttpClient, val apiKey: String
+    val client: HttpClient,
+    val retryConfig: RetryConfig,
+    val apiKey: String
 ) : RiotClient, WithLogger("riotClient") {
 
     object RiotHTTPClientConstants {
@@ -35,14 +39,20 @@ data class RiotHTTPClient(
                 val encodedRiotName = URLEncoder.encode(riotName, StandardCharsets.UTF_8.toString())
                 val partialURI = URI("/riot/account/v1/accounts/by-riot-id/$encodedRiotName/$riotTag")
 
-                fetchFromApi<GetPUUIDResponse> {
-                    client.get(baseURI("europe").toString() + partialURI.toString()) {
-                        headers {
-                            append(HttpHeaders.Accept, "*/*")
-                            append(X_RIOT_TOKEN, apiKey)
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getPUUIDByRiotId",
+                ) {
+                    fetchFromApi<GetPUUIDResponse> {
+                        client.get(baseURI("europe").toString() + partialURI.toString()) {
+                            headers {
+                                append(HttpHeaders.Accept, "*/*")
+                                append(X_RIOT_TOKEN, apiKey)
+                            }
                         }
                     }
                 }.bind()
+
             }
         }
     }
@@ -52,11 +62,16 @@ data class RiotHTTPClient(
             either {
                 val partialURI = URI("/lol/summoner/v4/summoners/by-puuid/$puuid")
 
-                fetchFromApi<GetSummonerResponse> {
-                    client.get(baseURI("euw1").toString() + partialURI.toString()) {
-                        headers {
-                            append(HttpHeaders.Accept, "*/*")
-                            append(X_RIOT_TOKEN, apiKey)
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getSummonerByPuuid",
+                ) {
+                    fetchFromApi<GetSummonerResponse> {
+                        client.get(baseURI("euw1").toString() + partialURI.toString()) {
+                            headers {
+                                append(HttpHeaders.Accept, "*/*")
+                                append(X_RIOT_TOKEN, apiKey)
+                            }
                         }
                     }
                 }.bind()
@@ -71,15 +86,20 @@ data class RiotHTTPClient(
                 logger.debug("Getting matches for $puuid and queue $queue")
                 val partialURI = URI("/lol/match/v5/matches/by-puuid/$puuid/ids")
 
-                fetchFromApi<List<String>> {
-                    client.get(baseURI("europe").toString() + partialURI.toString()) {
-                        headers {
-                            append(HttpHeaders.Accept, "*/*")
-                            append(X_RIOT_TOKEN, apiKey)
-                        }
-                        url {
-                            parameters.append("queue", queue.toString())
-                            parameters.append("count", "10")
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getMatchesByPuuid",
+                ) {
+                    fetchFromApi<List<String>> {
+                        client.get(baseURI("europe").toString() + partialURI.toString()) {
+                            headers {
+                                append(HttpHeaders.Accept, "*/*")
+                                append(X_RIOT_TOKEN, apiKey)
+                            }
+                            url {
+                                parameters.append("queue", queue.toString())
+                                parameters.append("count", "10")
+                            }
                         }
                     }
                 }.bind()
@@ -93,11 +113,16 @@ data class RiotHTTPClient(
                 logger.debug("Getting match $matchId")
                 val partialURI = URI("/lol/match/v5/matches/$matchId")
 
-                fetchFromApi<GetMatchResponse> {
-                    client.get(baseURI("europe").toString() + partialURI.toString()) {
-                        headers {
-                            append(HttpHeaders.Accept, "*/*")
-                            append(X_RIOT_TOKEN, apiKey)
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getMatchById",
+                ) {
+                    fetchFromApi<GetMatchResponse> {
+                        client.get(baseURI("europe").toString() + partialURI.toString()) {
+                            headers {
+                                append(HttpHeaders.Accept, "*/*")
+                                append(X_RIOT_TOKEN, apiKey)
+                            }
                         }
                     }
                 }.bind()
@@ -111,11 +136,16 @@ data class RiotHTTPClient(
                 logger.debug("Getting league entries for $summonerId")
                 val partialURI = URI("/lol/league/v4/entries/by-puuid/$summonerId")
 
-                fetchFromApi<List<LeagueEntryResponse>> {
-                    client.get(baseURI("europe").toString() + partialURI.toString()) {
-                        headers {
-                            append(HttpHeaders.Accept, "*/*")
-                            append(X_RIOT_TOKEN, apiKey)
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getLeagueEntriesByPUUID",
+                ) {
+                    fetchFromApi<List<LeagueEntryResponse>> {
+                        client.get(baseURI("europe").toString() + partialURI.toString()) {
+                            headers {
+                                append(HttpHeaders.Accept, "*/*")
+                                append(X_RIOT_TOKEN, apiKey)
+                            }
                         }
                     }
                 }.bind()
@@ -130,11 +160,16 @@ data class RiotHTTPClient(
                 logger.debug("Getting account for $puuid")
                 val partialURI = URI("/riot/account/v1/accounts/by-puuid/$puuid")
 
-                fetchFromApi<GetAccountResponse> {
-                    client.get(baseURI("europe").toString() + partialURI.toString()) {
-                        headers {
-                            append(HttpHeaders.Accept, "*/*")
-                            append(X_RIOT_TOKEN, apiKey)
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getAccountByPUUID",
+                ) {
+                    fetchFromApi<GetAccountResponse> {
+                        client.get(baseURI("europe").toString() + partialURI.toString()) {
+                            headers {
+                                append(HttpHeaders.Accept, "*/*")
+                                append(X_RIOT_TOKEN, apiKey)
+                            }
                         }
                     }
                 }.bind()

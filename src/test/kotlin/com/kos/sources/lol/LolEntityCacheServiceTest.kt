@@ -1,9 +1,9 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
+import com.kos.clients.RetryConfig
 import com.kos.clients.domain.QueueType
 import com.kos.clients.riot.RiotClient
-import com.kos.common.RetryConfig
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.RiotMockHelper
@@ -24,7 +24,6 @@ import kotlin.test.assertTrue
 
 class LolEntityCacheServiceTest {
     private val riotClient = mock(RiotClient::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     @Test
     fun `i can cache lol data`() {
@@ -38,7 +37,7 @@ class LolEntityCacheServiceTest {
             )
             `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))
             val repo = DataCacheInMemoryRepository()
-            LolEntitySynchronizer(repo, riotClient, retryConfig)
+            LolEntitySynchronizer(repo, riotClient)
                 .synchronize(listOf(basicLolEntity))
             assertEquals(1, repo.state().size)
         }
@@ -59,7 +58,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById(anyString())).thenReturn(Either.Right(RiotMockHelper.match))
 
             val repo = DataCacheInMemoryRepository().withState(listOf(dataCache))
-            val errors = LolEntitySynchronizer(repo, riotClient, retryConfig)
+            val errors = LolEntitySynchronizer(repo, riotClient)
                 .synchronize(listOf(basicLolEntity))
 
             verify(riotClient, times(0)).getMatchById("match1")
@@ -82,7 +81,7 @@ class LolEntityCacheServiceTest {
                 .thenReturn(jsonParseError)
 
             val repo = DataCacheInMemoryRepository()
-            val errors = LolEntitySynchronizer(repo, riotClient, retryConfig)
+            val errors = LolEntitySynchronizer(repo, riotClient)
                 .synchronize(listOf(basicLolEntity))
 
             errors.forEach { error ->
@@ -142,7 +141,7 @@ class LolEntityCacheServiceTest {
             )
 
             val repo = DataCacheInMemoryRepository().withState(listOf(dataCache))
-            val errors = LolEntitySynchronizer(repo, riotClient, retryConfig)
+            val errors = LolEntitySynchronizer(repo, riotClient)
                 .synchronize(listOf(basicLolEntity))
 
             verify(riotClient, times(0)).getMatchById("match3")
@@ -228,7 +227,7 @@ class LolEntityCacheServiceTest {
             )
 
             val repo = DataCacheInMemoryRepository()
-            val errors = LolEntitySynchronizer(repo, riotClient, retryConfig)
+            val errors = LolEntitySynchronizer(repo, riotClient)
                 .synchronize(listOf(basicLolEntity, basicLolEntity.copy(id = 2)))
 
             verify(riotClient, times(1)).getMatchById("match3")

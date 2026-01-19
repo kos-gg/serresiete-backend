@@ -2,7 +2,7 @@ package com.kos.eventsourcing
 
 import arrow.core.Either
 import com.kos.assertTrue
-import com.kos.common.RetryConfig
+import com.kos.clients.RetryConfig
 import com.kos.common.error.ViewCreateError
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion

@@ -1,7 +1,7 @@
 package com.kos.sources.wow
 
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.RetryConfig
+import com.kos.clients.RetryConfig
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
@@ -17,7 +17,6 @@ class WowCacheServiceTest {
     //TODO - this could ne more exhaustive
 
     private val raiderIoClient = mock(RaiderIoClient::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     @Test
     fun `i can cache wow data`() {
@@ -31,7 +30,7 @@ class WowCacheServiceTest {
             val repo = DataCacheInMemoryRepository().withState(listOf(wowDataCache))
             assertEquals(listOf(wowDataCache), repo.state())
 
-            WowEntitySynchronizer(repo, raiderIoClient, retryConfig)
+            WowEntitySynchronizer(repo, raiderIoClient)
                 .synchronize(listOf(basicWowEntity, basicWowEntity.copy(id = 2)))
             assertEquals(3, repo.state().size)
         }

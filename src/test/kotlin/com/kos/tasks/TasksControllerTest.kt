@@ -9,7 +9,6 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
-import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.CredentialsTestHelper
 import com.kos.credentials.CredentialsTestHelper.emptyCredentialsState
@@ -56,7 +55,6 @@ class TasksControllerTest {
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val dataCacheRepository = DataCacheInMemoryRepository()
@@ -167,21 +165,21 @@ class TasksControllerTest {
             AuthService(authRepositoryWithState, credentialsService, rolesService, JWTConfig("issuer", "secret"))
         val entityCacheServiceRegistry = EntitySynchronizerProvider(
             listOf(
-                LolEntitySynchronizer(dataCacheRepository, riotClient, retryConfig),
+                LolEntitySynchronizer(dataCacheRepository, riotClient),
                 WowHardcoreEntitySynchronizer(
                     dataCacheRepository,
                     entitiesRepositoryWithState,
                     raiderIoClient,
                     blizzardClient,
                     wowItemsDatabaseRepository,
-                    retryConfig
-                ),
-                WowEntitySynchronizer(dataCacheRepository, raiderIoClient, retryConfig)
+
+                    ),
+                WowEntitySynchronizer(dataCacheRepository, raiderIoClient)
             )
         )
 
         val seasonService =
-            WowSeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient, retryConfig)
+            WowSeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient)
         val tasksService =
             TasksService(
                 tasksRepositoryWithState,

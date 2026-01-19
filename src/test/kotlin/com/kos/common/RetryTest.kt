@@ -1,6 +1,8 @@
 package com.kos.common
 
 import arrow.core.Either
+import com.kos.clients.Retry
+import com.kos.clients.RetryConfig
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -49,14 +51,14 @@ class RetryTest {
         runBlocking {
             val attempts = mutableListOf<Either<String, String>>()
 
-            val block: suspend () -> Either<String, String> = {
+            val request: suspend () -> Either<String, String> = {
                 val result = Either.Left("Failure")
                 attempts.add(result)
                 result
             }
 
             val result =
-                Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, block = block)
+                Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, request = request)
 
             assertEquals(Either.Left("Failure"), result)
             assertEquals(4, attempts.size)
@@ -68,13 +70,13 @@ class RetryTest {
         runBlocking {
             val attempts = mutableListOf<Either<String, String>>()
 
-            val block: suspend () -> Either<String, String> = {
+            val request: suspend () -> Either<String, String> = {
                 val result = if (attempts.size == 1) Either.Right("Success") else Either.Left("Failure")
                 attempts.add(result)
                 result
             }
 
-            val result = Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, block = block)
+            val result = Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, request = request)
 
             assertEquals(Either.Right("Success"), result)
             assertEquals(2, attempts.size)

@@ -1,7 +1,7 @@
-package com.kos.common
+package com.kos.clients
 
 import arrow.core.Either
-import com.kos.clients.HttpError
+import com.kos.common.WithLogger
 import kotlinx.coroutines.delay
 
 data class RetryConfig(val maxAttempts: Int, val delayTime: Long)

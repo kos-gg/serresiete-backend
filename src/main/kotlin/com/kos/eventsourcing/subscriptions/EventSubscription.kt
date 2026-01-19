@@ -2,8 +2,8 @@ package com.kos.eventsourcing.subscriptions
 
 import arrow.core.Either
 import com.kos.common.OffsetDateTimeSerializer
-import com.kos.common.Retry.retryEitherWithExponentialBackoff
-import com.kos.common.RetryConfig
+import com.kos.clients.Retry.retryEitherWithExponentialBackoff
+import com.kos.clients.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.EventWithVersion

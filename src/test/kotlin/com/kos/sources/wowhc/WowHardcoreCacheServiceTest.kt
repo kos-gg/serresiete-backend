@@ -7,7 +7,6 @@ import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.RetryConfig
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
 import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
@@ -39,7 +38,6 @@ class WowHardcoreCacheServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -65,8 +63,8 @@ class WowHardcoreCacheServiceTest {
                 raiderIoClient,
                 blizzardClient,
                 wowItemsDatabaseRepository,
-                retryConfig
-            )
+
+                )
 
             wowHardcoreEntityCacheService.synchronize(
                 listOf(
@@ -127,8 +125,8 @@ class WowHardcoreCacheServiceTest {
                 raiderIoClient,
                 blizzardClient,
                 wowItemsDatabaseRepository,
-                retryConfig
-            ).synchronize(
+
+                ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -162,8 +160,8 @@ class WowHardcoreCacheServiceTest {
                 raiderIoClient,
                 blizzardClient,
                 wowItemsDatabaseRepository,
-                retryConfig
-            ).synchronize(
+
+                ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -200,8 +198,8 @@ class WowHardcoreCacheServiceTest {
                 raiderIoClient,
                 blizzardClient,
                 wowItemsDatabaseRepository,
-                retryConfig
-            ).synchronize(
+
+                ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )
@@ -279,8 +277,8 @@ class WowHardcoreCacheServiceTest {
                 raiderIoClient,
                 blizzardClient,
                 wowItemsDatabaseRepository,
-                retryConfig
-            ).synchronize(
+
+                ).synchronize(
                 listOf(
                     basicWowHardcoreEntity
                 )

@@ -1,13 +1,14 @@
 package com.kos.clients.riot
 
 import com.kos.assertTrue
+import com.kos.clients.RetryConfig
 import com.kos.clients.domain.QueueType
 import com.kos.clients.riot.RiotHTTPClientHelper.client
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 
 class RiotHTTPClientTest {
-    private val riotHTTPClient = RiotHTTPClient(client, "fake-key")
+    private val riotHTTPClient = RiotHTTPClient(client,  RetryConfig(0, 0), "fake-key")
 
     @Test
     fun `get puuid by riot id works as expected`() {

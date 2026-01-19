@@ -6,6 +6,7 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
+import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
@@ -13,7 +14,6 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient
 import com.kos.clients.riot.RiotHTTPClient
 import com.kos.common.DatabaseFactory
 import com.kos.common.JWTConfig
-import com.kos.common.RetryConfig
 import com.kos.common.launchSubscription
 import com.kos.credentials.CredentialsController
 import com.kos.credentials.CredentialsService
@@ -90,10 +90,11 @@ fun Application.module() {
     val db = DatabaseFactory.pooledDatabase()
 
     val client = HttpClient(CIO)
-    val raiderIoHTTPClient = RaiderIoHTTPClient(client)
-    val riotHTTPClient = RiotHTTPClient(client, riotApiKey)
+    val defaultRetryConfig = RetryConfig(3, 1200)
+    val raiderIoHTTPClient = RaiderIoHTTPClient(client, defaultRetryConfig)
+    val riotHTTPClient = RiotHTTPClient(client, defaultRetryConfig, riotApiKey)
     val blizzardAuthClient = BlizzardHttpAuthClient(client, blizzardCredentials)
-    val blizzardClient = BlizzardHttpClient(client, blizzardAuthClient)
+    val blizzardClient = BlizzardHttpClient(client, defaultRetryConfig, blizzardAuthClient)
     val wowItemsDatabaseRepository = WowItemsDatabaseRepository(db)
 
     val eventStore = EventStoreDatabase(db)
@@ -136,20 +137,17 @@ fun Application.module() {
 
     val seasonRepository = WowSeasonDatabaseRepository(db)
     val staticDataRepository = WowExpansionDatabaseRepository(db)
-    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient, RetryConfig(3, 1200))
+    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
 
-    val defaultRetryConfig = RetryConfig(3, 1200)
-
-    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient, defaultRetryConfig)
+    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient)
     val wowHardcoreEntitySynchronizer = WowHardcoreEntitySynchronizer(
         dataCacheRepository,
         entitiesRepository,
         raiderIoHTTPClient,
         blizzardClient,
         wowItemsDatabaseRepository,
-        defaultRetryConfig
     )
-    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, defaultRetryConfig)
+    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient)
 
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
