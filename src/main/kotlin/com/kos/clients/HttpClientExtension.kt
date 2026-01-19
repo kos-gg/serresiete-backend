@@ -12,6 +12,7 @@ val json = Json {
     ignoreUnknownKeys = true
 }
 
+//tested all scenarios in BlizzardHttpAuthClientTest
 suspend inline fun <reified A> fetchFromApi(
     crossinline request: suspend () -> HttpResponse
 ): Either<ClientError, A> =
@@ -29,6 +30,34 @@ suspend inline fun <reified A> fetchFromApi(
 
         try {
             json.decodeFromString<A>(rawBody)
+        } catch (e: Exception) {
+            raise(
+                JsonParseError(
+                    raw = rawBody,
+                    error = e.stackTraceToString()
+                )
+            )
+        }
+    }
+
+suspend inline fun <reified A> fetchFromApi(
+    crossinline request: suspend () -> HttpResponse,
+    parseResponse: (String) -> A
+): Either<ClientError, A> =
+    either {
+        val response = request()
+
+        ensure(response.status.isSuccess()) {
+            HttpError(
+                status = response.status.value,
+                body = response.bodyAsText()
+            )
+        }
+
+        val rawBody = response.body<String>()
+
+        try {
+            parseResponse(rawBody)
         } catch (e: Exception) {
             raise(
                 JsonParseError(
