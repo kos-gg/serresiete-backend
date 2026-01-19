@@ -1,6 +1,7 @@
 package com.kos.common
 
 import arrow.core.Either
+import com.kos.clients.HttpError
 import kotlinx.coroutines.delay
 
 data class RetryConfig(val maxAttempts: Int, val delayTime: Long)
@@ -9,39 +10,57 @@ object Retry : WithLogger("retry") {
     suspend fun <L, R> retryEitherWithFixedDelay(
         retryConfig: RetryConfig,
         functionName: String,
-        block: suspend () -> Either<L, R>
+        request: suspend () -> Either<L, R>
     ): Either<L, R> {
-        return _retryEitherWithFixedDelay(retryConfig.maxAttempts, retryConfig.delayTime, functionName, block)
+        return retry(
+            retryConfig.maxAttempts,
+            retryConfig.delayTime,
+            functionName,
+            request
+        )
+    }
+
+    private suspend fun <L, R> retry(
+        retries: Int,
+        delayTime: Long,
+        functionName: String,
+        request: suspend () -> Either<L, R>
+    ): Either<L, R> {
+        return when (val result = request()) {
+            is Either.Right -> result
+
+            is Either.Left -> {
+                if (!shouldRetry(result.value)) {
+                    logger.info("Retry aborted for $functionName due to non-retryable error")
+                    return result
+                }
+
+                if (retries > 0) {
+                    logger.info("Retries left $retries for $functionName")
+                    logger.debug("Last error: ${result.value}")
+                    delay(delayTime)
+                    retry(retries - 1, delayTime, functionName, request)
+                } else {
+                    logger.debug("Failed retrying for $functionName with ${result.value}")
+                    result
+                }
+            }
+        }
     }
 
     suspend fun <L, R> retryEitherWithExponentialBackoff(
         retryConfig: RetryConfig,
         factor: Double = 2.0,
         maxDelayMillis: Long = Long.MAX_VALUE,
-        block: suspend () -> Either<L, R>
+        request: suspend () -> Either<L, R>
     ): Either<L, R> {
-        return _retryEitherWithExponentialBackoff(retryConfig.maxAttempts, retryConfig.delayTime, factor, maxDelayMillis, block)
-    }
-
-    private suspend fun <L, R> _retryEitherWithFixedDelay(
-        retries: Int,
-        delayTime: Long = 1200L,
-        functionName: String,
-        block: suspend () -> Either<L, R>
-    ): Either<L, R> {
-        return when (val res = block()) {
-            is Either.Right -> res
-            is Either.Left ->
-                if (retries > 0) {
-                    logger.info("Retries left $retries for $functionName")
-                    logger.debug("Last error: ${res.value}")
-                    delay(delayTime)
-                    _retryEitherWithFixedDelay(retries - 1, delayTime, functionName, block)
-                } else {
-                    logger.debug("Failed retrying with $res")
-                    res
-                }
-        }
+        return _retryEitherWithExponentialBackoff(
+            retryConfig.maxAttempts,
+            retryConfig.delayTime,
+            factor,
+            maxDelayMillis,
+            request
+        )
     }
 
     private suspend fun <L, R> _retryEitherWithExponentialBackoff(
@@ -49,9 +68,9 @@ object Retry : WithLogger("retry") {
         initialDelayMillis: Long = 100,
         factor: Double = 2.0,
         maxDelayMillis: Long = Long.MAX_VALUE,
-        block: suspend () -> Either<L, R>
+        request: suspend () -> Either<L, R>
     ): Either<L, R> {
-        return when (val res = block()) {
+        return when (val res = request()) {
             is Either.Right -> res
             is Either.Left -> {
                 if (maxAttempts > 0) {
@@ -64,10 +83,17 @@ object Retry : WithLogger("retry") {
                         nextDelay,
                         factor,
                         maxDelayMillis,
-                        block
+                        request
                     )
                 } else res
             }
+        }
+    }
+
+    private fun <L> shouldRetry(error: L): Boolean {
+        return when (error) {
+            is HttpError -> error.status >= 500
+            else -> false
         }
     }
 }

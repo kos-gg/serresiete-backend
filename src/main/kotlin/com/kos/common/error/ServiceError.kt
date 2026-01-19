@@ -1,6 +1,5 @@
 package com.kos.common.error
 
-import com.kos.clients.ClientError
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.ViewToBeEditedEvent
