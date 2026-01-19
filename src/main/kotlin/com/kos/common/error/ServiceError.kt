@@ -1,5 +1,6 @@
 package com.kos.common.error
 
+import com.kos.clients.ClientError
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.ViewToBeEditedEvent
@@ -8,6 +9,13 @@ import com.kos.views.Game
 
 sealed class ServiceError {
     abstract fun error(): String
+}
+
+data class SerializationError(
+    val raw: String,
+    val error: String
+) : ServiceError() {
+    override fun error(): String = "JSON parse error. raw: $raw; error: $error"
 }
 
 data class SyncProcessingError(

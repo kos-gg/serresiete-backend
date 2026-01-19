@@ -101,7 +101,7 @@ class WowHardcoreEntitySynchronizer(
         newestDataCacheEntry: HardcoreData?
     ): Either<ServiceError, Pair<Long, HardcoreData>> {
         return either {
-            Retry.retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
+            retryEitherWithFixedDelay(retryConfig, "blizzardGetCharacter") {
                 blizzardClient.getCharacterProfile(
                     wowEntity.region,
                     wowEntity.realm,

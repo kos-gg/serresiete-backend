@@ -266,7 +266,7 @@ class ViewsService(
         return eventStore.save(event)
     }
 
-    suspend fun getData(view: View): Either<HttpError, List<Data>> =
+    suspend fun getData(view: View): Either<ServiceError, List<Data>> =
         dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =

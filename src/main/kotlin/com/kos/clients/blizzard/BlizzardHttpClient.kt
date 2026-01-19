@@ -3,6 +3,11 @@ package com.kos.clients.blizzard
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
+import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.BATTLENET_NAMESPACE
+import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.DYNAMIC_CLASSIC1X_NANESPACE
+import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.PROFILE_CLASSIC1X_EU_NAMESPACE
+import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.PROFILE_CLASSIC1X_NAMESPACE
+import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
@@ -20,16 +25,19 @@ import java.time.OffsetDateTime
 
 data class TokenState(val obtainedAt: OffsetDateTime, val tokenResponse: TokenResponse)
 
-private const val PROFILE_CLASSIC1X_NAMESPACE = "profile-classic1x"
-private const val BATTLENET_NAMESPACE = "Battlenet-Namespace"
-private const val STATIC_CLASSIC_NAMESPACE = "static-classic"
-private const val DYNAMIC_CLASSIC1X_NANESPACE = "dynamic-classic1x"
-private const val PROFILE_CLASSIC1X_EU_NAMESPACE = "profile-classic1x-eu"
-
 class BlizzardHttpClient(
     private val client: HttpClient,
     private val blizzardAuthClient: BlizzardAuthClient
 ) : BlizzardClient, WithLogger("blizzardClient") {
+
+    object BlizzardHttpClientConstants {
+        const val PROFILE_CLASSIC1X_NAMESPACE = "profile-classic1x"
+        const val BATTLENET_NAMESPACE = "Battlenet-Namespace"
+        const val STATIC_CLASSIC_NAMESPACE = "static-classic"
+        const val DYNAMIC_CLASSIC1X_NANESPACE = "dynamic-classic1x"
+        const val PROFILE_CLASSIC1X_EU_NAMESPACE = "profile-classic1x-eu"
+    }
+
     private val baseURI: (String) -> URI = { region -> URI("https://$region.api.blizzard.com") }
     private var token: Either<ClientError, TokenState>? = null
 

@@ -81,7 +81,11 @@ class ViewsController(
                     null -> Either.Left(NotFound(id))
                     else -> {
                         if (activities.contains(Activities.getViewData) && maybeView.published) {
-                            either { ViewData(maybeView.name, viewsService.getData(maybeView).bind()) }
+                            either {
+                                ViewData(maybeView.name, viewsService.getData(maybeView)
+                                    .mapLeft { ViewDataError(it.error()) }
+                                    .bind())
+                            }
                         } else if (!maybeView.published) Either.Left(NotPublished(id))
                         else Either.Left(NotEnoughPermissions(client))
                     }
@@ -102,7 +106,11 @@ class ViewsController(
                     null -> Either.Left(NotFound(id))
                     else -> {
                         if (activities.contains(Activities.getViewCachedData) && maybeView.published)
-                            either { ViewData(maybeView.name, viewsService.getCachedData(maybeView).bind()) }
+                            either {
+                                ViewData(maybeView.name, viewsService.getCachedData(maybeView)
+                                    .mapLeft { ViewDataError(it.error()) }
+                                    .bind())
+                            }
                         else if (!maybeView.published) Either.Left(NotPublished(id))
                         else Either.Left(NotEnoughPermissions(client))
                     }
