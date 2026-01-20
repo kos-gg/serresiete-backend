@@ -1,4 +1,10 @@
 # Changelog
+## [5.0.0] - 20-01-2026
+
+### Refactor
+- **Improved Error Handling Across Layers**:
+    - Refactored error handling between **client**, **service**, and **controller** layers to ensure consistent error propagation and mapping.
+
 ## [4.5.1] - 05-12-2025
 
 ### Added
