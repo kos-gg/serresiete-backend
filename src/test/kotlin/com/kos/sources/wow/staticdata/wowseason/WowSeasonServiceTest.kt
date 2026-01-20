@@ -2,7 +2,6 @@ package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
 import com.kos.clients.HttpError
-import com.kos.clients.RetryConfig
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
@@ -21,7 +20,6 @@ import kotlin.test.fail
 
 class WowSeasonServiceTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
-    private val retryConfig = RetryConfig(1, 1000)
 
 
     @Test

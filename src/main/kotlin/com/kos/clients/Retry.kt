@@ -30,18 +30,18 @@ object Retry : WithLogger("retry") {
             is Either.Right -> result
 
             is Either.Left -> {
-                if (shouldRetry(result.value)) {
+                if (shouldNotRetry(result.value)) {
                     logger.info("Retry aborted for $functionName due to non-retryable error")
                     return result
                 }
 
                 if (retries > 0) {
                     logger.info("Retries left $retries for $functionName")
-                    logger.debug("Last error: ${result.value}")
+                    logger.debug("Last error: {}", result.value)
                     delay(delayTime)
                     _retryEitherWithFixedDelay(retries - 1, delayTime, functionName, request)
                 } else {
-                    logger.debug("Failed retrying for $functionName with ${result.value}")
+                    logger.debug("Failed retrying for {} with {}", functionName, result.value)
                     result
                 }
             }
@@ -77,7 +77,7 @@ object Retry : WithLogger("retry") {
                     delay(initialDelayMillis)
                     val nextDelay = (initialDelayMillis * factor).coerceAtMost(maxDelayMillis.toDouble()).toLong()
                     logger.info("Retries left $maxAttempts, next delay: $nextDelay")
-                    logger.debug("Last error: ${res.value}")
+                    logger.debug("Last error: {}", res.value)
                     _retryEitherWithExponentialBackoff(
                         maxAttempts - 1,
                         nextDelay,
@@ -90,9 +90,9 @@ object Retry : WithLogger("retry") {
         }
     }
 
-    private fun <L> shouldRetry(error: L): Boolean {
+    private fun <L> shouldNotRetry(error: L): Boolean {
         return when (error) {
-            is HttpError -> error.status >= 500 || error.status == 429
+            is HttpError -> error.status < 500 && error.status != 429
             else -> false
         }
     }
