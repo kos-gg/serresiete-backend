@@ -12,7 +12,7 @@ object Retry : WithLogger("retry") {
         functionName: String,
         request: suspend () -> Either<L, R>
     ): Either<L, R> {
-        return retry(
+        return _retryEitherWithFixedDelay(
             retryConfig.maxAttempts,
             retryConfig.delayTime,
             functionName,
@@ -20,7 +20,7 @@ object Retry : WithLogger("retry") {
         )
     }
 
-    private suspend fun <L, R> retry(
+    private suspend fun <L, R> _retryEitherWithFixedDelay(
         retries: Int,
         delayTime: Long,
         functionName: String,
@@ -30,7 +30,7 @@ object Retry : WithLogger("retry") {
             is Either.Right -> result
 
             is Either.Left -> {
-                if (!shouldRetry(result.value)) {
+                if (shouldRetry(result.value)) {
                     logger.info("Retry aborted for $functionName due to non-retryable error")
                     return result
                 }
@@ -39,7 +39,7 @@ object Retry : WithLogger("retry") {
                     logger.info("Retries left $retries for $functionName")
                     logger.debug("Last error: ${result.value}")
                     delay(delayTime)
-                    retry(retries - 1, delayTime, functionName, request)
+                    _retryEitherWithFixedDelay(retries - 1, delayTime, functionName, request)
                 } else {
                     logger.debug("Failed retrying for $functionName with ${result.value}")
                     result
@@ -92,7 +92,7 @@ object Retry : WithLogger("retry") {
 
     private fun <L> shouldRetry(error: L): Boolean {
         return when (error) {
-            is HttpError -> error.status >= 500
+            is HttpError -> error.status >= 500 || error.status == 429
             else -> false
         }
     }
