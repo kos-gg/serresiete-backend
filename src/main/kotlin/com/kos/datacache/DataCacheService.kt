@@ -6,8 +6,9 @@ import com.kos.clients.domain.Data
 import com.kos.clients.domain.HardcoreData
 import com.kos.clients.domain.RaiderIoData
 import com.kos.clients.domain.RiotData
-import com.kos.common.JsonParseError
 import com.kos.common.WithLogger
+import com.kos.common.error.SerializationError
+import com.kos.common.error.ServiceError
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.EntityDataResponse
@@ -43,7 +44,7 @@ data class DataCacheService(
     }
 
     suspend fun get(entityId: Long): List<DataCache> = dataCacheRepository.get(entityId)
-    suspend fun getData(entitiesIds: List<Long>, oldFirst: Boolean): Either<JsonParseError, List<Data>> =
+    suspend fun getData(entitiesIds: List<Long>, oldFirst: Boolean): Either<ServiceError, List<Data>> =
         either {
             val comparator: (List<DataCache>) -> DataCache? = if (oldFirst) {
                 { it.minByOrNull { dc -> dc.inserted } }
@@ -56,23 +57,13 @@ data class DataCacheService(
             }
         }
 
-    fun parseData(dataCache: DataCache): Either<JsonParseError, Data> {
-        return try {
-            Either.Right(json.decodeFromString<Data>(dataCache.data))
-        } catch (se: SerializationException) {
-            Either.Left(JsonParseError(dataCache.data, "", se.stackTraceToString()))
-        } catch (iae: IllegalArgumentException) {
-            Either.Left(JsonParseError(dataCache.data, "", iae.stackTraceToString()))
-        }
-    }
-
     suspend fun clearExpired(game: Game?, keepLastRecord: Boolean): Int =
         dataCacheRepository.deleteExpiredRecord(ttl, game, keepLastRecord)
 
     suspend fun clearCache(game: Game?): Int =
         dataCacheRepository.clearRecords(game)
 
-    suspend fun getOrSync(request: Pair<CreateEntityRequest, Game>): Either<JsonParseError, EntityDataResponse> {
+    suspend fun getOrSync(request: Pair<CreateEntityRequest, Game>): Either<ServiceError, EntityDataResponse> {
 
         suspend fun syncOperation(entityId: Long): Operation {
             val eventData = RequestToBeSynced(request.first, request.second)
@@ -104,6 +95,14 @@ data class DataCacheService(
                     }
                 }
             }
+        }
+    }
+
+    private fun parseData(dataCache: DataCache): Either<ServiceError, Data> {
+        return try {
+            Either.Right(json.decodeFromString<Data>(dataCache.data))
+        } catch (se: SerializationException) {
+            Either.Left(SerializationError(dataCache.data, se.stackTraceToString()))
         }
     }
 }

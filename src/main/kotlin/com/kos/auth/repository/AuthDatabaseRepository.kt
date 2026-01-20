@@ -2,7 +2,7 @@ package com.kos.auth.repository
 
 import arrow.core.Either
 import com.kos.auth.Authorization
-import com.kos.common.InsertError
+import com.kos.common.error.InsertError
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq

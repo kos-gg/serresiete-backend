@@ -1,8 +1,8 @@
 package com.kos.credentials
 
 import com.kos.activities.Activities
-import com.kos.common.CantDeleteYourself
-import com.kos.common.NotEnoughPermissions
+import com.kos.common.error.CantDeleteYourself
+import com.kos.common.error.NotEnoughPermissions
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRoles
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRolesInitialState

@@ -1,8 +1,8 @@
 package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
-import com.kos.common.InsertError
 import com.kos.common.WithState
+import com.kos.common.error.InsertError
 import com.kos.entities.domain.GuildPayload
 
 interface WowGuildsRepository : WithState<WowGuildsState, WowGuildsRepository> {

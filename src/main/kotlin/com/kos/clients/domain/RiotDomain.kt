@@ -1,6 +1,5 @@
 package com.kos.clients.domain
 
-import com.kos.common.HttpError
 import com.kos.entities.domain.LolEntity
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -114,11 +113,6 @@ data class RiotStatus(
     val statusCode: Int,
     val message: String
 )
-
-@Serializable
-data class RiotError(val status: RiotStatus) : HttpError {
-    override fun error(): String = "${status.statusCode} ${status.message}"
-}
 
 data class LeagueMatchData(
     val leagueEntry: LeagueEntryResponse,

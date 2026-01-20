@@ -2,8 +2,8 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.common.ControllerError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.*
 import com.kos.views.ViewsService
 
@@ -12,7 +12,7 @@ class ViewsEventProcessor(
     private val viewsService: ViewsService
 ) : EventProcessor, WithLogger("eventSubscription.viewsProcessor") {
 
-    override suspend fun process(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ServiceError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_TO_BE_CREATED -> {
                 either {

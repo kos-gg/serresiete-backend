@@ -1,8 +1,8 @@
 package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
-import com.kos.common.ControllerError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.entities.EntitiesService
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.EventWithVersion
@@ -13,7 +13,7 @@ class EntitiesEventProcessor(
     private val entitiesService: EntitiesService,
 ) : EventProcessor, WithLogger("eventSubscription.entitiesProcessor") {
 
-    override suspend fun process(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ServiceError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_DELETED -> {
                 val payload = eventWithVersion.event.eventData as ViewDeletedEvent

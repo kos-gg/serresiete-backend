@@ -1,4 +1,4 @@
-package com.kos.eventsourcing.subscriptions.sync
+package com.kos.sources
 
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
@@ -15,6 +15,9 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
+import com.kos.eventsourcing.subscriptions.sync.LolEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.WowEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.WowHardcoreEventProcessor
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater

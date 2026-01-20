@@ -3,10 +3,10 @@ package com.kos.tasks
 import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
-import com.kos.common.ControllerError
-import com.kos.common.NotAuthorized
-import com.kos.common.NotEnoughPermissions
-import com.kos.common.NotFound
+import com.kos.common.error.ControllerError
+import com.kos.common.error.NotAuthorized
+import com.kos.common.error.NotEnoughPermissions
+import com.kos.common.error.NotFound
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

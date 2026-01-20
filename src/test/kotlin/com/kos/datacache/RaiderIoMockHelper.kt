@@ -1,12 +1,12 @@
 package com.kos.datacache
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.*
-import com.kos.common.HttpError
 import com.kos.entities.domain.WowEntity
 
 object RaiderIoMockHelper {
-    fun get(wowCharacter: WowEntity): Either<HttpError, RaiderIoResponse> {
+    fun get(wowCharacter: WowEntity): Either<ClientError, RaiderIoResponse> {
         return Either.Right(
             RaiderIoResponse(
                 RaiderIoProfile(
@@ -16,7 +16,8 @@ object RaiderIoMockHelper {
                     listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
                     MythicPlusRanks(
                         MythicPlusRank(1, 1, 1),
-                        MythicPlusRank(1, 1, 1)
+                        MythicPlusRank(1, 1, 1),
+                        mapOf()
                     ),
                     listOf()
                 ),
@@ -25,7 +26,7 @@ object RaiderIoMockHelper {
         )
     }
 
-    fun cutoff(): Either<HttpError, RaiderIoCutoff> {
+    fun cutoff(): Either<ClientError, RaiderIoCutoff> {
         return Either.Right(RaiderIoCutoff(100))
     }
 

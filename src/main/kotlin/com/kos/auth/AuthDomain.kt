@@ -1,6 +1,5 @@
 package com.kos.auth
 
-import com.kos.common.AuthError
 import com.kos.common.OffsetDateTimeSerializer
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
@@ -21,8 +20,6 @@ data class LoginResponse(
     val accessToken: String?,
     val refreshToken: String?
 )
-
-data class JWTCreationError(override val message: String) : AuthError
 
 enum class TokenMode {
     ACCESS {

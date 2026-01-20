@@ -1,10 +1,6 @@
-package com.kos.staticdata.repository
+package com.kos.sources.wow.staticdata.wowexpansion.repository
 
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
-import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
-import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
-import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionRepository
-import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway

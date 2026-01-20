@@ -1,11 +1,12 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.clients.domain.GetWowCharacterResponse
-import com.kos.common.HttpError
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
+import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -18,14 +19,123 @@ class BlizzardHTTPClientTest {
     private val blizzardClient = BlizzardHttpClient(client, blizzardAuthClient)
 
     @Test
-    fun `test get() method with successful response`() {
+    fun `getCharacterProfile returns successful response`() {
         runBlocking {
-            `when`(blizzardAuthClient.getAccessToken()).thenReturn(BlizzardMockHelper.getToken())
-
-            val result: Either<HttpError, GetWowCharacterResponse> = blizzardClient.getCharacterProfile(
+            givenAValidToken()
+            val result: Either<ClientError, GetWowCharacterResponse> = blizzardClient.getCharacterProfile(
                 "region", "realm", "name"
             )
             assertEquals(Either.Right(getWowCharacterResponse), result)
         }
+    }
+
+    @Test
+    fun `getCharacterMedia returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getCharacterMedia("region", "realm", "name")
+
+        assertEquals(
+            BlizzardMockHelper.getCharacterMedia(basicWowEntity),
+            result
+        )
+    }
+
+    @Test
+    fun `getCharacterEquipment returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getCharacterEquipment("region", "realm", "name")
+
+        assertEquals(
+            Either.Right(BlizzardMockHelper.getWowEquipmentResponse),
+            result
+        )
+    }
+
+    @Test
+    fun `getCharacterSpecializations returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getCharacterSpecializations("region", "realm", "name")
+
+        assertEquals(
+            Either.Right(BlizzardMockHelper.getWowSpecializationsResponse),
+            result
+        )
+    }
+
+    @Test
+    fun `getCharacterStats returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getCharacterStats("region", "realm", "name")
+
+        assertEquals(
+            Either.Right(BlizzardMockHelper.getWowStatsResponse),
+            result
+        )
+    }
+
+    @Test
+    fun `getItemMedia returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getItemMedia("region", 123L)
+
+        assertEquals(
+            BlizzardMockHelper.getItemMedia(),
+            result
+        )
+    }
+
+    @Test
+    fun `getItem returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getItem("region", 18421)
+
+        assertEquals(
+            Either.Right(BlizzardMockHelper.getWowItemResponse),
+            result
+        )
+    }
+
+    @Test
+    fun `getRealm returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getRealm("region", 1L)
+
+        assertEquals(
+            Either.Right(BlizzardMockHelper.notHardcoreRealm),
+            result
+        )
+    }
+
+    @Test
+    fun `getGuildRoster returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getGuildRoster("region", "realm", "guild")
+
+        assertEquals(
+            Either.Right(BlizzardMockHelper.getWowGuildRosterResponse),
+            result
+        )
+    }
+
+
+    private suspend fun givenAValidToken() {
+        `when`(blizzardAuthClient.getAccessToken())
+            .thenReturn(BlizzardMockHelper.getToken())
     }
 }

@@ -2,8 +2,8 @@ package com.kos.eventsourcing
 
 import arrow.core.Either
 import com.kos.assertTrue
-import com.kos.common.NotFound
 import com.kos.common.RetryConfig
+import com.kos.common.error.ViewCreateError
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
@@ -109,7 +109,7 @@ class EventSubscriptionTest {
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
                 retryConfig = retryConfig,
-                process = { Either.Left(NotFound("Simulated error")) }
+                process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
             )
 
             subscription.processPendingEvents()
@@ -150,7 +150,7 @@ class EventSubscriptionTest {
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
                 retryConfig = retryConfig,
-                process = { Either.Left(NotFound("Simulated error")) }
+                process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
             )
 
             subscription.processPendingEvents()
@@ -193,7 +193,7 @@ class EventSubscriptionTest {
                 retryConfig = retryConfig,
                 process = {
                     if (it.version <= 5) Either.Right(Unit)
-                    else Either.Left(NotFound("Simulated error"))
+                    else Either.Left(ViewCreateError(eventData, "Simulated error"))
                 }
             )
 

@@ -1,17 +1,16 @@
-package com.kos.entities.cache
+package com.kos.sources.lol
 
 import arrow.core.Either
 import com.kos.clients.domain.QueueType
 import com.kos.clients.riot.RiotClient
-import com.kos.common.JsonParseError
 import com.kos.common.RetryConfig
+import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.RiotMockHelper.flexQEntryResponse
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
-import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.ArgumentMatchers.anyString
@@ -78,7 +77,7 @@ class LolEntityCacheServiceTest {
     fun `caching lol data returns an error when retrieving match data fails`() {
         runBlocking {
 
-            val jsonParseError = Either.Left(JsonParseError("{}", ""))
+            val jsonParseError = Either.Left(com.kos.clients.JsonParseError("{}", ""))
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(jsonParseError)
 
@@ -86,7 +85,10 @@ class LolEntityCacheServiceTest {
             val errors = LolEntitySynchronizer(repo, riotClient, retryConfig)
                 .synchronize(listOf(basicLolEntity))
 
-            assertEquals(listOf(jsonParseError.value), errors)
+            errors.forEach { error ->
+                error as SyncProcessingError
+                assertTrue((error.type == "JSON_PARSE_ERROR"))
+            }
         }
     }
 

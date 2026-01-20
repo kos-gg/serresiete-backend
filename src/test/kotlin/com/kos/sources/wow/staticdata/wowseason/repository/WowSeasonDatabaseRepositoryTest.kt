@@ -1,4 +1,4 @@
-package com.kos.seasons.repository
+package com.kos.sources.wow.staticdata.wowseason.repository
 
 import com.kos.assertTrue
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
@@ -7,10 +7,6 @@ import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemo
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway

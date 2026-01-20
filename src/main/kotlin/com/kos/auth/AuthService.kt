@@ -8,8 +8,8 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTCreationException
 import com.kos.activities.Activity
 import com.kos.auth.repository.AuthRepository
-import com.kos.common.ControllerError
 import com.kos.common.JWTConfig
+import com.kos.common.error.*
 import com.kos.credentials.CredentialsService
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -22,18 +22,24 @@ class AuthService(
     private val jwtConfig: JWTConfig
 ) {
 
-    suspend fun login(userName: String): Either<ControllerError, LoginResponse> {
+    suspend fun login(userName: String): Either<ServiceError, LoginResponse> {
 
         return if (credentialsService.getUserRoles(userName).contains(Role.SERVICE)) {
             either {
-                LoginResponse(generateServiceToken(userName).bind(), null)
+                LoginResponse(
+                    authCall { generateServiceToken(userName) }.bind(),
+                    null
+                )
             }
         } else {
             either {
-                val refreshToken = generateUserToken(userName, TokenMode.REFRESH).bind()
-                authRepository.insertToken(userName, refreshToken, isAccess = false).bind()
+                val refreshToken =
+                    authCall { generateUserToken(userName, TokenMode.REFRESH) }.bind()
+                authRepository.insertToken(userName, refreshToken, isAccess = false)
+                    .mapLeft { it.toAuthTokenError(it.message) }
+                    .bind()
                 LoginResponse(
-                    generateUserToken(userName, TokenMode.ACCESS).bind(),
+                    authCall { generateUserToken(userName, TokenMode.ACCESS) }.bind(),
                     refreshToken
                 )
             }
@@ -42,9 +48,12 @@ class AuthService(
 
     suspend fun logout(user: String) = authRepository.deleteTokensFromUser(user)
 
-    suspend fun refresh(userName: String): Either<ControllerError, LoginResponse?> {
+    suspend fun refresh(userName: String): Either<ServiceError, LoginResponse?> {
         return either {
-            LoginResponse(generateToken(userName, TokenMode.ACCESS, expirationMinutes = 15).bind(), null)
+            LoginResponse(
+                authCall { generateToken(userName, TokenMode.ACCESS, expirationMinutes = 15) }.bind(),
+                null
+            )
         }
 
     }
@@ -95,4 +104,9 @@ class AuthService(
     private suspend fun generateServiceToken(userName: String): Either<JWTCreationError, String> {
         return generateToken(userName, TokenMode.ACCESS, expirationMinutes = null)
     }
+
+    private suspend fun <A> authCall(
+        block: suspend () -> Either<AuthError, A>
+    ): Either<ServiceError, A> =
+        block().mapLeft { it.toServiceError(it.message) }
 }

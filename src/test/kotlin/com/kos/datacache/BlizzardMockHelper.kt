@@ -1,19 +1,19 @@
 package com.kos.datacache
 
 import arrow.core.Either
+import com.kos.clients.ClientError
 import com.kos.clients.domain.*
-import com.kos.common.HttpError
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import kotlin.random.Random
 
 object BlizzardMockHelper {
 
-    fun getToken(): Either<HttpError, TokenResponse> {
+    fun getToken(): Either<ClientError, TokenResponse> {
         return Either.Right(TokenResponse("token", "token", 10, "sub"))
     }
 
-    fun getCharacterProfile(wowCharacter: WowEntity): Either<HttpError, GetWowCharacterResponse> {
+    fun getCharacterProfile(wowCharacter: WowEntity): Either<ClientError, GetWowCharacterResponse> {
         return Either.Right(
             GetWowCharacterResponse(
                 wowCharacter.id,
@@ -35,35 +35,35 @@ object BlizzardMockHelper {
         )
     }
 
-    fun getCharacterMedia(wowCharacter: WowEntity): Either<HttpError, GetWowMediaResponse> {
+    fun getCharacterMedia(wowCharacter: WowEntity): Either<ClientError, GetWowMediaResponse> {
         return Either.Right(
             GetWowMediaResponse(listOf(AssetKeyValue("avatar", "${wowCharacter.id}")))
         )
     }
 
-    fun getItemMedia(): Either<HttpError, GetWowMediaResponse> {
+    fun getItemMedia(): Either<ClientError, GetWowMediaResponse> {
         return Either.Right(
             GetWowMediaResponse(listOf(AssetKeyValue("icon", "1.jpg")))
         )
     }
 
-    fun getCharacterEquipment(): Either<HttpError, GetWowEquipmentResponse> {
+    fun getCharacterEquipment(): Either<ClientError, GetWowEquipmentResponse> {
         return Either.Right(getWowEquipmentResponse)
     }
 
-    fun getCharacterStats(): Either<HttpError, GetWowCharacterStatsResponse> {
+    fun getCharacterStats(): Either<ClientError, GetWowCharacterStatsResponse> {
         return Either.Right(getWowStatsResponse)
     }
 
-    fun getCharacterSpecializations(): Either<HttpError, GetWowSpecializationsResponse> {
+    fun getCharacterSpecializations(): Either<ClientError, GetWowSpecializationsResponse> {
         return Either.Right(getWowSpecializationsResponse)
     }
 
-    fun getWowItemResponse(): Either<HttpError, GetWowItemResponse> {
+    fun getWowItemResponse(): Either<ClientError, GetWowItemResponse> {
         return Either.Right(getWowItemResponse)
     }
 
-    fun getCharacterProfile(wowCharacter: WowEntityRequest): Either<HttpError, GetWowCharacterResponse> {
+    fun getCharacterProfile(wowCharacter: WowEntityRequest): Either<ClientError, GetWowCharacterResponse> {
         return Either.Right(
             GetWowCharacterResponse(
                 Random.nextLong(),
@@ -104,6 +104,18 @@ object BlizzardMockHelper {
         experience = 0,
         lastLogin = 1703019625000
     )
+
+    val getWowGuildRosterResponse =
+        GetWowRosterResponse(
+            listOf(WowMemberResponse(WowCharacterResponse("kumiko", 60))),
+            WowGuildResponse(1)
+        )
+
+    val getWowCharacterMediaResponse =
+        GetWowMediaResponse(listOf(AssetKeyValue("avatar", "1")))
+
+    val getWowItemMediaResponse =
+        GetWowMediaResponse(listOf(AssetKeyValue("icon", "1.jpg")))
 
     val getWowCharacterResponseString = """
             {

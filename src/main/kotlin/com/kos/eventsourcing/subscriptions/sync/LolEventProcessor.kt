@@ -2,8 +2,9 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.common.ControllerError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
+import com.kos.common.error.toEntityResolverError
 import com.kos.entities.EntitiesService
 import com.kos.eventsourcing.events.*
 import com.kos.sources.lol.LolEntitySynchronizer
@@ -15,7 +16,7 @@ class LolEventProcessor(
     private val lolEntityCacheService: LolEntitySynchronizer
 ) : EventProcessor, WithLogger("eventSubscription.syncLolEntitiesProcessor") {
 
-    override suspend fun process(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ServiceError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_CREATED -> {
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
@@ -94,6 +95,12 @@ class LolEventProcessor(
 
                             val inserted = entitiesService
                                 .insert(resolved.entities.map { it.first }, payload.game)
+                                .mapLeft {
+                                    it.toEntityResolverError(
+                                        game = payload.game,
+                                        message = "Couldn't insert resolved entities ${resolved.entities}"
+                                    )
+                                }
                                 .bind()
 
                             val entities = inserted.zip(resolved.entities.map { it.second }) +

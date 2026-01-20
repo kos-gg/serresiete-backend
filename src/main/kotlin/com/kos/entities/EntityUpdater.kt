@@ -1,7 +1,7 @@
 package com.kos.entities
 
-import com.kos.common.ControllerError
+import com.kos.common.error.ServiceError
 
 interface EntityUpdater<A> {
-    suspend fun update(entities: List<A>): List<ControllerError>
+    suspend fun update(entities: List<A>): List<ServiceError>
 }

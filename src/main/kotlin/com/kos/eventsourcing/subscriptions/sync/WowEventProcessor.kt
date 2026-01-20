@@ -2,8 +2,9 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.common.ControllerError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
+import com.kos.common.error.toEntityResolverError
 import com.kos.entities.EntitiesService
 import com.kos.eventsourcing.events.*
 import com.kos.sources.wow.WowEntitySynchronizer
@@ -15,7 +16,7 @@ class WowEventProcessor(
     private val wowEntityCacheService: WowEntitySynchronizer
 ) : EventProcessor, WithLogger("eventSubscription.syncWowEntitiesProcessor") {
 
-    override suspend fun process(): Either<ControllerError, Unit> {
+    override suspend fun process(): Either<ServiceError, Unit> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_CREATED -> {
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
@@ -96,6 +97,7 @@ class WowEventProcessor(
 
                             val inserted = entitiesService
                                 .insert(resolved.entities.map { it.first }, payload.game)
+                                .mapLeft { it.toEntityResolverError(Game.WOW, it.message) }
                                 .bind()
 
                             val entities = inserted.zip(resolved.entities.map { it.second }) +

@@ -3,10 +3,10 @@ package com.kos.sources.wow
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.HttpError
 import com.kos.common.collect
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.common.error.ServiceError
 import com.kos.entities.EntityResolver
+import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesRepository
@@ -25,7 +25,7 @@ class WowEntityResolver(
     override suspend fun resolve(
         requested: List<CreateEntityRequest>,
         extra: ViewExtraArguments?
-    ): Either<HttpError, ResolvedEntities> = either {
+    ): Either<ServiceError, ResolvedEntities> = either {
         val (existing, newRequests) = getCurrentAndNewEntities(repo, requested, Game.WOW)
 
         coroutineScope {

@@ -1,18 +1,16 @@
-package com.kos.seasons
+package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
+import com.kos.clients.HttpError
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.RaiderIoError
 import com.kos.common.RetryConfig
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
-import com.kos.sources.wow.staticdata.wowseason.WowSeason
-import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -21,7 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-class SeasonServiceTest {
+class WowSeasonServiceTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val retryConfig = RetryConfig(1, 1000)
 
@@ -67,7 +65,7 @@ class SeasonServiceTest {
     fun `i can not add a new mythic plus dungeon season because the raider io client is not available`() {
         runBlocking {
             `when`(raiderIoClient.getExpansionSeasons(10))
-                .thenReturn(Either.Left(RaiderIoError(500, "Internal server error", "error from server")))
+                .thenReturn(Either.Left(HttpError(500, "Internal server error")))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
             val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))

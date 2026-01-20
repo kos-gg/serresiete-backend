@@ -1,6 +1,6 @@
 package com.kos.eventsourcing.subscriptions
 
-import com.kos.common.respondWithHandledError
+import com.kos.common.error.respondWithHandledError
 import com.kos.plugins.UserWithActivities
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*

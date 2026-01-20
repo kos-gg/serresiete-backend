@@ -2,10 +2,10 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.assertTrue
+import com.kos.clients.ClientError
 import com.kos.clients.domain.*
-import com.kos.clients.raiderio.RaiderioHttpClientHelper.client
-import com.kos.clients.raiderio.RaiderioHttpClientHelper.raiderioProfileResponse
-import com.kos.common.HttpError
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfileResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
@@ -22,7 +22,7 @@ class RaiderIoHTTPClientTest {
     @Test
     fun `test get() method with successful response`() {
         runBlocking {
-            val result: Either<HttpError, RaiderIoResponse> = raiderIoClient.get(
+            val result: Either<ClientError, RaiderIoResponse> = raiderIoClient.get(
                 WowEntity(1, "region", "realm", "name", null)
             )
             assertEquals(Either.Right(raiderioProfileResponse), result)
@@ -32,7 +32,7 @@ class RaiderIoHTTPClientTest {
     @Test
     fun `test getExpansionSeasons() method with successful response`() {
         runBlocking {
-            val result: Either<HttpError, ExpansionSeasons> = raiderIoClient.getExpansionSeasons(10)
+            val result: Either<ClientError, ExpansionSeasons> = raiderIoClient.getExpansionSeasons(10)
             result.onLeft { fail() }
             result.onRight {
                 assertEquals(it.seasons[0].name, "TWW Season 3")
@@ -67,7 +67,7 @@ class RaiderIoHTTPClientTest {
     @Test
     fun `test wowheadEmbeddedCalculator() method with successful response`() {
         runBlocking {
-            val result: Either<HttpError, RaiderioWowHeadEmbeddedResponse> =
+            val result: Either<ClientError, RaiderioWowHeadEmbeddedResponse> =
                 raiderIoClient.wowheadEmbeddedCalculator(WowEntity(1, "Surmana", "eu", "Soulseeker", null))
             result.onLeft { fail() }
             result.onRight {

@@ -2,18 +2,16 @@ package com.kos.sources.lol
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.domain.Data
-import com.kos.clients.domain.GetMatchResponse
-import com.kos.clients.domain.LeagueEntryResponse
-import com.kos.clients.domain.LeagueMatchData
-import com.kos.clients.domain.RiotData
+import com.kos.clients.ClientError
+import com.kos.clients.domain.*
 import com.kos.clients.riot.RiotClient
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
-import com.kos.common.HttpError
-import com.kos.common.Retry
+import com.kos.common.Retry.retryEitherWithFixedDelay
 import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.common._fold
+import com.kos.common.error.ServiceError
 import com.kos.datacache.DataCache
 import com.kos.datacache.EntitySynchronizer
 import com.kos.datacache.repository.DataCacheRepository
@@ -53,17 +51,18 @@ class LolEntitySynchronizer(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun synchronize(entities: List<Entity>): List<HttpError> =
+    override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
-            val lolEntities = entities as List<LolEntity>
-            val errorsChannel = Channel<HttpError>()
             val dataChannel = Channel<DataCache>()
-            val errorsList = mutableListOf<HttpError>()
-            val matchCache = DynamicCache<Either<HttpError, GetMatchResponse>>()
+            val errorsChannel = Channel<ServiceError>()
+            val errorsList = mutableListOf<ServiceError>()
+            val matchCache = DynamicCache<Either<ServiceError, GetMatchResponse>>()
+
+            entities as List<LolEntity>
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
-                    logger.error(error.error())
+                    logger.error(error.toString())
                     errorsList.add(error)
                 }
             }
@@ -78,7 +77,7 @@ class LolEntitySynchronizer(
             }
 
             val start = OffsetDateTime.now()
-            lolEntities.asFlow()
+            entities.asFlow()
                 .buffer(10)
                 .collect { lolEntity ->
                     val result = cacheLolEntity(lolEntity, matchCache)
@@ -105,7 +104,7 @@ class LolEntitySynchronizer(
 
             logger.info("Finished Caching Lol entities")
             logger.debug(
-                "cached ${lolEntities.size} entities in ${
+                "cached ${entities.size} entities in ${
                     Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
                 } minutes"
             )
@@ -115,8 +114,8 @@ class LolEntitySynchronizer(
 
     private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
-        matchCache: DynamicCache<Either<HttpError, GetMatchResponse>>
-    ): Either<HttpError, Pair<Long, RiotData>> =
+        matchCache: DynamicCache<Either<ServiceError, GetMatchResponse>>
+    ): Either<ServiceError, Pair<Long, RiotData>> =
         either {
 
             val newestDataCacheEntry: RiotData? =
@@ -133,8 +132,10 @@ class LolEntitySynchronizer(
                 }
 
             val leagues: List<LeagueEntryResponse> =
-                Retry.retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesByPUUID") {
-                    riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
+                execute("getLeagueEntriesByPUUID") {
+                    retryEitherWithFixedDelay(retryConfig, "getLeagueEntriesByPUUID") {
+                        riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
+                    }
                 }.bind()
 
             val leagueWithMatches: List<LeagueMatchData> =
@@ -142,8 +143,10 @@ class LolEntitySynchronizer(
                     leagues.map { leagueEntry ->
                         async {
                             val lastMatchesForLeague: List<String> =
-                                Retry.retryEitherWithFixedDelay(retryConfig, "getMatchesByPuuid") {
-                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
+                                execute("getMatchesByPuuid") {
+                                    retryEitherWithFixedDelay(retryConfig, "getMatchesByPuuid") {
+                                        riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
+                                    }
                                 }.bind()
 
                             val matchesToRequest = newestDataCacheEntry._fold(
@@ -159,8 +162,10 @@ class LolEntitySynchronizer(
 
                             val matchResponses: List<GetMatchResponse> = matchesToRequest.map { matchId ->
                                 matchCache.get(matchId) {
-                                    Retry.retryEitherWithFixedDelay(retryConfig, "getMatchById") {
-                                        riotClient.getMatchById(matchId)
+                                    execute("getMatchById") {
+                                        retryEitherWithFixedDelay(retryConfig, "getMatchById") {
+                                            riotClient.getMatchById(matchId)
+                                        }
                                     }
                                 }.bind()
                             }
@@ -177,4 +182,10 @@ class LolEntitySynchronizer(
 
             Pair(lolEntity.id, RiotData.Companion.apply(lolEntity, leagueWithMatches))
         }
+
+    private suspend fun <A> execute(
+        operation: String,
+        block: suspend () -> Either<ClientError, A>
+    ): Either<ServiceError, A> =
+        block().mapLeft { it.toSyncProcessingError(operation) }
 }

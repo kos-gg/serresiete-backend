@@ -1,4 +1,4 @@
-package com.kos.eventsourcing.subscriptions.sync
+package com.kos.sources.wow
 
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.entities.EntitiesTestHelper
@@ -6,7 +6,7 @@ import com.kos.eventsourcing.events.ViewCreatedEvent
 import com.kos.eventsourcing.events.ViewEditedEvent
 import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
-import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.SyncGameCharactersTestCommon
 import com.kos.views.Game
 import com.kos.views.ViewsTestHelper
 import com.kos.views.ViewsTestHelper.owner
@@ -15,9 +15,9 @@ import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 
-class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
+class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
     @Test
-    fun `syncWowCharactersProcessor calls cache on VIEW_CREATED with WOW game`() = runBlocking {
+    fun `wowEntitySynchronizer calls cache on VIEW_CREATED with WOW game`() = runBlocking {
         `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
@@ -53,7 +53,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
     }
 
     @Test
-    fun `syncWowCharactersProcessor calls cache on VIEW_EDITED with WOW game`() = runBlocking {
+    fun `wowEntitySynchronizer calls cache on VIEW_EDITED with WOW game`() = runBlocking {
         `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
@@ -87,7 +87,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
     }
 
     @Test
-    fun `syncWowCharactersProcessor calls cache on VIEW_PATCHED with WOW game`() = runBlocking {
+    fun `wowEntitySynchronizer calls cache on VIEW_PATCHED with WOW game`() = runBlocking {
         `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))

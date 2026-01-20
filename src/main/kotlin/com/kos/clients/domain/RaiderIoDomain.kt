@@ -2,15 +2,16 @@ package com.kos.clients.domain
 
 import arrow.core.Either
 import arrow.core.raise.either
-import arrow.core.raise.ensureNotNull
-import com.kos.common.JsonParseError
 import com.kos.entities.domain.Spec
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
@@ -24,65 +25,60 @@ object RaiderIoProtocol {
         ignoreUnknownKeys = true
     }
 
-    fun parseCutoffJson(jsonString: String): Either<JsonParseError, RaiderIoCutoff> {
-        val totalPopulation: Int? = json.parseToJsonElement(jsonString)
-            .jsonObject["cutoffs"]
-            ?.jsonObject
-            ?.get("p999")
-            ?.jsonObject
-            ?.get("all")
-            ?.jsonObject
-            ?.get("totalPopulationCount")
-            ?.jsonPrimitive
-            ?.int
+    fun parseCutoffJson(jsonString: String): RaiderIoCutoff {
+        val totalPopulation =
+            json.parseToJsonElement(jsonString)
+                .jsonObject["cutoffs"]
+                ?.jsonObject
+                ?.get("p999")
+                ?.jsonObject
+                ?.get("all")
+                ?.jsonObject
+                ?.get("totalPopulationCount")
+                ?.jsonPrimitive
+                ?.int
+                ?: throw IllegalStateException(
+                    "cutoffs/p999/all/totalPopulationCount missing"
+                )
 
-        return when (totalPopulation) {
-            null -> Either.Left(JsonParseError(jsonString, "cutoffs/p999/all/totalPopulationCount"))
-            else -> Either.Right(RaiderIoCutoff(totalPopulation))
-        }
+        return RaiderIoCutoff(totalPopulation)
     }
 
-    fun parseMythicPlusRanks(
-        jsonString: String,
-        specs: List<Spec>,
-        scores: SeasonScores
-    ): Either<JsonParseError, List<MythicPlusRankWithSpecName>> {
-        val mythicPlusRanks = json.parseToJsonElement(jsonString)
-            .jsonObject["mythic_plus_ranks"]
-            ?.jsonObject
 
-        return either {
+    fun getMythicPlusRanks(
+        profile: RaiderIoProfile,
+        specs: List<Spec>
+    ): Either<com.kos.clients.JsonParseError, List<MythicPlusRankWithSpecName>> =
+        either {
+            val ranksByExternalSpec = profile.mythicPlusRanks.specs
+
             specs.map { spec ->
-                val ranks = mythicPlusRanks
-                    ?.get("spec_${spec.externalSpec}")
-                    ?.jsonObject
+                val rank = ranksByExternalSpec["spec_${spec.externalSpec}"]
+                    ?: raise(
+                        com.kos.clients.JsonParseError(
+                            raw = "",
+                            error = "/mythic_plus_ranks/spec_${spec.externalSpec}"
+                        )
+                    )
 
-                val world = ranks?.get("world")?.jsonPrimitive?.int
-                val region = ranks?.get("region")?.jsonPrimitive?.int
-                val realm = ranks?.get("realm")?.jsonPrimitive?.int
-
-                val specScore = when (spec.internalSpec) {
-                    0 -> scores.spec0
-                    1 -> scores.spec1
-                    2 -> scores.spec2
-                    3 -> scores.spec3
+                val score = when (spec.internalSpec) {
+                    0 -> profile.seasonScores[0].scores.spec0
+                    1 -> profile.seasonScores[0].scores.spec1
+                    2 -> profile.seasonScores[0].scores.spec2
+                    3 -> profile.seasonScores[0].scores.spec3
                     else -> 0.0
                 }
 
-                ensureNotNull(world) {
-                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
-                }
-                ensureNotNull(region) {
-                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
-                }
-                ensureNotNull(realm) {
-                    JsonParseError(jsonString, "/mythic_plus_ranks/spec_${spec.externalSpec}")
-                }
-
-                MythicPlusRankWithSpecName(spec.name, specScore, world, region, realm)
+                MythicPlusRankWithSpecName(
+                    name = spec.name,
+                    score = score,
+                    world = rank.world,
+                    region = rank.region,
+                    realm = rank.realm
+                )
             }
         }
-    }
+
 }
 
 @Serializable
@@ -145,11 +141,61 @@ data class MythicPlusRankWithSpecName(
     val realm: Int
 )
 
-@Serializable
+@Serializable(with = MythicPlusRanksSerializer::class)
 data class MythicPlusRanks(
     val overall: MythicPlusRank,
     val `class`: MythicPlusRank,
+    val specs: Map<String, MythicPlusRank>
 )
+
+object MythicPlusRanksSerializer : KSerializer<MythicPlusRanks> {
+
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("MythicPlusRanks") {
+            element("overall", MythicPlusRank.serializer().descriptor)
+            element("class", MythicPlusRank.serializer().descriptor)
+            element("specs", MapSerializer(String.serializer(), MythicPlusRank.serializer()).descriptor)
+        }
+
+    override fun deserialize(decoder: Decoder): MythicPlusRanks {
+        require(decoder is JsonDecoder)
+
+        val jsonObject = decoder.decodeJsonElement().jsonObject
+
+        val overall = jsonObject["overall"]
+            ?: error("Missing overall rank")
+
+        val clazz = jsonObject["class"]
+            ?: error("Missing class rank")
+
+        val specs = jsonObject
+            .filterKeys { it.startsWith("spec_") }
+            .mapValues { (_, value) ->
+                decoder.json.decodeFromJsonElement(MythicPlusRank.serializer(), value)
+            }
+
+        return MythicPlusRanks(
+            overall = decoder.json.decodeFromJsonElement(overall),
+            `class` = decoder.json.decodeFromJsonElement(clazz),
+            specs = specs
+        )
+    }
+
+    override fun serialize(encoder: Encoder, value: MythicPlusRanks) {
+        require(encoder is JsonEncoder)
+
+        val jsonObject = buildJsonObject {
+            put("overall", encoder.json.encodeToJsonElement(value.overall))
+            put("class", encoder.json.encodeToJsonElement(value.`class`))
+            value.specs.forEach { (key, rank) ->
+                put(key, encoder.json.encodeToJsonElement(rank))
+            }
+        }
+
+        encoder.encodeJsonElement(jsonObject)
+    }
+}
+
 
 @Serializable
 data class MythicPlusRanksWithSpecs(

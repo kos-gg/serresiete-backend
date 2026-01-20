@@ -2,10 +2,11 @@ package com.kos.sources.lol
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.kos.clients.ClientError
 import com.kos.clients.riot.RiotClient
-import com.kos.common.ControllerError
-import com.kos.common.HttpError
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
+import com.kos.common.error.ServiceError
 import com.kos.entities.EntityUpdater
 import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntity
@@ -18,12 +19,16 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 
-data class LolEntityUpdater(private val riotClient: RiotClient, private val repository: EntitiesRepository): EntityUpdater<LolEntity>, WithLogger("LolUpdater") {
-    override suspend fun update(entities: List<LolEntity>): List<ControllerError> =
+data class LolEntityUpdater(
+    private val riotClient: RiotClient,
+    private val repository: EntitiesRepository
+) :
+    EntityUpdater<LolEntity>, WithLogger("LolUpdater") {
+    override suspend fun update(entities: List<LolEntity>): List<ServiceError> =
         coroutineScope {
-            val errorsChannel = Channel<ControllerError>()
             val dataChannel = Channel<Pair<LolEnrichedEntityRequest, Long>>()
-            val errorsList = mutableListOf<ControllerError>()
+            val errorsChannel = Channel<ServiceError>()
+            val errorsList = mutableListOf<ServiceError>()
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -44,9 +49,8 @@ data class LolEntityUpdater(private val riotClient: RiotClient, private val repo
             entities.asFlow()
                 .buffer(40)
                 .collect { lolEntity ->
-                    val result = retrieveUpdatedLolEntity(lolEntity)
-                    result.fold(
-                        ifLeft = { error -> errorsChannel.send(error) },
+                    retrieveUpdatedLolEntity(lolEntity).fold(
+                        ifLeft = { error -> errorsChannel.send(error.toSyncProcessingError("Retrieve Updated Lol Entity")) },
                         ifRight = { dataChannel.send(Pair(it, lolEntity.id)) }
                     )
                 }
@@ -60,7 +64,7 @@ data class LolEntityUpdater(private val riotClient: RiotClient, private val repo
             errorsList
         }
 
-    private suspend fun retrieveUpdatedLolEntity(lolEntity: LolEntity): Either<HttpError, LolEnrichedEntityRequest> =
+    private suspend fun retrieveUpdatedLolEntity(lolEntity: LolEntity): Either<ClientError, LolEnrichedEntityRequest> =
         either {
             val summoner = riotClient.getSummonerByPuuid(lolEntity.puuid).bind()
             val account = riotClient.getAccountByPUUID(lolEntity.puuid).bind()

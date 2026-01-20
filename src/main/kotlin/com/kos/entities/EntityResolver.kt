@@ -1,7 +1,7 @@
 package com.kos.entities
 
 import arrow.core.Either
-import com.kos.common.HttpError
+import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.EntityWithAlias
@@ -24,7 +24,7 @@ interface EntityResolver {
     suspend fun resolve(
         requested: List<CreateEntityRequest>,
         extra: ViewExtraArguments?
-    ): Either<HttpError, ResolvedEntities>
+    ): Either<ServiceError, ResolvedEntities>
 
     suspend fun getCurrentAndNewEntities(
         repo: EntitiesRepository,

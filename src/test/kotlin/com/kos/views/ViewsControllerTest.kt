@@ -5,7 +5,11 @@ import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.common.*
+import com.kos.common.error.CantFeatureView
+import com.kos.common.error.NotEnoughPermissions
+import com.kos.common.error.NotFound
+import com.kos.common.error.TooMuchViews
+import com.kos.common.getLeftOrNull
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
 import com.kos.credentials.CredentialsTestHelper.emptyCredentialsState
@@ -28,8 +32,6 @@ import com.kos.entities.EntitiesTestHelper.basicWowRequest2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.lolEntityRequest
 import com.kos.entities.EntityResolverProvider
-import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -39,7 +41,9 @@ import com.kos.roles.Role
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.ViewsTestHelper.basicSimpleGameViews
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
