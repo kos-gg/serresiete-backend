@@ -2,6 +2,8 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.ClientError
+import com.kos.clients.Retry.retryEitherWithFixedDelay
+import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
@@ -9,8 +11,6 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.C
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_CUTOFFS_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
-import com.kos.clients.Retry.retryEitherWithFixedDelay
-import com.kos.clients.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest

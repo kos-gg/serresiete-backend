@@ -3,6 +3,8 @@ package com.kos.clients.blizzard
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
+import com.kos.clients.Retry.retryEitherWithFixedDelay
+import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.BATTLENET_NAMESPACE
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.DYNAMIC_CLASSIC1X_NANESPACE
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.PROFILE_CLASSIC1X_EU_NAMESPACE
@@ -10,8 +12,6 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
-import com.kos.clients.Retry.retryEitherWithFixedDelay
-import com.kos.clients.RetryConfig
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction

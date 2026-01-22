@@ -3,11 +3,11 @@ package com.kos.clients.riot
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
+import com.kos.clients.Retry.retryEitherWithFixedDelay
+import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
-import com.kos.clients.Retry.retryEitherWithFixedDelay
-import com.kos.clients.RetryConfig
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction

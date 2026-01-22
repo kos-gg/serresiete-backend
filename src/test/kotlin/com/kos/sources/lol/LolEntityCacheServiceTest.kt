@@ -1,7 +1,6 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
-import com.kos.clients.RetryConfig
 import com.kos.clients.domain.QueueType
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.SyncProcessingError

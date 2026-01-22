@@ -1,7 +1,6 @@
 package com.kos.sources.wow
 
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.RetryConfig
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
