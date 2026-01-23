@@ -93,6 +93,7 @@ object Retry : WithLogger("retry") {
     private fun <L> shouldNotRetry(error: L): Boolean {
         return when (error) {
             is HttpError -> error.status < 500 && error.status != 429
+            is JsonParseError -> true
             else -> false
         }
     }
