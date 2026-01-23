@@ -7,8 +7,6 @@ import com.kos.clients.domain.Data
 import com.kos.clients.domain.RaiderIoData
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
-import com.kos.common.Retry.retryEitherWithFixedDelay
-import com.kos.common.RetryConfig
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.split
@@ -32,7 +30,6 @@ import java.time.OffsetDateTime
 class WowEntitySynchronizer(
     private val dataCacheRepository: DataCacheRepository,
     private val raiderIoClient: RaiderIoClient,
-    private val retryConfig: RetryConfig
 ) : EntitySynchronizer, WithLogger("WowEntitySynchronizer") {
 
     override val game: Game = Game.WOW
@@ -59,9 +56,7 @@ class WowEntitySynchronizer(
                     entities.map {
                         async {
                             execute("raiderIoGet") {
-                                retryEitherWithFixedDelay(retryConfig, "raiderIoGet") {
-                                    raiderIoClient.get(it).map { r -> Pair(it.id, r) }
-                                }
+                                raiderIoClient.get(it).map { r -> Pair(it.id, r) }
                             }
                         }
                     }.awaitAll().split()

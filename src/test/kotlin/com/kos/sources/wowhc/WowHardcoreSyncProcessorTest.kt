@@ -107,8 +107,8 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
             raiderIoClient,
             blizzardClient,
             blizzardDatabaseClient,
-            retryConfig
-        )
+
+            )
         val spied = spyk(wowHardcoreEntityCacheService)
         assertWowHardcoreCacheInvocation(
 
@@ -207,8 +207,8 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
             raiderIoClient,
             blizzardClient,
             blizzardDatabaseClient,
-            retryConfig
-        )
+
+            )
         val spied = spyk(wowHardcoreEntityCacheService)
         assertWowHardcoreCacheInvocation(
 
@@ -309,8 +309,8 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
             raiderIoClient,
             blizzardClient,
             blizzardDatabaseClient,
-            retryConfig
-        )
+
+            )
         val spied = spyk(wowHardcoreEntityCacheService)
         assertWowHardcoreCacheInvocation(
 
@@ -349,8 +349,8 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
                 raiderIoClient,
                 blizzardClient,
                 blizzardDatabaseClient,
-                retryConfig
-            )
+
+                )
             val spied = spyk(wowHardcoreEntityCacheService)
             assertWowHardcoreCacheInvocation(
 

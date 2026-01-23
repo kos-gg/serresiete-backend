@@ -5,7 +5,6 @@ import com.kos.clients.HttpError
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.RetryConfig
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
@@ -21,7 +20,6 @@ import kotlin.test.fail
 
 class WowSeasonServiceTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
-    private val retryConfig = RetryConfig(1, 1000)
 
 
     @Test
@@ -106,7 +104,7 @@ class WowSeasonServiceTest {
         val seasonInMemoryRepository = WowSeasonInMemoryRepository()
             .withState(seasonsState)
 
-        return WowSeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient, retryConfig)
+        return WowSeasonService(staticDataInMemoryRepository, seasonInMemoryRepository, raiderIoClient)
     }
 
 }

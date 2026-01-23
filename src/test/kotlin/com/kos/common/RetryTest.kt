@@ -1,12 +1,64 @@
 package com.kos.common
 
 import arrow.core.Either
+import com.kos.clients.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class RetryTest {
     private val zeroDelayRetryConfig = RetryConfig(maxAttempts = 3, delayTime = 0L)
+
+    @Test
+    fun `retryEitherWithFixedDelay retries when the failure is retryable`() {
+        runBlocking {
+            val attempts = mutableListOf<Either<ClientError, String>>()
+
+            val block: suspend () -> Either<ClientError, String> = {
+                val result = Either.Left(HttpError(500, "internal server error"))
+                attempts.add(result)
+                result
+            }
+
+            val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
+            assertEquals(Either.Left(HttpError(500, "internal server error")), result)
+            assertEquals(4, attempts.size)
+        }
+    }
+
+    @Test
+    fun `retryEitherWithFixedDelay stops retrying upon a non retryable error`() {
+        runBlocking {
+            val attempts = mutableListOf<Either<ClientError, String>>()
+
+            val block: suspend () -> Either<ClientError, String> = {
+                val result = Either.Left(HttpError(404, "NouFound"))
+                attempts.add(result)
+                result
+            }
+
+            val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
+            assertEquals(Either.Left(HttpError(404, "NouFound")), result)
+            assertEquals(1, attempts.size)
+        }
+    }
+
+    @Test
+    fun `retryEitherWithFixedDelay stops retrying upon a JsonParseError error`() {
+        runBlocking {
+            val attempts = mutableListOf<Either<ClientError, String>>()
+
+            val block: suspend () -> Either<ClientError, String> = {
+                val result = Either.Left(JsonParseError("", ""))
+                attempts.add(result)
+                result
+            }
+
+            val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
+            assertEquals(Either.Left(JsonParseError("", "")), result)
+            assertEquals(1, attempts.size)
+        }
+    }
 
     @Test
     fun `retryEitherWithFixedDelay retries the specified number of times on failure`() {
@@ -49,14 +101,14 @@ class RetryTest {
         runBlocking {
             val attempts = mutableListOf<Either<String, String>>()
 
-            val block: suspend () -> Either<String, String> = {
+            val request: suspend () -> Either<String, String> = {
                 val result = Either.Left("Failure")
                 attempts.add(result)
                 result
             }
 
             val result =
-                Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, block = block)
+                Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, request = request)
 
             assertEquals(Either.Left("Failure"), result)
             assertEquals(4, attempts.size)
@@ -68,13 +120,13 @@ class RetryTest {
         runBlocking {
             val attempts = mutableListOf<Either<String, String>>()
 
-            val block: suspend () -> Either<String, String> = {
+            val request: suspend () -> Either<String, String> = {
                 val result = if (attempts.size == 1) Either.Right("Success") else Either.Left("Failure")
                 attempts.add(result)
                 result
             }
 
-            val result = Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, block = block)
+            val result = Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, request = request)
 
             assertEquals(Either.Right("Success"), result)
             assertEquals(2, attempts.size)

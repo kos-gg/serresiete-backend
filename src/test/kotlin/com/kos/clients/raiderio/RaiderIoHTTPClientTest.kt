@@ -3,6 +3,7 @@ package com.kos.clients.raiderio
 import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.ClientError
+import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfileResponse
@@ -17,7 +18,7 @@ import kotlin.test.fail
 
 class RaiderIoHTTPClientTest {
 
-    private val raiderIoClient = RaiderIoHTTPClient(client)
+    private val raiderIoClient = RaiderIoHTTPClient(client, RetryConfig(0, 0))
 
     @Test
     fun `test get() method with successful response`() {

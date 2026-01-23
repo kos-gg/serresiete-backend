@@ -9,7 +9,6 @@ import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
-import com.kos.common.RetryConfig
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
@@ -66,7 +65,6 @@ class TasksServiceTest {
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val blizzardDbClient = mock(WowItemsDatabaseRepository::class.java)
-    private val retryConfig = RetryConfig(1, 1)
 
     @Test
     fun `task update wow hardcore guilds is successful`() {
@@ -393,20 +391,20 @@ class TasksServiceTest {
 
         val wowExpansionRepository = WowExpansionInMemoryRepository()
         val wowSeasonsRepository = WowSeasonInMemoryRepository()
-        val wowSeasonsService = WowSeasonService(wowExpansionRepository, wowSeasonsRepository, raiderIoClient, retryConfig)
+        val wowSeasonsService = WowSeasonService(wowExpansionRepository, wowSeasonsRepository, raiderIoClient)
 
         val tasksRepo = TasksInMemoryRepository()
 
-        val lolEntityCacheService = LolEntitySynchronizer(dataCacheRepo, riotClient, retryConfig)
+        val lolEntityCacheService = LolEntitySynchronizer(dataCacheRepo, riotClient)
         val wowHardcoreEntityCacheService = WowHardcoreEntitySynchronizer(
             dataCacheRepo,
             entitiesRepository,
             raiderIoClient,
             blizzardClient,
             blizzardDbClient,
-            retryConfig
-        )
-        val wowEntityCacheService = WowEntitySynchronizer(dataCacheRepo, raiderIoClient, retryConfig)
+
+            )
+        val wowEntityCacheService = WowEntitySynchronizer(dataCacheRepo, raiderIoClient)
 
         val entityCacheServiceRegistry =
             EntitySynchronizerProvider(
