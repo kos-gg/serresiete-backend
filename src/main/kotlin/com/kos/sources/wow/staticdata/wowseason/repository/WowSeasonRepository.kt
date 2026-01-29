@@ -7,6 +7,7 @@ import com.kos.sources.wow.staticdata.wowseason.WowSeason
 
 interface WowSeasonRepository : WithState<WowSeasonsState, WowSeasonRepository> {
     suspend fun insert(season: WowSeason): Either<InsertError, Boolean>
+    suspend fun getCurrentSeason(): WowSeason?
 }
 
 data class WowSeasonsState(

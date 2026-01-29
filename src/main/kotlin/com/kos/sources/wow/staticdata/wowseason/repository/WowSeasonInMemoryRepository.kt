@@ -18,6 +18,10 @@ class WowSeasonInMemoryRepository : WowSeasonRepository, InMemoryRepository {
         }
     }
 
+    override suspend fun getCurrentSeason(): WowSeason {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun state(): WowSeasonsState {
         return WowSeasonsState(wowSeasons)
     }

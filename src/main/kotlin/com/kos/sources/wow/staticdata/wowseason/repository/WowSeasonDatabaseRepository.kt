@@ -13,26 +13,33 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
         val name = text("name")
         val expansionId = integer("expansion_id")
         val data = text("data")
+        val currentSeason = bool("is_current_season")
 
         override val primaryKey = PrimaryKey(seasonId, expansionId)
     }
 
     override suspend fun insert(season: WowSeason): Either<InsertError, Boolean> {
-        return Either.catch {
-            newSuspendedTransaction(Dispatchers.IO, db) {
-                when (season) {
-                    is WowSeason -> {
-                        WowSeasons.insert {
-                            it[seasonId] = season.id
-                            it[name] = season.name
-                            it[expansionId] = season.expansionId
-                            it[data] = season.seasonData
-                        }
-                    }
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            Either.catch {
+                WowSeasons.update {
+                    it[currentSeason] = false
+                }
+                WowSeasons.insert {
+                    it[seasonId] = season.id
+                    it[name] = season.name
+                    it[expansionId] = season.expansionId
+                    it[data] = season.seasonData
+                    it[currentSeason] = true
                 }
                 true
-            }
-        }.mapLeft { InsertError(it.message ?: it.stackTraceToString()) }
+            }.onLeft { rollback() }.mapLeft { InsertError(it.message ?: it.stackTraceToString()) }
+        }
+    }
+    
+    override suspend fun getCurrentSeason(): WowSeason? {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            WowSeasons.selectAll().where { WowSeasons.currentSeason eq true }.map { resultRowToWowSeason(it) }.firstOrNull()
+        }
     }
 
     override suspend fun state(): WowSeasonsState {
