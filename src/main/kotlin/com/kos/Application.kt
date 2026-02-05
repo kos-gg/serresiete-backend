@@ -37,6 +37,8 @@ import com.kos.roles.RolesController
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesDatabaseRepository
 import com.kos.roles.repository.RolesDatabaseRepository
+import com.kos.sources.SourcesController
+import com.kos.sources.SourcesService
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
@@ -187,6 +189,9 @@ fun Application.module() {
         )
     val viewsController = ViewsController(viewsService)
 
+    val sourcesService = SourcesService(wowSeasonService)
+    val sourcesController = SourcesController(sourcesService)
+
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
 
@@ -261,7 +266,8 @@ fun Application.module() {
         viewsController,
         tasksController,
         eventSubscriptionController,
-        entitiesController
+        entitiesController,
+        sourcesController
     )
     configureSerialization()
     configureLogging()

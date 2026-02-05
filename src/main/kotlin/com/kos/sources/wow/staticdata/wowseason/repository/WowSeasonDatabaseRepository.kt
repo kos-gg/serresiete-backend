@@ -5,6 +5,7 @@ import com.kos.common.error.InsertError
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepository {
@@ -13,26 +14,35 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
         val name = text("name")
         val expansionId = integer("expansion_id")
         val data = text("data")
+        val isCurrentSeason = bool("is_current_season")
 
         override val primaryKey = PrimaryKey(seasonId, expansionId)
     }
 
     override suspend fun insert(season: WowSeason): Either<InsertError, Boolean> {
-        return Either.catch {
-            newSuspendedTransaction(Dispatchers.IO, db) {
-                when (season) {
-                    is WowSeason -> {
-                        WowSeasons.insert {
-                            it[seasonId] = season.id
-                            it[name] = season.name
-                            it[expansionId] = season.expansionId
-                            it[data] = season.seasonData
-                        }
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            Either.catch {
+                if (season.isCurrentSeason)
+                    WowSeasons.update({ WowSeasons.isCurrentSeason eq true }) {
+                        it[isCurrentSeason] = false
                     }
+                WowSeasons.insert {
+                    it[seasonId] = season.id
+                    it[name] = season.name
+                    it[expansionId] = season.expansionId
+                    it[data] = season.seasonData
+                    it[isCurrentSeason] = season.isCurrentSeason
                 }
                 true
-            }
-        }.mapLeft { InsertError(it.message ?: it.stackTraceToString()) }
+            }.onLeft { rollback() }.mapLeft { InsertError(it.message ?: it.stackTraceToString()) }
+        }
+    }
+
+    override suspend fun getCurrentSeason(): WowSeason? {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            WowSeasons.selectAll().where { WowSeasons.isCurrentSeason eq true }.map { resultRowToWowSeason(it) }
+                .firstOrNull()
+        }
     }
 
     override suspend fun state(): WowSeasonsState {
@@ -50,6 +60,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
                 this[WowSeasons.name] = it.name
                 this[WowSeasons.expansionId] = it.expansionId
                 this[WowSeasons.data] = it.seasonData
+                this[WowSeasons.isCurrentSeason] = it.isCurrentSeason
             }
         }
 
@@ -60,6 +71,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
         row[WowSeasons.seasonId],
         row[WowSeasons.name],
         row[WowSeasons.expansionId],
-        row[WowSeasons.data]
+        row[WowSeasons.data],
+        row[WowSeasons.isCurrentSeason]
     )
 }
