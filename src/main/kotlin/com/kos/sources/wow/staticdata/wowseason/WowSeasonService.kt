@@ -2,6 +2,7 @@ package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
@@ -53,7 +54,8 @@ data class WowSeasonService(
                 currentSeason.blizzardSeasonId,
                 currentSeason.name,
                 10,
-                json.encodeToString(currentSeason)
+                json.encodeToString(currentSeason),
+                currentSeason.isCurrentSeason
             )
 
             wowSeasonRepository.insert(wowSeason)
@@ -62,6 +64,9 @@ data class WowSeasonService(
 
             wowSeason
         }
+
+    suspend fun getWowCurrentSeason(): Season? =
+        wowSeasonRepository.getCurrentSeason()?.let { Json.decodeFromString<Season>(it.seasonData) }
 
 
     private suspend fun getCurrentExpansion(): WowExpansion? {

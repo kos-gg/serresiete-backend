@@ -11,6 +11,7 @@ import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
@@ -49,7 +50,7 @@ class WowSeasonServiceTest {
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
@@ -66,7 +67,7 @@ class WowSeasonServiceTest {
                 .thenReturn(Either.Left(HttpError(500, "Internal server error")))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
@@ -84,13 +85,48 @@ class WowSeasonServiceTest {
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "")))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
                 seasonService.addNewMythicPlusSeason()
                     .isLeft()
             )
+        }
+    }
+
+    @Test
+    fun `i can retrieve wow current season`() {
+        runBlocking {
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val seasonData = """
+                {
+                  "is_main_season": true,
+                  "name": "Mythic+ Season 3",
+                  "blizzard_season_id": 12,
+                  "dungeons": [
+                    {
+                      "name": "The Nokhud Offensive",
+                      "short_name": "NO",
+                      "challenge_mode_id": 2516
+                    },
+                    {
+                      "name": "Algeth'ar Academy",
+                      "short_name": "AA",
+                      "challenge_mode_id": 2520
+                    },
+                    {
+                      "name": "Ruby Life Pools",
+                      "short_name": "RLP",
+                      "challenge_mode_id": 2521
+                    }
+                  ]
+                }
+            """.trimIndent()
+            val season = WowSeason(15, "TWW Season 3", 10, seasonData, true)
+            val wowSeasonsState = WowSeasonsState(listOf(season))
+            val service = createService(wowExpansionState, wowSeasonsState)
+            assertEquals(Json.decodeFromString<Season>(seasonData), service.getWowCurrentSeason())
         }
     }
 

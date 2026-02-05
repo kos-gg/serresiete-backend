@@ -15,7 +15,7 @@ class SourcesController(private val sourcesService: SourcesService) {
             null -> Either.Left(NotAuthorized)
             else -> {
                 if (activities.contains(Activities.getWowStaticData)) {
-                    when (val maybeData = sourcesService.getWowStaticData()) {
+                    when (val maybeData = sourcesService.getWowCurrentSeason()) {
                         null -> Either.Left(NotFound("wow static data current season"))
                         else -> Either.Right(maybeData)
                     }

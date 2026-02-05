@@ -44,7 +44,6 @@ import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
-import com.kos.sources.wow.staticdata.WowStaticDataService
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
@@ -190,8 +189,7 @@ fun Application.module() {
         )
     val viewsController = ViewsController(viewsService)
 
-    val wowStaticDataService = WowStaticDataService(seasonRepository)
-    val sourcesService = SourcesService(wowStaticDataService)
+    val sourcesService = SourcesService(wowSeasonService)
     val sourcesController = SourcesController(sourcesService)
 
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()

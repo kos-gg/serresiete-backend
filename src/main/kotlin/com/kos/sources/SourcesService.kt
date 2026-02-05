@@ -1,10 +1,10 @@
 package com.kos.sources
 
 import com.kos.clients.domain.Season
-import com.kos.sources.wow.staticdata.WowStaticDataService
+import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 
 class SourcesService(
-    val wowStaticDataService: WowStaticDataService
+    val wowSeasonService: WowSeasonService
 ) {
-    suspend fun getWowStaticData(): Season? = wowStaticDataService.getWowStaticData()
+    suspend fun getWowCurrentSeason(): Season? = wowSeasonService.getWowCurrentSeason()
 }

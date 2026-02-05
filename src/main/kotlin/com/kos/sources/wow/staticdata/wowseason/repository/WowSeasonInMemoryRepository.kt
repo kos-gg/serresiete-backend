@@ -13,13 +13,15 @@ class WowSeasonInMemoryRepository : WowSeasonRepository, InMemoryRepository {
         return if (this.wowSeasons.any { wowSeason -> season.same(wowSeason) })
             Either.Left(InsertError("Error inserting wow season $season because it already exists."))
         else {
+            if (season.isCurrentSeason)
+                this.wowSeasons.replaceAll { it.copy(isCurrentSeason = false) }
             this.wowSeasons.add(season)
             Either.Right(true)
         }
     }
 
-    override suspend fun getCurrentSeason(): WowSeason {
-        TODO("Not yet implemented")
+    override suspend fun getCurrentSeason(): WowSeason? {
+        return this.wowSeasons.firstOrNull { it.isCurrentSeason }
     }
 
     override suspend fun state(): WowSeasonsState {

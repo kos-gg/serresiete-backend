@@ -8,6 +8,7 @@ data class WowSeason(
     val name: String,
     val expansionId: Int,
     val seasonData: String,
+    val isCurrentSeason: Boolean
 ) {
     fun same(other: WowSeason): Boolean =
         this.id == other.id && this.expansionId == other.expansionId
