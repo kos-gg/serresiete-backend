@@ -141,7 +141,7 @@ data class RiotHTTPClient(
                     functionName = "getLeagueEntriesByPUUID",
                 ) {
                     fetchFromApi<List<LeagueEntryResponse>> {
-                        client.get(baseURI("europe").toString() + partialURI.toString()) {
+                        client.get(baseURI("euw1").toString() + partialURI.toString()) {
                             headers {
                                 append(HttpHeaders.Accept, "*/*")
                                 append(X_RIOT_TOKEN, apiKey)
