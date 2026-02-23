@@ -20,6 +20,8 @@ class ViewsController(
         limit: Int?,
         includeMetadata: Boolean
     ): Either<ControllerError, Pair<ViewMetadata?, List<SimpleView>>> {
+        println(activities)
+
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {

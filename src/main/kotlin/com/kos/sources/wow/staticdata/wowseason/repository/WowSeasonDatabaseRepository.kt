@@ -5,7 +5,6 @@ import com.kos.common.error.InsertError
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepository {
