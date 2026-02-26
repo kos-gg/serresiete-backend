@@ -519,8 +519,6 @@ class EntitiesServiceTest {
     }
 
     private fun assertResolvedEntities(expected: ResolvedEntities, actual: ResolvedEntities) {
-        println("expected: $expected")
-        println("actual: $actual")
         assertEquals(expected.entities.size, actual.entities.size)
         assertEquals(expected.existing, actual.existing)
         assertEquals(expected.guild, actual.guild)

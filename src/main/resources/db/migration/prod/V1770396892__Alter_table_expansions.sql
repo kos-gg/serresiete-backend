@@ -1,16 +1,14 @@
-DELETE FROM wow_expansions;
+ALTER TABLE mythic_plus_seasons
+DROP CONSTRAINT fk_mythic_plus_seasons;
 
-INSERT INTO wow_expansions (id, name, is_current_expansion)
-VALUES
-    (1, 'The Burning Crusade', false),
-    (2, 'Wrath of the Lich King', false),
-    (3, 'Cataclysm', false),
-    (4, 'Mists of Pandaria', false),
-    (5, 'Warlords of Draenor', false),
-    (6, 'Legion', false),
-    (7, 'Battle for Azeroth', false),
-    (8, 'Shadowlands', false),
-    (9, 'Dragonflight', false),
-    (10, 'The War Within', false),
-    (11, 'Midnight', true),
-    (12, 'The Last Titan', false);
+ALTER TABLE mythic_plus_seasons
+    ADD CONSTRAINT fk_mythic_plus_seasons
+        FOREIGN KEY (expansion_id)
+            REFERENCES wow_expansions(id)
+            ON UPDATE CASCADE;
+
+DELETE FROM wow_expansions
+WHERE name = 'Classic';
+
+UPDATE wow_expansions SET id = id + 100 WHERE id > 1;
+UPDATE wow_expansions SET id = id - 101 WHERE id > 101;
