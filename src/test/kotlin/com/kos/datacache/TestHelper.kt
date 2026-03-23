@@ -8,6 +8,8 @@ object TestHelper {
     private val wowData = """{                                
      "id": 1,                    
      "name": "Proassassin",       
+     "realm": "Sanguino",
+     "region": "eu",
      "spec": "Havoc",             
      "class": "Demon Hunter",     
      "score": 0.0,                

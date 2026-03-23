@@ -65,6 +65,8 @@ object RaiderIoHttpClientHelper {
         RaiderIoResponse(
             RaiderIoProfile(
                 name = "Nareez",
+                realm = "Blackrock",
+                region = "eu",
                 `class` = "Warlock",
                 spec = "Affliction",
                 seasonScores = listOf(
