@@ -227,6 +227,8 @@ data class MythicPlusRun(
 @Serializable
 data class RaiderIoProfile(
     val name: String,
+    val realm: String,
+    val region: String,
     val `class`: String,
     @SerialName("active_spec_name")
     val spec: String,
@@ -240,6 +242,8 @@ data class RaiderIoProfile(
     fun toRaiderIoData(characterId: Long, quantile: Double, specRanks: List<MythicPlusRankWithSpecName>) = RaiderIoData(
         characterId,
         name,
+        realm,
+        region,
         seasonScores[0].scores.all,
         `class`,
         spec,
@@ -285,6 +289,8 @@ data class RaiderioWowHeadEmbeddedResponse(
 data class RaiderIoData(
     val id: Long,
     val name: String,
+    val realm: String,
+    val region: String,
     val score: Double,
     val `class`: String,
     val spec: String,

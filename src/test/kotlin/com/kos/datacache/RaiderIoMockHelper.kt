@@ -11,6 +11,8 @@ object RaiderIoMockHelper {
             RaiderIoResponse(
                 RaiderIoProfile(
                     wowCharacter.name,
+                    wowCharacter.realm,
+                    wowCharacter.region,
                     "class",
                     "spec",
                     listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
@@ -34,6 +36,8 @@ object RaiderIoMockHelper {
         RaiderIoData(
             id = 1,
             name = "kakarona",
+            realm = "sanguino",
+            region = "eu",
             score = 0.0,
             `class` = "class",
             spec = "spec",
@@ -51,6 +55,8 @@ object RaiderIoMockHelper {
           "type": "com.kos.clients.domain.RaiderIoData",
           "id": 1,
           "name": "kakarona",
+          "realm": "sanguino",
+          "region": "eu",
           "score": 0.0,
           "class": "class",
           "spec": "spec",
@@ -79,6 +85,8 @@ object RaiderIoMockHelper {
     val raiderioCachedData: RaiderIoData = RaiderIoData(
         id = 1,
         name = "Proassassin",
+        realm = "Sanguino",
+        region = "eu",
         score = 0.0,
         `class` = "Demon Hunter",
         spec = "Havoc",
