@@ -256,6 +256,11 @@ val classes: List<Class> = listOf(
                 "Vengeance",
                 581,
                 1
+            ),
+            Spec(
+                "Devourer",
+                1480,
+                2
             )
         )
     ),
