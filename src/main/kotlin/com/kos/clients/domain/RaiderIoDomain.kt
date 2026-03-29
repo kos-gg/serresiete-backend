@@ -2,6 +2,7 @@ package com.kos.clients.domain
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.kos.common.OffsetDateTimeSerializer
 import com.kos.entities.domain.Spec
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -15,6 +16,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
+import java.time.OffsetDateTime
 
 @Serializable
 data class RaiderIoCutoff(val totalPopulation: Int)
@@ -212,6 +214,8 @@ data class Affix(
 
 @Serializable
 data class MythicPlusRun(
+    @SerialName("keystone_run_id")
+    val runId: String,
     val dungeon: String,
     @SerialName("short_name")
     val shortName: String,
@@ -219,6 +223,9 @@ data class MythicPlusRun(
     val keyLevel: Int,
     @SerialName("num_keystone_upgrades")
     val upgrades: Int,
+    @SerialName("completed_at")
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val completionTme: OffsetDateTime,
     val score: Float,
     val url: String,
     val affixes: List<Affix>
