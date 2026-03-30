@@ -56,6 +56,15 @@ object RaiderIoHttpClientHelper {
                         )
                     }
 
+                    "/api/v1/mythic-plus/run-details" -> {
+                        val response = ResourceLoader.readResource("wow/raiderio-run-details-response.json")
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
                     else -> error("Unhandled ${request.url.encodedPath}")
                 }
             }
@@ -201,6 +210,20 @@ object RaiderIoHttpClientHelper {
             ]
         }
     """.trimIndent()
+
+    val runDetails = RunDetails(
+        roster = listOf(
+            RunDetailsRosterEntry(RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm("Blackrock"))),
+            RunDetailsRosterEntry(RunDetailsCharacter("Surmana", RunDetailsCharacterClass("Warrior"), RunDetailsCharacterSpec("Protection"), RunDetailsCharacterRealm("Soulseeker")))
+        ),
+        loggedDetails = LoggedDetails(
+            deaths = listOf(
+                RunDetailsDeath(291586163L, 1441041, 3268098),
+                RunDetailsDeath(301703640L, 1446140, 3268098),
+                RunDetailsDeath(113975488L, 914295, null)
+            )
+        )
+    )
 
     val mythicPlusRun = MythicPlusRun(
         runId = "4462779",

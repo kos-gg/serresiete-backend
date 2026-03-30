@@ -1,0 +1,27 @@
+{
+  "roster": [
+    {
+      "character": {
+        "name": "Nareez",
+        "class": { "name": "Warlock" },
+        "spec": { "name": "Affliction" },
+        "realm": { "name": "Blackrock" }
+      }
+    },
+    {
+      "character": {
+        "name": "Surmana",
+        "class": { "name": "Warrior" },
+        "spec": { "name": "Protection" },
+        "realm": { "name": "Soulseeker" }
+      }
+    }
+  ],
+  "logged_details": {
+    "deaths": [
+      { "character_id": 291586163, "approximate_died_at": 1441041, "logged_encounter_id": 3268098 },
+      { "character_id": 301703640, "approximate_died_at": 1446140, "logged_encounter_id": 3268098 },
+      { "character_id": 113975488, "approximate_died_at": 914295, "logged_encounter_id": null }
+    ]
+  }
+}

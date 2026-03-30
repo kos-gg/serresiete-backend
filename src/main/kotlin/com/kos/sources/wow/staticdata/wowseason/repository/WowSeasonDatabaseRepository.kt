@@ -11,6 +11,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
     object WowSeasons : Table("mythic_plus_seasons") {
         val seasonId = integer("id")
         val name = text("name")
+        val slug = text("slug")
         val expansionId = integer("expansion_id")
         val data = text("data")
         val isCurrentSeason = bool("is_current_season")
@@ -28,6 +29,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
                 WowSeasons.insert {
                     it[seasonId] = season.id
                     it[name] = season.name
+                    it[slug] = season.slug
                     it[expansionId] = season.expansionId
                     it[data] = season.seasonData
                     it[isCurrentSeason] = season.isCurrentSeason
@@ -57,6 +59,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
             WowSeasons.batchInsert(initialState.wowSeasons) {
                 this[WowSeasons.seasonId] = it.id
                 this[WowSeasons.name] = it.name
+                this[WowSeasons.slug] = it.slug
                 this[WowSeasons.expansionId] = it.expansionId
                 this[WowSeasons.data] = it.seasonData
                 this[WowSeasons.isCurrentSeason] = it.isCurrentSeason
@@ -69,6 +72,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
     private fun resultRowToWowSeason(row: ResultRow) = WowSeason(
         row[WowSeasons.seasonId],
         row[WowSeasons.name],
+        row[WowSeasons.slug],
         row[WowSeasons.expansionId],
         row[WowSeasons.data],
         row[WowSeasons.isCurrentSeason]

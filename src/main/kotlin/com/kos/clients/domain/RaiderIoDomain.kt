@@ -88,6 +88,8 @@ data class Season(
     @SerialName("is_main_season")
     val isCurrentSeason: Boolean,
     val name: String,
+    @SerialName("slug")
+    val slug: String,
     @SerialName("blizzard_season_id")
     val blizzardSeasonId: Int,
     val dungeons: List<Dungeon>
@@ -263,6 +265,56 @@ data class RaiderIoProfile(
 data class RaiderIoResponse(
     val profile: RaiderIoProfile,
     val specs: List<MythicPlusRankWithSpecName>
+)
+
+@Serializable
+data class RunDetailsCharacterClass(val name: String)
+
+@Serializable
+data class RunDetailsCharacterSpec(val name: String)
+
+@Serializable
+data class RunDetailsCharacterRealm(val name: String)
+
+@Serializable
+data class RunDetailsCharacter(
+    val name: String,
+    @SerialName("class")
+    val characterClass: RunDetailsCharacterClass,
+    val spec: RunDetailsCharacterSpec,
+    val realm: RunDetailsCharacterRealm
+)
+
+@Serializable
+data class RunDetailsRosterEntry(val character: RunDetailsCharacter)
+
+@Serializable
+data class RunDetailsDeath(
+    @SerialName("character_id")
+    val characterId: Long,
+    @SerialName("approximate_died_at")
+    val approximateDiedAt: Int,
+    @SerialName("logged_encounter_id")
+    val loggedEncounterId: Int? = null
+)
+
+@Serializable
+data class LoggedDetails(val deaths: List<RunDetailsDeath> = emptyList())
+
+@Serializable
+data class RunDetails(
+    val roster: List<RunDetailsRosterEntry>,
+    @SerialName("logged_details")
+    val loggedDetails: LoggedDetails = LoggedDetails()
+) {
+    val deathCount: Int get() = loggedDetails.deaths.size
+    fun toResponse() = RunDetailsResponse(roster, deathCount)
+}
+
+@Serializable
+data class RunDetailsResponse(
+    val roster: List<RunDetailsRosterEntry>,
+    val deathCount: Int
 )
 
 

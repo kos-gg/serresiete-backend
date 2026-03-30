@@ -3,6 +3,12 @@ package com.kos.sources.wow.staticdata.wowseason
 import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.domain.ExpansionSeasons
+import com.kos.clients.domain.RunDetails
+import com.kos.clients.domain.RunDetailsCharacter
+import com.kos.clients.domain.RunDetailsCharacterClass
+import com.kos.clients.domain.RunDetailsCharacterRealm
+import com.kos.clients.domain.RunDetailsCharacterSpec
+import com.kos.clients.domain.RunDetailsRosterEntry
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
@@ -26,7 +32,7 @@ class WowSeasonServiceTest {
     @Test
     fun `i can add a new mythic plus dungeon season given there is no season data for the current expansion`() {
         runBlocking {
-            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(true, "TWW3", 15, listOf())))
+            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(true, "TWW3", "tww-3", 15, listOf())))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
@@ -45,12 +51,12 @@ class WowSeasonServiceTest {
     @Test
     fun `i can not add a new mythic plus dungeon season given in repository it already exists the same current season`() {
         runBlocking {
-            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(true, "TWW Season 3", 15, listOf())))
+            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(true, "TWW Season 3", "tww-season-3", 15, listOf())))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
@@ -67,7 +73,7 @@ class WowSeasonServiceTest {
                 .thenReturn(Either.Left(HttpError(500, "Internal server error")))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
@@ -80,18 +86,45 @@ class WowSeasonServiceTest {
     @Test
     fun `i can not add a new mythic plus dungeon season because there is not current season for the current expansion`() {
         runBlocking {
-            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(false, "TWW Season 3", 15, listOf())))
+            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(false, "TWW Season 3", "tww-season-3", 15, listOf())))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", 10, "", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
             assertTrue(
                 seasonService.addNewMythicPlusSeason()
                     .isLeft()
             )
+        }
+    }
+
+    @Test
+    fun `i can get run details for the current season`() {
+        runBlocking {
+            val runDetails = RunDetails(
+                listOf(RunDetailsRosterEntry(RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm("Blackrock"))))
+            )
+            `when`(raiderIoClient.getRunDetails("tww-season-3", "3415343"))
+                .thenReturn(Either.Right(runDetails))
+
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
+            val service = createService(wowExpansionState, wowSeasonsState)
+
+            assertEquals(Either.Right(runDetails), service.getRunDetails("3415343"))
+        }
+    }
+
+    @Test
+    fun `i cannot get run details when there is no current season`() {
+        runBlocking {
+            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
+            val service = createService(wowExpansionState, WowSeasonsState(listOf()))
+
+            assertTrue(service.getRunDetails("3415343").isLeft())
         }
     }
 
@@ -103,6 +136,7 @@ class WowSeasonServiceTest {
                 {
                   "is_main_season": true,
                   "name": "Mythic+ Season 3",
+                  "slug": "mythic-plus-season-3",
                   "blizzard_season_id": 12,
                   "dungeons": [
                     {
@@ -123,7 +157,7 @@ class WowSeasonServiceTest {
                   ]
                 }
             """.trimIndent()
-            val season = WowSeason(15, "TWW Season 3", 10, seasonData, true)
+            val season = WowSeason(15, "TWW Season 3", "tww-season-3", 10, seasonData, true)
             val wowSeasonsState = WowSeasonsState(listOf(season))
             val service = createService(wowExpansionState, wowSeasonsState)
             assertEquals(Json.decodeFromString<Season>(seasonData), service.getWowCurrentSeason())
