@@ -217,7 +217,7 @@ data class Affix(
 @Serializable
 data class MythicPlusRun(
     @SerialName("keystone_run_id")
-    val runId: String,
+    val runId: Long,
     val dungeon: String,
     @SerialName("short_name")
     val shortName: String,
@@ -228,6 +228,8 @@ data class MythicPlusRun(
     @SerialName("completed_at")
     @Serializable(with = OffsetDateTimeSerializer::class)
     val completionTme: OffsetDateTime,
+    @SerialName("clear_time_ms")
+    val clearTimeMs: Long,
     val score: Float,
     val url: String,
     val affixes: List<Affix>

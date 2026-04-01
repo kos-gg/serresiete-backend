@@ -96,89 +96,97 @@ object RaiderIoHttpClientHelper {
                 ),
                 mythicPlusBestRuns = listOf(
                     MythicPlusRun(
-                        "4462779",
+                        4462779L,
                         "Throne of the Tides",
                         "TOTT",
                         20,
                         2,
                         OffsetDateTime.parse("2023-11-25T12:12:22.000Z"),
+                        1380287L,
                         174.0F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4462779-20-throne-of-the-tides",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "3814291",
+                        3814291L,
                         "Atal'Dazar",
                         "AD",
                         20,
                         2,
                         OffsetDateTime.parse("2023-11-23T20:35:15.000Z"),
+                        1260658L,
                         173.8F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3814291-20-ataldazar",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "4879212",
+                        4879212L,
                         "Waycrest Manor",
                         "WM",
                         20,
                         2,
                         OffsetDateTime.parse("2023-11-26T13:06:05.000Z"),
+                        1605776L,
                         173.5F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4879212-20-waycrest-manor",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "3709222",
+                        3709222L,
                         "Darkheart Thicket",
                         "DHT",
                         20,
                         2,
                         OffsetDateTime.parse("2023-11-23T16:32:21.000Z"),
+                        1310595L,
                         173.4F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3709222-20-darkheart-thicket",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "3628977",
+                        3628977L,
                         "Black Rook Hold",
                         "BRH",
                         20,
                         2,
                         OffsetDateTime.parse("2023-11-23T10:33:37.000Z"),
+                        1724166L,
                         172.5F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3628977-20-black-rook-hold",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "3775347",
+                        3775347L,
                         "DOTI: Galakrond's Fall",
                         "FALL",
                         20,
                         1,
                         OffsetDateTime.parse("2023-11-23T20:04:33.000Z"),
+                        1642682L,
                         172.4F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3775347-20-doti-galakronds-fall",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "4267361",
+                        4267361L,
                         "The Everbloom",
                         "EB",
                         20,
                         1,
                         OffsetDateTime.parse("2023-11-24T19:42:55.000Z"),
+                        1719391L,
                         171.7F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4267361-20-everbloom",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
-                        "4382848",
+                        4382848L,
                         "DOTI: Murozond's Rise",
                         "RISE",
                         20,
                         1,
                         OffsetDateTime.parse("2023-11-25T09:38:33.000Z"),
+                        2097610L,
                         170.0F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4382848-20-doti-murozonds-rise",
                         listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
@@ -195,12 +203,13 @@ object RaiderIoHttpClientHelper {
 
     val mythicPlusRunJson = """
         {
-            "keystone_run_id": "4462779",
+            "keystone_run_id": 4462779,
             "dungeon": "Throne of the Tides",
             "short_name": "TOTT",
             "mythic_level": 20,
             "num_keystone_upgrades": 2,
             "completed_at": "2023-11-25T12:12:22.000Z",
+            "clear_time_ms": 1380287,
             "score": 174.0,
             "url": "https://raider.io/mythic-plus-runs/season-df-3/4462779-20-throne-of-the-tides",
             "affixes": [
@@ -226,12 +235,13 @@ object RaiderIoHttpClientHelper {
     )
 
     val mythicPlusRun = MythicPlusRun(
-        runId = "4462779",
+        runId = 4462779L,
         dungeon = "Throne of the Tides",
         shortName = "TOTT",
         keyLevel = 20,
         upgrades = 2,
         completionTme = OffsetDateTime.parse("2023-11-25T12:12:22.000Z"),
+        clearTimeMs = 1380287L,
         score = 174.0F,
         url = "https://raider.io/mythic-plus-runs/season-df-3/4462779-20-throne-of-the-tides",
         affixes = listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
