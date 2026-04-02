@@ -7,8 +7,10 @@ import com.kos.clients.domain.RunDetails
 import com.kos.clients.domain.RunDetailsCharacter
 import com.kos.clients.domain.RunDetailsCharacterClass
 import com.kos.clients.domain.RunDetailsCharacterRealm
+import com.kos.clients.domain.RunDetailsCharacterRegion
 import com.kos.clients.domain.RunDetailsCharacterSpec
 import com.kos.clients.domain.RunDetailsRosterEntry
+import com.kos.clients.domain.RunDetailsRosterRanks
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
@@ -105,7 +107,11 @@ class WowSeasonServiceTest {
     fun `i can get run details for the current season`() {
         runBlocking {
             val runDetails = RunDetails(
-                listOf(RunDetailsRosterEntry(RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm("Blackrock"))))
+                listOf(RunDetailsRosterEntry(
+                    character = RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm(1, "Blackrock", "blackrock"), RunDetailsCharacterRegion("United States & Oceania", "US", "us")),
+                    role = "dps",
+                    ranks = RunDetailsRosterRanks(0.0)
+                ))
             )
             `when`(raiderIoClient.getRunDetails("tww-season-3", "3415343"))
                 .thenReturn(Either.Right(runDetails))

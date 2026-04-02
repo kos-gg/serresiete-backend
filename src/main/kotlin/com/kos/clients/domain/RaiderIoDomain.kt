@@ -276,19 +276,40 @@ data class RunDetailsCharacterClass(val name: String)
 data class RunDetailsCharacterSpec(val name: String)
 
 @Serializable
-data class RunDetailsCharacterRealm(val name: String)
+data class RunDetailsCharacterRealm(
+    val id: Int,
+    val name: String,
+    val slug: String
+)
+
+@Serializable
+data class RunDetailsCharacterRegion(
+    val name: String,
+    @SerialName("short_name")
+    val shortName: String,
+    val slug: String
+)
+
+@Serializable
+data class RunDetailsRosterRanks(
+    val score: Double
+)
 
 @Serializable
 data class RunDetailsCharacter(
     val name: String,
-    @SerialName("class")
-    val characterClass: RunDetailsCharacterClass,
+    val `class`: RunDetailsCharacterClass,
     val spec: RunDetailsCharacterSpec,
-    val realm: RunDetailsCharacterRealm
+    val realm: RunDetailsCharacterRealm,
+    val region: RunDetailsCharacterRegion
 )
 
 @Serializable
-data class RunDetailsRosterEntry(val character: RunDetailsCharacter)
+data class RunDetailsRosterEntry(
+    val character: RunDetailsCharacter,
+    val role: String,
+    val ranks: RunDetailsRosterRanks
+)
 
 @Serializable
 data class RunDetailsDeath(
@@ -307,9 +328,9 @@ data class LoggedDetails(val deaths: List<RunDetailsDeath> = emptyList())
 data class RunDetails(
     val roster: List<RunDetailsRosterEntry>,
     @SerialName("logged_details")
-    val loggedDetails: LoggedDetails = LoggedDetails()
+    val loggedDetails: LoggedDetails? = null
 ) {
-    val deathCount: Int get() = loggedDetails.deaths.size
+    val deathCount: Int get() = loggedDetails?.deaths?.size ?: 0
     fun toResponse() = RunDetailsResponse(roster, deathCount)
 }
 

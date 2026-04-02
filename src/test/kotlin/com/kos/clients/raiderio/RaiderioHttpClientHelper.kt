@@ -220,10 +220,20 @@ object RaiderIoHttpClientHelper {
         }
     """.trimIndent()
 
+    private val usRegion = RunDetailsCharacterRegion("United States & Oceania", "US", "us")
+
     val runDetails = RunDetails(
         roster = listOf(
-            RunDetailsRosterEntry(RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm("Blackrock"))),
-            RunDetailsRosterEntry(RunDetailsCharacter("Surmana", RunDetailsCharacterClass("Warrior"), RunDetailsCharacterSpec("Protection"), RunDetailsCharacterRealm("Soulseeker")))
+            RunDetailsRosterEntry(
+                character = RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm(1, "Blackrock", "blackrock"), usRegion),
+                role = "dps",
+                ranks = RunDetailsRosterRanks(3200.5)
+            ),
+            RunDetailsRosterEntry(
+                character = RunDetailsCharacter("Surmana", RunDetailsCharacterClass("Warrior"), RunDetailsCharacterSpec("Protection"), RunDetailsCharacterRealm(2, "Soulseeker", "soulseeker"), usRegion),
+                role = "tank",
+                ranks = RunDetailsRosterRanks(2800.0)
+            )
         ),
         loggedDetails = LoggedDetails(
             deaths = listOf(

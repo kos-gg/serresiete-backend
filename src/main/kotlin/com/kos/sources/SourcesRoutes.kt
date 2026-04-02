@@ -23,4 +23,17 @@ fun Route.sourcesRouting(
             }
         }
     }
+    route("/sources/wow/rundetails") {
+        authenticate("auth-jwt") {
+            get {
+                val userWithActivities = call.principal<UserWithActivities>()
+                val runId = call.request.queryParameters["runId"] ?: ""
+                sourcesController.getRunDetails(userWithActivities?.name, userWithActivities?.activities.orEmpty(), runId).fold({
+                    call.respondWithHandledError(it)
+                }, {
+                    call.respond(HttpStatusCode.OK, it)
+                })
+            }
+        }
+    }
 }
