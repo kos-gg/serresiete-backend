@@ -1,4 +1,23 @@
 # Changelog
+## [5.1.0] - 02-04-2026
+
+### Added
+- **Mythic+ Run Details Endpoint** (`GET /api/sources/wow/rundetails?runId={runId}`):
+    - New endpoint to fetch detailed information about a specific Mythic+ run from Raider.IO.
+    - Returns the **roster** (character name, class, spec, realm, region, role, and score) and the **death count** for the run.
+    - Requires the `get wow run details` activity (granted to `admin` and `service` roles).
+    - Uses the current active season's slug to resolve the run against the Raider.IO API.
+- **Extended `MythicPlusRun` fields**:
+    - Added `keystone_run_id` (`runId`), `completed_at` (`completionTime`), and `clear_time_ms` (`clearTimeMs`) to the Raider.IO run domain model.
+- **Season slug support**:
+    - Added `slug` field to the `Season` and `WowSeason` domain models.
+    - Season slug is now persisted to the database during the Mythic+ season sync task.
+    - Added DB migration to add the `slug` column to the `mythic_plus_seasons` table.
+
+### Fixed
+- **Nullable `logged_details` in run details response**:
+    - `logged_details` returned by Raider.IO can be `null` for unlogged runs. The field is now correctly treated as nullable, preventing a JSON parse error for those runs. Death count defaults to `0` when `logged_details` is absent.
+
 ## [5.0.0] - 20-01-2026
 
 ### Refactor

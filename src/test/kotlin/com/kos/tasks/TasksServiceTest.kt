@@ -110,7 +110,7 @@ class TasksServiceTest {
     fun `task update mythic plus dungeon season is successful`() = runBlocking {
         val testComponents = createTaskService()
 
-        val expected = ExpansionSeasons(listOf(Season(true, "TWW3", 15, listOf())))
+        val expected = ExpansionSeasons(listOf(Season(true, "TWW3", "tww-3", 15, listOf())))
         testComponents.wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
 
         `when`(raiderIoClient.getExpansionSeasons(10))

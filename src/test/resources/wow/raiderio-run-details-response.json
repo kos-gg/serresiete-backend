@@ -1,0 +1,33 @@
+{
+  "roster": [
+    {
+      "character": {
+        "name": "Nareez",
+        "class": { "name": "Warlock" },
+        "spec": { "name": "Affliction" },
+        "realm": { "id": 1, "name": "Blackrock", "slug": "blackrock" },
+        "region": { "name": "United States & Oceania", "short_name": "US", "slug": "us" }
+      },
+      "role": "dps",
+      "ranks": { "score": 3200.5, "world": 1200, "region": 400, "realm": 10 }
+    },
+    {
+      "character": {
+        "name": "Surmana",
+        "class": { "name": "Warrior" },
+        "spec": { "name": "Protection" },
+        "realm": { "id": 2, "name": "Soulseeker", "slug": "soulseeker" },
+        "region": { "name": "United States & Oceania", "short_name": "US", "slug": "us" }
+      },
+      "role": "tank",
+      "ranks": { "score": 2800.0, "world": 2500, "region": 800, "realm": 25 }
+    }
+  ],
+  "logged_details": {
+    "deaths": [
+      { "character_id": 291586163, "approximate_died_at": 1441041, "logged_encounter_id": 3268098 },
+      { "character_id": 301703640, "approximate_died_at": 1446140, "logged_encounter_id": 3268098 },
+      { "character_id": 113975488, "approximate_died_at": 914295, "logged_encounter_id": null }
+    ]
+  }
+}

@@ -59,6 +59,18 @@ class RaiderIoHTTPClientTest {
     }
 
     @Test
+    fun `test getRunDetails() method with successful response`() {
+        runBlocking {
+            val result = raiderIoClient.getRunDetails("season-mn-1", "3415343")
+            result.onLeft { fail() }
+            result.onRight {
+                assertEquals(RaiderIoHttpClientHelper.runDetails, it)
+                assertEquals(3, it.deathCount)
+            }
+        }
+    }
+
+    @Test
     fun `test  cutoff() method with successful response`() {
         runBlocking {
             assertEquals(Either.Right(RaiderIoCutoff(1860760)), raiderIoClient.cutoff())

@@ -38,7 +38,7 @@ class EntitiesDomainTest {
         val expectedWarlockSpecs = setOf("Affliction", "Demonology", "Destruction")
         val expectedMonkSpecs = setOf("Wind Walker", "Brew Master", "Mist Weaver")
         val expectedDruidSpecs = setOf("Guardian", "Balance", "Feral", "Restoration Druid")
-        val expectedDemonHunterSpecs = setOf("Havoc", "Vengeance")
+        val expectedDemonHunterSpecs = setOf("Havoc", "Vengeance", "Devourer")
         val expectedDeathKnightSpecs = setOf("Blood", "Frost Death Knight", "Unholy")
         val expectedEvokerSpecs = setOf("Devastation", "Preservation", "Augmentation")
 

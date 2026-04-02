@@ -23,7 +23,7 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
     abstract val repository: WowSeasonRepository
     abstract val wowExpansionRepository: WowExpansionRepository
 
-    private val wowSeason = WowSeason(15, "TWW3", 10, "{}", true)
+    private val wowSeason = WowSeason(15, "TWW3", "tww-3", 10, "{}", true)
 
     @Test
     open fun `given an empty repository I can insert a wow season`() {
@@ -92,6 +92,7 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
                     WowSeason(
                         id = index,
                         name = "Season $index",
+                        slug = "season-$index",
                         expansionId = 10,
                         seasonData = "data-$index",
                         isCurrentSeason = Random.nextInt() % 2 == 0

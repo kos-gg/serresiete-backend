@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class WowSeason(
     val id: Int,
     val name: String,
+    val slug: String,
     val expansionId: Int,
     val seasonData: String,
     val isCurrentSeason: Boolean

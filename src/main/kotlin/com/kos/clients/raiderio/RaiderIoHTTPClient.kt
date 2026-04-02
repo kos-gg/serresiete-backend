@@ -10,6 +10,7 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.B
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_CUTOFFS_PATH
+import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_RUN_DETAILS_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.WithLogger
 import com.kos.entities.domain.WowEntity
@@ -31,6 +32,7 @@ data class RaiderIoHTTPClient(
         const val CHARACTERS_PROFILE_PATH = "/characters/profile"
         const val MYTHIC_PLUS_STATIC_DATA_PATH = "/mythic-plus/static-data"
         const val MYTHIC_PLUS_CUTOFFS_PATH = "/mythic-plus/season-cutoffs"
+        const val MYTHIC_PLUS_RUN_DETAILS_PATH = "/mythic-plus/run-details"
     }
 
     override suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, ExpansionSeasons> {
@@ -46,6 +48,25 @@ data class RaiderIoHTTPClient(
                     }
                     url {
                         parameters.append("expansion_id", expansionId.toString())
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun getRunDetails(season: String, runId: String): Either<ClientError, RunDetails> {
+        return retryEitherWithFixedDelay(
+            retryConfig = retryConfig,
+            functionName = "getRunDetails",
+        ) {
+            fetchFromApi<RunDetails> {
+                client.get(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
+                    headers {
+                        append(HttpHeaders.Accept, "*/*")
+                    }
+                    url {
+                        parameters.append("season", season)
+                        parameters.append("id", runId)
                     }
                 }
             }
