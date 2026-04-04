@@ -250,7 +250,12 @@ data class RaiderIoProfile(
     @SerialName("mythic_plus_best_runs")
     val mythicPlusBestRuns: List<MythicPlusRun>
 ) {
-    fun toRaiderIoData(characterId: Long, quantile: Double, specRanks: List<MythicPlusRankWithSpecName>) = RaiderIoData(
+    fun toRaiderIoData(
+        characterId: Long,
+        quantile: Double,
+        specRanks: List<MythicPlusRankWithSpecName>,
+        bestRuns: List<EnrichedMythicPlusRun>
+    ) = RaiderIoData(
         characterId,
         name,
         realm,
@@ -260,7 +265,7 @@ data class RaiderIoProfile(
         spec,
         quantile,
         MythicPlusRanksWithSpecs(mythicPlusRanks.overall, mythicPlusRanks.`class`, specRanks),
-        mythicPlusBestRuns
+        bestRuns
     )
 }
 
@@ -331,14 +336,7 @@ data class RunDetails(
     val loggedDetails: LoggedDetails? = null
 ) {
     val deathCount: Int get() = loggedDetails?.deaths?.size ?: 0
-    fun toResponse() = RunDetailsResponse(roster, deathCount)
 }
-
-@Serializable
-data class RunDetailsResponse(
-    val roster: List<RunDetailsRosterEntry>,
-    val deathCount: Int
-)
 
 
 object CodeExtractorSerializer : KSerializer<String> {
@@ -368,6 +366,12 @@ data class RaiderioWowHeadEmbeddedResponse(
 )
 
 @Serializable
+data class EnrichedMythicPlusRun(
+    val run: MythicPlusRun,
+    val details: RunDetails? = null
+)
+
+@Serializable
 data class RaiderIoData(
     val id: Long,
     val name: String,
@@ -378,6 +382,6 @@ data class RaiderIoData(
     val spec: String,
     val quantile: Double,
     val mythicPlusRanks: MythicPlusRanksWithSpecs,
-    val mythicPlusBestRuns: List<MythicPlusRun>
+    val mythicPlusBestRuns: List<EnrichedMythicPlusRun>
 ) : Data
 

@@ -1,14 +1,5 @@
 package com.kos.sources
 
-import arrow.core.Either
-import com.kos.clients.domain.RunDetails
-import com.kos.clients.domain.RunDetailsCharacter
-import com.kos.clients.domain.RunDetailsCharacterClass
-import com.kos.clients.domain.RunDetailsCharacterRealm
-import com.kos.clients.domain.RunDetailsCharacterRegion
-import com.kos.clients.domain.RunDetailsCharacterSpec
-import com.kos.clients.domain.RunDetailsRosterEntry
-import com.kos.clients.domain.RunDetailsRosterRanks
 import com.kos.clients.domain.Season
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import kotlinx.coroutines.runBlocking
@@ -55,23 +46,4 @@ class SourcesServiceTest {
             assertEquals(season, service.getWowCurrentSeason())
         }
     }
-
-    @Test
-    fun `it should return run details`() {
-        runBlocking {
-            val runDetails = RunDetails(
-                listOf(
-                    RunDetailsRosterEntry(
-                        character = RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm(1, "Blackrock", "blackrock"), RunDetailsCharacterRegion("United States & Oceania", "US", "us")),
-                        role = "dps",
-                        ranks = RunDetailsRosterRanks(0.0)
-                    )
-                )
-            )
-            `when`(wowSeasonsService.getRunDetails("3415343")).thenReturn(Either.Right(runDetails))
-            val service = SourcesService(wowSeasonsService)
-            assertEquals(Either.Right(runDetails), service.getRunDetails("3415343"))
-        }
-    }
-
 }

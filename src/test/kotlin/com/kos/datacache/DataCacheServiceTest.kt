@@ -36,11 +36,9 @@ class DataCacheServiceTest {
 
             val data = createService(repo).getData(listOf(1, 3), oldFirst = true)
             assertTrue(data.isRight { it.size == 2 })
-            assertEquals(listOf<Long>(1, 3), data.map {
-                it.map { d ->
-                    d as RaiderIoData
-                    d.id
-                }
+            assertEquals(listOf<Long>(1, 3), data.map { list ->
+                list as List<RaiderIoData>
+                list.map { (it).id }
             }.getOrNull())
         }
     }
@@ -54,11 +52,9 @@ class DataCacheServiceTest {
             val data = createService(repo).getData(listOf(2), oldFirst = true)
 
             assertTrue(data.isRight { it.size == 1 })
-            assertEquals(listOf(basicLolEntity.name), data.map {
-                it.map { d ->
-                    d as RiotData
-                    d.summonerName
-                }
+            assertEquals(listOf(basicLolEntity.name), data.map { list ->
+                list as List<RiotData>
+                list.map { (it).summonerName }
             }.getOrNull())
         }
     }
@@ -74,11 +70,9 @@ class DataCacheServiceTest {
             )
             val data = createService(repo).getData(listOf(1), oldFirst = true)
             assertTrue(data.isRight { it.size == 1 })
-            assertEquals(listOf(0.0), data.map {
-                it.map { d ->
-                    d as RaiderIoData
-                    d.score
-                }
+            assertEquals(listOf(0.0), data.map { list ->
+                list as List<RaiderIoData>
+                list.map { (it).score }
             }.getOrNull())
         }
     }

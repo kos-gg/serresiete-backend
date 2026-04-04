@@ -174,7 +174,7 @@ class TasksControllerTest {
                     wowItemsDatabaseRepository,
 
                     ),
-                WowEntitySynchronizer(dataCacheRepository, raiderIoClient)
+                WowEntitySynchronizer(dataCacheRepository, raiderIoClient, seasonDatabaseRepository)
             )
         )
 
