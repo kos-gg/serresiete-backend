@@ -195,18 +195,24 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
     }
 
     @Test
-    fun `synchronization fails when there is no current season`() = runBlocking {
+    fun `data is cached with null run details when current season is unavailable`() = runBlocking {
+        val run = RaiderIoHttpClientHelper.mythicPlusRun
+
         `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
+            .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
 
         val (_, dataCacheRepository) = createService()
         val errors = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, WowSeasonInMemoryRepository())
             .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
 
-        assertTrue(errors.isNotEmpty())
+        assertTrue(errors.isEmpty())
+        val cached = getCachedData(dataCacheRepository, EntitiesTestHelper.basicWowEntity.id)
+        assertNull(cached.mythicPlusBestRuns.first().details)
     }
 
     @Test
-    fun `run details are null when getRunDetails fails`() = runBlocking {
+    fun `data is still cached with null run details when getRunDetails fails`() = runBlocking {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
 
         `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
@@ -219,7 +225,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
         val errors = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
             .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
 
-        assertTrue(errors.isNotEmpty())
+        assertTrue(errors.isEmpty())
         val cached = getCachedData(dataCacheRepository, EntitiesTestHelper.basicWowEntity.id)
         assertNull(cached.mythicPlusBestRuns.first().details)
     }

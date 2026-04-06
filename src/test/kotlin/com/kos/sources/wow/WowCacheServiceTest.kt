@@ -101,7 +101,7 @@ class WowCacheServiceTest {
             val errors = WowEntitySynchronizer(repo, raiderIoClient, seasonRepository())
                 .synchronize(listOf(basicWowEntity))
 
-            assertTrue(errors.isNotEmpty())
+            assertTrue(errors.isEmpty())
             val cached: RaiderIoData =
                 decodeJson.decodeFromString(repo.get(basicWowEntity.id).first().data)
             assertNull(cached.mythicPlusBestRuns.first().details)
