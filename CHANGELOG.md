@@ -4,9 +4,9 @@
 ### Added
 - **Run details embedded in `WowEntitySynchronizer`**:
     - The synchronizer now fetches Mythic+ run details from Raider.IO for each best run during entity synchronization, so the frontend no longer needs a dedicated API call.
-    - Run details (roster with character name, class, spec, realm, region, role, score, and death count) are stored directly inside each `MythicPlusRun` as `runDetails`.
+    - Run details (roster with character name, class, spec, realm, region, role, score, and death count) are stored in `RaiderIoData.mythicPlusBestRuns` as `EnrichedMythicPlusRun(run=..., details=...)` rather than embedded inside `MythicPlusRun`.
     - A `DynamicCache` is used to deduplicate requests — since multiple characters can share the same keystone run ID, each unique run is fetched only once per sync cycle. Hit rate is logged at debug level.
-    - If the current season is unavailable or a run detail fetch fails, the sync continues gracefully with `runDetails` set to `null` for the affected runs.
+    - If a run detail fetch fails, the sync continues with `details` set to `null` for the affected `EnrichedMythicPlusRun` (logged as a warning; not propagated as a task error). If the current season is unavailable, run detail fetching is skipped entirely and all runs are stored with `details = null`, but profile caching proceeds normally.
 - **Extended `MythicPlusRun` fields**:
     - Added `keystone_run_id` (`runId`), `completed_at` (`completionTime`), and `clear_time_ms` (`clearTimeMs`) to the Raider.IO run domain model.
 - **Season slug support**:

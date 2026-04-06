@@ -10,7 +10,6 @@ import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
 import com.kos.common.split
 import com.kos.datacache.DataCache
 import com.kos.datacache.EntitySynchronizer
@@ -52,9 +51,12 @@ class WowEntitySynchronizer(
 
             entities as List<WowEntity>
 
+            val currentSeasonSlug = wowSeasonRepository.getCurrentSeason()?.slug
+            if (currentSeasonSlug == null) {
+                logger.warn("No current season found — run details will be skipped for this sync")
+            }
+
             val syncResult = either {
-                val currentSeasonSlug = wowSeasonRepository.getCurrentSeason()?.slug
-                    ?: raise(SyncProcessingError("raiderIoGetCurrentSeason", "No current season found"))
 
                 val cutoff = execute("raiderIoCutoff") {
                     raiderIoClient.cutoff()
@@ -66,39 +68,31 @@ class WowEntitySynchronizer(
                     }
                 }.split()
 
-                val results = profiles.parMap { (entityId, raiderIoResponse) ->
+                val data = profiles.parMap { (entityId, raiderIoResponse) ->
                     val quantile =
                         BigDecimal(raiderIoResponse.profile.mythicPlusRanks.overall.region.toDouble() / cutoff.totalPopulation * 100)
                             .setScale(2, RoundingMode.HALF_EVEN)
                             .toDouble()
-                    val (runErrors, enrichedRuns) = fetchRunDetails(
-                        raiderIoResponse,
-                        currentSeasonSlug,
-                        runDetailsCache
-                    )
-                    Pair(
-                        runErrors,
-                        DataCache(
-                            entityId,
-                            json.encodeToString<Data>(
-                                raiderIoResponse.profile.toRaiderIoData(
-                                    entityId,
-                                    quantile,
-                                    raiderIoResponse.specs,
-                                    enrichedRuns
-                                )
-                            ),
-                            OffsetDateTime.now(),
-                            Game.WOW
-                        )
+                    val enrichedRuns = fetchRunDetails(raiderIoResponse, currentSeasonSlug, runDetailsCache)
+                    DataCache(
+                        entityId,
+                        json.encodeToString<Data>(
+                            raiderIoResponse.profile.toRaiderIoData(
+                                entityId,
+                                quantile,
+                                raiderIoResponse.specs,
+                                enrichedRuns
+                            )
+                        ),
+                        OffsetDateTime.now(),
+                        Game.WOW
                     )
                 }
 
-                val data = results.map { it.second }
                 dataCacheRepository.insert(data)
                 data.forEach { logger.info("Cached entity ${it.entityId}") }
 
-                profileErrors + results.flatMap { it.first }
+                profileErrors
             }
 
             syncResult.fold({ listOf(it) }, { it })
@@ -106,21 +100,25 @@ class WowEntitySynchronizer(
 
     private suspend fun fetchRunDetails(
         response: RaiderIoResponse,
-        currentSeasonSlug: String,
+        currentSeasonSlug: String?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
-    ): Pair<List<ServiceError>, List<EnrichedMythicPlusRun>> {
-        val errors = mutableListOf<ServiceError>()
-        val runs = response.profile.mythicPlusBestRuns.map { run ->
+    ): List<EnrichedMythicPlusRun> {
+        if (currentSeasonSlug == null) {
+            return response.profile.mythicPlusBestRuns.map { EnrichedMythicPlusRun(it, null) }
+        }
+        return response.profile.mythicPlusBestRuns.map { run ->
             runDetailsCache.get(run.runId.toString()) {
                 execute("raiderIoGetRunDetails") {
                     raiderIoClient.getRunDetails(currentSeasonSlug, run.runId.toString())
                 }
             }.fold(
-                ifLeft = { error -> errors.add(error); EnrichedMythicPlusRun(run, null) },
+                ifLeft = { error ->
+                    logger.warn("Failed to fetch run details for runId=${run.runId}: ${error.error()}")
+                    EnrichedMythicPlusRun(run, null)
+                },
                 ifRight = { details -> EnrichedMythicPlusRun(run, details) }
             )
         }
-        return Pair(errors, runs)
     }
 
     private suspend fun <A> execute(

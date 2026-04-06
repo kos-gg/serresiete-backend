@@ -3,6 +3,7 @@ package com.kos.common
 import arrow.atomic.Atomic
 import arrow.atomic.update
 import arrow.atomic.value
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -10,6 +11,7 @@ class DynamicCache<T> : WithLogger("dynamicCache") {
 
     //TODO: Add size limit. We don't want to fuck up heap because we stored millions of values.
     private val cache: MutableMap<String, T> = mutableMapOf()
+    private val inFlight: MutableMap<String, CompletableDeferred<T>> = mutableMapOf()
     private val mutex = Mutex()
     private val hits = Atomic<Int>(0)
     private val miss = Atomic<Int>(0)
@@ -20,19 +22,44 @@ class DynamicCache<T> : WithLogger("dynamicCache") {
     val numberOfAccess: Int
         get() = hits.value + miss.value
 
-    suspend fun get(id: String, fetch: suspend () -> T): T = mutex.withLock {
-        cache[id].fold(
-            {
-                logger.debug("no hit in cache for $id")
-                val res = fetch()
-                cache[id] = res
-                miss.update { it + 1 }
-                res
-            }, { res ->
+    suspend fun get(id: String, fetch: suspend () -> T): T {
+        // Hold the lock only for the fast map-check-and-register step so that
+        // fetches for different keys can run in parallel.
+        val (deferred, shouldFetch) = mutex.withLock {
+            cache[id]?.let { cached ->
                 logger.debug("hit in cache for $id")
                 hits.update { it + 1 }
-                res
-            })
+                return cached
+            }
+            inFlight[id]?.let { existing ->
+                logger.debug("awaiting in-flight fetch for $id")
+                hits.update { it + 1 }
+                return@withLock Pair(existing, false)
+            }
+            logger.debug("no hit in cache for $id")
+            miss.update { it + 1 }
+            val d = CompletableDeferred<T>()
+            inFlight[id] = d
+            Pair(d, true)
+        }
+
+        return if (shouldFetch) {
+            try {
+                val result = fetch()
+                mutex.withLock {
+                    cache[id] = result
+                    inFlight.remove(id)
+                }
+                deferred.complete(result)
+                result
+            } catch (e: Throwable) {
+                mutex.withLock { inFlight.remove(id) }
+                deferred.completeExceptionally(e)
+                throw e
+            }
+        } else {
+            deferred.await()
+        }
     }
 
 }
