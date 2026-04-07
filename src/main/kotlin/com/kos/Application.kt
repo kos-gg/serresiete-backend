@@ -149,7 +149,7 @@ fun Application.module() {
         blizzardClient,
         wowItemsDatabaseRepository,
     )
-    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient)
+    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, seasonRepository)
 
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(

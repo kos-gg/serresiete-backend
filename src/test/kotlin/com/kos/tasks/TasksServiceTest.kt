@@ -7,6 +7,8 @@ import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper.runDetails
 import com.kos.clients.riot.RiotClient
 import com.kos.common.JWTConfig
 import com.kos.credentials.CredentialsService
@@ -40,9 +42,11 @@ import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -184,10 +188,19 @@ class TasksServiceTest {
             EntitiesState(listOf(basicWowEntity), listOf(), listOf())
         )
 
+        val season = WowSeason(1, "Default Season", "default-season", 1, "", true)
+
+        testComponents.seasonRepo.withState(
+            WowSeasonsState(listOf(season)))
+
+        val run = RaiderIoHttpClientHelper.mythicPlusRun
+
         `when`(raiderIoClient.get(basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(basicWowEntity))
         `when`(raiderIoClient.cutoff())
             .thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
+            .thenReturn(Either.Right(runDetails))
 
         val id = UUID.randomUUID().toString()
 
@@ -404,7 +417,7 @@ class TasksServiceTest {
             blizzardDbClient,
 
             )
-        val wowEntityCacheService = WowEntitySynchronizer(dataCacheRepo, raiderIoClient)
+        val wowEntityCacheService = WowEntitySynchronizer(dataCacheRepo, raiderIoClient, wowSeasonsRepository)
 
         val entityCacheServiceRegistry =
             EntitySynchronizerProvider(

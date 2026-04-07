@@ -2,13 +2,11 @@ package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.domain.RunDetails
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
 import com.kos.common.error.UnableToAddNewMythicPlusSeason
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionRepository
@@ -70,15 +68,6 @@ data class WowSeasonService(
 
     suspend fun getWowCurrentSeason(): Season? =
         wowSeasonRepository.getCurrentSeason()?.let { Json.decodeFromString<Season>(it.seasonData) }
-
-    suspend fun getRunDetails(runId: String): Either<ServiceError, RunDetails> = either {
-        val currentSeason = wowSeasonRepository.getCurrentSeason()
-            ?: raise(SyncProcessingError("GET_RUN_DETAILS", "No current season found"))
-
-        raiderIoClient.getRunDetails(currentSeason.slug, runId)
-            .mapLeft { it.toSyncProcessingError("GetRunDetails") }
-            .bind()
-    }
 
     private suspend fun getCurrentExpansion(): WowExpansion? {
         return wowExpansionRepository.getExpansions()

@@ -3,14 +3,6 @@ package com.kos.sources.wow.staticdata.wowseason
 import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.domain.ExpansionSeasons
-import com.kos.clients.domain.RunDetails
-import com.kos.clients.domain.RunDetailsCharacter
-import com.kos.clients.domain.RunDetailsCharacterClass
-import com.kos.clients.domain.RunDetailsCharacterRealm
-import com.kos.clients.domain.RunDetailsCharacterRegion
-import com.kos.clients.domain.RunDetailsCharacterSpec
-import com.kos.clients.domain.RunDetailsRosterEntry
-import com.kos.clients.domain.RunDetailsRosterRanks
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
@@ -100,37 +92,6 @@ class WowSeasonServiceTest {
                 seasonService.addNewMythicPlusSeason()
                     .isLeft()
             )
-        }
-    }
-
-    @Test
-    fun `i can get run details for the current season`() {
-        runBlocking {
-            val runDetails = RunDetails(
-                listOf(RunDetailsRosterEntry(
-                    character = RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm(1, "Blackrock", "blackrock"), RunDetailsCharacterRegion("United States & Oceania", "US", "us")),
-                    role = "dps",
-                    ranks = RunDetailsRosterRanks(0.0)
-                ))
-            )
-            `when`(raiderIoClient.getRunDetails("tww-season-3", "3415343"))
-                .thenReturn(Either.Right(runDetails))
-
-            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
-            val service = createService(wowExpansionState, wowSeasonsState)
-
-            assertEquals(Either.Right(runDetails), service.getRunDetails("3415343"))
-        }
-    }
-
-    @Test
-    fun `i cannot get run details when there is no current season`() {
-        runBlocking {
-            val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val service = createService(wowExpansionState, WowSeasonsState(listOf()))
-
-            assertTrue(service.getRunDetails("3415343").isLeft())
         }
     }
 
