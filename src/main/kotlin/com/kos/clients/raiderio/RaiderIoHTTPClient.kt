@@ -112,7 +112,7 @@ data class RaiderIoHTTPClient(
         return response.status.value < 300
     }
 
-    override suspend fun cutoff(): Either<ClientError, RaiderIoCutoff> {
+    override suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff> {
         return fetchFromApi(
             request = {
                 client.get(BASE_URI.toString() + MYTHIC_PLUS_CUTOFFS_PATH) {
@@ -121,7 +121,7 @@ data class RaiderIoHTTPClient(
                     }
                     url {
                         parameters.append("region", "eu")
-                        parameters.append("season", "season-df-3")
+                        parameters.append("season", seasonSlug)
                     }
                 }
             },

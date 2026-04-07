@@ -252,7 +252,7 @@ data class RaiderIoProfile(
 ) {
     fun toRaiderIoData(
         characterId: Long,
-        quantile: Double,
+        quantile: Double?,
         specRanks: List<MythicPlusRankWithSpecName>,
         bestRuns: List<EnrichedMythicPlusRun>
     ) = RaiderIoData(
@@ -380,7 +380,7 @@ data class RaiderIoData(
     val score: Double,
     val `class`: String,
     val spec: String,
-    val quantile: Double,
+    val quantile: Double?,
     val mythicPlusRanks: MythicPlusRanksWithSpecs,
     val mythicPlusBestRuns: List<EnrichedMythicPlusRun>
 ) : Data
