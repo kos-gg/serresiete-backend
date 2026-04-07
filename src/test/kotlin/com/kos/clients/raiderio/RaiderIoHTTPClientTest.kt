@@ -73,7 +73,7 @@ class RaiderIoHTTPClientTest {
     @Test
     fun `test  cutoff() method with successful response`() {
         runBlocking {
-            assertEquals(Either.Right(RaiderIoCutoff(1860760)), raiderIoClient.cutoff())
+            assertEquals(Either.Right(RaiderIoCutoff(1860760)), raiderIoClient.cutoff("season-tww-1"))
         }
     }
 

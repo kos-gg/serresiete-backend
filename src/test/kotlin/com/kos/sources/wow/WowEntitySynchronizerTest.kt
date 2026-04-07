@@ -45,7 +45,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `wowEntitySynchronizer calls cache on VIEW_CREATED with WOW game`() = runBlocking {
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
 
@@ -80,7 +80,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `wowEntitySynchronizer calls cache on VIEW_EDITED with WOW game`() = runBlocking {
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
         val (charactersService, dataCacheRepository) = createService()
@@ -112,7 +112,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `wowEntitySynchronizer calls cache on VIEW_PATCHED with WOW game`() = runBlocking {
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
         val (charactersService, dataCacheRepository) = createService()
@@ -180,7 +180,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
         val runDetails = RaiderIoHttpClientHelper.runDetails
 
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
         `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
@@ -198,7 +198,6 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
     fun `data is cached with null run details when current season is unavailable`() = runBlocking {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
 
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
 
@@ -208,6 +207,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
         assertTrue(errors.isEmpty())
         val cached = getCachedData(dataCacheRepository, EntitiesTestHelper.basicWowEntity.id)
+        assertNull(cached.quantile)
         assertNull(cached.mythicPlusBestRuns.first().details)
     }
 
@@ -215,7 +215,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
     fun `data is still cached with null run details when getRunDetails fails`() = runBlocking {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
 
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
         `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
@@ -235,7 +235,7 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
         val runDetails = RaiderIoHttpClientHelper.runDetails
 
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity2))

@@ -197,7 +197,7 @@ class TasksServiceTest {
 
         `when`(raiderIoClient.get(basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(basicWowEntity))
-        `when`(raiderIoClient.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug))
             .thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
             .thenReturn(Either.Right(runDetails))
@@ -275,8 +275,6 @@ class TasksServiceTest {
     @Test
     fun `run task with correct parameters should run wow data cache task`() = runBlocking {
         val testComponents = createTaskService()
-
-        `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
 
         val id = UUID.randomUUID().toString()
 

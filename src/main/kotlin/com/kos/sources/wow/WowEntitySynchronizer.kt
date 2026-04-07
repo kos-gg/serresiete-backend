@@ -51,29 +51,27 @@ class WowEntitySynchronizer(
 
             entities as List<WowEntity>
 
-            val currentSeasonSlug = wowSeasonRepository.getCurrentSeason()?.slug
+            val currentSeasonSlug = wowSeasonRepository.getCurrentSeason()?.slug?.takeIf { it.isNotBlank() }
             if (currentSeasonSlug == null) {
-                logger.warn("No current season found — run details will be skipped for this sync")
+                logger.warn("No current season found — cutoff and quantile will be skipped for this sync")
             }
 
             val syncResult = either {
 
-                val cutoff = execute("raiderIoCutoff") {
-                    raiderIoClient.cutoff()
-                }.bind()
+                val cutoff = currentSeasonSlug?.let {
+                    executeClientCall("raiderIoCutoff") { raiderIoClient.cutoff(it) }.bind()
+                }
 
                 val (profileErrors, profiles) = entities.parMap { entity ->
-                    execute("raiderIoGet") {
+                    executeClientCall("raiderIoGet") {
                         raiderIoClient.get(entity).map { Pair(entity.id, it) }
                     }
                 }.split()
 
                 val data = profiles.parMap { (entityId, raiderIoResponse) ->
-                    val quantile =
-                        BigDecimal(raiderIoResponse.profile.mythicPlusRanks.overall.region.toDouble() / cutoff.totalPopulation * 100)
-                            .setScale(2, RoundingMode.HALF_EVEN)
-                            .toDouble()
+                    val quantile = getQuantile(cutoff, raiderIoResponse)
                     val enrichedRuns = fetchRunDetails(raiderIoResponse, currentSeasonSlug, runDetailsCache)
+
                     DataCache(
                         entityId,
                         json.encodeToString<Data>(
@@ -98,6 +96,15 @@ class WowEntitySynchronizer(
             syncResult.fold({ listOf(it) }, { it })
         }
 
+    private fun getQuantile(
+        cutoff: RaiderIoCutoff?,
+        raiderIoResponse: RaiderIoResponse
+    ): Double? = cutoff?.let {
+        BigDecimal(raiderIoResponse.profile.mythicPlusRanks.overall.region.toDouble() / it.totalPopulation * 100)
+            .setScale(2, RoundingMode.HALF_EVEN)
+            .toDouble()
+    }
+
     private suspend fun fetchRunDetails(
         response: RaiderIoResponse,
         currentSeasonSlug: String?,
@@ -108,7 +115,7 @@ class WowEntitySynchronizer(
         }
         return response.profile.mythicPlusBestRuns.map { run ->
             runDetailsCache.get(run.runId.toString()) {
-                execute("raiderIoGetRunDetails") {
+                executeClientCall("raiderIoGetRunDetails") {
                     raiderIoClient.getRunDetails(currentSeasonSlug, run.runId.toString())
                 }
             }.fold(
@@ -121,7 +128,7 @@ class WowEntitySynchronizer(
         }
     }
 
-    private suspend fun <A> execute(
+    private suspend fun <A> executeClientCall(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =

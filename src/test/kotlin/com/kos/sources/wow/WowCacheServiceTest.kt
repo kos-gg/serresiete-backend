@@ -55,7 +55,7 @@ class WowCacheServiceTest {
             `when`(raiderIoClient.get(basicWowEntity.copy(id = 2))).thenReturn(
                 RaiderIoMockHelper.get(basicWowEntity.copy(id = 2))
             )
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
 
             val repo = DataCacheInMemoryRepository().withState(listOf(wowDataCache))
             assertEquals(listOf(wowDataCache), repo.state())
@@ -72,7 +72,7 @@ class WowCacheServiceTest {
             val run = RaiderIoHttpClientHelper.mythicPlusRun
             val runDetails = RaiderIoHttpClientHelper.runDetails
 
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
             `when`(raiderIoClient.get(basicWowEntity)).thenReturn(responseWithRun(run))
             `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
                 .thenReturn(Either.Right(runDetails))
@@ -92,7 +92,7 @@ class WowCacheServiceTest {
         runBlocking {
             val run = RaiderIoHttpClientHelper.mythicPlusRun
 
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
             `when`(raiderIoClient.get(basicWowEntity)).thenReturn(responseWithRun(run))
             `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
                 .thenReturn(Either.Left(HttpError(500, "Internal server error")))
@@ -114,7 +114,7 @@ class WowCacheServiceTest {
             val run = RaiderIoHttpClientHelper.mythicPlusRun
             val runDetails = RaiderIoHttpClientHelper.runDetails
 
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
+            `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
             `when`(raiderIoClient.get(basicWowEntity)).thenReturn(responseWithRun(run))
             `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity2)).thenReturn(responseWithRun(run))
             `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))

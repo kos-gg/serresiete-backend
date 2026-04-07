@@ -12,7 +12,6 @@ val json = Json {
     ignoreUnknownKeys = true
 }
 
-//tested all scenarios in BlizzardHttpAuthClientTest
 suspend inline fun <reified A> fetchFromApi(
     crossinline request: suspend () -> HttpResponse
 ): Either<ClientError, A> =

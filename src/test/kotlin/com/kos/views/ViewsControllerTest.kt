@@ -382,7 +382,6 @@ class ViewsControllerTest {
                 listOf(DataCache(basicWowEntity.id, raiderIoDataString, OffsetDateTime.now(), Game.WOW))
             )
 
-            `when`(raiderIoClient.cutoff()).thenReturn(RaiderIoMockHelper.cutoff())
             `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
 
             controller.getViewData("owner", basicSimpleWowView.id, setOf(Activities.getViewData))
