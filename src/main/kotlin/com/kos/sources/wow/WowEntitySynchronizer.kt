@@ -70,7 +70,8 @@ class WowEntitySynchronizer(
 
                 val data = profiles.parMap { (entityId, raiderIoResponse) ->
                     val quantile = getQuantile(cutoff, raiderIoResponse)
-                    val enrichedRuns = fetchRunDetails(raiderIoResponse, currentSeasonSlug, runDetailsCache)
+                    val enrichedRuns =
+                        fetchRunDetails(raiderIoResponse.profile.mythicPlusBestRuns, currentSeasonSlug, runDetailsCache)
 
                     DataCache(
                         entityId,
@@ -106,14 +107,14 @@ class WowEntitySynchronizer(
     }
 
     private suspend fun fetchRunDetails(
-        response: RaiderIoResponse,
+        runs: List<MythicPlusRun>,
         currentSeasonSlug: String?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
     ): List<EnrichedMythicPlusRun> {
         if (currentSeasonSlug == null) {
-            return response.profile.mythicPlusBestRuns.map { EnrichedMythicPlusRun(it, null) }
+            return runs.map { EnrichedMythicPlusRun(it, null) }
         }
-        return response.profile.mythicPlusBestRuns.map { run ->
+        return runs.map { run ->
             runDetailsCache.get(run.runId.toString()) {
                 executeClientCall("raiderIoGetRunDetails") {
                     raiderIoClient.getRunDetails(currentSeasonSlug, run.runId.toString())

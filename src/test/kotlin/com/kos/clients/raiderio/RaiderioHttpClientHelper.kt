@@ -94,6 +94,7 @@ object RaiderIoHttpClientHelper {
                         "spec_267" to MythicPlusRank(0, 0, 0)
                     )
                 ),
+                mythicPlusRecentRuns = listOf(),
                 mythicPlusBestRuns = listOf(
                     MythicPlusRun(
                         4462779L,

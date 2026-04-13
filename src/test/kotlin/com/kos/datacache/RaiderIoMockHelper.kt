@@ -21,6 +21,7 @@ object RaiderIoMockHelper {
                         MythicPlusRank(1, 1, 1),
                         mapOf()
                     ),
+                    listOf(),
                     listOf()
                 ),
                 listOf()
@@ -46,7 +47,9 @@ object RaiderIoMockHelper {
                 overall = MythicPlusRank(world = 1, region = 1, realm = 1),
                 `class` = MythicPlusRank(world = 1, region = 1, realm = 1),
                 specs = listOf()
-            ), mythicPlusBestRuns = listOf()
+            ),
+            mythicPlusBestRuns = listOf(),
+            mythicPlusRecentRuns = listOf()
         )
     )
 
@@ -96,7 +99,8 @@ object RaiderIoMockHelper {
             `class` = MythicPlusRank(world = 0, region = 0, realm = 0),
             specs = listOf()
         ),
-        mythicPlusBestRuns = listOf()
+        mythicPlusBestRuns = listOf(),
+        mythicPlusRecentRuns = listOf()
     )
 
 
