@@ -90,7 +90,7 @@ data class RaiderIoHTTPClient(
                         parameters.append("name", wowEntity.name)
                         parameters.append(
                             "fields",
-                            "mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks"
+                            "mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks,mythic_plus_recent_runs"
                         )
                     }
                 }

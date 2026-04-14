@@ -215,6 +215,13 @@ data class Affix(
 )
 
 @Serializable
+data class ClassSpec(
+    val id: Int,
+    val name: String,
+    val role: String,
+)
+
+@Serializable
 data class MythicPlusRun(
     @SerialName("keystone_run_id")
     val runId: Long,
@@ -232,7 +239,8 @@ data class MythicPlusRun(
     val clearTimeMs: Long,
     val score: Float,
     val url: String,
-    val affixes: List<Affix>
+    val affixes: List<Affix>,
+    val spec: ClassSpec? = null
 )
 
 @Serializable
@@ -248,13 +256,15 @@ data class RaiderIoProfile(
     @SerialName("mythic_plus_ranks")
     val mythicPlusRanks: MythicPlusRanks,
     @SerialName("mythic_plus_best_runs")
-    val mythicPlusBestRuns: List<MythicPlusRun>
+    val mythicPlusBestRuns: List<MythicPlusRun>,
+    @SerialName("mythic_plus_recent_runs")
+    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
 ) {
     fun toRaiderIoData(
         characterId: Long,
         quantile: Double?,
         specRanks: List<MythicPlusRankWithSpecName>,
-        bestRuns: List<EnrichedMythicPlusRun>
+        bestRuns: List<EnrichedMythicPlusRun>,
     ) = RaiderIoData(
         characterId,
         name,
@@ -265,7 +275,8 @@ data class RaiderIoProfile(
         spec,
         quantile,
         MythicPlusRanksWithSpecs(mythicPlusRanks.overall, mythicPlusRanks.`class`, specRanks),
-        bestRuns
+        bestRuns,
+        mythicPlusRecentRuns
     )
 }
 
@@ -382,6 +393,7 @@ data class RaiderIoData(
     val spec: String,
     val quantile: Double?,
     val mythicPlusRanks: MythicPlusRanksWithSpecs,
-    val mythicPlusBestRuns: List<EnrichedMythicPlusRun>
+    val mythicPlusBestRuns: List<EnrichedMythicPlusRun>,
+    val mythicPlusRecentRuns: List<MythicPlusRun>
 ) : Data
 

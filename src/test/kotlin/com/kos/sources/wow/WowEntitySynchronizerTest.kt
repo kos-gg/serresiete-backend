@@ -231,6 +231,22 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
     }
 
     @Test
+    fun `recent runs are stored without enrichment`() = runBlocking {
+        val recentRun = RaiderIoHttpClientHelper.mythicPlusRun
+
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
+            .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, recentRuns = listOf(recentRun))))
+
+        val (_, dataCacheRepository) = createService()
+        WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+            .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
+
+        val cached = getCachedData(dataCacheRepository, EntitiesTestHelper.basicWowEntity.id)
+        assertEquals(recentRun, cached.mythicPlusRecentRuns.first())
+    }
+
+    @Test
     fun `getRunDetails is called only once for the same run id across multiple entities`(): Unit = runBlocking {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
         val runDetails = RaiderIoHttpClientHelper.runDetails
@@ -250,16 +266,20 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
         verify(raiderIoClient, times(1)).getRunDetails(season.slug, run.runId.toString())
     }
 
-    private fun buildResponseWithRuns(entity: com.kos.entities.domain.WowEntity, runs: List<MythicPlusRun>) =
-        RaiderIoResponse(
-            RaiderIoProfile(
-                entity.name, entity.realm, entity.region, "class", "spec",
-                listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
-                MythicPlusRanks(MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), mapOf()),
-                runs
-            ),
-            listOf()
-        )
+    private fun buildResponseWithRuns(
+        entity: com.kos.entities.domain.WowEntity,
+        bestRuns: List<MythicPlusRun> = listOf(),
+        recentRuns: List<MythicPlusRun> = listOf()
+    ) = RaiderIoResponse(
+        RaiderIoProfile(
+            entity.name, entity.realm, entity.region, "class", "spec",
+            listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
+            MythicPlusRanks(MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), mapOf()),
+            bestRuns,
+            recentRuns
+        ),
+        listOf()
+    )
 
     private val decodeJson = Json { ignoreUnknownKeys = true }
 

@@ -28,6 +28,7 @@ object TestHelper {
          }                        
      },                           
      "mythicPlusBestRuns": [],
+     "mythicPlusRecentRuns": [],
      "type": "com.kos.clients.domain.RaiderIoData"
    }"""
 
