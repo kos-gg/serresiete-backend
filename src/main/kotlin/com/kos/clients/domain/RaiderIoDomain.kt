@@ -394,6 +394,6 @@ data class RaiderIoData(
     val quantile: Double?,
     val mythicPlusRanks: MythicPlusRanksWithSpecs,
     val mythicPlusBestRuns: List<EnrichedMythicPlusRun>,
-    val mythicPlusRecentRuns: List<MythicPlusRun>
+    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
 ) : Data
 
