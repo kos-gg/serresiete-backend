@@ -1,1 +1,1 @@
-web: java -jar build/libs/raiderio-ladder-backend-0.0.1.jar
+web: java -jar build/libs/raiderio-ladder-backend-all.jar

@@ -43,7 +43,7 @@ tasks.jacocoTestReport {
 }
 
 tasks.register("stage") {
-    dependsOn("build")
+    dependsOn("shadowJar")
 }
 
 ktor {
