@@ -42,6 +42,10 @@ tasks.jacocoTestReport {
     }
 }
 
+tasks.register("stage") {
+    dependsOn("build")
+}
+
 ktor {
     docker {
         jreVersion.set(io.ktor.plugin.features.JreVersion.JRE_17)
