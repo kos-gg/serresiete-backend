@@ -128,20 +128,20 @@ class WowEntitySynchronizer(
     }
 
     private suspend fun fetchRunDetails(
-        fetchedRuns: List<MythicPlusRun>,
+        responseRuns: List<MythicPlusRun>,
         currentSeasonSlug: String?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>,
         newestDataCacheEntry: RaiderIoData?
     ): List<EnrichedMythicPlusRun> {
         if (currentSeasonSlug == null) {
-            return fetchedRuns.map { EnrichedMythicPlusRun(it, null) }
+            return responseRuns.map { EnrichedMythicPlusRun(it, null) }
         }
 
-        val currentRunIds = fetchedRuns.map { it.runId }.toSet()
+        val responseRunIds = responseRuns.map { it.runId }.toSet()
         val cachedRunIds = newestDataCacheEntry?.mythicPlusBestRuns
             ?.map { it.run.runId }?.toSet().orEmpty()
 
-        val newIds = fetchedRuns.filterNot { it.runId in cachedRunIds }
+        val newIds = responseRuns.filterNot { it.runId in cachedRunIds }
 
         val fetchedRunDetails: Map<Long, RunDetails?> = newIds.associate { run ->
             run.runId to runDetailsCache.get(run.runId.toString()) {
@@ -158,11 +158,11 @@ class WowEntitySynchronizer(
         }
 
         val cachedRunDetails: Map<Long, RunDetails?> = newestDataCacheEntry?.mythicPlusBestRuns
-            ?.filter { it.run.runId in currentRunIds }
+            ?.filter { it.run.runId in responseRunIds }
             ?.associate { it.run.runId to it.details }
             .orEmpty()
 
-        return fetchedRuns.map { run ->
+        return responseRuns.map { run ->
             EnrichedMythicPlusRun(run, fetchedRunDetails[run.runId] ?: cachedRunDetails[run.runId])
         }
     }
