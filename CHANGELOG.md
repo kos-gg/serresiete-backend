@@ -1,4 +1,12 @@
 # Changelog
+## [5.2.0] - 17-04-2026
+
+### Improved
+- **`WowEntitySynchronizer` avoids redundant `getRunDetails` calls across syncs**:
+    - `RunDetails` (roster composition, death logs) for a Mythic+ run don't change between syncs. Previously, every synchronization called `raiderIoClient.getRunDetails` for every best run of every character unconditionally.
+    - The synchronizer now loads the most recent cached `RaiderIoData` for each entity before enriching runs. Runs already present in the persistent cache skip the third-party call entirely and reuse the stored details.
+    - Runs not found in the persistent cache are still fetched via the existing `DynamicCache`, which deduplicates requests within a single sync for runs shared across multiple entities.
+
 ## [5.1.0] - 02-04-2026
 
 ### Added
