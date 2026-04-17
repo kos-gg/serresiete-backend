@@ -247,6 +247,34 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
     }
 
     @Test
+    fun `getRunDetails is not called when run details are already in the persistent cache`() = runBlocking {
+        val run = RaiderIoHttpClientHelper.mythicPlusRun
+        val runDetails = RaiderIoHttpClientHelper.runDetails
+
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
+            .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
+
+        val (_, dataCacheRepository) = createService()
+
+        // First sync — populates the persistent cache with run details
+        `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
+            .thenReturn(Either.Right(runDetails))
+        WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+            .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
+
+        // Second sync — same run is still in the profile, details already cached
+        WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+            .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
+
+        // getRunDetails should have been called exactly once across both syncs
+        verify(raiderIoClient, times(1)).getRunDetails(season.slug, run.runId.toString())
+
+        val cached = getCachedData(dataCacheRepository, EntitiesTestHelper.basicWowEntity.id)
+        assertEquals(EnrichedMythicPlusRun(run, runDetails), cached.mythicPlusBestRuns.first())
+    }
+
+    @Test
     fun `getRunDetails is called only once for the same run id across multiple entities`(): Unit = runBlocking {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
         val runDetails = RaiderIoHttpClientHelper.runDetails

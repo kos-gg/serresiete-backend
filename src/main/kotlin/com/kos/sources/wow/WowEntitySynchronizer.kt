@@ -69,9 +69,14 @@ class WowEntitySynchronizer(
                 }.split()
 
                 val data = profiles.parMap { (entityId, raiderIoResponse) ->
+                    val newestDataCacheEntry: RaiderIoData? = getNewestDataCacheEntry(entityId)
                     val quantile = getQuantile(cutoff, raiderIoResponse)
-                    val enrichedRuns =
-                        fetchRunDetails(raiderIoResponse.profile.mythicPlusBestRuns, currentSeasonSlug, runDetailsCache)
+                    val enrichedRuns = fetchRunDetails(
+                        raiderIoResponse.profile.mythicPlusBestRuns,
+                        currentSeasonSlug,
+                        runDetailsCache,
+                        newestDataCacheEntry
+                    )
 
                     DataCache(
                         entityId,
@@ -97,6 +102,22 @@ class WowEntitySynchronizer(
             syncResult.fold({ listOf(it) }, { it })
         }
 
+    private suspend fun getNewestDataCacheEntry(entityId: Long): RaiderIoData? =
+        dataCacheRepository.get(entityId)
+            .filter { it.game == Game.WOW }
+            .maxByOrNull { it.inserted }
+            ?.let {
+                try {
+                    json.decodeFromString<RaiderIoData>(it.data)
+                } catch (e: Throwable) {
+                    logger.debug(
+                        "Couldn't deserialize entity $entityId " +
+                                "while trying to obtain newest cached record.\n${e.message}"
+                    )
+                    null
+                }
+            }
+
     private fun getQuantile(
         cutoff: RaiderIoCutoff?,
         raiderIoResponse: RaiderIoResponse
@@ -107,25 +128,42 @@ class WowEntitySynchronizer(
     }
 
     private suspend fun fetchRunDetails(
-        runs: List<MythicPlusRun>,
+        fetchedRuns: List<MythicPlusRun>,
         currentSeasonSlug: String?,
-        runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
+        runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>,
+        newestDataCacheEntry: RaiderIoData?
     ): List<EnrichedMythicPlusRun> {
         if (currentSeasonSlug == null) {
-            return runs.map { EnrichedMythicPlusRun(it, null) }
+            return fetchedRuns.map { EnrichedMythicPlusRun(it, null) }
         }
-        return runs.map { run ->
-            runDetailsCache.get(run.runId.toString()) {
+
+        val currentRunIds = fetchedRuns.map { it.runId }.toSet()
+        val cachedRunIds = newestDataCacheEntry?.mythicPlusBestRuns
+            ?.map { it.run.runId }?.toSet().orEmpty()
+
+        val newIds = fetchedRuns.filterNot { it.runId in cachedRunIds }
+
+        val fetchedRunDetails: Map<Long, RunDetails?> = newIds.associate { run ->
+            run.runId to runDetailsCache.get(run.runId.toString()) {
                 executeClientCall("raiderIoGetRunDetails") {
                     raiderIoClient.getRunDetails(currentSeasonSlug, run.runId.toString())
                 }
             }.fold(
                 ifLeft = { error ->
                     logger.warn("Failed to fetch run details for runId=${run.runId}: ${error.error()}")
-                    EnrichedMythicPlusRun(run, null)
+                    null
                 },
-                ifRight = { details -> EnrichedMythicPlusRun(run, details) }
+                ifRight = { it }
             )
+        }
+
+        val cachedRunDetails: Map<Long, RunDetails?> = newestDataCacheEntry?.mythicPlusBestRuns
+            ?.filter { it.run.runId in currentRunIds }
+            ?.associate { it.run.runId to it.details }
+            .orEmpty()
+
+        return fetchedRuns.map { run ->
+            EnrichedMythicPlusRun(run, fetchedRunDetails[run.runId] ?: cachedRunDetails[run.runId])
         }
     }
 
