@@ -104,7 +104,6 @@ class WowEntitySynchronizer(
 
     private suspend fun getNewestDataCacheEntry(entityId: Long): RaiderIoData? =
         dataCacheRepository.get(entityId)
-            .filter { it.game == Game.WOW }
             .maxByOrNull { it.inserted }
             ?.let {
                 try {
@@ -161,6 +160,8 @@ class WowEntitySynchronizer(
             ?.filter { it.run.runId in responseRunIds }
             ?.associate { it.run.runId to it.details }
             .orEmpty()
+
+        logger.debug("Found ${cachedRunDetails.size} cached run details: $cachedRunDetails")
 
         return responseRuns.map { run ->
             EnrichedMythicPlusRun(run, fetchedRunDetails[run.runId] ?: cachedRunDetails[run.runId])
