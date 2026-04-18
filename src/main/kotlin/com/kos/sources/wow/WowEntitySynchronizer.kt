@@ -161,7 +161,7 @@ class WowEntitySynchronizer(
             ?.associate { it.run.runId to it.details }
             .orEmpty()
 
-        logger.debug("Found ${cachedRunDetails.size} cached run details: $cachedRunDetails")
+        logger.debug("Not requesting ${cachedRunDetails.size} run details because they are already cached");
 
         return responseRuns.map { run ->
             EnrichedMythicPlusRun(run, fetchedRunDetails[run.runId] ?: cachedRunDetails[run.runId])
