@@ -19,6 +19,7 @@ import com.kos.entities.domain.WowEntity
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -108,7 +109,7 @@ class WowEntitySynchronizer(
             ?.let {
                 try {
                     json.decodeFromString<RaiderIoData>(it.data)
-                } catch (e: Throwable) {
+                } catch (e: SerializationException) {
                     logger.debug(
                         "Couldn't deserialize entity $entityId " +
                                 "while trying to obtain newest cached record.\n${e.message}"
