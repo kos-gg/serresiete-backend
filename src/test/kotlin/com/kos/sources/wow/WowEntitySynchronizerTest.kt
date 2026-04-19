@@ -2,15 +2,7 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import com.kos.clients.HttpError
-import com.kos.clients.domain.EnrichedMythicPlusRun
-import com.kos.clients.domain.MythicPlusRank
-import com.kos.clients.domain.MythicPlusRanks
-import com.kos.clients.domain.MythicPlusRun
-import com.kos.clients.domain.MythicPlusSeasonScore
-import com.kos.clients.domain.RaiderIoData
-import com.kos.clients.domain.RaiderIoProfile
-import com.kos.clients.domain.RaiderIoResponse
-import com.kos.clients.domain.SeasonScores
+import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.entities.EntitiesTestHelper
@@ -28,9 +20,7 @@ import com.kos.views.ViewsTestHelper.owner
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -45,7 +35,8 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `wowEntitySynchronizer calls cache on VIEW_CREATED with WOW game`() = runBlocking {
-        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug))
+            .thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(RaiderIoMockHelper.get(EntitiesTestHelper.basicWowEntity))
 
@@ -236,7 +227,14 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
         `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
-            .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, recentRuns = listOf(recentRun))))
+            .thenReturn(
+                Either.Right(
+                    buildResponseWithRuns(
+                        EntitiesTestHelper.basicWowEntity,
+                        recentRuns = listOf(recentRun)
+                    )
+                )
+            )
 
         val (_, dataCacheRepository) = createService()
         WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
@@ -251,24 +249,23 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
         val run = RaiderIoHttpClientHelper.mythicPlusRun
         val runDetails = RaiderIoHttpClientHelper.runDetails
 
-        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.cutoff(season.slug))
+            .thenReturn(RaiderIoMockHelper.cutoff())
         `when`(raiderIoClient.get(EntitiesTestHelper.basicWowEntity))
             .thenReturn(Either.Right(buildResponseWithRuns(EntitiesTestHelper.basicWowEntity, listOf(run))))
 
         val (_, dataCacheRepository) = createService()
 
-        // First sync — populates the persistent cache with run details
         `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString()))
             .thenReturn(Either.Right(runDetails))
         WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
             .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
 
-        // Second sync — same run is still in the profile, details already cached
         WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
             .synchronize(listOf(EntitiesTestHelper.basicWowEntity))
 
-        // getRunDetails should have been called exactly once across both syncs
-        verify(raiderIoClient, times(1)).getRunDetails(season.slug, run.runId.toString())
+        verify(raiderIoClient, times(1))
+            .getRunDetails(season.slug, run.runId.toString())
 
         val cached = getCachedData(dataCacheRepository, EntitiesTestHelper.basicWowEntity.id)
         assertEquals(EnrichedMythicPlusRun(run, runDetails), cached.mythicPlusBestRuns.first())
@@ -311,7 +308,12 @@ class WowEntitySynchronizerTest : SyncGameCharactersTestCommon() {
 
     private val decodeJson = Json { ignoreUnknownKeys = true }
 
-    private suspend fun getCachedData(dataCacheRepository: com.kos.datacache.repository.DataCacheRepository, entityId: Long): RaiderIoData =
-        decodeJson.decodeFromString(dataCacheRepository.get(entityId).first().data)
+    private suspend fun getCachedData(
+        dataCacheRepository: com.kos.datacache.repository.DataCacheRepository,
+        entityId: Long
+    ): RaiderIoData =
+        decodeJson.decodeFromString(
+            dataCacheRepository.get(entityId).maxBy { it.inserted }.data
+        )
 
 }

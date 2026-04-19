@@ -136,8 +136,10 @@ class WowEntitySynchronizer(
             return responseRuns.map { EnrichedMythicPlusRun(it, null) }
         }
 
-        val responseRunIds = responseRuns.map { it.runId }.toSet()
+        val responseRunIds = responseRuns
+            .map { it.runId }.toSet()
         val cachedRunIds = newestDataCacheEntry?.mythicPlusBestRuns
+            ?.filter { it.details != null }
             ?.map { it.run.runId }?.toSet().orEmpty()
 
         val uncachedRuns = responseRuns.filterNot { it.runId in cachedRunIds }
