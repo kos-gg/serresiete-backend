@@ -140,9 +140,9 @@ class WowEntitySynchronizer(
         val cachedRunIds = newestDataCacheEntry?.mythicPlusBestRuns
             ?.map { it.run.runId }?.toSet().orEmpty()
 
-        val newIds = responseRuns.filterNot { it.runId in cachedRunIds }
+        val uncachedRuns = responseRuns.filterNot { it.runId in cachedRunIds }
 
-        val fetchedRunDetails: Map<Long, RunDetails?> = newIds.associate { run ->
+        val fetchedRunDetails: Map<Long, RunDetails?> = uncachedRuns.associate { run ->
             run.runId to runDetailsCache.get(run.runId.toString()) {
                 executeClientCall("raiderIoGetRunDetails") {
                     raiderIoClient.getRunDetails(currentSeasonSlug, run.runId.toString())
