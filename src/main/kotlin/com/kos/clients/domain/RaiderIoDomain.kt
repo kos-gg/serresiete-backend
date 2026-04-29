@@ -234,9 +234,11 @@ data class MythicPlusRun(
     val upgrades: Int,
     @SerialName("completed_at")
     @Serializable(with = OffsetDateTimeSerializer::class)
-    val completionTme: OffsetDateTime,
+    val dateCompleted: OffsetDateTime,
     @SerialName("clear_time_ms")
     val clearTimeMs: Long,
+    @SerialName("par_time_ms")
+    val dungeonTimeMs: Long,
     val score: Float,
     val url: String,
     val affixes: List<Affix>,
