@@ -1,4 +1,4 @@
-package com.kos.acceptance
+package acceptance
 
 import io.ktor.client.statement.*
 

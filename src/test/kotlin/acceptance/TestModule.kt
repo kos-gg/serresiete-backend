@@ -1,4 +1,4 @@
-package com.kos.acceptance
+package acceptance
 
 import com.kos.activities.ActivitiesController
 import com.kos.activities.ActivitiesService

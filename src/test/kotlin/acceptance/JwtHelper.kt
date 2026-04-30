@@ -1,4 +1,4 @@
-package com.kos.acceptance
+package acceptance
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

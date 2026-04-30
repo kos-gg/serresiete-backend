@@ -1,8 +1,8 @@
-package com.kos.acceptance.steps
+package acceptance.steps
 
-import com.kos.acceptance.JwtHelper
-import com.kos.acceptance.SharedInfrastructure
-import com.kos.acceptance.World
+import acceptance.JwtHelper
+import acceptance.SharedInfrastructure
+import acceptance.World
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When

@@ -1,4 +1,4 @@
-package com.kos.acceptance
+package acceptance
 
 import com.kos.common.JWTConfig
 import io.ktor.client.*
