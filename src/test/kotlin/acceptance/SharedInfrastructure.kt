@@ -17,13 +17,16 @@ object SharedInfrastructure {
     val jwtConfig = JWTConfig(issuer = "test-issuer", secret = "test-secret-at-least-32-chars!!")
 
     private val flyway: Flyway = Flyway.configure()
-        .locations("db/migration/prod")
+        .locations("db/migration/test")
         .dataSource(postgres.postgresDatabase)
         .cleanDisabled(false)
         .load()
 
+    lateinit var subscriptions: TestSubscriptions
+        private set
+
     private val app: TestApplication = TestApplication {
-        application { testModule(db, jwtConfig) }
+        application { subscriptions = testModule(db, jwtConfig) }
     }
 
     val client: HttpClient = runBlocking {

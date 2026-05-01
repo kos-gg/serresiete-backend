@@ -20,6 +20,11 @@ class AuthSteps(private val world: World) {
         world.token = JwtHelper.validJwt(jwtConfig, username, activity)
     }
 
+    @Given("{string} has a valid token with activities {string}")
+    fun userHasValidTokenWithActivities(username: String, activities: String) {
+        world.token = JwtHelper.validJwt(jwtConfig, username, *activities.split(",").map { it.trim() }.toTypedArray())
+    }
+
     @Given("the request has no authentication")
     fun noAuthentication() {
         world.token = null

@@ -25,9 +25,15 @@ import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
+import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
+import com.kos.eventsourcing.subscriptions.sync.EntitiesEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.LolEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.ViewsEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.WowEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.WowHardcoreEventProcessor
 import com.kos.plugins.configureAuthentication
 import com.kos.plugins.configureCors
 import com.kos.plugins.configureRouting
@@ -62,11 +68,23 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 
-fun Application.testModule(db: Database, jwtConfig: JWTConfig) {
+data class TestSubscriptions(
+    val views: EventSubscription,
+    val syncLol: EventSubscription,
+    val syncWow: EventSubscription,
+    val syncWowHc: EventSubscription,
+    val entities: EventSubscription,
+)
+
+fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
     val mockHttpClient = HttpClient(MockEngine) {
         engine {
             addHandler {
-                respond("{}", HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()))
+                respond(
+                    "{}",
+                    HttpStatusCode.OK,
+                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                )
             }
         }
     }
@@ -111,15 +129,28 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig) {
 
     val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
     val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient)
-    val wowHardcoreEntitySynchronizer = WowHardcoreEntitySynchronizer(dataCacheRepository, entitiesRepository, raiderIoHTTPClient, blizzardClient, wowItemsDatabaseRepository)
+    val wowHardcoreEntitySynchronizer = WowHardcoreEntitySynchronizer(
+        dataCacheRepository,
+        entitiesRepository,
+        raiderIoHTTPClient,
+        blizzardClient,
+        wowItemsDatabaseRepository
+    )
     val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, seasonRepository)
-    val entitySynchronizerProvider = EntitySynchronizerProvider(listOf(lolEntitySynchronizer, wowHardcoreEntitySynchronizer, wowEntitySynchronizer))
+    val entitySynchronizerProvider =
+        EntitySynchronizerProvider(listOf(lolEntitySynchronizer, wowHardcoreEntitySynchronizer, wowEntitySynchronizer))
 
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)
 
     val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-    val entitiesService = EntitiesService(entitiesRepository, wowGuildsDatabaseRepository, entityResolverProvider, lolUpdater, wowHardcoreGuildUpdater)
+    val entitiesService = EntitiesService(
+        entitiesRepository,
+        wowGuildsDatabaseRepository,
+        entityResolverProvider,
+        lolUpdater,
+        wowHardcoreGuildUpdater
+    )
     val entitiesController = EntitiesController(dataCacheService)
 
     val viewsService = ViewsService(viewsRepository, entitiesService, dataCacheService, credentialsService, eventStore)
@@ -129,14 +160,19 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig) {
     val sourcesController = SourcesController(sourcesService)
 
     val tasksRepository = TasksDatabaseRepository(db)
-    val tasksService = TasksService(tasksRepository, dataCacheService, entitiesService, authService, wowSeasonService, entitySynchronizerProvider)
+    val tasksService = TasksService(
+        tasksRepository,
+        dataCacheService,
+        entitiesService,
+        authService,
+        wowSeasonService,
+        entitySynchronizerProvider
+    )
     val tasksController = TasksController(tasksService)
 
     val subscriptionsRepository = SubscriptionsDatabaseRepository(db)
     val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
     val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)
-
-    // No background subscriptions or task launcher — tests control execution explicitly
 
     configureAuthentication(credentialsService, jwtConfig)
     configureSerialization()
@@ -151,5 +187,23 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig) {
         eventSubscriptionController,
         entitiesController,
         sourcesController
+    )
+
+    return TestSubscriptions(
+        views = EventSubscription("views", eventStore, subscriptionsRepository, retryConfig) {
+            ViewsEventProcessor(it, viewsService).process()
+        },
+        syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository, retryConfig) {
+            LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process()
+        },
+        syncWow = EventSubscription("sync-wow", eventStore, subscriptionsRepository, retryConfig) {
+            WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process()
+        },
+        syncWowHc = EventSubscription("sync-wow-hc", eventStore, subscriptionsRepository, retryConfig) {
+            WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process()
+        },
+        entities = EventSubscription("entities", eventStore, subscriptionsRepository, retryConfig) {
+            EntitiesEventProcessor(it, entitiesService).process()
+        },
     )
 }
