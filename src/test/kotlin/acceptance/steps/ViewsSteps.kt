@@ -2,8 +2,6 @@ package acceptance.steps
 
 import acceptance.SharedInfrastructure
 import acceptance.World
-import com.kos.credentials.repository.CredentialsDatabaseRepository
-import com.kos.roles.Role
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest
@@ -26,25 +24,15 @@ class ViewsSteps(private val world: World) {
     private val client = SharedInfrastructure.client
     private val db = SharedInfrastructure.db
 
-    @Given("{string} exists in the database with role {string}")
-    fun userExistsInDatabase(username: String, roleName: String) {
-        val role = Role.valueOf(roleName.uppercase())
-        val repo = CredentialsDatabaseRepository(db)
-        runBlocking {
-            repo.insertCredentials(username, "test-password")
-            repo.insertRoles(username, setOf(role))
-        }
-    }
-
-    @When("they create a {string} view named {string}")
-    fun createView(game: String, name: String) {
+    @When("they create a {string} view")
+    fun createView(game: String) {
         val resolvedGame = Game.valueOf(game.uppercase())
         world.game = resolvedGame
         world.response = runBlocking {
             client.post("/api/views") {
                 contentType(ContentType.Application.Json)
                 world.token?.let { bearerAuth(it) }
-                setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = resolvedGame, featured = false))
+                setBody(ViewRequest(name = "My View", published = false, entities = emptyList(), game = resolvedGame, featured = false))
             }
         }
         if (world.response.status == HttpStatusCode.OK) {

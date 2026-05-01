@@ -4,11 +4,9 @@ import acceptance.JwtHelper
 import acceptance.SharedInfrastructure
 import acceptance.World
 import io.cucumber.java.en.Given
-import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
-import kotlin.test.assertEquals
 
 class AuthSteps(private val world: World) {
 
@@ -49,8 +47,4 @@ class AuthSteps(private val world: World) {
         }
     }
 
-    @Then("the response status is {int}")
-    fun responseStatusIs(status: Int) {
-        assertEquals(status, world.response.status.value)
-    }
 }

@@ -1,0 +1,18 @@
+{
+  "type": "com.kos.clients.domain.RaiderIoData",
+  "id": 1,
+  "name": "Sanxei",
+  "realm": "Silvermoon",
+  "region": "eu",
+  "score": 3000.0,
+  "class": "Warrior",
+  "spec": "Arms",
+  "quantile": 0.99,
+  "mythicPlusRanks": {
+    "overall": { "world": 100, "region": 50, "realm": 1 },
+    "class": { "world": 50, "region": 25, "realm": 1 },
+    "specs": []
+  },
+  "mythicPlusBestRuns": [],
+  "mythicPlusRecentRuns": []
+}

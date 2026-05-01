@@ -76,15 +76,24 @@ data class TestSubscriptions(
     val entities: EventSubscription,
 )
 
+private fun readResource(path: String): String =
+    object {}.javaClass.classLoader.getResourceAsStream(path)!!
+        .bufferedReader(Charsets.UTF_8).readText()
+
 fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
     val mockHttpClient = HttpClient(MockEngine) {
         engine {
-            addHandler {
-                respond(
-                    "{}",
-                    HttpStatusCode.OK,
-                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                )
+            addHandler { request ->
+                val json = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                when {
+                    request.url.encodedPath.contains("/characters/profile") ->
+                        respond(readResource("wow/raiderio-profile-response.json"), HttpStatusCode.OK, json)
+                    request.url.encodedPath.contains("/season-cutoffs") ->
+                        respond(readResource("wow/raiderio-cutoff-response.json"), HttpStatusCode.OK, json)
+                    request.url.encodedPath.contains("/run-details") ->
+                        respond(readResource("wow/raiderio-run-details-response.json"), HttpStatusCode.OK, json)
+                    else -> respond("{}", HttpStatusCode.OK, json)
+                }
             }
         }
     }
