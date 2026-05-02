@@ -62,9 +62,6 @@ import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
-import io.ktor.http.*
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 
@@ -76,27 +73,7 @@ data class TestSubscriptions(
     val entities: EventSubscription,
 )
 
-private fun readResource(path: String): String =
-    object {}.javaClass.classLoader.getResourceAsStream(path)!!
-        .bufferedReader(Charsets.UTF_8).readText()
-
 fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
-    val mockHttpClient = HttpClient(MockEngine) {
-        engine {
-            addHandler { request ->
-                val json = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                when {
-                    request.url.encodedPath.contains("/characters/profile") ->
-                        respond(readResource("wow/raiderio-profile-response.json"), HttpStatusCode.OK, json)
-                    request.url.encodedPath.contains("/season-cutoffs") ->
-                        respond(readResource("wow/raiderio-cutoff-response.json"), HttpStatusCode.OK, json)
-                    request.url.encodedPath.contains("/run-details") ->
-                        respond(readResource("wow/raiderio-run-details-response.json"), HttpStatusCode.OK, json)
-                    else -> respond("{}", HttpStatusCode.OK, json)
-                }
-            }
-        }
-    }
 
     val retryConfig = RetryConfig(maxAttempts = 1, delayTime = 0)
     val raiderIoHTTPClient = RaiderIoHTTPClient(mockHttpClient, retryConfig)

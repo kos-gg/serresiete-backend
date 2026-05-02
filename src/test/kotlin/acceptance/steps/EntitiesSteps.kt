@@ -58,6 +58,18 @@ class EntitiesSteps(private val world: World) {
         }
     }
 
+    @When("they search for a {string} entity {string} with tag {string}")
+    fun searchLolEntity(game: String, name: String, tag: String) {
+        world.response = runBlocking {
+            client.get("/api/entities") {
+                world.token?.let { bearerAuth(it) }
+                parameter("game", game.lowercase())
+                parameter("name", name)
+                parameter("tag", tag)
+            }
+        }
+    }
+
     @And("the response data is null")
     fun responseDataIsNull() {
         val body = runBlocking { world.response.bodyAsText() }
@@ -80,6 +92,16 @@ class EntitiesSteps(private val world: World) {
         assertNotNull(data["name"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
         assertNotNull(data["score"])
         assertNotNull(data["mythicPlusRanks"])
+    }
+
+    @And("the response data is a valid LOL entity")
+    fun responseDataIsValidLolEntity() {
+        val body = runBlocking { world.response.bodyAsText() }
+        val data = Json.parseToJsonElement(body).jsonObject["data"]!!.jsonObject
+        assertEquals("com.kos.clients.domain.RiotData", data["type"]!!.jsonPrimitive.content)
+        assertNotNull(data["summonerName"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
+        assertNotNull(data["summonerTag"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
+        assertNotNull(data["leagues"])
     }
 
     @And("the response contains an operation")

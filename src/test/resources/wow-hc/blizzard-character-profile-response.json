@@ -1,0 +1,32 @@
+{
+  "id": 30758927,
+  "name": "Sanxei",
+  "gender": {
+    "type": "MALE",
+    "name": "Male"
+  },
+  "faction": {
+    "type": "ALLIANCE",
+    "name": "Alliance"
+  },
+  "race": {
+    "name": "Human",
+    "id": 1
+  },
+  "character_class": {
+    "name": "Warrior",
+    "id": 1
+  },
+  "realm": {
+    "name": "Silvermoon",
+    "id": 5220,
+    "slug": "silvermoon"
+  },
+  "level": 60,
+  "experience": 0,
+  "last_login_timestamp": 1703019625000,
+  "average_item_level": 59,
+  "equipped_item_level": 57,
+  "is_ghost": false,
+  "is_self_found": false
+}

@@ -7,5 +7,6 @@ class Hooks {
     @Before
     fun resetDatabase() {
         SharedInfrastructure.resetDatabase()
+        MockConfig.reset()
     }
 }
