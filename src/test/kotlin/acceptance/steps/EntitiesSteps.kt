@@ -150,8 +150,9 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
                     val data = eventWithVersion.event.eventData
                     data is RequestToBeSynced &&
                         data.game == resolvedGame &&
-                        data.request is WowEntityRequest &&
-                        data.request.let { it.name == name && it.realm == realm && it.region == region }
+                        (data.request as? WowEntityRequest)?.let {
+                            it.name == name && it.realm == realm && it.region == region
+                        } == true
                 },
                 "Expected a sync event for $game entity $name on $realm/$region but none found"
             )
