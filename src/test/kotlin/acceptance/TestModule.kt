@@ -29,11 +29,7 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
-import com.kos.eventsourcing.subscriptions.sync.EntitiesEventProcessor
-import com.kos.eventsourcing.subscriptions.sync.LolEventProcessor
-import com.kos.eventsourcing.subscriptions.sync.ViewsEventProcessor
-import com.kos.eventsourcing.subscriptions.sync.WowEventProcessor
-import com.kos.eventsourcing.subscriptions.sync.WowHardcoreEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.*
 import com.kos.plugins.configureAuthentication
 import com.kos.plugins.configureCors
 import com.kos.plugins.configureRouting

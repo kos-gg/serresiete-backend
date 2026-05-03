@@ -9,6 +9,7 @@ Feature: Entities
     Then the response status is 200
     And the response data is null
     And the response contains an operation
+    And a sync event exists for "WOW" entity "Sanxei" on realm "Silvermoon" region "eu"
 
   Scenario: Searching for a WOW entity with cached data returns the data
     Given a "WOW" entity "Sanxei" on realm "Silvermoon" region "eu" exists with cached data "wowEntity"

@@ -1,12 +1,11 @@
 package acceptance.steps
 
+import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
-import acceptance.World
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest
 import io.cucumber.java.en.And
-import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.ktor.client.request.*
@@ -19,7 +18,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.assertEquals
 
-class ViewsSteps(private val world: World) {
+class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
 
     private val client = SharedInfrastructure.client
     private val db = SharedInfrastructure.db
@@ -27,17 +26,17 @@ class ViewsSteps(private val world: World) {
     @When("they create a {string} view")
     fun createView(game: String) {
         val resolvedGame = Game.valueOf(game.uppercase())
-        world.game = resolvedGame
-        world.response = runBlocking {
+        scenarioVariables.game = resolvedGame
+        scenarioVariables.response = runBlocking {
             client.post("/api/views") {
                 contentType(ContentType.Application.Json)
-                world.token?.let { bearerAuth(it) }
+                scenarioVariables.token?.let { bearerAuth(it) }
                 setBody(ViewRequest(name = "My View", published = false, entities = emptyList(), game = resolvedGame, featured = false))
             }
         }
-        if (world.response.status == HttpStatusCode.OK) {
-            val body = runBlocking { world.response.bodyAsText() }
-            world.viewId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            scenarioVariables.viewId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
         }
     }
 
@@ -48,30 +47,30 @@ class ViewsSteps(private val world: World) {
 
     @When("they GET the created view")
     fun getCreatedView() {
-        world.response = runBlocking {
-            client.get("/api/views/${world.viewId}") {
-                world.token?.let { bearerAuth(it) }
+        scenarioVariables.response = runBlocking {
+            client.get("/api/views/${scenarioVariables.viewId}") {
+                scenarioVariables.token?.let { bearerAuth(it) }
             }
         }
     }
 
     @When("they edit the created view to be named {string}")
     fun editCreatedView(name: String) {
-        world.response = runBlocking {
-            client.put("/api/views/${world.viewId}") {
+        scenarioVariables.response = runBlocking {
+            client.put("/api/views/${scenarioVariables.viewId}") {
                 contentType(ContentType.Application.Json)
-                world.token?.let { bearerAuth(it) }
-                setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = world.game!!, featured = false))
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = scenarioVariables.game!!, featured = false))
             }
         }
     }
 
     @When("they edit a view at {string} to be named {string}")
     fun editViewAtPath(path: String, name: String) {
-        world.response = runBlocking {
+        scenarioVariables.response = runBlocking {
             client.put(path) {
                 contentType(ContentType.Application.Json)
-                world.token?.let { bearerAuth(it) }
+                scenarioVariables.token?.let { bearerAuth(it) }
                 setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = Game.LOL, featured = false))
             }
         }
@@ -79,29 +78,29 @@ class ViewsSteps(private val world: World) {
 
     @When("they patch the created view to be named {string}")
     fun patchCreatedView(name: String) {
-        world.response = runBlocking {
-            client.patch("/api/views/${world.viewId}") {
+        scenarioVariables.response = runBlocking {
+            client.patch("/api/views/${scenarioVariables.viewId}") {
                 contentType(ContentType.Application.Json)
-                world.token?.let { bearerAuth(it) }
-                setBody(ViewPatchRequest(name = name, game = world.game!!))
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(ViewPatchRequest(name = name, game = scenarioVariables.game!!))
             }
         }
     }
 
     @When("they DELETE the created view")
     fun deleteCreatedView() {
-        world.response = runBlocking {
-            client.delete("/api/views/${world.viewId}") {
-                world.token?.let { bearerAuth(it) }
+        scenarioVariables.response = runBlocking {
+            client.delete("/api/views/${scenarioVariables.viewId}") {
+                scenarioVariables.token?.let { bearerAuth(it) }
             }
         }
     }
 
     @When("they request DELETE {string}")
     fun requestDelete(path: String) {
-        world.response = runBlocking {
+        scenarioVariables.response = runBlocking {
             client.delete(path) {
-                world.token?.let { bearerAuth(it) }
+                scenarioVariables.token?.let { bearerAuth(it) }
             }
         }
     }
@@ -110,7 +109,7 @@ class ViewsSteps(private val world: World) {
     fun getViewsReturnsCount(path: String, expectedCount: Int) {
         val response = runBlocking {
             client.get(path) {
-                world.token?.let { bearerAuth(it) }
+                scenarioVariables.token?.let { bearerAuth(it) }
             }
         }
         assertEquals(HttpStatusCode.OK, response.status)

@@ -1,11 +1,14 @@
 package acceptance.steps
 
+import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
-import acceptance.World
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheDatabaseRepository
+import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
+import com.kos.eventsourcing.events.RequestToBeSynced
+import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.views.Game
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
@@ -20,8 +23,9 @@ import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-class EntitiesSteps(private val world: World) {
+class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
 
     private val client = SharedInfrastructure.client
     private val db = SharedInfrastructure.db
@@ -45,11 +49,28 @@ class EntitiesSteps(private val world: World) {
         }
     }
 
+    @Given("a {string} entity {string} on realm {string} region {string} exists in the database")
+    fun entityExistsWithoutCachedData(game: String, name: String, realm: String, region: String) {
+        val resolvedGame = Game.valueOf(game.uppercase())
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        runBlocking {
+            entitiesRepo.insert(listOf(WowEntityRequest(name, region, realm)), resolvedGame)
+        }
+    }
+
+    @Given("a LOL entity {string} with tag {string} exists in the database")
+    fun lolEntityExists(name: String, tag: String) {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        runBlocking {
+            entitiesRepo.insert(listOf(LolEnrichedEntityRequest(name, tag, "test-puuid-${name.replace(" ", "-")}", 0, 0)), Game.LOL)
+        }
+    }
+
     @When("they search for a {string} entity {string} on realm {string} region {string}")
     fun searchEntity(game: String, name: String, realm: String, region: String) {
-        world.response = runBlocking {
+        scenarioVariables.response = runBlocking {
             client.get("/api/entities") {
-                world.token?.let { bearerAuth(it) }
+                scenarioVariables.token?.let { bearerAuth(it) }
                 parameter("game", game.lowercase())
                 parameter("name", name)
                 parameter("realm", realm)
@@ -60,9 +81,9 @@ class EntitiesSteps(private val world: World) {
 
     @When("they search for a {string} entity {string} with tag {string}")
     fun searchLolEntity(game: String, name: String, tag: String) {
-        world.response = runBlocking {
+        scenarioVariables.response = runBlocking {
             client.get("/api/entities") {
-                world.token?.let { bearerAuth(it) }
+                scenarioVariables.token?.let { bearerAuth(it) }
                 parameter("game", game.lowercase())
                 parameter("name", name)
                 parameter("tag", tag)
@@ -72,21 +93,21 @@ class EntitiesSteps(private val world: World) {
 
     @And("the response data is null")
     fun responseDataIsNull() {
-        val body = runBlocking { world.response.bodyAsText() }
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val data = Json.parseToJsonElement(body).jsonObject["data"]
         assertNull(data?.takeIf { it.toString() != "null" })
     }
 
     @And("the response contains entity data")
     fun responseContainsEntityData() {
-        val body = runBlocking { world.response.bodyAsText() }
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val data = Json.parseToJsonElement(body).jsonObject["data"]
         assertNotNull(data?.takeIf { it.toString() != "null" })
     }
 
     @And("the response data is a valid WOW entity")
     fun responseDataIsValidWowEntity() {
-        val body = runBlocking { world.response.bodyAsText() }
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val data = Json.parseToJsonElement(body).jsonObject["data"]!!.jsonObject
         assertEquals("com.kos.clients.domain.RaiderIoData", data["type"]!!.jsonPrimitive.content)
         assertNotNull(data["name"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
@@ -96,7 +117,7 @@ class EntitiesSteps(private val world: World) {
 
     @And("the response data is a valid LOL entity")
     fun responseDataIsValidLolEntity() {
-        val body = runBlocking { world.response.bodyAsText() }
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val data = Json.parseToJsonElement(body).jsonObject["data"]!!.jsonObject
         assertEquals("com.kos.clients.domain.RiotData", data["type"]!!.jsonPrimitive.content)
         assertNotNull(data["summonerName"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
@@ -106,15 +127,34 @@ class EntitiesSteps(private val world: World) {
 
     @And("the response contains an operation")
     fun responseContainsOperation() {
-        val body = runBlocking { world.response.bodyAsText() }
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val operation = Json.parseToJsonElement(body).jsonObject["operation"]
         assertNotNull(operation?.takeIf { it.toString() != "null" })
     }
 
     @And("the operation is null")
     fun operationIsNull() {
-        val body = runBlocking { world.response.bodyAsText() }
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val operation = Json.parseToJsonElement(body).jsonObject["operation"]
         assertNull(operation?.takeIf { it.toString() != "null" })
+    }
+
+    @And("a sync event exists for {string} entity {string} on realm {string} region {string}")
+    fun syncEventExistsForEntity(game: String, name: String, realm: String, region: String) {
+        val eventStore = EventStoreDatabase(db)
+        val resolvedGame = Game.valueOf(game.uppercase())
+        runBlocking {
+            val events = eventStore.state()
+            assertTrue(
+                events.any { eventWithVersion ->
+                    val data = eventWithVersion.event.eventData
+                    data is RequestToBeSynced &&
+                        data.game == resolvedGame &&
+                        data.request is WowEntityRequest &&
+                        data.request.let { it.name == name && it.realm == realm && it.region == region }
+                },
+                "Expected a sync event for $game entity $name on $realm/$region but none found"
+            )
+        }
     }
 }

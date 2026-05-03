@@ -24,6 +24,8 @@ val mockHttpClient = HttpClient(MockEngine) {
                     respond(readResource("wow-hc/blizzard-statistics-response.json"), HttpStatusCode.OK, json)
                 path.contains("/specializations") ->
                     respond(readResource("wow-hc/blizzard-specializations-response.json"), HttpStatusCode.OK, json)
+                path.contains("/data/wow/guild/") ->
+                    respond(readResource("wow-hc/blizzard-guild-roster-response.json"), HttpStatusCode.OK, json)
                 path.contains("/data/wow/realm/") ->
                     respond(readResource("wow-hc/blizzard-realm-response.json"), HttpStatusCode.OK, json)
                 path.contains("/profile/wow/character/") -> {
@@ -33,6 +35,8 @@ val mockHttpClient = HttpClient(MockEngine) {
                     else
                         respond("", status, json)
                 }
+                path.contains("/mythic-plus/static-data") ->
+                    respond(readResource("wow/raiderio-expansion-seasons-response.json"), HttpStatusCode.OK, json)
                 path.contains("/characters/profile") ->
                     respond(readResource("wow/raiderio-profile-response.json"), HttpStatusCode.OK, json)
                 path.contains("/season-cutoffs") ->
