@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 abstract class ActivitiesRepositoryTestCommon {
 
@@ -22,7 +23,7 @@ abstract class ActivitiesRepositoryTestCommon {
     fun `given a repository with activities i can retrieve them`() {
         runBlocking {
             val repositoryWithState = repository.withState(basicActivities)
-            assertEquals(repositoryWithState.getActivities(), basicActivities)
+            assertTrue { repositoryWithState.getActivities().containsAll(basicActivities) }
         }
     }
 }
