@@ -1,0 +1,6 @@
+{
+  "guild": { "id": 12345 },
+  "members": [
+    { "character": { "name": "Sanxei", "level": 60 } }
+  ]
+}

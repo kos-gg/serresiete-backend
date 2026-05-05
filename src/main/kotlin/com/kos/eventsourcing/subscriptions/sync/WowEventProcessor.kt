@@ -20,7 +20,7 @@ class WowEventProcessor(
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_CREATED -> {
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
-                return when (payload.game) {
+                when (payload.game) {
                     Game.WOW -> {
                         logger.debug("processing event v${eventWithVersion.version}")
                         val entities = payload.entities.mapNotNull {
@@ -43,7 +43,7 @@ class WowEventProcessor(
 
             EventType.VIEW_EDITED -> {
                 val payload = eventWithVersion.event.eventData as ViewEditedEvent
-                return when (payload.game) {
+                when (payload.game) {
                     Game.WOW -> {
                         logger.debug("processing event v${eventWithVersion.version}")
                         val entities = payload.entities.mapNotNull {
@@ -66,7 +66,7 @@ class WowEventProcessor(
 
             EventType.VIEW_PATCHED -> {
                 val payload = eventWithVersion.event.eventData as ViewPatchedEvent
-                return when (payload.game) {
+                when (payload.game) {
                     Game.WOW -> {
                         logger.debug("processing event v${eventWithVersion.version}")
                         payload.entities?.mapNotNull { entitiesService.get(it, Game.WOW) }?.let {
@@ -85,7 +85,7 @@ class WowEventProcessor(
 
             EventType.REQUEST_TO_BE_SYNCED -> {
                 val payload = eventWithVersion.event.eventData as RequestToBeSynced
-                return when (payload.game) {
+                when (payload.game) {
                     Game.WOW -> {
                         either {
                             logger.debug("processing event v${eventWithVersion.version}")
