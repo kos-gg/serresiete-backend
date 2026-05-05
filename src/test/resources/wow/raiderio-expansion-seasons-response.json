@@ -1,0 +1,13 @@
+{
+  "seasons": [
+    {
+      "slug": "season-tww-4",
+      "name": "TWW Season 4",
+      "blizzard_season_id": 16,
+      "is_main_season": true,
+      "dungeons": [
+        { "name": "Ara-Kara, City of Echoes", "short_name": "ARAK", "challenge_mode_id": 503 }
+      ]
+    }
+  ]
+}

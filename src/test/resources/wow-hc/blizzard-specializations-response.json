@@ -1,0 +1,19 @@
+{
+  "specialization_groups": [
+    {
+      "is_active": true,
+      "specializations": [
+        {
+          "talents": [
+            {
+              "talent": { "id": 1382 },
+              "talent_rank": 2
+            }
+          ],
+          "specialization_name": "Arms",
+          "spent_points": 2
+        }
+      ]
+    }
+  ]
+}

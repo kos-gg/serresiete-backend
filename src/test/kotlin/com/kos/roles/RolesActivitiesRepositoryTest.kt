@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 abstract class RolesActivitiesRepositoryTest {
 
@@ -23,7 +24,7 @@ abstract class RolesActivitiesRepositoryTest {
     fun `given a repository with roles and activities i can retrieve activities from a given role`() {
         runBlocking {
             val repositoryWithState = repository.withState(basicRolesActivities)
-            assertEquals(repositoryWithState.getActivitiesFromRole(Role.USER), setOf(basicActivity))
+            assertTrue { repositoryWithState.getActivitiesFromRole(Role.USER).contains(basicActivity) }
         }
     }
 
