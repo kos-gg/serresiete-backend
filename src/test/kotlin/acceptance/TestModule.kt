@@ -156,6 +156,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
     val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)
 
+    val operationsService = com.kos.operations.OperationsService(eventStore)
+    val operationsController = com.kos.operations.OperationsController(operationsService)
+
     configureAuthentication(credentialsService, jwtConfig)
     configureSerialization()
     configureCors()
@@ -168,7 +171,8 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         tasksController,
         eventSubscriptionController,
         entitiesController,
-        sourcesController
+        sourcesController,
+        operationsController
     )
 
     return TestSubscriptions(

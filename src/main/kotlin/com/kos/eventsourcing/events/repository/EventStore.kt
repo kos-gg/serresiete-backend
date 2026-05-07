@@ -8,4 +8,5 @@ import com.kos.eventsourcing.events.Operation
 interface EventStore : WithState<List<EventWithVersion>, EventStore> {
     suspend fun save(event: Event): Operation
     suspend fun getEvents(version: Long?): Sequence<EventWithVersion>
+    suspend fun getEventsByOperationId(operationId: String): List<EventWithVersion>
 }

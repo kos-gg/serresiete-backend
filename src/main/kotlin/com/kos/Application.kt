@@ -55,6 +55,8 @@ import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
+import com.kos.operations.OperationsController
+import com.kos.operations.OperationsService
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -189,6 +191,9 @@ fun Application.module() {
         )
     val viewsController = ViewsController(viewsService)
 
+    val operationsService = OperationsService(eventStore)
+    val operationsController = OperationsController(operationsService)
+
     val sourcesService = SourcesService(wowSeasonService)
     val sourcesController = SourcesController(sourcesService)
 
@@ -267,7 +272,8 @@ fun Application.module() {
         tasksController,
         eventSubscriptionController,
         entitiesController,
-        sourcesController
+        sourcesController,
+        operationsController
     )
     configureSerialization()
     configureLogging()

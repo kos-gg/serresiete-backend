@@ -64,12 +64,13 @@ class ViewsService(
             ensureRequest(request).bind()
 
             val operationId = UUID.randomUUID().toString()
+            val viewId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
                 aggregateRoot,
                 operationId,
                 ViewToBeCreatedEvent(
-                    operationId,
+                    viewId,
                     request.name,
                     request.published,
                     request.entities,
@@ -133,10 +134,11 @@ class ViewsService(
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
 
+            val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
                 aggregateRoot,
-                id,
+                operationId,
                 ViewToBeEditedEvent(
                     id,
                     request.name,
@@ -191,10 +193,11 @@ class ViewsService(
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
 
+            val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
             val event = Event(
                 aggregateRoot,
-                id,
+                operationId,
                 ViewToBePatchedEvent(
                     id,
                     request.name,
@@ -247,11 +250,12 @@ class ViewsService(
     }
 
     suspend fun delete(owner: String, viewToDelete: SimpleView): Operation {
+        val operationId = UUID.randomUUID().toString()
         val aggregateRoot = "/credentials/$owner"
         val event = Event(
             aggregateRoot,
-            viewToDelete.id,
-            ViewDeletedEvent(
+            operationId,
+            ViewToBeDeletedEvent(
                 viewToDelete.id,
                 viewToDelete.name,
                 viewToDelete.owner,
@@ -261,9 +265,25 @@ class ViewsService(
                 viewToDelete.featured
             )
         )
-
-        viewsRepository.delete(viewToDelete.id) //TODO: encapsular en either lo que retorna delete
         return eventStore.save(event)
+    }
+
+    suspend fun deleteView(
+        operationId: String,
+        aggregateRoot: String,
+        event: ViewToBeDeletedEvent
+    ): Either<ServiceError, Operation> {
+        viewsRepository.delete(event.id)
+        val completionEvent = Event(
+            aggregateRoot,
+            operationId,
+            ViewDeletedEvent(event.id, event.name, event.owner, event.entities, event.published, event.game, event.featured)
+        )
+        return Either.Right(eventStore.save(completionEvent))
+    }
+
+    suspend fun failOperation(operationId: String, aggregateRoot: String, reason: String) {
+        eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
     }
 
     suspend fun getData(view: View): Either<ServiceError, List<Data>> =
