@@ -34,6 +34,9 @@ enum class EventType {
     },
     OPERATION_FAILED {
         override fun toString(): String = "operationFailed"
+    },
+    VIEW_SYNC_COMPLETED {
+        override fun toString(): String = "viewSyncCompleted"
     };
 
     companion object {
@@ -49,6 +52,7 @@ enum class EventType {
                 "viewDeleted" -> VIEW_DELETED
                 "requestToBeSynced" -> REQUEST_TO_BE_SYNCED
                 "operationFailed" -> OPERATION_FAILED
+                "viewSyncCompleted" -> VIEW_SYNC_COMPLETED
                 else -> throw IllegalArgumentException("error parsing EventType: $string")
             }
         }
@@ -213,6 +217,13 @@ data class OperationFailedEvent(
 }
 
 @Serializable
+data class ViewSyncCompletedEvent(
+    val viewId: String
+) : EventData {
+    override val eventType: EventType = EventType.VIEW_SYNC_COMPLETED
+}
+
+@Serializable
 data class Event(
     val aggregateRoot: String,
     val operationId: String,
@@ -222,7 +233,8 @@ data class Event(
 @Serializable
 data class Operation(
     val id: String,
-    val type: EventType
+    val type: EventType,
+    val resourceId: String? = null
 )
 
 data class EventWithVersion(val version: Long, val event: Event)

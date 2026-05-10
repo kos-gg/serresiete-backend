@@ -8,7 +8,9 @@ Feature: Views
   Scenario Outline: User can create a view for each game
     When they create a "<game>" view
     And the views subscription processes pending events
+    And the sync subscription processes pending events
     Then GET "/api/views" returns 1 view
+    And a completed event is saved for the operation
 
     Examples:
       | game   |
@@ -19,29 +21,34 @@ Feature: Views
   Scenario: User can get their view by id
     When they create a "LOL" view
     And the views subscription processes pending events
+    And the sync subscription processes pending events
     And they GET the created view
     Then the response status is 200
+    And a completed event is saved for the operation
 
   Scenario: User can edit their view
-    When they create a "LOL" view
+    Given they have an existing "LOL" view
+    When they edit the created view to be named "Updated View"
     And the views subscription processes pending events
-    And they edit the created view to be named "Updated View"
-    And the views subscription processes pending events
+    And the sync subscription processes pending events
     Then the response status is 200
+    And a completed event is saved for the operation
 
   Scenario: User can patch their view
-    When they create a "LOL" view
+    Given they have an existing "LOL" view
+    When they patch the created view to be named "Patched View"
     And the views subscription processes pending events
-    And they patch the created view to be named "Patched View"
-    And the views subscription processes pending events
+    And the sync subscription processes pending events
     Then the response status is 200
+    And a completed event is saved for the operation
 
   Scenario: User can delete their view
-    When they create a "LOL" view
+    Given they have an existing "LOL" view
+    When they DELETE the created view
     And the views subscription processes pending events
-    And they DELETE the created view
     Then the response status is 200
     And GET "/api/views" returns 0 views
+    And a completed event is saved for the operation
 
   @sad
   Scenario: Deleting a non-existent view returns 404

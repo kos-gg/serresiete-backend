@@ -232,21 +232,21 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",

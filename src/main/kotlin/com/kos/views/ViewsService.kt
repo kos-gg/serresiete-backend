@@ -80,7 +80,7 @@ class ViewsService(
                     request.extraArguments
                 )
             )
-            eventStore.save(event)
+            eventStore.save(event).copy(resourceId = viewId)
         }
     }
 

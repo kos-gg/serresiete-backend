@@ -39,8 +39,13 @@ val mockHttpClient = HttpClient(MockEngine) {
                     respond(readResource("wow/raiderio-expansion-seasons-response.json"), HttpStatusCode.OK, json)
                 path.contains("/characters/profile") ->
                     respond(readResource("wow/raiderio-profile-response.json"), HttpStatusCode.OK, json)
-                path.contains("/season-cutoffs") ->
-                    respond(readResource("wow/raiderio-cutoff-response.json"), HttpStatusCode.OK, json)
+                path.contains("/season-cutoffs") -> {
+                    val status = MockConfig.raiderIoCutoffStatusOverride ?: HttpStatusCode.OK
+                    if (status == HttpStatusCode.OK)
+                        respond(readResource("wow/raiderio-cutoff-response.json"), status, json)
+                    else
+                        respond("", status, json)
+                }
                 path.contains("/run-details") ->
                     respond(readResource("wow/raiderio-run-details-response.json"), HttpStatusCode.OK, json)
                 path.contains("/accounts/by-riot-id") ->

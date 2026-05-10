@@ -6,6 +6,13 @@ Feature: Sync
     When the WOW sync subscription processes pending events
     Then the data cache contains a "WOW" entry for "Sanxei" "Silvermoon" "eu"
 
+  Scenario: WOW sync records a failure when the raiderIo cutoff endpoint fails
+    Given a "WOW" sync event is posted for "Sanxei" "Silvermoon" "eu"
+    And a current WOW season exists in the database
+    And the raiderIo cutoff API returns an error
+    When the WOW sync subscription processes pending events
+    Then a failure event is saved for the operation
+
   Scenario: WOW Hardcore sync caches entity data
     Given a "WOW_HC" sync event is posted for "Sanxei" "Silvermoon" "eu"
     When the WOW HC sync subscription processes pending events

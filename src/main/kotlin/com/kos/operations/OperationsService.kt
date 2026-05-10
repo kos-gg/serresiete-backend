@@ -2,13 +2,11 @@ package com.kos.operations
 
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.OperationFailedEvent
-import com.kos.eventsourcing.events.ViewCreatedEvent
+import com.kos.eventsourcing.events.ViewSyncCompletedEvent
 import com.kos.eventsourcing.events.repository.EventStore
 
 private val completionEventTypes = setOf(
-    EventType.VIEW_CREATED,
-    EventType.VIEW_EDITED,
-    EventType.VIEW_PATCHED,
+    EventType.VIEW_SYNC_COMPLETED,
     EventType.VIEW_DELETED
 )
 
@@ -30,7 +28,7 @@ class OperationsService(private val eventStore: EventStore) {
             completionEvent != null -> OperationStatus(
                 id = operationId,
                 status = OperationStatusType.COMPLETED,
-                resourceId = (completionEvent.event.eventData as? ViewCreatedEvent)?.id
+                resourceId = (completionEvent.event.eventData as? ViewSyncCompletedEvent)?.viewId
             )
             else -> OperationStatus(
                 id = operationId,

@@ -30,6 +30,7 @@ class EventStoreDatabase(private val db: Database) : EventStore {
                 subclass(ViewDeletedEvent::class, ViewDeletedEvent.serializer())
                 subclass(RequestToBeSynced::class, RequestToBeSynced.serializer())
                 subclass(OperationFailedEvent::class, OperationFailedEvent.serializer())
+                subclass(ViewSyncCompletedEvent::class, ViewSyncCompletedEvent.serializer())
             }
 
             //TODO: This is repeated code. We could do it better
@@ -103,7 +104,7 @@ class EventStoreDatabase(private val db: Database) : EventStore {
     }
 
     override suspend fun withState(initialState: List<EventWithVersion>): EventStore {
-        newSuspendedTransaction(Dispatchers.IO, db)  {
+        newSuspendedTransaction(Dispatchers.IO, db) {
             Events.batchInsert(initialState) {
                 this[Events.aggregateRoot] = it.event.aggregateRoot
                 this[Events.operationId] = it.event.operationId
