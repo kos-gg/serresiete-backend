@@ -84,6 +84,10 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = scenarioVariables.game!!, featured = false))
             }
         }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            scenarioVariables.operationId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
+        }
     }
 
     @When("they edit a view at {string} to be named {string}")
@@ -105,6 +109,10 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 scenarioVariables.token?.let { bearerAuth(it) }
                 setBody(ViewPatchRequest(name = name, game = scenarioVariables.game!!))
             }
+        }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            scenarioVariables.operationId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
         }
     }
 
