@@ -272,15 +272,24 @@ class ViewsService(
         operationId: String,
         aggregateRoot: String,
         event: ViewToBeDeletedEvent
-    ): Either<ServiceError, Operation> {
-        viewsRepository.delete(event.id)
-        val completionEvent = Event(
-            aggregateRoot,
-            operationId,
-            ViewDeletedEvent(event.id, event.name, event.owner, event.entities, event.published, event.game, event.featured)
-        )
-        return Either.Right(eventStore.save(completionEvent))
-    }
+    ): Either<ServiceError, Operation> =
+        Either.catch {
+            viewsRepository.delete(event.id)
+            val completionEvent = Event(
+                aggregateRoot,
+                operationId,
+                ViewDeletedEvent(
+                    event.id,
+                    event.name,
+                    event.owner,
+                    event.entities,
+                    event.published,
+                    event.game,
+                    event.featured
+                )
+            )
+            eventStore.save(completionEvent)
+        }.mapLeft { ViewDeleteError(event, it.message ?: it.javaClass.simpleName) }
 
     suspend fun failOperation(operationId: String, aggregateRoot: String, reason: String) {
         eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))

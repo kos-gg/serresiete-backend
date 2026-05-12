@@ -31,7 +31,11 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
-import com.kos.eventsourcing.subscriptions.sync.*
+import com.kos.eventsourcing.subscriptions.sync.EntitiesEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.ViewsEventProcessor
+import com.kos.operations.OperationsController
+import com.kos.operations.OperationsService
 import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
@@ -55,8 +59,6 @@ import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
-import com.kos.operations.OperationsController
-import com.kos.operations.OperationsService
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository

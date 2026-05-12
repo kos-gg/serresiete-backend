@@ -5,11 +5,14 @@ import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.common.error.NotFound
 import com.kos.common.getLeftOrNull
-import com.kos.eventsourcing.events.*
+import com.kos.eventsourcing.events.Event
+import com.kos.eventsourcing.events.OperationFailedEvent
+import com.kos.eventsourcing.events.ViewSyncCompletedEvent
+import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
-import java.util.UUID
+import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -72,13 +75,13 @@ class OperationsControllerTest {
     }
 
     @Test
-    fun `returns completed status with resource id when sync is done`() {
+    fun `returns completed status when sync is done`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
             eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
 
             assertEquals(
-                OperationStatus(operationId, OperationStatusType.COMPLETED, resourceId = viewId),
+                OperationStatus(operationId, OperationStatusType.COMPLETED),
                 controller.getOperationStatus("sanxei", operationId, setOf(Activities.getOperationStatus)).getOrNull()
             )
         }

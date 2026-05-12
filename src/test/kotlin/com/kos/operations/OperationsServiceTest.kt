@@ -4,7 +4,7 @@ import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
-import java.util.UUID
+import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,7 +46,7 @@ class OperationsServiceTest {
     }
 
     @Test
-    fun `returns completed with resource id when a view sync completed event exists`() {
+    fun `returns completed when a view sync completed event exists`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
             eventStore.save(Event(aggregateRoot, operationId, ViewToBeCreatedEvent(
@@ -55,14 +55,14 @@ class OperationsServiceTest {
             eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
 
             assertEquals(
-                OperationStatus(operationId, OperationStatusType.COMPLETED, resourceId = viewId),
+                OperationStatus(operationId, OperationStatusType.COMPLETED),
                 service.getOperationStatus(operationId)
             )
         }
     }
 
     @Test
-    fun `returns completed without resource id when a view deleted event exists`() {
+    fun `returns completed when a view deleted event exists`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
             eventStore.save(Event(aggregateRoot, operationId, ViewDeletedEvent(
@@ -70,7 +70,7 @@ class OperationsServiceTest {
             )))
 
             assertEquals(
-                OperationStatus(operationId, OperationStatusType.COMPLETED, resourceId = null),
+                OperationStatus(operationId, OperationStatusType.COMPLETED),
                 service.getOperationStatus(operationId)
             )
         }
