@@ -4,7 +4,7 @@
 ### Added
 - **Operation Status Endpoint** (`GET /api/operations/{id}`):
     - Introduced a new endpoint to check the status of an async operation by its ID.
-    - Requires JWT authentication and the `getOperationStatus` activity.
+    - Requires JWT authentication and the `get operation status` activity.
     - Returns a JSON object with the following shape:
         ```json
         {
