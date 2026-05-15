@@ -17,7 +17,21 @@ kotlin {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeEngines("cucumber")
+    }
+}
+
+tasks.register<Test>("acceptanceTest") {
+    group = "verification"
+    description = "Runs acceptance tests (Cucumber)."
+    useJUnitPlatform {
+        includeEngines("cucumber")
+    }
+}
+
+tasks.check {
+    dependsOn("acceptanceTest")
 }
 
 tasks.shadowJar {

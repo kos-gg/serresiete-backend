@@ -27,15 +27,21 @@ Apis used:
 ./gradlew test
 ```
 
-### Acceptance tests (e2e)
+### Acceptance tests
 
 Acceptance tests are written in Gherkin (Cucumber) and live under `src/test/resources/acceptance/features/`.
 
 **Via Gradle:**
 ```bash
-./gradlew test --tests "acceptance.CucumberRunner"
+./gradlew acceptanceTest
 ```
 
 **Via IDE (IntelliJ):**
 - Run `CucumberRunner` directly — right-click `src/test/kotlin/acceptance/CucumberRunner.kt` and select _Run_
 - Or open any `.feature` file and click the run icon next to an individual scenario to run it in isolation
+
+### Full build (unit, integration & acceptance)
+
+```bash
+./gradlew check
+```
