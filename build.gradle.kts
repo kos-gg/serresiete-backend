@@ -17,22 +17,20 @@ kotlin {
 }
 
 tasks.test {
-    useJUnitPlatform {
-        excludeEngines("cucumber")
-    }
+    useJUnitPlatform()
+    exclude("**/acceptance/**")
 }
 
 tasks.register<Test>("acceptanceTest") {
     group = "verification"
     description = "Runs acceptance tests (Cucumber)."
-    useJUnitPlatform {
-        includeEngines("cucumber")
-    }
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform()
+    include("**/acceptance/CucumberRunner.class")
+    outputs.upToDateWhen { false }
 }
 
-tasks.check {
-    dependsOn("acceptanceTest")
-}
 
 tasks.shadowJar {
     mergeServiceFiles()
