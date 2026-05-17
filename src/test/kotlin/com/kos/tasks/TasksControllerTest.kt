@@ -43,6 +43,7 @@ import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
+import com.kos.tasks.runners.TaskRunnerProvider
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
@@ -178,17 +179,7 @@ class TasksControllerTest {
             )
         )
 
-        val seasonService =
-            WowSeasonService(staticDataRepository, seasonDatabaseRepository, raiderIoClient)
-        val tasksService =
-            TasksService(
-                tasksRepositoryWithState,
-                dataCacheService,
-                entitiesService,
-                authService,
-                seasonService,
-                entityCacheServiceRegistry
-            )
+        val tasksService = TasksService(tasksRepositoryWithState, TaskRunnerProvider(emptyList()))
 
         return TasksController(tasksService)
     }

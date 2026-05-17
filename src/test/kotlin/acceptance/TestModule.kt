@@ -57,6 +57,17 @@ import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
+import com.kos.tasks.runners.CacheClearTaskRunner
+import com.kos.tasks.runners.CacheGameViewDataTaskRunner
+import com.kos.tasks.runners.CacheLolDataTaskRunner
+import com.kos.tasks.runners.CacheWowDataTaskRunner
+import com.kos.tasks.runners.CacheWowHcDataTaskRunner
+import com.kos.tasks.runners.TaskCleanupTaskRunner
+import com.kos.tasks.runners.TaskRunnerProvider
+import com.kos.tasks.runners.TokenCleanupTaskRunner
+import com.kos.tasks.runners.UpdateLolEntitiesTaskRunner
+import com.kos.tasks.runners.UpdateMythicPlusSeasonTaskRunner
+import com.kos.tasks.runners.UpdateWowHardcoreGuildsTaskRunner
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -144,14 +155,21 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val sourcesController = SourcesController(sourcesService)
 
     val tasksRepository = TasksDatabaseRepository(db)
-    val tasksService = TasksService(
-        tasksRepository,
-        dataCacheService,
-        entitiesService,
-        authService,
-        wowSeasonService,
-        entitySynchronizerProvider
+    val taskRunnerProvider = TaskRunnerProvider(
+        listOf(
+            TokenCleanupTaskRunner(tasksRepository, authService),
+            TaskCleanupTaskRunner(tasksRepository),
+            UpdateLolEntitiesTaskRunner(tasksRepository, entitiesService),
+            CacheClearTaskRunner(tasksRepository, dataCacheService),
+            UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
+            UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
+            CacheLolDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheWowDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheWowHcDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider)
+        )
     )
+    val tasksService = TasksService(tasksRepository, taskRunnerProvider)
     val tasksController = TasksController(tasksService)
 
     val subscriptionsRepository = SubscriptionsDatabaseRepository(db)

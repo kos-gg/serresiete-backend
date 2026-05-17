@@ -59,3 +59,16 @@ Feature: Tasks
   Scenario: UPDATE_MYTHIC_PLUS_SEASON task fails when no WOW expansion exists
     When they run the "updateMythicPlusSeason" task
     Then the task completes with status "ERROR"
+
+  Scenario: CACHE_GAME_VIEW_DATA_TASK caches entities for a specific view
+    And a LOL view "test-lol-view" exists
+    When they run the "cacheGameDataTask" task with viewId "test-lol-view"
+    Then the task completes with status "SUCCESSFUL"
+
+  Scenario: CACHE_GAME_VIEW_DATA_TASK fails when no viewId is provided
+    When they run the "cacheGameDataTask" task
+    Then the task completes with status "ERROR"
+
+  Scenario: CACHE_GAME_VIEW_DATA_TASK fails when view does not exist
+    When they run the "cacheGameDataTask" task with viewId "non-existent-view"
+    Then the task completes with status "ERROR"

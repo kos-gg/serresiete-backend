@@ -17,8 +17,9 @@ kotlin {
 }
 
 tasks.test {
-    useJUnitPlatform()
-    exclude("**/acceptance/**")
+    useJUnitPlatform {
+        excludeEngines("cucumber")
+    }
 }
 
 tasks.register<Test>("acceptanceTest") {

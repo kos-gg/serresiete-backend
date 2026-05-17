@@ -153,4 +153,29 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
             assertTrue(entries.isEmpty(), "Expected data cache to be empty but found ${entries.size} entries")
         }
     }
+
+    @When("they run the {string} task with viewId {string}")
+    fun theyRunTaskWithViewId(taskType: String, viewId: String) {
+        val type = TaskType.fromString(taskType).getOrElse { error("Unknown task type: $taskType") }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/tasks") {
+                scenarioVariables.token?.let { bearerAuth(it) }
+                contentType(ContentType.Application.Json)
+                setBody("""{"type":"${type.name}","arguments":{"viewId":"$viewId"}}""")
+            }
+        }
+    }
+
+    @And("a LOL view {string} exists")
+    fun lolViewExists(viewId: String) {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        runBlocking {
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(SimpleView(viewId, "Test LOL View", "sanxei", false, emptyList(), Game.LOL, false)),
+                    viewEntities = emptyList()
+                )
+            )
+        }
+    }
 }
