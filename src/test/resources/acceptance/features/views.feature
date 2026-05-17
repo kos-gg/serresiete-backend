@@ -61,7 +61,7 @@ Feature: Views
     Then the response status is 401
 
   Scenario: User without permission to create a view gets 403
-    Given "sanxei" has a valid token with activity "get own views"
+    Given "sanxei" has a valid token with activities "get own views"
     When they create a "LOL" view
     Then the response status is 403
 
