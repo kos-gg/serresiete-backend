@@ -311,7 +311,6 @@ class ViewsControllerTest {
                 setOf(Activities.createViews)
             ).onRight {
                 assertTrue(it.id.isNotEmpty())
-                assertEquals("/credentials/$user", it.aggregateRoot)
                 assertEquals(EventType.VIEW_TO_BE_CREATED, it.type)
             }
                 .onLeft { fail(it.toStr()) }
@@ -477,7 +476,6 @@ class ViewsControllerTest {
             controller.editView("owner", viewRequest, basicSimpleWowView.id, setOf(Activities.editAnyView))
                 .onRight {
                     assertTrue(it.id.isNotEmpty())
-                    assertEquals("/credentials/owner", it.aggregateRoot)
                     assertEquals(EventType.VIEW_TO_BE_EDITED, it.type)
                 }
                 .onLeft { fail(it.toStr()) }
@@ -536,7 +534,6 @@ class ViewsControllerTest {
             controller.patchView(user, viewPatchRequest, basicSimpleLolView.id, setOf(Activities.editOwnView))
                 .onRight {
                     assertTrue(it.id.isNotEmpty())
-                    assertEquals("/credentials/$user", it.aggregateRoot)
                     assertEquals(EventType.VIEW_TO_BE_PATCHED, it.type)
                 }
                 .onLeft { fail(it.toStr()) }
@@ -601,7 +598,6 @@ class ViewsControllerTest {
             )
                 .onRight {
                     assertTrue(it.id.isNotEmpty())
-                    assertEquals("/credentials/$user", it.aggregateRoot)
                     assertEquals(EventType.VIEW_TO_BE_PATCHED, it.type)
                 }
                 .onLeft { fail(it.toStr()) }

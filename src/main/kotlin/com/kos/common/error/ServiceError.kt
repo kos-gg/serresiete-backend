@@ -2,6 +2,7 @@ package com.kos.common.error
 
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
+import com.kos.eventsourcing.events.ViewToBeDeletedEvent
 import com.kos.eventsourcing.events.ViewToBeEditedEvent
 import com.kos.eventsourcing.events.ViewToBePatchedEvent
 import com.kos.views.Game
@@ -83,6 +84,14 @@ class ViewPatchError(
 ) : ServiceError() {
     override fun error(): String =
         "Couldn't patch view with payload [$view] for game [${view.game}] with error $message"
+}
+
+class ViewDeleteError(
+    val view: ViewToBeDeletedEvent,
+    val message: String
+) : ServiceError() {
+    override fun error(): String =
+        "Couldn't delete view with payload [$view] with error $message"
 }
 
 class UnableToAddNewMythicPlusSeason(

@@ -39,5 +39,6 @@ object Activities {
     const val getEventSubscriptions = "get event subscriptions"
     const val featureView = "feature view"
     const val getWowStaticData = "get wow static data"
+    const val getOperationStatus = "get operation status"
 }
 typealias Activity = String

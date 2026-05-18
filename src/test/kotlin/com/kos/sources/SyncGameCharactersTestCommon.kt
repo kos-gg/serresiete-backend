@@ -14,9 +14,8 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.subscriptions.sync.LolEventProcessor
-import com.kos.eventsourcing.subscriptions.sync.WowEventProcessor
-import com.kos.eventsourcing.subscriptions.sync.WowHardcoreEventProcessor
+import com.kos.eventsourcing.events.repository.EventStoreInMemory
+import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
@@ -101,7 +100,12 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = LolEventProcessor(eventWithVersion, entitiesService, lolEntitySynchronizer).process()
+        val result = GameSyncEventProcessor(
+            eventWithVersion,
+            entitiesService,
+            lolEntitySynchronizer,
+            EventStoreInMemory()
+        ).process()
 
         result.fold(
             { fail("Expected success") },
@@ -129,7 +133,12 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = WowEventProcessor(eventWithVersion, entitiesService, wowEntityCacheService).process()
+        val result = GameSyncEventProcessor(
+            eventWithVersion,
+            entitiesService,
+            wowEntityCacheService,
+            EventStoreInMemory()
+        ).process()
 
         result.fold(
             { fail("Expected success") },
@@ -156,7 +165,12 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = WowHardcoreEventProcessor(eventWithVersion, entitiesService, wowHardcoreEntityCacheService).process()
+        val result = GameSyncEventProcessor(
+            eventWithVersion,
+            entitiesService,
+            wowHardcoreEntityCacheService,
+            EventStoreInMemory()
+        ).process()
 
         result.fold(
             { fail("Expected success") },

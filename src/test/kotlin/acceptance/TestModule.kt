@@ -29,7 +29,9 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
-import com.kos.eventsourcing.subscriptions.sync.*
+import com.kos.eventsourcing.subscriptions.sync.EntitiesEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.ViewsEventProcessor
 import com.kos.plugins.configureAuthentication
 import com.kos.plugins.configureCors
 import com.kos.plugins.configureRouting
@@ -156,6 +158,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
     val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)
 
+    val operationsService = com.kos.operations.OperationsService(eventStore)
+    val operationsController = com.kos.operations.OperationsController(operationsService)
+
     configureAuthentication(credentialsService, jwtConfig)
     configureSerialization()
     configureCors()
@@ -168,7 +173,8 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         tasksController,
         eventSubscriptionController,
         entitiesController,
-        sourcesController
+        sourcesController,
+        operationsController
     )
 
     return TestSubscriptions(
@@ -176,13 +182,13 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             ViewsEventProcessor(it, viewsService).process()
         },
         syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository, retryConfig) {
-            LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process()
+            GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process()
         },
         syncWow = EventSubscription("sync-wow", eventStore, subscriptionsRepository, retryConfig) {
-            WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process()
+            GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process()
         },
         syncWowHc = EventSubscription("sync-wow-hc", eventStore, subscriptionsRepository, retryConfig) {
-            WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process()
+            GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process()
         },
         entities = EventSubscription("entities", eventStore, subscriptionsRepository, retryConfig) {
             EntitiesEventProcessor(it, entitiesService).process()

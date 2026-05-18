@@ -10,6 +10,8 @@ import com.kos.entities.EntitiesController
 import com.kos.entities.entitiesRouting
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.subscriptionsRouting
+import com.kos.operations.OperationsController
+import com.kos.operations.operationsRouting
 import com.kos.roles.RolesController
 import com.kos.roles.rolesRouting
 import com.kos.sources.SourcesController
@@ -31,7 +33,8 @@ fun Application.configureRouting(
     tasksController: TasksController,
     eventSubscriptionController: EventSubscriptionController,
     entitiesController: EntitiesController,
-    sourcesController: SourcesController
+    sourcesController: SourcesController,
+    operationsController: OperationsController
 ) {
 
     routing {
@@ -46,6 +49,7 @@ fun Application.configureRouting(
             subscriptionsRouting(eventSubscriptionController)
             entitiesRouting(entitiesController)
             sourcesRouting(sourcesController)
+            operationsRouting(operationsController)
         }
     }
 }

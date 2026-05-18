@@ -1,4 +1,28 @@
 # Changelog
+## [5.3.0] - 12-05-2026
+
+### Added
+- **Operation Status Endpoint** (`GET /api/operations/{id}`):
+    - Introduced a new endpoint to check the status of an async operation by its ID.
+    - Requires JWT authentication and the `get operation status` activity.
+    - Returns a JSON object with the following shape:
+        ```json
+        {
+          "id": "<operationId>",
+          "status": "PENDING | COMPLETED | FAILED",
+          "resourceId": "<viewId, if completed>",
+          "reason": "<failure reason, if failed>"
+        }
+        ```
+    - `PENDING` — the operation has been queued but not yet resolved.
+    - `COMPLETED` — the operation finished successfully; `resourceId` contains the ID of the created or synced view.
+    - `FAILED` — the operation could not be completed; `reason` describes why.
+    - Returns `404` if no events are found for the given operation ID.
+
+### Refactor
+- **`GameSyncEventProcessor` consolidates game-specific processors**:
+    - `LolEventProcessor`, `WowEventProcessor`, and `WowHardcoreEventProcessor` have been merged into a single `GameSyncEventProcessor`, removing ~380 lines of duplicated synchronization logic.
+
 ## [5.2.0] - 17-04-2026
 
 ### Improved

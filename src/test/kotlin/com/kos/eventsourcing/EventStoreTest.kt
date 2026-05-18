@@ -88,6 +88,50 @@ abstract class EventStoreTest {
             assertEquals(expected, storeWithEvents.getEvents(1).toList())
         }
     }
+
+    @Test
+    fun `given a store with events i can retrieve events by operation id`() {
+        runBlocking {
+            val payload = ViewToBeCreatedEvent(
+                UUID.randomUUID().toString(),
+                basicSimpleWowView.name,
+                basicSimpleWowView.published,
+                listOf(),
+                basicSimpleWowView.game,
+                basicSimpleWowView.owner,
+                basicSimpleWowView.featured,
+                null
+            )
+            val targetOperationId = UUID.randomUUID().toString()
+            val otherOperationId = UUID.randomUUID().toString()
+            val event1 = EventWithVersion(1, Event("/credentials/client1", targetOperationId, payload))
+            val event2 = EventWithVersion(2, Event("/credentials/client1", otherOperationId, payload))
+            val event3 = EventWithVersion(3, Event("/credentials/client1", targetOperationId, payload))
+            val storeWithEvents = store.withState(listOf(event1, event2, event3))
+
+            assertEquals(listOf(event1, event3), storeWithEvents.getEventsByOperationId(targetOperationId))
+        }
+    }
+
+    @Test
+    fun `given a store with events i get empty list for an unknown operation id`() {
+        runBlocking {
+            val payload = ViewToBeCreatedEvent(
+                UUID.randomUUID().toString(),
+                basicSimpleWowView.name,
+                basicSimpleWowView.published,
+                listOf(),
+                basicSimpleWowView.game,
+                basicSimpleWowView.owner,
+                basicSimpleWowView.featured,
+                null
+            )
+            val event1 = EventWithVersion(1, Event("/credentials/client1", UUID.randomUUID().toString(), payload))
+            val storeWithEvents = store.withState(listOf(event1))
+
+            assertEquals(emptyList(), storeWithEvents.getEventsByOperationId("unknown-op"))
+        }
+    }
 }
 
 class EventStoreInMemoryTest : EventStoreTest() {

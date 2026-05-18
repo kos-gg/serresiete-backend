@@ -697,10 +697,10 @@ class ViewsServiceTest {
                 )
 
                 val result = viewsService.delete(owner, basicSimpleWowView)
-                assertOperation(result, EventType.VIEW_DELETED)
+                assertOperation(result, EventType.VIEW_TO_BE_DELETED)
                 assertEventStoredCorrectly(
                     eventStore,
-                    ViewDeletedEvent(
+                    ViewToBeDeletedEvent(
                         basicSimpleWowView.id,
                         basicSimpleWowView.name,
                         basicSimpleWowView.owner,
@@ -806,16 +806,12 @@ class ViewsServiceTest {
                     fail(it.toStr())
                 }
 
-                val expectedEvent = Event(
-                    aggregateRoot,
-                    id,
-                    ViewToBePatchedEvent(id, null, null, characterRequests, Game.WOW, false)
-                )
-
                 val events = eventStore.getEvents(null).toList()
-
                 assertEquals(1, events.size)
-                assertEquals(EventWithVersion(1, expectedEvent), events.first())
+                val actual = events.first().event
+                assertTrue(actual.operationId.isNotEmpty())
+                assertEquals(aggregateRoot, actual.aggregateRoot)
+                assertEquals(ViewToBePatchedEvent(id, null, null, characterRequests, Game.WOW, false), actual.eventData)
 
             }
         }
@@ -1011,7 +1007,6 @@ class ViewsServiceTest {
 
     private fun assertOperation(operation: Operation, expectedType: EventType) {
         assertTrue(operation.id.isNotEmpty())
-        assertEquals(aggregateRoot, operation.aggregateRoot)
         assertEquals(expectedType, operation.type)
     }
 
@@ -1031,7 +1026,8 @@ class ViewsServiceTest {
 
         assertTrue(actual.operationId.isNotEmpty())
         assertEquals(aggregateRoot, actual.aggregateRoot)
-        assertEquals(data.id, actual.operationId)
+        assertTrue(actual.operationId.isNotEmpty())
+        assertTrue(data.id != actual.operationId)
         assertEquals(viewName, data.name)
         assertEquals(published, data.published)
         assertEquals(characters, data.entities)
@@ -1042,15 +1038,11 @@ class ViewsServiceTest {
 
     private suspend fun assertEventStoredCorrectly(eventStore: EventStore, eventData: EventData) {
         val events = eventStore.getEvents(null).toList()
-
-        val expectedEvent = Event(
-            aggregateRoot,
-            id,
-            eventData
-        )
-
         assertEquals(1, events.size)
-        assertEquals(EventWithVersion(1, expectedEvent), events.first())
+        val actual = events.first().event
+        assertTrue(actual.operationId.isNotEmpty())
+        assertEquals(aggregateRoot, actual.aggregateRoot)
+        assertEquals(eventData, actual.eventData)
     }
 
     private suspend fun assertNoEventsStored(eventStore: EventStore) {

@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  build:
-    name: build
+  unit-tests:
+    name: unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,8 +17,8 @@ jobs:
           distribution: 'temurin'
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Build with Gradle
-        run: ./gradlew build jacocoTestReport
+      - name: Run unit tests
+        run: ./gradlew test jacocoTestReport
       - name: Upload coverage reports
         uses: codecov/codecov-action@v2
         env:
@@ -38,4 +38,4 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Run acceptance tests
-        run: ./gradlew test --tests "acceptance.CucumberRunner"
+        run: ./gradlew acceptanceTest

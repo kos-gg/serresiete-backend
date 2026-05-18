@@ -12,13 +12,17 @@ class EventStoreInMemory : EventStore, InMemoryRepository {
     override suspend fun save(event: Event): Operation {
         val eventWithVersion = EventWithVersion(currentVersion++, event)
         events.add(eventWithVersion)
-        return Operation(event.operationId, event.aggregateRoot, event.eventData.eventType)
+        return Operation(event.operationId, event.eventData.eventType)
     }
 
     override suspend fun getEvents(version: Long?): Sequence<EventWithVersion> {
         return version?.let { v ->
             events.filter { it.version > v }.asSequence()
         } ?: events.asSequence()
+    }
+
+    override suspend fun getEventsByOperationId(operationId: String): List<EventWithVersion> {
+        return events.filter { it.event.operationId == operationId }
     }
 
     override suspend fun state(): List<EventWithVersion> {

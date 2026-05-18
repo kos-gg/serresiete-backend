@@ -31,7 +31,11 @@ import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
 import com.kos.eventsourcing.subscriptions.EventSubscriptionService
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepository
-import com.kos.eventsourcing.subscriptions.sync.*
+import com.kos.eventsourcing.subscriptions.sync.EntitiesEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
+import com.kos.eventsourcing.subscriptions.sync.ViewsEventProcessor
+import com.kos.operations.OperationsController
+import com.kos.operations.OperationsService
 import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
@@ -189,6 +193,9 @@ fun Application.module() {
         )
     val viewsController = ViewsController(viewsService)
 
+    val operationsService = OperationsService(eventStore)
+    val operationsController = OperationsController(operationsService)
+
     val sourcesService = SourcesService(wowSeasonService)
     val sourcesController = SourcesController(sourcesService)
 
@@ -227,21 +234,21 @@ fun Application.module() {
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { LolEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository,
         subscriptionsRetryConfig
-    ) { WowHardcoreEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
@@ -267,7 +274,8 @@ fun Application.module() {
         tasksController,
         eventSubscriptionController,
         entitiesController,
-        sourcesController
+        sourcesController,
+        operationsController
     )
     configureSerialization()
     configureLogging()

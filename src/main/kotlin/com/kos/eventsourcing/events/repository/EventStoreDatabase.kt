@@ -26,8 +26,11 @@ class EventStoreDatabase(private val db: Database) : EventStore {
                 subclass(ViewCreatedEvent::class, ViewCreatedEvent.serializer())
                 subclass(ViewEditedEvent::class, ViewEditedEvent.serializer())
                 subclass(ViewPatchedEvent::class, ViewPatchedEvent.serializer())
+                subclass(ViewToBeDeletedEvent::class, ViewToBeDeletedEvent.serializer())
                 subclass(ViewDeletedEvent::class, ViewDeletedEvent.serializer())
                 subclass(RequestToBeSynced::class, RequestToBeSynced.serializer())
+                subclass(OperationFailedEvent::class, OperationFailedEvent.serializer())
+                subclass(ViewSyncCompletedEvent::class, ViewSyncCompletedEvent.serializer())
             }
 
             //TODO: This is repeated code. We could do it better
@@ -58,7 +61,6 @@ class EventStoreDatabase(private val db: Database) : EventStore {
     private fun resultRowToOperation(row: ResultRow): Operation =
         Operation(
             row[Events.operationId],
-            row[Events.aggregateRoot],
             EventType.fromString(row[Events.eventType])
         )
 
@@ -87,6 +89,14 @@ class EventStoreDatabase(private val db: Database) : EventStore {
         }
     }
 
+    override suspend fun getEventsByOperationId(operationId: String): List<EventWithVersion> {
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            Events.selectAll().where { Events.operationId eq operationId }
+                .orderBy(Events.version)
+                .map { resultRowToEventWithVersion(it) }
+        }
+    }
+
     override suspend fun state(): List<EventWithVersion> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             Events.selectAll().map { resultRowToEventWithVersion(it) }
@@ -94,7 +104,7 @@ class EventStoreDatabase(private val db: Database) : EventStore {
     }
 
     override suspend fun withState(initialState: List<EventWithVersion>): EventStore {
-        newSuspendedTransaction(Dispatchers.IO, db)  {
+        newSuspendedTransaction(Dispatchers.IO, db) {
             Events.batchInsert(initialState) {
                 this[Events.aggregateRoot] = it.event.aggregateRoot
                 this[Events.operationId] = it.event.operationId

@@ -9,6 +9,7 @@ import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.Event
+import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.RequestToBeSynced
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.views.Game
@@ -23,7 +24,7 @@ import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class SyncSteps {
+class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
 
     private val db = SharedInfrastructure.db
     private val eventStore = EventStoreDatabase(db)
@@ -33,16 +34,20 @@ class SyncSteps {
     @Given("a {string} sync event is posted for {string} {string} {string}")
     fun syncEventPosted(game: String, name: String, realm: String, region: String) {
         val (resolvedGame, request) = getWowEntityRequest(game, name, realm, region)
+        val operationId = UUID.randomUUID().toString()
+        scenarioVariables.operationId = operationId
         runBlocking {
-            eventStore.save(Event("/entity/-1", UUID.randomUUID().toString(), RequestToBeSynced(request, resolvedGame)))
+            eventStore.save(Event("/entity/-1", operationId, RequestToBeSynced(request, resolvedGame)))
         }
     }
 
     @Given("a LOL sync event is posted for {string} {string}")
     fun lolSyncEventPosted(name: String, tag: String) {
         val request: CreateEntityRequest = LolEntityRequest(name, tag)
+        val operationId = UUID.randomUUID().toString()
+        scenarioVariables.operationId = operationId
         runBlocking {
-            eventStore.save(Event("/entity/-1", UUID.randomUUID().toString(), RequestToBeSynced(request, Game.LOL)))
+            eventStore.save(Event("/entity/-1", operationId, RequestToBeSynced(request, Game.LOL)))
         }
     }
 
@@ -109,6 +114,36 @@ class SyncSteps {
             assertNotNull(entity, "Entity $name not found in database after sync")
             val cached = dataCacheRepo.get(entity.id)
             assertNotNull(cached.firstOrNull(), "No data cache entry found for entity $name after sync")
+        }
+    }
+
+    @And("the raiderIo cutoff API returns an error")
+    fun raiderIoCutoffReturnsError() {
+        MockConfig.raiderIoCutoffStatusOverride = HttpStatusCode.InternalServerError
+    }
+
+    @Then("a failure event is saved for the operation")
+    fun failureEventIsSaved() {
+        val operationId = requireNotNull(scenarioVariables.operationId) { "No operationId in scenario" }
+        runBlocking {
+            val events = eventStore.getEventsByOperationId(operationId)
+            assertTrue(
+                events.any { it.event.eventData.eventType == EventType.OPERATION_FAILED },
+                "Expected OPERATION_FAILED event for operation $operationId but found: ${events.map { it.event.eventData.eventType }}"
+            )
+        }
+    }
+
+    @Then("a completed event is saved for the operation")
+    fun completedEventIsSaved() {
+        val operationId = requireNotNull(scenarioVariables.operationId) { "No operationId in scenario" }
+        runBlocking {
+            val events = eventStore.getEventsByOperationId(operationId)
+            val completionEventTypes = setOf(EventType.VIEW_SYNC_COMPLETED, EventType.VIEW_DELETED)
+            assertTrue(
+                events.any { it.event.eventData.eventType in completionEventTypes },
+                "Expected completion event for operation $operationId but found: ${events.map { it.event.eventData.eventType }}"
+            )
         }
     }
 

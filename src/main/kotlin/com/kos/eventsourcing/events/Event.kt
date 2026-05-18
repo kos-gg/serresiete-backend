@@ -23,11 +23,20 @@ enum class EventType {
     VIEW_PATCHED {
         override fun toString(): String = "viewPatched"
     },
+    VIEW_TO_BE_DELETED {
+        override fun toString(): String = "viewToBeDeleted"
+    },
     VIEW_DELETED {
         override fun toString(): String = "viewDeleted"
     },
     REQUEST_TO_BE_SYNCED {
         override fun toString(): String = "requestToBeSynced"
+    },
+    OPERATION_FAILED {
+        override fun toString(): String = "operationFailed"
+    },
+    VIEW_SYNC_COMPLETED {
+        override fun toString(): String = "viewSyncCompleted"
     };
 
     companion object {
@@ -39,8 +48,11 @@ enum class EventType {
                 "viewCreated" -> VIEW_CREATED
                 "viewEdited" -> VIEW_EDITED
                 "viewPatched" -> VIEW_PATCHED
+                "viewToBeDeleted" -> VIEW_TO_BE_DELETED
                 "viewDeleted" -> VIEW_DELETED
                 "requestToBeSynced" -> REQUEST_TO_BE_SYNCED
+                "operationFailed" -> OPERATION_FAILED
+                "viewSyncCompleted" -> VIEW_SYNC_COMPLETED
                 else -> throw IllegalArgumentException("error parsing EventType: $string")
             }
         }
@@ -163,6 +175,19 @@ data class ViewPatchedEvent(
 }
 
 @Serializable
+data class ViewToBeDeletedEvent(
+    val id: String,
+    val name: String,
+    val owner: String,
+    val entities: List<Long>,
+    val published: Boolean,
+    val game: Game,
+    val featured: Boolean
+) : EventData {
+    override val eventType: EventType = EventType.VIEW_TO_BE_DELETED
+}
+
+@Serializable
 data class ViewDeletedEvent(
     val id: String,
     val name: String,
@@ -184,6 +209,21 @@ data class RequestToBeSynced(
 }
 
 @Serializable
+data class OperationFailedEvent(
+    val operationId: String,
+    val reason: String
+) : EventData {
+    override val eventType: EventType = EventType.OPERATION_FAILED
+}
+
+@Serializable
+data class ViewSyncCompletedEvent(
+    val viewId: String
+) : EventData {
+    override val eventType: EventType = EventType.VIEW_SYNC_COMPLETED
+}
+
+@Serializable
 data class Event(
     val aggregateRoot: String,
     val operationId: String,
@@ -193,8 +233,8 @@ data class Event(
 @Serializable
 data class Operation(
     val id: String,
-    val aggregateRoot: String,
-    val type: EventType
+    val type: EventType,
+    val resourceId: String? = null
 )
 
 data class EventWithVersion(val version: Long, val event: Event)

@@ -6,6 +6,7 @@ import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest
 import io.cucumber.java.en.And
+import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.ktor.client.request.*
@@ -36,13 +37,33 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
         }
         if (scenarioVariables.response.status == HttpStatusCode.OK) {
             val body = runBlocking { scenarioVariables.response.bodyAsText() }
-            scenarioVariables.viewId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
+            val json = Json.parseToJsonElement(body).jsonObject
+            scenarioVariables.operationId = json["id"]!!.jsonPrimitive.content
+            scenarioVariables.viewId = json["resourceId"]!!.jsonPrimitive.content
         }
+    }
+
+    @Given("they have an existing {string} view")
+    fun existingView(game: String) {
+        createView(game)
+        processViewsSubscription()
     }
 
     @And("the views subscription processes pending events")
     fun processViewsSubscription() {
         runBlocking { SharedInfrastructure.subscriptions.views.processPendingEvents() }
+    }
+
+    @And("the sync subscription processes pending events")
+    fun processSyncSubscription() {
+        runBlocking {
+            when (scenarioVariables.game) {
+                Game.LOL -> SharedInfrastructure.subscriptions.syncLol.processPendingEvents()
+                Game.WOW -> SharedInfrastructure.subscriptions.syncWow.processPendingEvents()
+                Game.WOW_HC -> SharedInfrastructure.subscriptions.syncWowHc.processPendingEvents()
+                null -> error("No game set in scenario variables")
+            }
+        }
     }
 
     @When("they GET the created view")
@@ -62,6 +83,10 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 scenarioVariables.token?.let { bearerAuth(it) }
                 setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = scenarioVariables.game!!, featured = false))
             }
+        }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            scenarioVariables.operationId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
         }
     }
 
@@ -85,6 +110,10 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 setBody(ViewPatchRequest(name = name, game = scenarioVariables.game!!))
             }
         }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            scenarioVariables.operationId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
+        }
     }
 
     @When("they DELETE the created view")
@@ -93,6 +122,10 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
             client.delete("/api/views/${scenarioVariables.viewId}") {
                 scenarioVariables.token?.let { bearerAuth(it) }
             }
+        }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            scenarioVariables.operationId = Json.parseToJsonElement(body).jsonObject["id"]!!.jsonPrimitive.content
         }
     }
 
