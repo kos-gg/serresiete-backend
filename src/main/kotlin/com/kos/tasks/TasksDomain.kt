@@ -16,10 +16,18 @@ data class Task(
 )
 
 @Serializable
-data class TaskStatus(val status: Status, val message: String?)
+data class TaskStatus(
+    val status: Status,
+    val message: String?,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val retryAfter: OffsetDateTime? = null
+)
 
 @Serializable
 enum class Status {
+    PENDING {
+        override fun toString(): String = "pending"
+    },
     SUCCESSFUL {
         override fun toString(): String = "successful"
     },
@@ -29,6 +37,7 @@ enum class Status {
 
     companion object {
         fun fromString(value: String): Status = when (value) {
+            "pending" -> PENDING
             "successful" -> SUCCESSFUL
             "error" -> ERROR
             else -> throw IllegalArgumentException("Unknown status: $value")

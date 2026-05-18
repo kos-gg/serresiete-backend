@@ -10,8 +10,11 @@ import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.tasks.Status
+import com.kos.tasks.Task
+import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
+import java.time.OffsetDateTime
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -35,6 +38,7 @@ class UpdateMythicPlusSeasonTaskRunnerTest {
             .thenReturn(Either.Right(ExpansionSeasons(listOf(Season(true, "TWW3", "tww-3", 15, listOf())))))
 
         val id = UUID.randomUUID().toString()
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
 
         runner.run(id, null)
 

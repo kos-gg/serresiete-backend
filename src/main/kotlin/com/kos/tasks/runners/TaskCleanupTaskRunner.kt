@@ -19,6 +19,6 @@ class TaskCleanupTaskRunner(
         logger.info("Running task cleanup task")
         val deletedTasks = tasksRepository.deleteOldTasks(olderThanDays)
         logger.info("Deleted $deletedTasks old tasks")
-        tasksRepository.insertTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTasks old tasks"), OffsetDateTime.now()))
+        tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTasks old tasks"), OffsetDateTime.now()))
     }
 }

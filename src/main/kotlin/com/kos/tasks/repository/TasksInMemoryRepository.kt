@@ -13,6 +13,11 @@ class TasksInMemoryRepository : TasksRepository, InMemoryRepository {
         tasks.add(task)
     }
 
+    override suspend fun updateTask(task: Task) {
+        val index = tasks.indexOfFirst { it.id == task.id }
+        if (index != -1) tasks[index] = task
+    }
+
     override suspend fun getTasks(taskType: TaskType?): List<Task> {
         val allTasks = tasks.toList()
 

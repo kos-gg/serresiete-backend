@@ -21,9 +21,9 @@ class UpdateLolEntitiesTaskRunner(
         logger.info("Updating lol entities")
         val errors = entitiesService.updateEntities(Game.LOL)
         if (errors.isEmpty()) {
-            tasksRepository.insertTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
         } else {
-            tasksRepository.insertTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
         }
     }
 }

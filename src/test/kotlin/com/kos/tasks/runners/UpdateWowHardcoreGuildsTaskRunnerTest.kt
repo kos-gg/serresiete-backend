@@ -14,8 +14,11 @@ import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.tasks.Status
+import com.kos.tasks.Task
+import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
+import java.time.OffsetDateTime
 import com.kos.views.repository.ViewsInMemoryRepository
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
@@ -64,6 +67,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
             .thenReturn(Either.Right(GetWowRealmResponse("Hardcore")))
 
         val id = UUID.randomUUID().toString()
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
 
         runner.run(id, null)
 

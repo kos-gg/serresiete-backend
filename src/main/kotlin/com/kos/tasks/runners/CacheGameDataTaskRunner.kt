@@ -31,10 +31,10 @@ abstract class CacheGameDataTaskRunner(
         )
         //TODO: improve the check of excluded error from being flagged as error
         if (errors.isEmpty() || errors.all { it is WowHardcoreCharacterIsDead }) {
-            tasksRepository.insertTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"), OffsetDateTime.now()))
         } else {
             //TODO: depending on the error, decide what to do with the task (not a true error, etc)
-            tasksRepository.insertTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
         }
     }
 }

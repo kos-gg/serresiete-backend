@@ -5,6 +5,7 @@ import com.kos.common.getOrThrow
 import com.kos.entities.repository.EntitiesDatabaseRepository.Entities
 import com.kos.views.*
 import kotlinx.coroutines.Dispatchers
+import java.time.OffsetDateTime
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -35,6 +36,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 this[Views.published] = it.published
                 this[Views.game] = it.game.toString()
                 this[Views.featured] = it.featured
+                this[Views.lastSyncedAt] = it.lastSyncedAt?.toString()
             }
             ViewEntities.batchInsert(initialState.viewEntities) {
                 this[ViewEntities.viewId] = it.viewId
@@ -53,6 +55,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         val game = text("game")
         val featured = bool("featured")
         val extraArguments = text("extra_arguments").nullable()
+        val lastSyncedAt = text("last_synced_at").nullable()
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -67,7 +70,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
                 .map { resultRowToViewEntity(it).entityId },
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured],
-            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it)}
+            row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it) },
+            row[Views.lastSyncedAt]?.let { OffsetDateTime.parse(it) }
         )
     }
 
@@ -215,6 +219,14 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             ViewEntities.selectAll().where(ViewEntities.entityId.eq(entityId) and ViewEntities.viewId.eq(viewId))
                 .map { resultRowToViewEntity(it) }.singleOrNull()
+        }
+    }
+
+    override suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime) {
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            Views.update({ Views.id.eq(viewId) }) {
+                it[lastSyncedAt] = at.toString()
+            }
         }
     }
 

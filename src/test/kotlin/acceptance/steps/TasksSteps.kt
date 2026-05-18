@@ -22,7 +22,9 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
@@ -83,9 +85,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
 
     @Then("the task completes with status {string}")
     fun taskCompletesWithStatus(expectedStatus: String) {
-        val taskId = scenarioVariables.response.headers[HttpHeaders.Location]
-            ?.removePrefix("/tasks/")
-            ?: error("No Location header in response")
+        val taskId = runBlocking { scenarioVariables.response.body<Map<String, String>>()["id"]!! }
 
         runBlocking {
             assertUntil(5, 1000) {
@@ -97,7 +97,6 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                 assertEquals(Status.fromString(expectedStatus.lowercase()), task.taskStatus.status)
             }
         }
-
     }
 
     @And("the expired token for {string} has been removed")
@@ -176,6 +175,41 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = emptyList()
                 )
             )
+        }
+    }
+
+    @And("a LOL view {string} was recently synced")
+    fun lolViewWasRecentlySynced(viewId: String) {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        runBlocking {
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(
+                        SimpleView(
+                            viewId, "Test LOL View", "sanxei", false, emptyList(), Game.LOL, false,
+                            lastSyncedAt = OffsetDateTime.now().minusSeconds(10)
+                        )
+                    ),
+                    viewEntities = emptyList()
+                )
+            )
+        }
+    }
+
+    @Then("the task completes with status {string} and a retryAfter timestamp")
+    fun taskCompletesWithStatusAndRetryAfter(expectedStatus: String) {
+        val taskId = runBlocking { scenarioVariables.response.body<Map<String, String>>()["id"]!! }
+
+        runBlocking {
+            assertUntil(5, 1000) {
+                val response = client.get("/api/tasks/$taskId") {
+                    scenarioVariables.token?.let { bearerAuth(it) }
+                }
+                assertEquals(HttpStatusCode.OK, response.status)
+                val task = response.body<Task>()
+                assertEquals(Status.fromString(expectedStatus.lowercase()), task.taskStatus.status)
+                assertTrue(task.taskStatus.retryAfter != null, "Expected retryAfter to be set")
+            }
         }
     }
 }

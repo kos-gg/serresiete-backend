@@ -10,6 +10,8 @@ import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
 import com.kos.tasks.Status
+import com.kos.tasks.Task
+import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -39,6 +41,7 @@ class TokenCleanupTaskRunnerTest {
             )
         )
         val id = UUID.randomUUID().toString()
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
 
         runner.run(id, null)
 

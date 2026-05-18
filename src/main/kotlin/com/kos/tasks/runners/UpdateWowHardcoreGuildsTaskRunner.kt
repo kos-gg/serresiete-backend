@@ -20,9 +20,9 @@ class UpdateWowHardcoreGuildsTaskRunner(
         logger.info("Updating wow hardcore guild entities")
         val errors = entitiesService.updateWowHardcoreGuilds()
         if (errors.isEmpty()) {
-            tasksRepository.insertTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
         } else {
-            tasksRepository.insertTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
         }
     }
 }

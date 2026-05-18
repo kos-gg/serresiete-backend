@@ -45,6 +45,14 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
         }
     }
 
+    override suspend fun updateTask(task: Task) {
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            Tasks.update({ Tasks.id.eq(task.id) }) {
+                it[taskStatus] = json.encodeToString(task.taskStatus)
+            }
+        }
+    }
+
     override suspend fun getTasks(taskType: TaskType?): List<Task> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val baseQuery = Tasks.selectAll()

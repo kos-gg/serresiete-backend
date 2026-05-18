@@ -224,7 +224,7 @@ fun Application.module() {
             CacheLolDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
             CacheWowDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
             CacheWowHcDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider)
+            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, System.getenv("VIEW_SYNC_COOLDOWN_SECONDS")?.toLong() ?: 300L)
         )
     )
     val tasksService = TasksService(tasksRepository, taskRunnerProvider)

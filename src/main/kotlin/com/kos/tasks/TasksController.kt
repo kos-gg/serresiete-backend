@@ -7,7 +7,6 @@ import com.kos.common.error.ControllerError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.common.error.NotFound
-import com.kos.views.Game
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
