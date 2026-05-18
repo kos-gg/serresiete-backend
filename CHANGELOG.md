@@ -1,4 +1,19 @@
 # Changelog
+## [5.5.0] - 18-05-2026
+
+### Added
+- **`POST /api/tasks` now returns the task ID in the response body**:
+    - The response body is `{"id": "<taskId>"}` so consumers can poll `GET /api/tasks/{id}` without parsing the `Location` header.
+- **`CACHE_GAME_VIEW_DATA_TASK` cooldown support**:
+    - Returns `ERROR` with a `retryAfter` timestamp if the view was synced within the cooldown window (default 300s, configurable via `VIEW_SYNC_COOLDOWN_SECONDS`).
+    - Returns `SUCCESSFUL` with a `retryAfter` timestamp indicating when the next sync is allowed, so the frontend can disable the sync button accordingly.
+- **`SERVICE` role can now run and query tasks**:
+    - Granted the `run task`, `get task`, and `get tasks` activities to the `service` role via DB migration.
+
+### Refactor
+- **`CacheGameViewDataTaskRunner` validation uses Arrow `either`**:
+    - Early-exit validation (missing `viewId`, view not found, cooldown active) is now expressed as an `either` block with `raise`/`ensure`, replacing nested `if`/`return` imperative checks.
+
 ## [5.4.0] - 17-05-2026
 
 ### Added
