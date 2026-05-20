@@ -41,8 +41,8 @@ class CacheGameViewDataTaskRunner(
             }
             view
         }.fold(
-            { errorStatus ->
-                tasksRepository.updateTask(Task(id, type, errorStatus, OffsetDateTime.now()))
+            { errorTaskStatus ->
+                tasksRepository.updateTask(Task(id, type, errorTaskStatus, OffsetDateTime.now()))
             },
             { view ->
                 logger.info("Running $type for game=${view.game} viewId=${view.id}")
