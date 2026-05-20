@@ -17,9 +17,16 @@ kotlin {
 }
 
 tasks.test {
-    useJUnitPlatform {
-        excludeEngines("cucumber")
-    }
+    useJUnitPlatform()
+}
+
+tasks.register<Test>("unitTest") {
+    group = "verification"
+    description = "Runs only unit tests (JUnit), excludes acceptance tests."
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform()
+    exclude("**/acceptance/**")
 }
 
 tasks.register<Test>("acceptanceTest") {
@@ -49,6 +56,8 @@ tasks.jacocoTestCoverageVerification {
 }
 
 tasks.jacocoTestReport {
+    dependsOn(tasks.named<Test>("unitTest"))
+    executionData(tasks.named<Test>("unitTest"))
     reports {
         xml.required.set(true)
         csv.required.set(false)

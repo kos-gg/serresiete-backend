@@ -59,7 +59,7 @@ Feature: Tasks
 
   Scenario: CACHE_GAME_VIEW_DATA_TASK caches entities for a specific view
     And a LOL view "test-lol-view" exists
-    When they run the "cacheGameDataTask" task with viewId "test-lol-view"
+    When they run the "cacheGameViewDataTask" task with viewId "test-lol-view"
     Then the task completes with status "SUCCESSFUL"
 
   @sad
@@ -68,14 +68,14 @@ Feature: Tasks
     Then the task completes with status "ERROR"
 
   Scenario: CACHE_GAME_VIEW_DATA_TASK fails when no viewId is provided
-    When they run the "cacheGameDataTask" task
+    When they run the "cacheGameViewDataTask" task
     Then the task completes with status "ERROR"
 
   Scenario: CACHE_GAME_VIEW_DATA_TASK fails when view does not exist
-    When they run the "cacheGameDataTask" task with viewId "non-existent-view"
+    When they run the "cacheGameViewDataTask" task with viewId "non-existent-view"
     Then the task completes with status "ERROR"
 
   Scenario: CACHE_GAME_VIEW_DATA_TASK fails with retryAfter when view was synced recently
     And a LOL view "test-lol-view" was recently synced
-    When they run the "cacheGameDataTask" task with viewId "test-lol-view"
+    When they run the "cacheGameViewDataTask" task with viewId "test-lol-view"
     Then the task completes with status "ERROR" and a retryAfter timestamp
