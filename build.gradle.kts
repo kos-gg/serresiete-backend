@@ -57,7 +57,7 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.named<Test>("unitTest"))
-    executionData(tasks.named<Test>("unitTest"))
+    executionData(layout.buildDirectory.file("jacoco/unitTest.exec"))
     reports {
         xml.required.set(true)
         csv.required.set(false)
