@@ -2,7 +2,6 @@ package com.kos.tasks.runners
 
 import com.kos.common.WithLogger
 import com.kos.common.error.SynchronizerNotFound
-import com.kos.common.error.WowHardcoreCharacterIsDead
 import com.kos.common.fold
 import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.entities.EntitiesService
@@ -25,16 +24,32 @@ abstract class CacheGameDataTaskRunner(
         logger.info("Running $type")
         val entities = entitiesService.getEntitiesToSync(game, 30)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
-        val errors = entitySynchronizerProvider.synchronizerFor(game).fold(
+        val synchronizer = entitySynchronizerProvider.synchronizerFor(game)
+        val errors = synchronizer.fold(
             left = { listOf(SynchronizerNotFound(game)) },
-            right = { it.synchronize(entities) }
+            right = {
+                it.synchronize(entities)
+                    .filter { syncErrors -> synchronizer?.isSyncError(syncErrors) == true }
+            }
         )
-        //TODO: improve the check of excluded error from being flagged as error
-        if (errors.isEmpty() || errors.all { it is WowHardcoreCharacterIsDead }) {
-            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"), OffsetDateTime.now()))
+        if (errors.isEmpty()) {
+            tasksRepository.updateTask(
+                Task(
+                    id,
+                    type,
+                    TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"),
+                    OffsetDateTime.now()
+                )
+            )
         } else {
-            //TODO: depending on the error, decide what to do with the task (not a true error, etc)
-            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
+            tasksRepository.updateTask(
+                Task(
+                    id,
+                    type,
+                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
+                    OffsetDateTime.now()
+                )
+            )
         }
     }
 }

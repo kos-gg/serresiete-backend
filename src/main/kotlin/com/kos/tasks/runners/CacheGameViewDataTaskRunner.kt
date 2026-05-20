@@ -4,7 +4,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.common.WithLogger
 import com.kos.common.error.SynchronizerNotFound
-import com.kos.common.error.WowHardcoreCharacterIsDead
 import com.kos.common.fold
 import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.entities.EntitiesService
@@ -47,11 +46,13 @@ class CacheGameViewDataTaskRunner(
             { view ->
                 logger.info("Running $type for game=${view.game} viewId=${view.id}")
                 val entities = view.entitiesIds.mapNotNull { entitiesService.get(it, view.game) }
-                val errors = entitySynchronizerProvider.synchronizerFor(view.game).fold(
+                val synchronizer = entitySynchronizerProvider.synchronizerFor(view.game)
+                val errors = synchronizer.fold(
                     left = { listOf(SynchronizerNotFound(view.game)) },
-                    right = { it.synchronize(entities) }
+                    right = { it.synchronize(entities)
+                        .filter { syncErrors -> synchronizer?.isSyncError(syncErrors) == true }}
                 )
-                if (errors.isEmpty() || errors.all { it is WowHardcoreCharacterIsDead }) {
+                if (errors.isEmpty()) {
                     val syncedAt = OffsetDateTime.now()
                     viewsService.updateLastSyncedAt(view.id, syncedAt)
                     tasksRepository.updateTask(

@@ -1,17 +1,24 @@
 package com.kos.tasks.runners
 
+import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsInMemoryRepository
 import com.kos.datacache.EntitySynchronizerProvider
+import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
+import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
+import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
+import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.Status
 import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
@@ -36,6 +43,9 @@ class CacheGameViewDataTaskRunnerTest {
     private val tasksRepo = TasksInMemoryRepository()
     private val viewsRepo = ViewsInMemoryRepository()
     private val riotClient = mock(RiotClient::class.java)
+    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val blizzardClient = mock(BlizzardClient::class.java)
+    private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
     private val dataCacheRepo = DataCacheInMemoryRepository()
     private val entitiesRepo = EntitiesInMemoryRepository()
     private val entitiesService = EntitiesService(
@@ -46,7 +56,10 @@ class CacheGameViewDataTaskRunnerTest {
         mock()
     )
     private val entitySynchronizerProvider = EntitySynchronizerProvider(
-        listOf(LolEntitySynchronizer(dataCacheRepo, riotClient))
+        listOf(
+            LolEntitySynchronizer(dataCacheRepo, riotClient),
+            WowHardcoreEntitySynchronizer(dataCacheRepo, entitiesRepo, raiderIoClient, blizzardClient, wowItemsDatabaseRepository)
+        )
     )
     private val viewsService = ViewsService(
         viewsRepo,
@@ -61,6 +74,7 @@ class CacheGameViewDataTaskRunnerTest {
     )
 
     private val lolView = SimpleView("test-view", "Test View", "sanxei", false, emptyList(), Game.LOL, false)
+    private val wowHcView = SimpleView("wohc-view", "WowHC View", "sanxei", false, listOf(basicWowHardcoreEntity.id), Game.WOW_HC, false)
 
     @Test
     fun `view entities are synced and task is recorded as successful`() = runBlocking {
@@ -117,5 +131,23 @@ class CacheGameViewDataTaskRunnerTest {
         assertEquals(id, task.id)
         assertEquals(Status.ERROR, task.taskStatus.status)
         assertNotNull(task.taskStatus.retryAfter)
+    }
+
+    @Test
+    fun `dead wow hardcore entities are non-fatal and task is recorded as successful`() = runBlocking {
+        entitiesRepo.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
+        dataCacheRepo.withState(
+            listOf(wowHardcoreDataCache.copy(data = wowHardcoreDataCache.data.replace(""""isDead": false""", """"isDead": true""")))
+        )
+        viewsRepo.withState(ViewsState(listOf(wowHcView), emptyList()))
+        val id = UUID.randomUUID().toString()
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+
+        runner.run(id, mapOf("viewId" to wowHcView.id))
+
+        val task = tasksRepo.state().first()
+        assertEquals(id, task.id)
+        assertEquals(TaskType.CACHE_GAME_VIEW_DATA_TASK, task.type)
+        assertEquals(Status.SUCCESSFUL, task.taskStatus.status)
     }
 }
