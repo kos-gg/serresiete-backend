@@ -22,9 +22,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
+import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals

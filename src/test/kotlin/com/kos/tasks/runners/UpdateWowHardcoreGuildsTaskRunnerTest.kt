@@ -3,7 +3,6 @@ package com.kos.tasks.runners
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
@@ -18,12 +17,12 @@ import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
-import java.time.OffsetDateTime
 import com.kos.views.repository.ViewsInMemoryRepository
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals

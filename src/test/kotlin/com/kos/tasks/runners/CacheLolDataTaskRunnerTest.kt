@@ -6,9 +6,9 @@ import com.kos.clients.riot.RiotClient
 import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.EntitiesService
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -19,10 +19,10 @@ import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
-import java.time.OffsetDateTime
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
