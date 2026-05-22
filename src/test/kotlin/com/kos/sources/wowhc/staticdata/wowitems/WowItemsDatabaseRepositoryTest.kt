@@ -1,7 +1,7 @@
 package com.kos.sources.wowhc.staticdata.wowitems
 
-import com.kos.clients.domain.AssetKeyValue
-import com.kos.clients.domain.GetWowMediaResponse
+import com.kos.clients.domain.blizzard.AssetKeyValue
+import com.kos.clients.domain.blizzard.GetWowMediaResponse
 import com.kos.datacache.BlizzardMockHelper.getWowItemResponse
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking

@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.ClientError
 import com.kos.clients.RetryConfig
-import com.kos.clients.domain.*
+import com.kos.clients.domain.raiderio.*
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfileResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity

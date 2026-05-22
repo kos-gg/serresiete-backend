@@ -2,8 +2,8 @@ package com.kos.views
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
+import com.kos.clients.domain.riot.GetPUUIDResponse
+import com.kos.clients.domain.riot.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.TooMuchEntities

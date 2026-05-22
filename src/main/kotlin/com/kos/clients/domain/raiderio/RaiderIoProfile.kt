@@ -1,0 +1,155 @@
+package com.kos.clients.domain.raiderio
+
+import com.kos.clients.domain.RaiderIoData
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.*
+
+@Serializable
+data class SeasonScores(
+    val all: Double,
+    @SerialName("spec_0")
+    val spec0: Double,
+    @SerialName("spec_1")
+    val spec1: Double,
+    @SerialName("spec_2")
+    val spec2: Double,
+    @SerialName("spec_3")
+    val spec3: Double,
+) {
+    fun specScore(internalSpec: Int): Double = when (internalSpec) {
+        0 -> spec0
+        1 -> spec1
+        2 -> spec2
+        3 -> spec3
+        else -> 0.0
+    }
+}
+
+@Serializable
+data class MythicPlusSeasonScore(
+    val season: String,
+    val scores: SeasonScores,
+)
+
+@Serializable
+data class MythicPlusRank(
+    val world: Int,
+    val region: Int,
+    val realm: Int
+)
+
+@Serializable
+data class MythicPlusRankWithSpecName(
+    val name: String,
+    val score: Double,
+    val world: Int,
+    val region: Int,
+    val realm: Int
+)
+
+@Serializable(with = MythicPlusRanksSerializer::class)
+data class MythicPlusRanks(
+    val overall: MythicPlusRank,
+    val `class`: MythicPlusRank,
+    val specs: Map<String, MythicPlusRank>
+)
+
+object MythicPlusRanksSerializer : KSerializer<MythicPlusRanks> {
+
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("MythicPlusRanks") {
+            element("overall", MythicPlusRank.serializer().descriptor)
+            element("class", MythicPlusRank.serializer().descriptor)
+            element("specs", MapSerializer(String.serializer(), MythicPlusRank.serializer()).descriptor)
+        }
+
+    override fun deserialize(decoder: Decoder): MythicPlusRanks {
+        require(decoder is JsonDecoder)
+
+        val jsonObject = decoder.decodeJsonElement().jsonObject
+
+        val overall = jsonObject["overall"]
+            ?: error("Missing overall rank")
+
+        val clazz = jsonObject["class"]
+            ?: error("Missing class rank")
+
+        val specs = jsonObject
+            .filterKeys { it.startsWith("spec_") }
+            .mapValues { (_, value) ->
+                decoder.json.decodeFromJsonElement(MythicPlusRank.serializer(), value)
+            }
+
+        return MythicPlusRanks(
+            overall = decoder.json.decodeFromJsonElement(overall),
+            `class` = decoder.json.decodeFromJsonElement(clazz),
+            specs = specs
+        )
+    }
+
+    override fun serialize(encoder: Encoder, value: MythicPlusRanks) {
+        require(encoder is JsonEncoder)
+
+        val jsonObject = buildJsonObject {
+            put("overall", encoder.json.encodeToJsonElement(value.overall))
+            put("class", encoder.json.encodeToJsonElement(value.`class`))
+            value.specs.forEach { (key, rank) ->
+                put(key, encoder.json.encodeToJsonElement(rank))
+            }
+        }
+
+        encoder.encodeJsonElement(jsonObject)
+    }
+}
+
+@Serializable
+data class MythicPlusRanksWithSpecs(
+    val overall: MythicPlusRank,
+    val `class`: MythicPlusRank,
+    val specs: List<MythicPlusRankWithSpecName>
+)
+
+@Serializable
+data class RaiderIoProfile(
+    val name: String,
+    val realm: String,
+    val region: String,
+    val `class`: String,
+    @SerialName("active_spec_name")
+    val spec: String,
+    @SerialName("mythic_plus_scores_by_season")
+    val seasonScores: List<MythicPlusSeasonScore>,
+    @SerialName("mythic_plus_ranks")
+    val mythicPlusRanks: MythicPlusRanks,
+    @SerialName("mythic_plus_best_runs")
+    val mythicPlusBestRuns: List<MythicPlusRun>,
+    @SerialName("mythic_plus_recent_runs")
+    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
+) {
+    fun toRaiderIoData(
+        characterId: Long,
+        quantile: Double?,
+        specRanks: List<MythicPlusRankWithSpecName>,
+        bestRuns: List<EnrichedMythicPlusRun>,
+    ) = RaiderIoData(
+        characterId,
+        name,
+        realm,
+        region,
+        seasonScores[0].scores.all,
+        `class`,
+        spec,
+        quantile,
+        MythicPlusRanksWithSpecs(mythicPlusRanks.overall, mythicPlusRanks.`class`, specRanks),
+        bestRuns,
+        mythicPlusRecentRuns
+    )
+}

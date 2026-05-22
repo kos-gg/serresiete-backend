@@ -2,7 +2,7 @@ package com.kos.clients.riot
 
 import com.kos.assertTrue
 import com.kos.clients.RetryConfig
-import com.kos.clients.domain.QueueType
+import com.kos.clients.domain.riot.QueueType
 import com.kos.clients.riot.RiotHTTPClientHelper.client
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test

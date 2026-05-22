@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
-import com.kos.clients.domain.*
+import com.kos.clients.domain.raiderio.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH

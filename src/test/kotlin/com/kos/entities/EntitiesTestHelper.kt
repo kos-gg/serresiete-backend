@@ -1,8 +1,8 @@
 package com.kos.entities
 
-import com.kos.clients.domain.GetAccountResponse
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
+import com.kos.clients.domain.riot.GetAccountResponse
+import com.kos.clients.domain.riot.GetPUUIDResponse
+import com.kos.clients.domain.riot.GetSummonerResponse
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesState
 

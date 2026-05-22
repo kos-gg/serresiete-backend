@@ -2,7 +2,8 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import com.kos.clients.HttpError
-import com.kos.clients.domain.*
+import com.kos.clients.domain.RaiderIoData
+import com.kos.clients.domain.raiderio.*
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.entities.EntitiesTestHelper

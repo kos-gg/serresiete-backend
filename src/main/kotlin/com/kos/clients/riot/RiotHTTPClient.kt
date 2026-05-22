@@ -5,7 +5,7 @@ import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
-import com.kos.clients.domain.*
+import com.kos.clients.domain.riot.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
 import com.kos.common.WithLogger

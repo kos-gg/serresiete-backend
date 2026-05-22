@@ -1,7 +1,7 @@
 package com.kos.tasks.runners
 
 import arrow.core.Either
-import com.kos.clients.domain.QueueType
+import com.kos.clients.domain.riot.QueueType
 import com.kos.clients.riot.RiotClient
 import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.RiotMockHelper

@@ -2,7 +2,8 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.clients.domain.RaiderIoData
+import com.kos.clients.domain.raiderio.*
 import com.kos.entities.domain.WowEntity
 
 object RaiderIoMockHelper {

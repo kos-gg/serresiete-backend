@@ -10,7 +10,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.D
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.PROFILE_CLASSIC1X_EU_NAMESPACE
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.PROFILE_CLASSIC1X_NAMESPACE
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
-import com.kos.clients.domain.*
+import com.kos.clients.domain.blizzard.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig

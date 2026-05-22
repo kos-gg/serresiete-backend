@@ -1,8 +1,8 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
-import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.clients.domain.TalentLoadout
+import com.kos.clients.domain.raiderio.RaiderioWowHeadEmbeddedResponse
+import com.kos.clients.domain.raiderio.TalentLoadout
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.repository.EntitiesInMemoryRepository

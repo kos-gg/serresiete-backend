@@ -1,8 +1,8 @@
 package com.kos.tasks.runners
 
 import arrow.core.Either
-import com.kos.clients.domain.ExpansionSeasons
-import com.kos.clients.domain.Season
+import com.kos.clients.domain.raiderio.ExpansionSeasons
+import com.kos.clients.domain.raiderio.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository

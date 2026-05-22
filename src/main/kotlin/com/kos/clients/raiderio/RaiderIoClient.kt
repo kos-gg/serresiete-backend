@@ -2,7 +2,7 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.clients.domain.raiderio.*
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 

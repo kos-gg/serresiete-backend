@@ -3,8 +3,8 @@ package com.kos.sources.wowhc.staticdata.wowitems
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.JsonParseError
-import com.kos.clients.domain.GetWowItemResponse
-import com.kos.clients.domain.GetWowMediaResponse
+import com.kos.clients.domain.blizzard.GetWowItemResponse
+import com.kos.clients.domain.blizzard.GetWowMediaResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json

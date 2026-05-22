@@ -9,7 +9,7 @@ import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
-import com.kos.clients.domain.BlizzardCredentials
+import com.kos.clients.domain.blizzard.BlizzardCredentials
 import com.kos.clients.raiderio.RaiderIoHTTPClient
 import com.kos.clients.riot.RiotHTTPClient
 import com.kos.common.DatabaseFactory

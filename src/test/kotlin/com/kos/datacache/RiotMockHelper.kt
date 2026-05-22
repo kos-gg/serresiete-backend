@@ -2,7 +2,11 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.clients.domain.LeagueProfile
+import com.kos.clients.domain.MatchProfile
+import com.kos.clients.domain.MatchUpProfile
+import com.kos.clients.domain.RiotData
+import com.kos.clients.domain.riot.*
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 
 object RiotMockHelper {

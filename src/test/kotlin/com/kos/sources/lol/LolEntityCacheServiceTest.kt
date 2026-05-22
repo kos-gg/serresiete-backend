@@ -1,7 +1,7 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
-import com.kos.clients.domain.QueueType
+import com.kos.clients.domain.riot.QueueType
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
@@ -105,7 +105,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match4")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match4"
                         )
                     )
@@ -114,7 +114,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match5")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match5"
                         )
                     )
@@ -123,7 +123,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match6")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match6"
                         )
                     )
@@ -132,7 +132,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match7")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match7"
                         )
                     )
@@ -181,7 +181,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match3")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match4"
                         )
                     )
@@ -191,7 +191,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match4")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match4"
                         )
                     )
@@ -200,7 +200,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match5")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match5"
                         )
                     )
@@ -209,7 +209,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match6")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match6"
                         )
                     )
@@ -218,7 +218,7 @@ class LolEntityCacheServiceTest {
             `when`(riotClient.getMatchById("match7")).thenReturn(
                 Either.Right(
                     RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
+                        metadata = com.kos.clients.domain.riot.Metadata(
                             "match7"
                         )
                     )

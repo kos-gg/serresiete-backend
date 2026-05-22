@@ -1,6 +1,6 @@
 package com.kos.clients.raiderio
 
-import com.kos.clients.domain.*
+import com.kos.clients.domain.raiderio.*
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -107,7 +107,6 @@ object RaiderIoHttpClientHelper {
                         2040999L,
                         174.0F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4462779-20-throne-of-the-tides",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         3814291L,
@@ -120,7 +119,6 @@ object RaiderIoHttpClientHelper {
                         1800999L,
                         173.8F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3814291-20-ataldazar",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         4879212L,
@@ -133,7 +131,6 @@ object RaiderIoHttpClientHelper {
                         2220999L,
                         173.5F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4879212-20-waycrest-manor",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         3709222L,
@@ -146,7 +143,6 @@ object RaiderIoHttpClientHelper {
                         1800999L,
                         173.4F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3709222-20-darkheart-thicket",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         3628977L,
@@ -159,7 +155,6 @@ object RaiderIoHttpClientHelper {
                         2160999L,
                         172.5F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3628977-20-black-rook-hold",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         3775347L,
@@ -172,7 +167,6 @@ object RaiderIoHttpClientHelper {
                         2040999L,
                         172.4F,
                         "https://raider.io/mythic-plus-runs/season-df-3/3775347-20-doti-galakronds-fall",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         4267361L,
@@ -185,7 +179,6 @@ object RaiderIoHttpClientHelper {
                         1980999L,
                         171.7F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4267361-20-everbloom",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     ),
                     MythicPlusRun(
                         4382848L,
@@ -198,7 +191,6 @@ object RaiderIoHttpClientHelper {
                         2100999L,
                         170.0F,
                         "https://raider.io/mythic-plus-runs/season-df-3/4382848-20-doti-murozonds-rise",
-                        listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
                     )
                 )
 
@@ -265,6 +257,5 @@ object RaiderIoHttpClientHelper {
         dungeonTimeMs = 2040999L,
         score = 174.0F,
         url = "https://raider.io/mythic-plus-runs/season-df-3/4462779-20-throne-of-the-tides",
-        affixes = listOf(Affix("Tyrannical"), Affix("Entangling"), Affix("Bursting"))
     )
 }

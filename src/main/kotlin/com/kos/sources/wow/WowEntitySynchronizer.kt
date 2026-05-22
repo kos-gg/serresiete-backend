@@ -4,7 +4,9 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.clients.domain.Data
+import com.kos.clients.domain.RaiderIoData
+import com.kos.clients.domain.raiderio.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache

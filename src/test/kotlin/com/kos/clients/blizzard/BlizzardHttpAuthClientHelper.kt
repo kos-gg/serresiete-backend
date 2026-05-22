@@ -1,6 +1,6 @@
 package com.kos.clients.blizzard
 
-import com.kos.clients.domain.TokenResponse
+import com.kos.clients.domain.blizzard.TokenResponse
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*

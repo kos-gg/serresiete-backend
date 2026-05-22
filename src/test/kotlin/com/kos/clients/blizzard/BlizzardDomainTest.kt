@@ -1,6 +1,6 @@
 package com.kos.clients.blizzard
 
-import com.kos.clients.domain.*
+import com.kos.clients.domain.blizzard.*
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponseString
 import com.kos.datacache.BlizzardMockHelper.getWowEquipmentResponse

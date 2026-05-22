@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetWowRosterResponse
+import com.kos.clients.domain.blizzard.GetWowRosterResponse
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
 import com.kos.common.error.NonHardcoreCharacter

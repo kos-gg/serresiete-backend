@@ -3,7 +3,7 @@ package com.kos.sources
 import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
-import com.kos.clients.domain.Season
+import com.kos.clients.domain.raiderio.Season
 import com.kos.common.error.ControllerError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions

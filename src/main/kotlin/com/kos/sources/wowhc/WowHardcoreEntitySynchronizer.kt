@@ -5,7 +5,13 @@ import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.*
+import com.kos.clients.domain.Data
+import com.kos.clients.domain.HardcoreData
+import com.kos.clients.domain.WowItem
+import com.kos.clients.domain.blizzard.GetWowEquipmentResponse
+import com.kos.clients.domain.blizzard.GetWowItemResponse
+import com.kos.clients.domain.blizzard.GetWowMediaResponse
+import com.kos.clients.domain.blizzard.WowEquippedItemResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger

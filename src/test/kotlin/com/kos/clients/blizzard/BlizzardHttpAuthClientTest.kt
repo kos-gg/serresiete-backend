@@ -7,8 +7,8 @@ import com.kos.clients.JsonParseError
 import com.kos.clients.blizzard.BlizzardHttpAuthClientHelper.client
 import com.kos.clients.blizzard.BlizzardHttpAuthClientHelper.httpErrorClient
 import com.kos.clients.blizzard.BlizzardHttpAuthClientHelper.jsonErrorClient
-import com.kos.clients.domain.BlizzardCredentials
-import com.kos.clients.domain.TokenResponse
+import com.kos.clients.domain.blizzard.BlizzardCredentials
+import com.kos.clients.domain.blizzard.TokenResponse
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

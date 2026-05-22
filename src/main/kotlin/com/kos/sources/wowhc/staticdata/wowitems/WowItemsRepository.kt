@@ -2,8 +2,8 @@ package com.kos.sources.wowhc.staticdata.wowitems
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.GetWowItemResponse
-import com.kos.clients.domain.GetWowMediaResponse
+import com.kos.clients.domain.blizzard.GetWowItemResponse
+import com.kos.clients.domain.blizzard.GetWowMediaResponse
 import com.kos.common.WithState
 
 data class WowItemsState(

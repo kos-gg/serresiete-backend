@@ -1,6 +1,6 @@
 package com.kos.sources.wowhc.staticdata.wowitems.scripts
 
-import com.kos.clients.domain.*
+import com.kos.clients.domain.blizzard.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

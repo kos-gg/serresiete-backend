@@ -4,8 +4,8 @@ import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.HardcoreData
-import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.clients.domain.TalentLoadout
+import com.kos.clients.domain.raiderio.RaiderioWowHeadEmbeddedResponse
+import com.kos.clients.domain.raiderio.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment

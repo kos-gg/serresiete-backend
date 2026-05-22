@@ -2,7 +2,7 @@ package com.kos.tasks.runners
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.*
+import com.kos.clients.domain.blizzard.*
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider

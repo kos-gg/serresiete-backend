@@ -1,6 +1,6 @@
 package com.kos.clients.raiderio
 
-import com.kos.clients.domain.MythicPlusRun
+import com.kos.clients.domain.raiderio.MythicPlusRun
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.mythicPlusRun
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.mythicPlusRunJson
 import kotlinx.serialization.json.Json
