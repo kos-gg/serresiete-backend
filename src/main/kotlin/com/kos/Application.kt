@@ -275,6 +275,7 @@ fun Application.module() {
     configureRouting(
         activitiesController,
         authController,
+        jwtConfig,
         credentialsController,
         rolesController,
         viewsController,

@@ -4,6 +4,7 @@ import com.kos.activities.ActivitiesController
 import com.kos.activities.activitiesRouting
 import com.kos.auth.AuthController
 import com.kos.auth.authRouting
+import com.kos.common.JWTConfig
 import com.kos.credentials.CredentialsController
 import com.kos.credentials.credentialsRouting
 import com.kos.entities.EntitiesController
@@ -27,6 +28,7 @@ import io.ktor.server.routing.*
 fun Application.configureRouting(
     activitiesController: ActivitiesController,
     authController: AuthController,
+    jwtConfig: JWTConfig,
     credentialsController: CredentialsController,
     rolesController: RolesController,
     viewsController: ViewsController,
@@ -41,7 +43,7 @@ fun Application.configureRouting(
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
         route("/api") {
             viewsRouting(viewsController)
-            authRouting(authController)
+            authRouting(authController, jwtConfig)
             rolesRouting(rolesController)
             activitiesRouting(activitiesController)
             credentialsRouting(credentialsController)

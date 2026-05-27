@@ -46,24 +46,5 @@ fun Application.configureAuthentication(credentialsService: CredentialsService, 
             }
         }
 
-        jwt("auth-jwt-refresh") {
-            verifier(
-                JWT.require(Algorithm.HMAC256(jwtConfig.secret))
-                    .withIssuer(jwtConfig.issuer)
-                    .withClaimPresence("username")
-                    .withClaimPresence("mode")
-                    .build()
-            )
-
-            validate { token ->
-                //TODO: Would be nice to provide why validation went wrong
-                if (TokenMode.fromString(token.payload.getClaim("mode").asString()) != TokenMode.REFRESH) null
-                else if (token.payload.expiresAtAsInstant.isBefore(OffsetDateTime.now().toInstant())) null
-                else {
-                    val username = token.payload.getClaim("username").asString()
-                    UserIdPrincipal(username)
-                }
-            }
-        }
     }
 }
