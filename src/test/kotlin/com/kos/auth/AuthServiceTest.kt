@@ -133,9 +133,14 @@ class AuthServiceTest {
             )
             val authService =
                 AuthService(authInMemoryRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
-            val newToken = authService.refresh("refresh")
+            val result = authService.refresh(user)
 
-            assertTrue(newToken.isRight { it.isDefined() })
+            result.onRight { response ->
+                val accessToken = response?.accessToken
+                assertTrue(accessToken != null)
+                validateToken(accessToken, TokenMode.ACCESS, emptySet(), Role.USER)
+                assertTrue(response.refreshToken == null)
+            }.onLeft { fail(it.toString()) }
         }
     }
 

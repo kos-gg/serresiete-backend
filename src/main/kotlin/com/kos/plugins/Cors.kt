@@ -5,10 +5,14 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*
 
 fun Application.configureCors() {
-    val allowedOrigin = System.getenv("ALLOWED_ORIGIN") ?: "http://localhost:5173"
-    val (scheme, host) = allowedOrigin.split("://", limit = 2)
+    val allowedOrigins = (System.getenv("ALLOWED_ORIGIN") ?: "http://localhost:5173")
+        .split(",")
+        .map { it.trim() }
     install(CORS) {
-        allowHost(host, schemes = listOf(scheme))
+        allowedOrigins.forEach { origin ->
+            val (scheme, host) = origin.split("://", limit = 2)
+            allowHost(host, schemes = listOf(scheme))
+        }
         allowMethod(HttpMethod.Options)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)

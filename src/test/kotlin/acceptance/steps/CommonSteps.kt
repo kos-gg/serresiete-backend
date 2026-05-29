@@ -9,6 +9,7 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.mindrot.jbcrypt.BCrypt
 import kotlin.test.assertEquals
 
 suspend fun assertUntil(repetitions: Int, delayMillis: Long, block: suspend () -> Unit) {
@@ -27,7 +28,7 @@ class CommonSteps(private val scenarioVariables: ScenarioVariables) {
         val role = Role.valueOf(roleName.uppercase())
         val repo = CredentialsDatabaseRepository(db)
         runBlocking {
-            repo.insertCredentials(username, "test-password")
+            repo.insertCredentials(username, BCrypt.hashpw("test-password", BCrypt.gensalt(4)))
             repo.insertRoles(username, setOf(role))
         }
     }

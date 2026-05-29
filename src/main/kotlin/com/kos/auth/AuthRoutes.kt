@@ -16,6 +16,11 @@ import java.time.OffsetDateTime
 private const val REFRESH_COOKIE = "refreshToken"
 private const val REFRESH_COOKIE_PATH = "/api/auth/refresh"
 private const val REFRESH_MAX_AGE = 60L * 60 * 24 * 30
+private val IS_HTTPS = System.getenv("ALLOWED_ORIGIN")
+    ?.split(",")
+    ?.any { it.trim().startsWith("https://") }
+    ?: false
+private val SAME_SITE = if (IS_HTTPS) mapOf("SameSite" to "None") else emptyMap()
 
 fun Route.authRouting(
     authController: AuthController,
@@ -33,10 +38,10 @@ fun Route.authRouting(
                             name = REFRESH_COOKIE,
                             value = it.refreshToken,
                             httpOnly = true,
-                            secure = true,
+                            secure = IS_HTTPS,
                             maxAge = REFRESH_MAX_AGE,
                             path = REFRESH_COOKIE_PATH,
-                            extensions = mapOf("SameSite" to "None")
+                            extensions = SAME_SITE
                         )
                     }
                     call.respond(HttpStatusCode.OK, it)
@@ -53,10 +58,10 @@ fun Route.authRouting(
                         name = REFRESH_COOKIE,
                         value = "",
                         httpOnly = true,
-                        secure = true,
+                        secure = IS_HTTPS,
                         maxAge = 0L,
                         path = REFRESH_COOKIE_PATH,
-                        extensions = mapOf("SameSite" to "None")
+                        extensions = SAME_SITE + mapOf("Max-Age" to "0")
                     )
                     call.respond(HttpStatusCode.OK)
                 })
@@ -102,7 +107,7 @@ fun Route.authRouting(
                             else -> call.respond(HttpStatusCode.OK, it)
                         }
                     })
-                } catch (e: JWTVerificationException) {
+                } catch (e: Exception) {
                     call.respond(HttpStatusCode.Unauthorized)
                 }
             }

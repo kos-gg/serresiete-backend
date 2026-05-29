@@ -16,7 +16,6 @@ import com.kos.roles.Role
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.roles.repository.RolesInMemoryRepository
-import com.kos.views.ViewsTestHelper.owner
 import kotlinx.coroutines.runBlocking
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -92,8 +91,9 @@ class AuthControllerTest {
     @Test
     fun `I can refresh tokens`() {
         runBlocking {
+            val username = "owner"
             val credentialsState = CredentialsRepositoryState(
-                listOf(basicCredentials.copy(userName = "owner")),
+                listOf(basicCredentials.copy(userName = username)),
                 mapOf()
             )
 
@@ -101,11 +101,12 @@ class AuthControllerTest {
                 credentialsState,
                 mapOf(),
                 listOf(),
-                listOf(basicAuthorization.copy(userName = "owner").copy(isAccess = false))
+                listOf(basicAuthorization.copy(userName = username).copy(isAccess = false))
             )
 
-            val res = controller.refresh(owner).getOrNull()
-            assertTrue(res.isDefined())
+            val res = controller.refresh(username).getOrNull()
+            assertTrue(res?.accessToken?.isNotEmpty())
+            assertTrue(res?.refreshToken == null)
         }
     }
 

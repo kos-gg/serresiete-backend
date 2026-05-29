@@ -175,6 +175,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     configureRouting(
         activitiesController,
         authController,
+        jwtConfig,
         credentialsController,
         rolesController,
         viewsController,
