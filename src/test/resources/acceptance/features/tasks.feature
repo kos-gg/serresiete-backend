@@ -3,6 +3,7 @@ Feature: Tasks
   Background:
     Given "sanxei" has a valid token with activities "run task, get task"
 
+  @happy
   Scenario: TOKEN_CLEANUP_TASK task removes expired tokens
     And an expired token exists for "olduser" in the database
     When they run the "tokenCleanupTask" task
@@ -56,6 +57,25 @@ Feature: Tasks
     When they run the "updateMythicPlusSeason" task
     Then the task completes with status "SUCCESSFUL"
 
+  Scenario: CACHE_GAME_VIEW_DATA_TASK caches entities for a specific view
+    And a LOL view "test-lol-view" exists
+    When they run the "cacheGameViewDataTask" task with viewId "test-lol-view"
+    Then the task completes with status "SUCCESSFUL"
+
+  @sad
   Scenario: UPDATE_MYTHIC_PLUS_SEASON task fails when no WOW expansion exists
     When they run the "updateMythicPlusSeason" task
     Then the task completes with status "ERROR"
+
+  Scenario: CACHE_GAME_VIEW_DATA_TASK fails when no viewId is provided
+    When they run the "cacheGameViewDataTask" task
+    Then the task completes with status "ERROR"
+
+  Scenario: CACHE_GAME_VIEW_DATA_TASK fails when view does not exist
+    When they run the "cacheGameViewDataTask" task with viewId "non-existent-view"
+    Then the task completes with status "ERROR"
+
+  Scenario: CACHE_GAME_VIEW_DATA_TASK fails with retryAfter when view was synced recently
+    And a LOL view "test-lol-view" was recently synced
+    When they run the "cacheGameViewDataTask" task with viewId "test-lol-view"
+    Then the task completes with status "ERROR" and a retryAfter timestamp

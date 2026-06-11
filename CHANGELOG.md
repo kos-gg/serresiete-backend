@@ -1,4 +1,39 @@
 # Changelog
+## [5.5.0] - 18-05-2026
+
+### Added
+- **`POST /api/tasks` now returns the task ID in the response body**:
+    - The response body is `{"id": "<taskId>"}` so consumers can poll `GET /api/tasks/{id}` without parsing the `Location` header.
+- **`CACHE_GAME_VIEW_DATA_TASK` cooldown support**:
+    - Returns `ERROR` with a `retryAfter` timestamp if the view was synced within the cooldown window (default 300s, configurable via `VIEW_SYNC_COOLDOWN_SECONDS`).
+    - Returns `SUCCESSFUL` with a `retryAfter` timestamp indicating when the next sync is allowed, so the frontend can disable the sync button accordingly.
+- **`SERVICE` role can now run and query tasks**:
+    - Granted the `run task`, `get task`, and `get tasks` activities to the `service` role via DB migration.
+
+### Refactor
+- **`CacheGameViewDataTaskRunner` validation uses Arrow `either`**:
+    - Early-exit validation (missing `viewId`, view not found, cooldown active) is now expressed as an `either` block with `raise`/`ensure`, replacing nested `if`/`return` imperative checks.
+
+## [5.4.0] - 17-05-2026
+
+### Added
+- **`CACHE_GAME_VIEW_DATA_TASK`**:
+    - New task that syncs entity data for a specific view, identified by a `viewId` argument.
+    - The game is inferred from the view itself — no game argument needed.
+    - Returns `ERROR` if `viewId` is missing or the view does not exist.
+
+### Refactor
+- **`TaskRunner` abstraction**:
+    - Extracted all task logic out of `TasksService` into dedicated `TaskRunner` implementations, one per task type.
+    - `TasksService` is now a thin dispatcher (~20 lines) delegating to a `TaskRunnerProvider`.
+    - Abstract `CacheGameDataTaskRunner(game: Game)` base class shared by `CacheLolDataTaskRunner`, `CacheWowDataTaskRunner`, and `CacheWowHcDataTaskRunner`.
+- **`ScheduledTaskRunnable` consolidates four identical runnables**:
+    - `TokenCleanupRunnable`, `TasksCleanupRunnable`, `UpdateLolEntitiesRunnable`, and `UpdateWowGuildsRunnable` replaced by a single generic `ScheduledTaskRunnable`.
+
+### Fixed
+- **`CACHE_CLEAR_TASK` with no game argument now clears all caches**:
+    - Previously returned `ERROR` when no game was provided. A null game is now correctly forwarded to `clearCache(null)`, which clears data for all games.
+
 ## [5.3.0] - 12-05-2026
 
 ### Added

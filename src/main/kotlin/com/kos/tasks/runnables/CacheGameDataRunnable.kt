@@ -20,7 +20,7 @@ data class CacheGameDataRunnable(
     override fun run() {
         coroutineScope.launch {
             logger.info("Running filling cache data task")
-            tasksService.cacheDataTask(game, task, UUID.randomUUID().toString())
+            tasksService.runTask(task, UUID.randomUUID().toString(), null)
             val deletedRecords = dataCacheService.clearExpired(game, false)
             val deletionMessage = "Deleted $deletedRecords cached records"
             logger.info(deletionMessage)

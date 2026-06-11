@@ -13,11 +13,6 @@ class AuthSteps(private val scenarioVariables: ScenarioVariables) {
     private val client = SharedInfrastructure.client
     private val jwtConfig = SharedInfrastructure.jwtConfig
 
-    @Given("{string} has a valid token with activity {string}")
-    fun userHasValidToken(username: String, activity: String) {
-        scenarioVariables.token = JwtHelper.validJwt(jwtConfig, username, activity)
-    }
-
     @Given("{string} has a valid token with activities {string}")
     fun userHasValidTokenWithActivities(username: String, activities: String) {
         scenarioVariables.token = JwtHelper.validJwt(jwtConfig, username, *activities.split(",").map { it.trim() }.toTypedArray())

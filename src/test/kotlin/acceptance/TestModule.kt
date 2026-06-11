@@ -57,6 +57,7 @@ import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
+import com.kos.tasks.runners.*
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -144,14 +145,21 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val sourcesController = SourcesController(sourcesService)
 
     val tasksRepository = TasksDatabaseRepository(db)
-    val tasksService = TasksService(
-        tasksRepository,
-        dataCacheService,
-        entitiesService,
-        authService,
-        wowSeasonService,
-        entitySynchronizerProvider
+    val taskRunnerProvider = TaskRunnerProvider(
+        listOf(
+            TokenCleanupTaskRunner(tasksRepository, authService),
+            TaskCleanupTaskRunner(tasksRepository),
+            UpdateLolEntitiesTaskRunner(tasksRepository, entitiesService),
+            CacheClearTaskRunner(tasksRepository, dataCacheService),
+            UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
+            UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
+            CacheLolDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheWowDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheWowHcDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, 300L)
+        )
     )
+    val tasksService = TasksService(tasksRepository, taskRunnerProvider)
     val tasksController = TasksController(tasksService)
 
     val subscriptionsRepository = SubscriptionsDatabaseRepository(db)

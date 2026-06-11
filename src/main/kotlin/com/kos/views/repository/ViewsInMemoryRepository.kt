@@ -3,6 +3,7 @@ package com.kos.views.repository
 import com.kos.common.InMemoryRepository
 import com.kos.common.fold
 import com.kos.views.*
+import java.time.OffsetDateTime
 
 class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
 
@@ -114,6 +115,13 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         id: String
     ) {
         entities.forEach { viewEntities.add(ViewEntity(it.first, id, it.second)) }
+    }
+
+    override suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime) {
+        val index = views.indexOfFirst { it.id == viewId }
+        if (index != -1) {
+            views[index] = views[index].copy(lastSyncedAt = at)
+        }
     }
 
     override suspend fun state(): ViewsState {

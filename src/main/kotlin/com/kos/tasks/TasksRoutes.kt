@@ -28,7 +28,7 @@ fun Route.tasksRouting(tasksController: TasksController) {
                     call.respondWithHandledError(it)
                 }, {
                     call.response.headers.append(Location, "/tasks/$it")
-                    call.respond(HttpStatusCode.Created)
+                    call.respond(HttpStatusCode.Created, mapOf("id" to it))
                 })
             }
         }

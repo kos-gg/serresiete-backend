@@ -13,6 +13,7 @@ import com.kos.entities.domain.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository
+import java.time.OffsetDateTime
 import java.util.*
 
 class ViewsService(
@@ -49,13 +50,17 @@ class ViewsService(
                         }
                     },
                     simpleView.game,
-                    simpleView.featured
+                    simpleView.featured,
+                    simpleView.lastSyncedAt
                 )
             }
         }
     }
 
     suspend fun getSimple(id: String): SimpleView? = viewsRepository.get(id)
+
+    suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime) =
+        viewsRepository.updateLastSyncedAt(viewId, at)
 
     suspend fun create(owner: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {

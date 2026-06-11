@@ -2,10 +2,12 @@ package com.kos.views
 
 import arrow.core.Either
 import com.kos.clients.domain.Data
+import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.error.InvalidGameType
 import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.EntityWithAlias
 import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
 
 @Serializable
 enum class Game {
@@ -58,7 +60,9 @@ data class SimpleView(
     val entitiesIds: List<Long>,
     val game: Game,
     val featured: Boolean,
-    val extraArguments: ViewExtraArguments? = null
+    val extraArguments: ViewExtraArguments? = null,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val lastSyncedAt: OffsetDateTime? = null
 )
 
 @Serializable
@@ -69,7 +73,9 @@ data class View(
     val published: Boolean,
     val entities: List<EntityWithAlias>,
     val game: Game,
-    val featured: Boolean
+    val featured: Boolean,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val lastSyncedAt: OffsetDateTime? = null
 )
 
 //TODO: We need to decode/encode the entity request based on Game.

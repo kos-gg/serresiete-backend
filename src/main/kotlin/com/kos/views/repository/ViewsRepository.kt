@@ -2,6 +2,7 @@ package com.kos.views.repository
 
 import com.kos.common.WithState
 import com.kos.views.*
+import java.time.OffsetDateTime
 
 data class ViewsState(
     val views: List<SimpleView>,
@@ -43,4 +44,5 @@ interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
     suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity?
 
     suspend fun associateEntitiesIdsToView(entities: List<Pair<Long, String?>>, id: String)
+    suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime)
 }

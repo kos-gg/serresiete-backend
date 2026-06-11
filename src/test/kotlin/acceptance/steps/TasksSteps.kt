@@ -83,9 +83,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
 
     @Then("the task completes with status {string}")
     fun taskCompletesWithStatus(expectedStatus: String) {
-        val taskId = scenarioVariables.response.headers[HttpHeaders.Location]
-            ?.removePrefix("/tasks/")
-            ?: error("No Location header in response")
+        val taskId = runBlocking { scenarioVariables.response.body<Map<String, String>>()["id"]!! }
 
         runBlocking {
             assertUntil(5, 1000) {
@@ -97,7 +95,6 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                 assertEquals(Status.fromString(expectedStatus.lowercase()), task.taskStatus.status)
             }
         }
-
     }
 
     @And("the expired token for {string} has been removed")
@@ -151,6 +148,66 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         runBlocking {
             val entries = dataCacheRepo.state()
             assertTrue(entries.isEmpty(), "Expected data cache to be empty but found ${entries.size} entries")
+        }
+    }
+
+    @When("they run the {string} task with viewId {string}")
+    fun theyRunTaskWithViewId(taskType: String, viewId: String) {
+        val type = TaskType.fromString(taskType).getOrElse { error("Unknown task type: $taskType") }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/tasks") {
+                scenarioVariables.token?.let { bearerAuth(it) }
+                contentType(ContentType.Application.Json)
+                setBody("""{"type":"${type.name}","arguments":{"viewId":"$viewId"}}""")
+            }
+        }
+    }
+
+    @And("a LOL view {string} exists")
+    fun lolViewExists(viewId: String) {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        runBlocking {
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(SimpleView(viewId, "Test LOL View", "sanxei", false, emptyList(), Game.LOL, false)),
+                    viewEntities = emptyList()
+                )
+            )
+        }
+    }
+
+    @And("a LOL view {string} was recently synced")
+    fun lolViewWasRecentlySynced(viewId: String) {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        runBlocking {
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(
+                        SimpleView(
+                            viewId, "Test LOL View", "sanxei", false, emptyList(), Game.LOL, false,
+                            lastSyncedAt = OffsetDateTime.now().minusSeconds(10)
+                        )
+                    ),
+                    viewEntities = emptyList()
+                )
+            )
+        }
+    }
+
+    @Then("the task completes with status {string} and a retryAfter timestamp")
+    fun taskCompletesWithStatusAndRetryAfter(expectedStatus: String) {
+        val taskId = runBlocking { scenarioVariables.response.body<Map<String, String>>()["id"]!! }
+
+        runBlocking {
+            assertUntil(5, 1000) {
+                val response = client.get("/api/tasks/$taskId") {
+                    scenarioVariables.token?.let { bearerAuth(it) }
+                }
+                assertEquals(HttpStatusCode.OK, response.status)
+                val task = response.body<Task>()
+                assertEquals(Status.fromString(expectedStatus.lowercase()), task.taskStatus.status)
+                assertTrue(task.taskStatus.retryAfter != null, "Expected retryAfter to be set")
+            }
         }
     }
 }

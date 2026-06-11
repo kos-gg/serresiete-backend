@@ -2,7 +2,7 @@ Feature: Authentication
 
   @happy
   Scenario: Authenticated user can access protected endpoints
-    Given "sanxei" has a valid token with activity "get any activities"
+    Given "sanxei" has a valid token with activities "get any activities"
     When they request GET "/api/activities"
     Then the response status is 200
 

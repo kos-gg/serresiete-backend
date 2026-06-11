@@ -2,8 +2,9 @@ Feature: Entities
 
   Background:
     Given "sanxei" exists in the database with role "admin"
-    And "sanxei" has a valid token with activity "search entity"
+    And "sanxei" has a valid token with activities "search entity"
 
+  @happy
   Scenario: Searching for an unknown WOW entity queues it for sync
     When they search for a "WOW" entity "Sanxei" on realm "Silvermoon" region "eu"
     Then the response status is 200

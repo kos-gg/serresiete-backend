@@ -16,10 +16,18 @@ data class Task(
 )
 
 @Serializable
-data class TaskStatus(val status: Status, val message: String?)
+data class TaskStatus(
+    val status: Status,
+    val message: String?,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val retryAfter: OffsetDateTime? = null
+)
 
 @Serializable
 enum class Status {
+    PENDING {
+        override fun toString(): String = "pending"
+    },
     SUCCESSFUL {
         override fun toString(): String = "successful"
     },
@@ -29,6 +37,7 @@ enum class Status {
 
     companion object {
         fun fromString(value: String): Status = when (value) {
+            "pending" -> PENDING
             "successful" -> SUCCESSFUL
             "error" -> ERROR
             else -> throw IllegalArgumentException("Unknown status: $value")
@@ -64,6 +73,9 @@ enum class TaskType {
     },
     UPDATE_MYTHIC_PLUS_SEASON {
         override fun toString(): String = "updateMythicPlusSeason"
+    },
+    CACHE_GAME_VIEW_DATA_TASK {
+        override fun toString(): String = "cacheGameViewDataTask"
     };
 
     companion object {
@@ -77,6 +89,7 @@ enum class TaskType {
             "cacheClearTask" -> Either.Right(CACHE_CLEAR_TASK)
             "updateWowHardcoreGuilds" -> Either.Right(UPDATE_WOW_HARDCORE_GUILDS)
             "updateMythicPlusSeason" -> Either.Right(UPDATE_MYTHIC_PLUS_SEASON)
+            "cacheGameViewDataTask" -> Either.Right(CACHE_GAME_VIEW_DATA_TASK)
             else -> Either.Left(InvalidTaskType(value))
         }
     }

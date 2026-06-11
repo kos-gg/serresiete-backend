@@ -21,13 +21,13 @@ Apis used:
 
 ## Testing
 
-### Unit & integration tests
+### Unit & integration tests only
 
 ```bash
-./gradlew test
+./gradlew unitTest
 ```
 
-### Acceptance tests
+### Acceptance tests only
 
 Acceptance tests are written in Gherkin (Cucumber) and live under `src/test/resources/acceptance/features/`.
 
@@ -43,5 +43,7 @@ Acceptance tests are written in Gherkin (Cucumber) and live under `src/test/reso
 ### All tests
 
 ```bash
-./gradlew test acceptanceTest
+./gradlew test
 ```
+
+Or right-click the project root in IntelliJ and select _Run Tests_.

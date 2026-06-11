@@ -50,6 +50,7 @@ class WowHardcoreEntitySynchronizer(
         ignoreUnknownKeys = true
         encodeDefaults = false
     }
+    override fun isSyncError(error: ServiceError) = error !is WowHardcoreCharacterIsDead
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =

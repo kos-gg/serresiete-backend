@@ -4,7 +4,8 @@ import com.kos.auth.AuthService
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCacheService
 import com.kos.tasks.repository.TasksRepository
-import com.kos.tasks.runnables.*
+import com.kos.tasks.runnables.CacheGameDataRunnable
+import com.kos.tasks.runnables.ScheduledTaskRunnable
 import com.kos.views.Game
 import kotlinx.coroutines.CoroutineScope
 import java.time.Duration
@@ -36,7 +37,8 @@ data class TasksLauncher(
             } ?: 0
 
         val cacheWowDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_WOW_DATA_TASK, thirtyMinutesDelay)
-        val cacheWowHcDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_WOW_HC_DATA_TASK, thirtyMinutesDelay)
+        val cacheWowHcDataTaskInitDelay: Long =
+            getTaskInitialDelay(now, TaskType.CACHE_WOW_HC_DATA_TASK, thirtyMinutesDelay)
         val cacheLolDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_LOL_DATA_TASK, thirtyMinutesDelay)
         val tokenCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TOKEN_CLEANUP_TASK, fifteenMinutesDelay)
         val tasksCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TASK_CLEANUP_TASK, oneWeekDelay)
@@ -50,9 +52,8 @@ data class TasksLauncher(
         logger.info("Setting $tasksCleanupInitDelay minutes of delay before launching ${TaskType.TASK_CLEANUP_TASK}")
         logger.info("Setting $updateLolEntitiesInitDelay minutes of delay before launching ${TaskType.UPDATE_LOL_ENTITIES_TASK}")
 
-
         executorService.scheduleAtFixedRate(
-            TokenCleanupRunnable(tasksService, coroutineScope),
+            ScheduledTaskRunnable(tasksService, TaskType.TOKEN_CLEANUP_TASK, coroutineScope),
             tokenCleanupInitDelay, fifteenMinutesDelay.toLong(), TimeUnit.MINUTES
         )
 
@@ -90,26 +91,17 @@ data class TasksLauncher(
         )
 
         executorService.scheduleAtFixedRate(
-            TasksCleanupRunnable(
-                tasksService,
-                coroutineScope
-            ),
+            ScheduledTaskRunnable(tasksService, TaskType.TASK_CLEANUP_TASK, coroutineScope),
             tasksCleanupInitDelay, oneWeekDelay.toLong(), TimeUnit.MINUTES
         )
 
         executorService.scheduleAtFixedRate(
-            UpdateLolEntitiesRunnable(
-                tasksService,
-                coroutineScope
-            ),
+            ScheduledTaskRunnable(tasksService, TaskType.UPDATE_LOL_ENTITIES_TASK, coroutineScope),
             updateLolEntitiesInitDelay, oneDayDelay.toLong(), TimeUnit.MINUTES
         )
 
         executorService.scheduleAtFixedRate(
-            UpdateWowGuildsRunnable(
-                tasksService,
-                coroutineScope
-            ),
+            ScheduledTaskRunnable(tasksService, TaskType.UPDATE_WOW_HARDCORE_GUILDS, coroutineScope),
             updateWowGuildsInitDelay, oneDayDelay.toLong(), TimeUnit.MINUTES
         )
 

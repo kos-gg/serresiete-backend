@@ -1,11 +1,13 @@
 Feature: Sync
 
+  @happy
   Scenario: WOW sync caches entity data
     Given a "WOW" sync event is posted for "Sanxei" "Silvermoon" "eu"
     And a current WOW season exists in the database
     When the WOW sync subscription processes pending events
     Then the data cache contains a "WOW" entry for "Sanxei" "Silvermoon" "eu"
 
+  @sad
   Scenario: WOW sync records a failure when the raiderIo cutoff endpoint fails
     Given a "WOW" sync event is posted for "Sanxei" "Silvermoon" "eu"
     And a current WOW season exists in the database
