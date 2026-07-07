@@ -7,6 +7,7 @@ import com.kos.auth.TokenMode
 import com.kos.common.JWTConfig
 import com.kos.common.toCredentials
 import com.kos.credentials.CredentialsService
+import io.ktor.http.auth.parseAuthorizationHeader
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -20,7 +21,7 @@ fun Application.configureAuthentication(credentialsService: CredentialsService, 
             validate { credentials ->
                 if (credentialsService.validateCredentials(credentials.toCredentials())) UserIdPrincipal(credentials.name)
                 else null
-            }
+
         }
 
         jwt("auth-jwt") {
@@ -43,6 +44,32 @@ fun Application.configureAuthentication(credentialsService: CredentialsService, 
                     val activities = token.payload.getClaim("activities").asList(String::class.java).toSet()
                     UserWithActivities(username, activities)
                 }
+            }
+        }
+
+        jwt("auth-jwt-refresh") {
+            authHeader { call ->
+                val cookieToken = call.request.cookies["refreshToken"]
+                    ?: return@authHeader call.request.parseAuthorizationHeader()
+                try {
+                    parseAuthorizationHeader("Bearer $cookieToken")
+                } catch (_: IllegalArgumentException) {
+                    null
+                }
+            }
+
+            verifier(
+                JWT.require(Algorithm.HMAC256(jwtConfig.secret))
+                    .withIssuer(jwtConfig.issuer)
+                    .withClaimPresence("username")
+                    .withClaimPresence("mode")
+                    .build()
+            )
+
+            validate { token ->
+                if (TokenMode.fromString(token.payload.getClaim("mode").asString()) != TokenMode.REFRESH) null
+                else if (token.payload.expiresAtAsInstant?.isBefore(OffsetDateTime.now().toInstant()) == true) null
+                else UserIdPrincipal(token.payload.getClaim("username").asString())
             }
         }
 

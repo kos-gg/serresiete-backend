@@ -6,7 +6,6 @@ import com.kos.assertTrue
 import com.kos.auth.AuthTestHelper.basicAuthorization
 import com.kos.auth.repository.AuthInMemoryRepository
 import com.kos.common.JWTConfig
-import com.kos.common.isDefined
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
 import com.kos.credentials.CredentialsTestHelper.emptyCredentialsState

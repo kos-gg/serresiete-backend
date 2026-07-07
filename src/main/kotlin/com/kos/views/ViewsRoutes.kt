@@ -16,8 +16,8 @@ import io.ktor.server.routing.*
 fun Route.viewsRouting(
     viewsController: ViewsController
 ) {
-    route("/views") {
-        authenticate("auth-jwt") {
+    authenticate("auth-jwt") {
+        route("/views") {
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 either {
@@ -55,8 +55,6 @@ fun Route.viewsRouting(
                     call.respond(OK, GetViewsResponse(it.first, it.second))
                 })
             }
-        }
-        authenticate("auth-jwt") {
             get("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.getView(
@@ -69,23 +67,18 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             get("/{id}/data") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.getViewData(
                     userWithActivities?.name,
                     call.parameters["id"].orEmpty(),
                     userWithActivities?.activities.orEmpty()
-                )
-                    .fold({
-                        call.respondWithHandledError(it)
-                    }, {
-                        call.respond(OK, it)
-                    })
+                ).fold({
+                    call.respondWithHandledError(it)
+                }, {
+                    call.respond(OK, it)
+                })
             }
-        }
-        authenticate("auth-jwt") {
             get("/{id}/cached-data") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.getViewCachedData(
@@ -98,8 +91,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             post {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.createView(
@@ -112,8 +103,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             put("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.editView(
@@ -127,8 +116,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             patch("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.patchView(
@@ -142,8 +129,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             delete("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.deleteView(

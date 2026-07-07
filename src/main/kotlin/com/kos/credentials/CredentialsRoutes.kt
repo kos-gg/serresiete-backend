@@ -10,8 +10,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.credentialsRouting(credentialsController: CredentialsController) {
-    route("/credentials") {
-        authenticate("auth-jwt") {
+    authenticate("auth-jwt") {
+        route("/credentials") {
             post {
                 val userWithActivities = call.principal<UserWithActivities>()
                 credentialsController.createCredential(
@@ -24,8 +24,6 @@ fun Route.credentialsRouting(credentialsController: CredentialsController) {
                     call.respond(HttpStatusCode.Created)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 credentialsController.getCredentials(
@@ -37,9 +35,7 @@ fun Route.credentialsRouting(credentialsController: CredentialsController) {
                     call.respond(HttpStatusCode.OK, it)
                 })
             }
-        }
-        route("/{user}") {
-            authenticate("auth-jwt") {
+            route("/{user}") {
                 delete {
                     val userWithActivities = call.principal<UserWithActivities>()
                     credentialsController.deleteCredential(
@@ -52,8 +48,6 @@ fun Route.credentialsRouting(credentialsController: CredentialsController) {
                         call.respond(HttpStatusCode.NoContent)
                     })
                 }
-            }
-            authenticate("auth-jwt") {
                 get {
                     val userWithActivities = call.principal<UserWithActivities>()
                     credentialsController.getCredential(
@@ -66,8 +60,6 @@ fun Route.credentialsRouting(credentialsController: CredentialsController) {
                         call.respond(HttpStatusCode.OK, it)
                     })
                 }
-            }
-            authenticate("auth-jwt") {
                 put {
                     val userWithActivities = call.principal<UserWithActivities>()
                     credentialsController.editCredential(
@@ -81,8 +73,6 @@ fun Route.credentialsRouting(credentialsController: CredentialsController) {
                         call.respond(HttpStatusCode.NoContent)
                     })
                 }
-            }
-            authenticate("auth-jwt") {
                 patch {
                     val userWithActivities = call.principal<UserWithActivities>()
                     credentialsController.patchCredential(

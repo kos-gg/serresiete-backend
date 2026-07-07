@@ -156,7 +156,13 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheLolDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
             CacheWowDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
             CacheWowHcDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, 300L)
+            CacheGameViewDataTaskRunner(
+                tasksRepository,
+                viewsService,
+                entitiesService,
+                entitySynchronizerProvider,
+                300L
+            )
         )
     )
     val tasksService = TasksService(tasksRepository, taskRunnerProvider)

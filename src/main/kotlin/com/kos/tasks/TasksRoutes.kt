@@ -16,8 +16,8 @@ import io.ktor.server.routing.*
 
 fun Route.tasksRouting(tasksController: TasksController) {
 
-    route("/tasks") {
-        authenticate("auth-jwt") {
+    authenticate("auth-jwt") {
+        route("/tasks") {
             post {
                 val userWithActivities = call.principal<UserWithActivities>()
                 tasksController.runTask(
@@ -31,8 +31,6 @@ fun Route.tasksRouting(tasksController: TasksController) {
                     call.respond(HttpStatusCode.Created, mapOf("id" to it))
                 })
             }
-        }
-        authenticate("auth-jwt") {
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 either {
@@ -50,21 +48,17 @@ fun Route.tasksRouting(tasksController: TasksController) {
                     call.respond(OK, it)
                 })
             }
-        }
-        route("/{id}") {
-            authenticate("auth-jwt") {
-                get {
-                    val userWithActivities = call.principal<UserWithActivities>()
-                    tasksController.getTask(
-                        userWithActivities?.name,
-                        call.parameters["id"].orEmpty(),
-                        userWithActivities?.activities.orEmpty()
-                    ).fold({
-                        call.respondWithHandledError(it)
-                    }, {
-                        call.respond(OK, it)
-                    })
-                }
+            get("/{id}") {
+                val userWithActivities = call.principal<UserWithActivities>()
+                tasksController.getTask(
+                    userWithActivities?.name,
+                    call.parameters["id"].orEmpty(),
+                    userWithActivities?.activities.orEmpty()
+                ).fold({
+                    call.respondWithHandledError(it)
+                }, {
+                    call.respond(OK, it)
+                })
             }
         }
     }

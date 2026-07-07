@@ -12,8 +12,8 @@ import io.ktor.server.routing.*
 fun Route.rolesRouting(
     rolesController: RolesController
 ) {
-    route("/roles") {
-        authenticate("auth-jwt") {
+    authenticate("auth-jwt") {
+        route("/roles") {
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 rolesController.getRoles(userWithActivities?.name, userWithActivities?.activities.orEmpty()).fold({
@@ -22,9 +22,7 @@ fun Route.rolesRouting(
                     call.respond(HttpStatusCode.OK, it)
                 })
             }
-        }
-        route("/{role}") {
-            authenticate("auth-jwt") {
+            route("/{role}") {
                 get {
                     val userWithActivities = call.principal<UserWithActivities>()
                     rolesController.getRole(
@@ -37,8 +35,6 @@ fun Route.rolesRouting(
                         call.respond(HttpStatusCode.OK, it)
                     })
                 }
-            }
-            authenticate("auth-jwt") {
                 put {
                     val userWithActivities = call.principal<UserWithActivities>()
                     rolesController.setActivities(

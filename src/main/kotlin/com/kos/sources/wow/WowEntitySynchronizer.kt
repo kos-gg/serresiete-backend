@@ -63,7 +63,7 @@ class WowEntitySynchronizer(
                     executeClientCall("raiderIoCutoff") { raiderIoClient.cutoff(it) }.bind()
                 }
 
-                val (profileErrors, profiles) = entities.parMap { entity ->
+                val (profileErrors, profiles) = entities.parMap(concurrency = 4) { entity ->
                     executeClientCall("raiderIoGet") {
                         raiderIoClient.get(entity).map { Pair(entity.id, it) }
                     }

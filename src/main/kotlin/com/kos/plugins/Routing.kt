@@ -2,6 +2,7 @@ package com.kos.plugins
 
 import com.kos.activities.ActivitiesController
 import com.kos.activities.activitiesRouting
+import com.kos.auth.AuthConfig
 import com.kos.auth.AuthController
 import com.kos.auth.authRouting
 import com.kos.common.JWTConfig
@@ -43,7 +44,7 @@ fun Application.configureRouting(
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
         route("/api") {
             viewsRouting(viewsController)
-            authRouting(authController, jwtConfig)
+            authRouting(authController, AuthConfig(jwtConfig))
             rolesRouting(rolesController)
             activitiesRouting(activitiesController)
             credentialsRouting(credentialsController)
