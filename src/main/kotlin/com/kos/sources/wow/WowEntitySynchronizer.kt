@@ -49,6 +49,7 @@ class WowEntitySynchronizer(
         encodeDefaults = false
     }
 
+    @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
             val dataChannel = Channel<DataCache>()

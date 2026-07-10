@@ -23,13 +23,17 @@ import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.views.Game
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import java.time.Duration
 import java.time.OffsetDateTime
 
 class WowHardcoreEntitySynchronizer(
@@ -50,113 +54,135 @@ class WowHardcoreEntitySynchronizer(
         ignoreUnknownKeys = true
         encodeDefaults = false
     }
+
     override fun isSyncError(error: ServiceError) = error !is WowHardcoreCharacterIsDead
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
-            entities as List<WowEntity>
+            val dataChannel = Channel<DataCache>()
+            val errorChannel = Channel<ServiceError>()
+            val errors = mutableListOf<ServiceError>()
 
-            val errorsAndData: Pair<List<ServiceError>, List<Pair<Long, HardcoreData>>> =
-                entities.map { wowEntity ->
-                    async {
-                        either {
-                            val newestDataCacheEntry: HardcoreData? =
-                                dataCacheRepository.get(wowEntity.id).maxByOrNull {
-                                    it.inserted
-                                }?.let {
-                                    try {
-                                        json.decodeFromString<HardcoreData>(it.data)
-                                    } catch (e: Throwable) {
-                                        logger.debug(
-                                            "Couldn't deserialize entity ${wowEntity.id} while trying to obtain newest cached record.\n${e.message}"
-                                        )
-                                        null
-                                    }
-                                }
-                            if (newestDataCacheEntry?.isDead != true) {
-                                syncWowHardcoreEntity(wowEntity, newestDataCacheEntry).bind()
-                            } else {
-                                raise(WowHardcoreCharacterIsDead(wowEntity.name, wowEntity.id))
-                            }
-                        }
+            val errorsCollector = launch {
+                errorChannel.consumeAsFlow()
+                    .collect {
+                        errors.add(it)
                     }
-                }.awaitAll().split()
-
-            val data = errorsAndData.second.map {
-                DataCache(
-                    it.first,
-                    json.encodeToString<Data>(it.second),
-                    OffsetDateTime.now(),
-                    Game.WOW_HC
-                )
             }
 
-            dataCacheRepository.insert(data)
+            val dataCollector = launch {
+                dataChannel.consumeAsFlow()
+                    .buffer(50)
+                    .collect {
+                        dataCacheRepository.insert(listOf(it))
+                        logger.info("Cached entity ${it.entityId}")
+                    }
+            }
 
-            errorsAndData.first
+            entities as List<WowEntity>
+
+            val start = OffsetDateTime.now()
+            entities.asFlow()
+                .buffer(10)
+                .collect {
+                    synchronizeWowHcEntity(it)
+                        .fold(
+                            ifLeft = { errorChannel.send(it) },
+                            ifRight = {
+                                dataChannel.send(it)
+                            }
+                        )
+                }
+
+            errorChannel.close()
+            dataChannel.close()
+
+            errorsCollector.join()
+            dataCollector.join()
+
+            logger.info("Finished Caching Wow HC entities")
+            logger.debug(
+                "cached ${entities.size} entities in ${
+                    Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
+                } minutes"
+            )
+
+            errors
         }
 
+    private suspend fun synchronizeWowHcEntity(entity: WowEntity): Either<ServiceError, DataCache> =
+        either {
+            val newestDataCacheEntry: HardcoreData? =
+                dataCacheRepository.get(entity.id).maxByOrNull {
+                    it.inserted
+                }?.let {
+                    try {
+                        json.decodeFromString<HardcoreData>(it.data)
+                    } catch (e: Throwable) {
+                        logger.debug(
+                            "Couldn't deserialize entity ${entity.id} while trying to obtain newest cached record.\n${e.message}"
+                        )
+                        null
+                    }
+                }
 
-    private suspend fun syncWowHardcoreEntity(
-        wowEntity: WowEntity,
-        newestDataCacheEntry: HardcoreData?
-    ): Either<ServiceError, Pair<Long, HardcoreData>> {
-        return either {
-            blizzardClient.getCharacterProfile(
-                wowEntity.region,
-                wowEntity.realm,
-                wowEntity.name
+            if (newestDataCacheEntry?.isDead == true) {
+                raise(WowHardcoreCharacterIsDead(entity.name, entity.id))
+            }
+
+            val hardcoreData: HardcoreData = blizzardClient.getCharacterProfile(
+                entity.region,
+                entity.realm,
+                entity.name
             ).fold(
                 ifLeft = { error ->
                     when {
                         error is HttpError && error.status == 404 ->
-                            handleNotFoundHardcoreCharacter(newestDataCacheEntry, wowEntity)
+                            handleNotFoundHardcoreCharacter(newestDataCacheEntry, entity)
 
                         else ->
                             Either.Left(error.toSyncProcessingError("getCharacterProfile"))
                     }.bind()
                 },
                 ifRight = { response ->
-                    if (newestDataCacheEntry != null && wowEntity.blizzardId != response.id) {
-                        markWowHardcoreCharacterAsDead(wowEntity, newestDataCacheEntry)
+                    if (deadCharacterHasBeenCreatedAgain(newestDataCacheEntry, entity, response)) {
+                        markWowHardcoreCharacterAsDead(newestDataCacheEntry!!)
                     } else {
-
                         val mediaResponse = execute("getCharacterMedia") {
                             blizzardClient.getCharacterMedia(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
+                                entity.region,
+                                entity.realm,
+                                entity.name
                             )
                         }.bind()
 
                         val equipmentResponse = execute("getCharacterEquipment") {
                             blizzardClient.getCharacterEquipment(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
+                                entity.region,
+                                entity.realm,
+                                entity.name
                             )
                         }.bind()
 
                         val stats = execute("getCharacterStats") {
                             blizzardClient.getCharacterStats(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
+                                entity.region,
+                                entity.realm,
+                                entity.name
                             )
                         }.bind()
 
                         val specializations = execute("getCharacterSpecializations") {
                             blizzardClient.getCharacterSpecializations(
-                                wowEntity.region,
-                                wowEntity.realm,
-                                wowEntity.name
+                                entity.region,
+                                entity.realm,
+                                entity.name
                             )
-
                         }.bind()
 
                         val wowHeadEmbeddedResponse = execute("wowheadEmbeddedCalculator") {
-                            raiderIoClient.wowheadEmbeddedCalculator(wowEntity)
+                            raiderIoClient.wowheadEmbeddedCalculator(entity)
                         }.getOrNull()
 
                         val existentItemsAndItemsToRequest =
@@ -164,10 +190,10 @@ class WowHardcoreEntitySynchronizer(
 
                         //TODO: BRING BACK RETRY WHEN IT PERFORMS BETTER.
                         val newItemsWithIcons =
-                            getNewItemsWithIcons(existentItemsAndItemsToRequest, wowEntity).bindAll()
+                            getNewItemsWithIcons(existentItemsAndItemsToRequest, entity).bindAll()
 
-                        wowEntity.id to HardcoreData.apply(
-                            wowEntity.region,
+                        HardcoreData.apply(
+                            entity.region,
                             response,
                             mediaResponse,
                             existentItemsAndItemsToRequest.first,
@@ -178,8 +204,15 @@ class WowHardcoreEntitySynchronizer(
                         )
                     }
                 })
+
+            DataCache(entity.id, json.encodeToString<Data>(hardcoreData), OffsetDateTime.now(), Game.WOW_HC)
         }
-    }
+
+    private fun deadCharacterHasBeenCreatedAgain(
+        newestDataCacheEntry: HardcoreData?,
+        entity: WowEntity,
+        response: GetWowCharacterResponse
+    ): Boolean = newestDataCacheEntry != null && entity.blizzardId != response.id
 
     private suspend fun getNewItemsWithIcons(
         existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>>,
@@ -228,7 +261,7 @@ class WowHardcoreEntitySynchronizer(
     private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: HardcoreData?,
         wowEntity: WowEntity
-    ): Either<ServiceError, Pair<Long, HardcoreData>> {
+    ): Either<ServiceError, HardcoreData> {
         return newestCharacterDataCacheEntry.fold(
             {
                 entitiesRepository.delete(wowEntity.id)
@@ -241,15 +274,14 @@ class WowHardcoreEntitySynchronizer(
                 )
             },
             {
-                Either.Right(markWowHardcoreCharacterAsDead(wowEntity, it))
+                Either.Right(markWowHardcoreCharacterAsDead(it))
             })
     }
 
     private fun markWowHardcoreCharacterAsDead(
-        wowEntity: WowEntity,
         newestCharacterDataCacheEntry: HardcoreData
-    ): Pair<Long, HardcoreData> {
-        return wowEntity.id to newestCharacterDataCacheEntry.copy(isDead = true)
+    ): HardcoreData {
+        return newestCharacterDataCacheEntry.copy(isDead = true)
     }
 
     private suspend fun <A> execute(
