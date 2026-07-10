@@ -15,15 +15,20 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.M
 import com.kos.common.WithLogger
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
+import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
+import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
+import io.github.resilience4j.ratelimiter.RateLimiter
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.net.URI
+import java.time.Duration
 
 data class RaiderIoHTTPClient(
     val client: HttpClient,
-    val retryConfig: RetryConfig
+    val retryConfig: RetryConfig,
+    val apiKey: String
 ) : RaiderIoClient, WithLogger("RaiderioClient") {
     object RaiderIoHTTPClientConstants {
         val BASE_URI = URI("https://raider.io/api/v1")
@@ -36,13 +41,12 @@ data class RaiderIoHTTPClient(
     }
 
     override suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, ExpansionSeasons> {
-
         return retryEitherWithFixedDelay(
             retryConfig = retryConfig,
             functionName = "getExpansionSeasons",
         ) {
             fetchFromApi<ExpansionSeasons> {
-                client.get(BASE_URI.toString() + MYTHIC_PLUS_STATIC_DATA_PATH) {
+                apiGet(BASE_URI.toString() + MYTHIC_PLUS_STATIC_DATA_PATH) {
                     headers {
                         append(HttpHeaders.Accept, "*/*")
                     }
@@ -60,7 +64,7 @@ data class RaiderIoHTTPClient(
             functionName = "getRunDetails",
         ) {
             fetchFromApi<RunDetails> {
-                client.get(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
+                apiGet(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
                     headers {
                         append(HttpHeaders.Accept, "*/*")
                     }
@@ -74,13 +78,12 @@ data class RaiderIoHTTPClient(
     }
 
     override suspend fun get(wowEntity: WowEntity): Either<ClientError, RaiderIoResponse> {
-
         return retryEitherWithFixedDelay(
             retryConfig = retryConfig,
             functionName = "getRaiderIoResponse",
         ) {
             fetchFromApi<RaiderIoProfile> {
-                client.get(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
+                apiGet(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
                     headers {
                         append(HttpHeaders.Accept, "*/*")
                     }
@@ -115,7 +118,7 @@ data class RaiderIoHTTPClient(
     override suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff> {
         return fetchFromApi(
             request = {
-                client.get(BASE_URI.toString() + MYTHIC_PLUS_CUTOFFS_PATH) {
+                apiGet(BASE_URI.toString() + MYTHIC_PLUS_CUTOFFS_PATH) {
                     headers {
                         append(HttpHeaders.Accept, "*/*")
                     }
@@ -131,7 +134,6 @@ data class RaiderIoHTTPClient(
         )
     }
 
-
     override suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse> {
         logger.debug("Getting Wowhead talents for entity {}", wowEntity)
         return retryEitherWithFixedDelay(
@@ -139,7 +141,7 @@ data class RaiderIoHTTPClient(
             functionName = "getRaiderioWowHeadEmbeddedResponse",
         ) {
             fetchFromApi<RaiderioWowHeadEmbeddedResponse> {
-                client.get(CLASSIC_BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
+                apiGet(CLASSIC_BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
                     headers {
                         append(HttpHeaders.Accept, "*/*")
                     }
@@ -155,7 +157,7 @@ data class RaiderIoHTTPClient(
     }
 
     private suspend fun getRaiderIoProfile(region: String, realm: String, name: String): HttpResponse =
-        client.get(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
+        apiGet(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
             headers {
                 append(HttpHeaders.Accept, "*/*")
             }
@@ -170,4 +172,21 @@ data class RaiderIoHTTPClient(
             }
         }
 
+    private val rateLimiter = RateLimiter.of(
+        "raiderIoRateLimiter",
+        RateLimiterConfig {
+            this.limitForPeriod(1000)
+                .limitRefreshPeriod(Duration.ofMinutes(1))
+                .timeoutDuration(Duration.ofSeconds(5))
+                .build()
+        }
+    )
+
+    private suspend fun apiGet(url: String, block: HttpRequestBuilder.() -> Unit = {}): HttpResponse =
+        rateLimiter.executeSuspendFunction {
+            client.get(url) {
+                block()
+                url { parameters.append("access_key", apiKey) }
+            }
+        }
 }

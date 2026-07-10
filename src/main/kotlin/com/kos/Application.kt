@@ -81,6 +81,7 @@ fun main() {
 
 fun Application.module() {
     val riotApiKey = System.getenv("RIOT_API_KEY")
+    val raiderIoApiKey = System.getenv("RAIDERIO_API_KEY")
 
     val jwtConfig = JWTConfig(
         System.getenv("JWT_ISSUER"),
@@ -98,7 +99,7 @@ fun Application.module() {
 
     val client = HttpClient(CIO)
     val defaultRetryConfig = RetryConfig(3, 1200)
-    val raiderIoHTTPClient = RaiderIoHTTPClient(client, defaultRetryConfig)
+    val raiderIoHTTPClient = RaiderIoHTTPClient(client, defaultRetryConfig, raiderIoApiKey)
     val riotHTTPClient = RiotHTTPClient(client, defaultRetryConfig, riotApiKey)
     val blizzardAuthClient = BlizzardHttpAuthClient(client, blizzardCredentials)
     val blizzardClient = BlizzardHttpClient(client, defaultRetryConfig, blizzardAuthClient)

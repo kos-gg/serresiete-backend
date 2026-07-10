@@ -18,7 +18,7 @@ import kotlin.test.fail
 
 class RaiderIoHTTPClientTest {
 
-    private val raiderIoClient = RaiderIoHTTPClient(client, RetryConfig(0, 0))
+    private val raiderIoClient = RaiderIoHTTPClient(client, RetryConfig(0, 0), apiKey = "test-key")
 
     @Test
     fun `test get() method with successful response`() {
