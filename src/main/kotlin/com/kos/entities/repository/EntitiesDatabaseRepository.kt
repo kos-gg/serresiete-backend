@@ -350,37 +350,34 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
             }
         }
 
-    override suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long): List<Entity> {
-
-        return newSuspendedTransaction(Dispatchers.IO, db) {
+    override suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long): List<Entity> =
+        newSuspendedTransaction(Dispatchers.IO, db) {
             when (game) {
-                Game.WOW -> WowEntities.selectAll().map { resultRowToWowEntity(it) }
-                Game.LOL -> {
-                    val subQuery = DataCacheDatabaseRepository.DataCaches
-                        .select(
-                            DataCacheDatabaseRepository.DataCaches.entityId,
-                            DataCacheDatabaseRepository.DataCaches.inserted.max().alias("inserted")
-                        )
-                        .groupBy(DataCacheDatabaseRepository.DataCaches.entityId)
-
-                    val subQueryAliased = subQuery.alias("dc")
-
-                    val thirtyMinutesAgo = OffsetDateTime.now().minusMinutes(olderThanMinutes).toString()
-                    LolEntities
-                        .leftJoin(
-                            subQueryAliased,
-                            { id },
-                            { subQueryAliased[DataCacheDatabaseRepository.DataCaches.entityId] })
-                        .selectAll().where {
-                            (subQueryAliased[DataCacheDatabaseRepository.DataCaches.inserted].isNull()) or
-                                    (subQueryAliased[DataCacheDatabaseRepository.DataCaches.inserted] lessEq thirtyMinutesAgo)
-                        }
-                        .map { resultRowToLolEntity(it) }
-                }
-
+                Game.WOW -> entitiesOlderThan(WowEntities.id, olderThanMinutes, ::resultRowToWowEntity)
+                Game.LOL -> entitiesOlderThan(LolEntities.id, olderThanMinutes, ::resultRowToLolEntity)
                 Game.WOW_HC -> WowHardcoreEntities.selectAll().map { resultRowToWowHardcoreEntity(it) }
             }
         }
+
+    private fun entitiesOlderThan(
+        entityIdColumn: Column<Long>,
+        olderThanMinutes: Long,
+        mapper: (ResultRow) -> Entity
+    ): List<Entity> {
+        val caches = DataCacheDatabaseRepository.DataCaches
+        val subQuery = caches
+            .select(caches.entityId, caches.inserted.max().alias("inserted"))
+            .groupBy(caches.entityId)
+        val subQueryAliased = subQuery.alias("dc")
+        val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes).toString()
+
+        return entityIdColumn.table
+            .leftJoin(subQueryAliased, { entityIdColumn }, { subQueryAliased[caches.entityId] })
+            .selectAll().where {
+                subQueryAliased[caches.inserted].isNull() or
+                        (subQueryAliased[caches.inserted] lessEq threshold)
+            }
+            .map(mapper)
     }
 
     override suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> {
