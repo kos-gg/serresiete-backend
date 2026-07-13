@@ -1,4 +1,17 @@
 # Changelog
+## [5.6.0] - 12-07-2026
+
+### Improved
+- **`RaiderIoHTTPClient` rate limiting and API key support**:
+    - All requests now include an `access_key` query parameter sourced from the `RAIDERIO_API_KEY` environment variable.
+    - A Resilience4j `RateLimiter` (1000 requests/min, 5s timeout) is applied transparently via a single internal `apiGet()` wrapper, covering all client methods without changes at the call site.
+- **WoW and WoW HC sync refactored to channel-based concurrent pattern**:
+    - Both synchronizers now use a producer/consumer architecture with `asFlow().buffer(10)` for concurrent entity fetching and a `Channel<DataCache>` with `buffer(50)` for decoupled DB writes.
+    - Per-entity errors are isolated — a failed sync for one entity no longer aborts the rest.
+    - Season and cutoff data are fetched once upfront for all entities rather than once per entity.
+- **30-minute cache filter applied to WoW entity selection**:
+    - `getEntitiesToSync` for WoW now skips entities synced within the last 30 minutes, matching the existing LoL behaviour. Entities with no cache entry are always included.
+
 ## [5.5.0] - 18-05-2026
 
 ### Added
