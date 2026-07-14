@@ -18,11 +18,13 @@ import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
+import com.kos.datacache.DataCache
 import com.kos.tasks.Status
 import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
+import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -35,7 +37,7 @@ class CacheWowDataTaskRunnerTest {
 
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val dataCacheRepo = DataCacheInMemoryRepository()
-    private val entitiesRepository = EntitiesInMemoryRepository()
+    private val entitiesRepository = EntitiesInMemoryRepository(dataCacheRepo)
     private val wowSeasonsRepository = WowSeasonInMemoryRepository()
     private val entitiesService = EntitiesService(
         entitiesRepository,
@@ -71,5 +73,38 @@ class CacheWowDataTaskRunnerTest {
         assertEquals(id, task.id)
         assertEquals(TaskType.CACHE_WOW_DATA_TASK, task.type)
         assertEquals(Status.SUCCESSFUL, task.taskStatus.status)
+    }
+
+    @Test
+    fun `wow entity with fresh cache is not synced`() = runBlocking {
+        entitiesRepository.withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
+        dataCacheRepo.insert(listOf(DataCache(basicWowEntity.id, "{}", OffsetDateTime.now(), Game.WOW)))
+
+        val id = UUID.randomUUID().toString()
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+
+        runner.run(id, null)
+
+        assertEquals(1, dataCacheRepo.state().size)
+    }
+
+    @Test
+    fun `wow entity with stale cache is synced`() = runBlocking {
+        entitiesRepository.withState(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
+        dataCacheRepo.insert(listOf(DataCache(basicWowEntity.id, "{}", OffsetDateTime.now().minusMinutes(31), Game.WOW)))
+        val season = WowSeason(1, "Default Season", "default-season", 1, "", true)
+        wowSeasonsRepository.withState(WowSeasonsState(listOf(season)))
+
+        val run = RaiderIoHttpClientHelper.mythicPlusRun
+        `when`(raiderIoClient.get(basicWowEntity)).thenReturn(RaiderIoMockHelper.get(basicWowEntity))
+        `when`(raiderIoClient.cutoff(season.slug)).thenReturn(RaiderIoMockHelper.cutoff())
+        `when`(raiderIoClient.getRunDetails(season.slug, run.runId.toString())).thenReturn(Either.Right(runDetails))
+
+        val id = UUID.randomUUID().toString()
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+
+        runner.run(id, null)
+
+        assertEquals(2, dataCacheRepo.state().size)
     }
 }

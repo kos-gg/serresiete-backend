@@ -2,7 +2,6 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import arrow.core.raise.either
-import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
@@ -10,7 +9,6 @@ import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
-import com.kos.common.split
 import com.kos.datacache.DataCache
 import com.kos.datacache.EntitySynchronizer
 import com.kos.datacache.repository.DataCacheRepository
@@ -18,7 +16,12 @@ import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntity
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -26,6 +29,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Duration
 import java.time.OffsetDateTime
 
 class WowEntitySynchronizer(
@@ -48,7 +52,26 @@ class WowEntitySynchronizer(
     @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
+            val dataChannel = Channel<DataCache>()
+            val errorsChannel = Channel<ServiceError>()
+            val errorsList = mutableListOf<ServiceError>()
             val runDetailsCache = DynamicCache<Either<ServiceError, RunDetails>>()
+
+            val errorsCollector = launch {
+                errorsChannel.consumeAsFlow().collect { error ->
+                    logger.error(error.toString())
+                    errorsList.add(error)
+                }
+            }
+
+            val dataCollector = launch {
+                dataChannel.consumeAsFlow()
+                    .buffer(50)
+                    .collect { data ->
+                        dataCacheRepository.insert(listOf(data))
+                        logger.info("Cached entity ${data.entityId}")
+                    }
+            }
 
             entities as List<WowEntity>
 
@@ -57,50 +80,77 @@ class WowEntitySynchronizer(
                 logger.warn("No current season found — cutoff and quantile will be skipped for this sync")
             }
 
-            val syncResult = either {
-
-                val cutoff = currentSeasonSlug?.let {
-                    executeClientCall("raiderIoCutoff") { raiderIoClient.cutoff(it) }.bind()
-                }
-
-                val (profileErrors, profiles) = entities.parMap { entity ->
-                    executeClientCall("raiderIoGet") {
-                        raiderIoClient.get(entity).map { Pair(entity.id, it) }
-                    }
-                }.split()
-
-                val data = profiles.parMap { (entityId, raiderIoResponse) ->
-                    val newestDataCacheEntry: RaiderIoData? = getNewestDataCacheEntry(entityId)
-                    val quantile = getQuantile(cutoff, raiderIoResponse)
-                    val enrichedRuns = fetchRunDetails(
-                        raiderIoResponse.profile.mythicPlusBestRuns,
-                        currentSeasonSlug,
-                        runDetailsCache,
-                        newestDataCacheEntry
-                    )
-
-                    DataCache(
-                        entityId,
-                        json.encodeToString<Data>(
-                            raiderIoResponse.profile.toRaiderIoData(
-                                entityId,
-                                quantile,
-                                raiderIoResponse.specs,
-                                enrichedRuns
-                            )
-                        ),
-                        OffsetDateTime.now(),
-                        Game.WOW
-                    )
-                }
-
-                dataCacheRepository.insert(data)
-                data.forEach { logger.info("Cached entity ${it.entityId}") }
-
-                profileErrors
+            val cutoff = currentSeasonSlug?.let {
+                executeClientCall("raiderIoCutoff") { raiderIoClient.cutoff(it) }
+                    .onLeft { logger.warn("Failed to fetch cutoff, quantile will be null for this sync: ${it.error()}") }
+                    .getOrNull()
             }
 
-            syncResult.fold({ listOf(it) }, { it })
+            val start = OffsetDateTime.now()
+            entities.asFlow()
+                .buffer(10)
+                .collect { entity ->
+                    synchronizeWowEntity(entity, currentSeasonSlug, cutoff, runDetailsCache)
+                        .fold(
+                            ifLeft = { errorsChannel.send(it) },
+                            ifRight = { dataChannel.send(it) }
+                        )
+                }
+
+            errorsChannel.close()
+            dataChannel.close()
+
+            errorsCollector.join()
+            dataCollector.join()
+
+            logger.info("Finished Caching Wow entities")
+            logger.debug(
+                "cached ${entities.size} entities in ${
+                    Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
+                } minutes"
+            )
+            logger.debug("dynamic match cache hit rate: ${runDetailsCache.hitRate}%")
+
+            errorsList
+        }
+
+
+    private suspend fun synchronizeWowEntity(
+        entity: WowEntity,
+        season: String?,
+        cutoff: RaiderIoCutoff?,
+        runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
+    ): Either<ServiceError, DataCache> =
+        either {
+
+            val newestDataCacheEntry: RaiderIoData? = getNewestDataCacheEntry(entity.id)
+
+            val raiderIoResponse = executeClientCall("raiderIoGet") {
+                raiderIoClient.get(entity)
+            }.bind()
+
+            val quantile = getQuantile(cutoff, raiderIoResponse)
+
+            val enrichedRuns = fetchRunDetails(
+                raiderIoResponse.profile.mythicPlusBestRuns,
+                season,
+                runDetailsCache,
+                newestDataCacheEntry
+            )
+
+            DataCache(
+                entity.id,
+                json.encodeToString<Data>(
+                    raiderIoResponse.profile.toRaiderIoData(
+                        entity.id,
+                        quantile,
+                        raiderIoResponse.specs,
+                        enrichedRuns
+                    )
+                ),
+                OffsetDateTime.now(),
+                Game.WOW
+            )
         }
 
     private suspend fun getNewestDataCacheEntry(entityId: Long): RaiderIoData? =

@@ -75,7 +75,7 @@ data class TestSubscriptions(
 fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
 
     val retryConfig = RetryConfig(maxAttempts = 1, delayTime = 0)
-    val raiderIoHTTPClient = RaiderIoHTTPClient(mockHttpClient, retryConfig)
+    val raiderIoHTTPClient = RaiderIoHTTPClient(mockHttpClient, retryConfig, apiKey = "test-key")
     val riotHTTPClient = RiotHTTPClient(mockHttpClient, retryConfig, "test-api-key")
     val blizzardAuthClient = BlizzardHttpAuthClient(mockHttpClient, BlizzardCredentials("id", "secret"))
     val blizzardClient = BlizzardHttpClient(mockHttpClient, retryConfig, blizzardAuthClient)

@@ -221,7 +221,10 @@ class EntitiesInMemoryRepository(
         val now = OffsetDateTime.now()
 
         return when (game) {
-            Game.WOW -> wowEntities
+            Game.WOW -> wowEntities.filter { entity ->
+                val newestCachedRecord = dataCacheRepository.get(entity.id).maxByOrNull { it.inserted }
+                newestCachedRecord == null || newestCachedRecord.inserted.isBefore(now.minusMinutes(olderThanMinutes))
+            }
             Game.WOW_HC -> wowHardcoreEntities
             Game.LOL -> {
                 lolEntities.filter { entity ->
