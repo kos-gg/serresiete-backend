@@ -37,7 +37,7 @@ class CacheWowDataTaskRunnerTest {
 
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val dataCacheRepo = DataCacheInMemoryRepository()
-    private val entitiesRepository = EntitiesInMemoryRepository()
+    private val entitiesRepository = EntitiesInMemoryRepository(dataCacheRepo)
     private val wowSeasonsRepository = WowSeasonInMemoryRepository()
     private val entitiesService = EntitiesService(
         entitiesRepository,
