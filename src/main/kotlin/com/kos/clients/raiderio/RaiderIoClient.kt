@@ -6,6 +6,7 @@ import com.kos.clients.domain.*
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 
+
 interface RaiderIoClient {
     suspend fun get(wowEntity: WowEntity): Either<ClientError, RaiderIoResponse>
     suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, ExpansionSeasons>
@@ -13,5 +14,9 @@ interface RaiderIoClient {
 
     suspend fun exists(wowEntityRequest: WowEntityRequest): Boolean
     suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff>
-    suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse>
+    suspend fun wowheadEmbeddedCalculator(
+        region: String,
+        realm: String,
+        name: String
+    ): Either<ClientError, RaiderioWowHeadEmbeddedResponse>
 }

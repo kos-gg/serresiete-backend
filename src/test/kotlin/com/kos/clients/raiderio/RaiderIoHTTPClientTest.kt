@@ -81,7 +81,7 @@ class RaiderIoHTTPClientTest {
     fun `test wowheadEmbeddedCalculator() method with successful response`() {
         runBlocking {
             val result: Either<ClientError, RaiderioWowHeadEmbeddedResponse> =
-                raiderIoClient.wowheadEmbeddedCalculator(WowEntity(1, "Surmana", "eu", "Soulseeker", null))
+                raiderIoClient.wowheadEmbeddedCalculator("eu", "Soulseeker", "Surmana")
             result.onLeft { fail() }
             result.onRight {
                 assertNotNull(it.talentLoadout)

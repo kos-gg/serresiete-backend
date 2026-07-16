@@ -25,14 +25,6 @@ data class SyncProcessingError(
     override fun error(): String = "$type: $message"
 }
 
-data class WowHardcoreCharacterIsDead(
-    val character: String,
-    val characterId: Long
-) : ServiceError() {
-    override fun error(): String =
-        "Character with name [$character] and id [$characterId] could not be synced because it is dead"
-}
-
 data class NonHardcoreCharacter(
     val wowEntity: WowEntityRequest
 ) : ServiceError() {

@@ -47,15 +47,14 @@ class LolEntitySynchronizer(
         encodeDefaults = false
     }
 
-    @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
+            val lolEntities = entities.filterIsInstance<LolEntity>()
+
             val dataChannel = Channel<DataCache>()
             val errorsChannel = Channel<ServiceError>()
             val errorsList = mutableListOf<ServiceError>()
             val matchCache = DynamicCache<Either<ServiceError, GetMatchResponse>>()
-
-            entities as List<LolEntity>
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -74,7 +73,7 @@ class LolEntitySynchronizer(
             }
 
             val start = OffsetDateTime.now()
-            entities.asFlow()
+            lolEntities.asFlow()
                 .buffer(10)
                 .collect { lolEntity ->
                     val result = cacheLolEntity(lolEntity, matchCache)
@@ -100,11 +99,7 @@ class LolEntitySynchronizer(
             dataCollector.join()
 
             logger.info("Finished Caching Lol entities")
-            logger.debug(
-                "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
-                } minutes"
-            )
+            logger.debug("cached ${entities.size} entities in ${Duration.between(start, OffsetDateTime.now()).toMinutes()} minutes")
             logger.debug("dynamic match cache hit rate: ${matchCache.hitRate}%")
             errorsList
         }
