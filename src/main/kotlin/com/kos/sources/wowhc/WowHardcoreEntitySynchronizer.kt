@@ -12,7 +12,6 @@ import com.kos.common.WithLogger
 import com.kos.common._fold
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
-import com.kos.common.error.WowHardcoreCharacterIsDead
 import com.kos.common.fold
 import com.kos.common.split
 import com.kos.datacache.DataCache
@@ -55,11 +54,10 @@ class WowHardcoreEntitySynchronizer(
         encodeDefaults = false
     }
 
-    override fun isSyncError(error: ServiceError) = error !is WowHardcoreCharacterIsDead
-
-    @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
+            val wowEntities = entities.filterIsInstance<WowEntity>()
+
             val dataChannel = Channel<DataCache>()
             val errorChannel = Channel<ServiceError>()
             val errors = mutableListOf<ServiceError>()
@@ -80,17 +78,16 @@ class WowHardcoreEntitySynchronizer(
                     }
             }
 
-            entities as List<WowEntity>
-
             val start = OffsetDateTime.now()
-            entities.asFlow()
+            wowEntities
+                .asFlow()
                 .buffer(10)
                 .collect {
                     synchronizeWowHcEntity(it)
                         .fold(
                             ifLeft = { errorChannel.send(it) },
                             ifRight = {
-                                dataChannel.send(it)
+                                it?.let { dataChannel.send(it) }
                             }
                         )
                 }
@@ -104,14 +101,14 @@ class WowHardcoreEntitySynchronizer(
             logger.info("Finished Caching Wow HC entities")
             logger.debug(
                 "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
+                    Duration.between(start, OffsetDateTime.now()).toMinutes()
                 } minutes"
             )
 
             errors
         }
 
-    private suspend fun synchronizeWowHcEntity(entity: WowEntity): Either<ServiceError, DataCache> =
+    private suspend fun synchronizeWowHcEntity(entity: WowEntity): Either<ServiceError, DataCache?> =
         either {
             val newestDataCacheEntry: HardcoreData? =
                 dataCacheRepository.get(entity.id).maxByOrNull {
@@ -128,7 +125,7 @@ class WowHardcoreEntitySynchronizer(
                 }
 
             if (newestDataCacheEntry?.isDead == true) {
-                raise(WowHardcoreCharacterIsDead(entity.name, entity.id))
+                return@either null
             }
 
             val hardcoreData: HardcoreData = blizzardClient.getCharacterProfile(
@@ -182,7 +179,7 @@ class WowHardcoreEntitySynchronizer(
                         }.bind()
 
                         val wowHeadEmbeddedResponse = execute("wowheadEmbeddedCalculator") {
-                            raiderIoClient.wowheadEmbeddedCalculator(entity)
+                            raiderIoClient.wowheadEmbeddedCalculator(entity.region, entity.realm, entity.name)
                         }.getOrNull()
 
                         val existentItemsAndItemsToRequest =

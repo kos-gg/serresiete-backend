@@ -134,8 +134,12 @@ data class RaiderIoHTTPClient(
         )
     }
 
-    override suspend fun wowheadEmbeddedCalculator(wowEntity: WowEntity): Either<ClientError, RaiderioWowHeadEmbeddedResponse> {
-        logger.debug("Getting Wowhead talents for entity {}", wowEntity)
+    override suspend fun wowheadEmbeddedCalculator(
+        region: String,
+        realm: String,
+        name: String
+    ): Either<ClientError, RaiderioWowHeadEmbeddedResponse> {
+        logger.debug("Getting Wowhead talents for {}/{}/{}", region, realm, name)
         return retryEitherWithFixedDelay(
             retryConfig = retryConfig,
             functionName = "getRaiderioWowHeadEmbeddedResponse",
@@ -146,9 +150,9 @@ data class RaiderIoHTTPClient(
                         append(HttpHeaders.Accept, "*/*")
                     }
                     url {
-                        parameters.append("region", wowEntity.region)
-                        parameters.append("realm", wowEntity.realm)
-                        parameters.append("name", wowEntity.name)
+                        parameters.append("region", region)
+                        parameters.append("realm", realm)
+                        parameters.append("name", name)
                         parameters.append("fields", "talents")
                     }
                 }

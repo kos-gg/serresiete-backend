@@ -47,11 +47,13 @@ class CacheGameViewDataTaskRunner(
                 logger.info("Running $type for game=${view.game} viewId=${view.id}")
                 val entities = view.entitiesIds.mapNotNull { entitiesService.get(it, view.game) }
                 val synchronizer = entitySynchronizerProvider.synchronizerFor(view.game)
+
                 val errors = synchronizer.fold(
                     left = { listOf(SynchronizerNotFound(view.game)) },
-                    right = { it.synchronize(entities)
-                        .filter { syncErrors -> synchronizer?.isSyncError(syncErrors) == true }}
-                )
+                    right = {
+                        it.synchronize(entities)
+                    })
+
                 if (errors.isEmpty()) {
                     val syncedAt = OffsetDateTime.now()
                     viewsService.updateLastSyncedAt(view.id, syncedAt)

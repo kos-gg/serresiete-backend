@@ -264,7 +264,11 @@ class WowHardcoreCacheServiceTest {
                 )
             ).thenReturn(getWowItemResponse())
             `when`(
-                raiderIoClient.wowheadEmbeddedCalculator(basicWowHardcoreEntity)
+                raiderIoClient.wowheadEmbeddedCalculator(
+                    basicWowHardcoreEntity.region,
+                    basicWowHardcoreEntity.realm,
+                    basicWowHardcoreEntity.name
+                )
             ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(

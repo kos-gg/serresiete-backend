@@ -49,9 +49,10 @@ class WowEntitySynchronizer(
         encodeDefaults = false
     }
 
-    @Suppress("UNCHECKED_CAST")
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
+            val wowEntities = entities.filterIsInstance<WowEntity>()
+
             val dataChannel = Channel<DataCache>()
             val errorsChannel = Channel<ServiceError>()
             val errorsList = mutableListOf<ServiceError>()
@@ -73,8 +74,6 @@ class WowEntitySynchronizer(
                     }
             }
 
-            entities as List<WowEntity>
-
             val currentSeasonSlug = wowSeasonRepository.getCurrentSeason()?.slug?.takeIf { it.isNotBlank() }
             if (currentSeasonSlug == null) {
                 logger.warn("No current season found — cutoff and quantile will be skipped for this sync")
@@ -87,7 +86,7 @@ class WowEntitySynchronizer(
             }
 
             val start = OffsetDateTime.now()
-            entities.asFlow()
+            wowEntities.asFlow()
                 .buffer(10)
                 .collect { entity ->
                     synchronizeWowEntity(entity, currentSeasonSlug, cutoff, runDetailsCache)
@@ -104,11 +103,7 @@ class WowEntitySynchronizer(
             dataCollector.join()
 
             logger.info("Finished Caching Wow entities")
-            logger.debug(
-                "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toSeconds() / 60.0
-                } minutes"
-            )
+            logger.debug("cached ${entities.size} entities in ${Duration.between(start, OffsetDateTime.now()).toMinutes()} minutes")
             logger.debug("dynamic match cache hit rate: ${runDetailsCache.hitRate}%")
 
             errorsList

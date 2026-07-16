@@ -9,5 +9,4 @@ interface EntitySynchronizer {
     val game: Game
     val json: Json
     suspend fun synchronize(entities: List<Entity>): List<ServiceError>
-    fun isSyncError(error: ServiceError): Boolean = true
 }

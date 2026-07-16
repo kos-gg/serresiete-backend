@@ -45,7 +45,15 @@ class CacheWowHcDataTaskRunnerTest {
         mock()
     )
     private val entitySynchronizerProvider = EntitySynchronizerProvider(
-        listOf(WowHardcoreEntitySynchronizer(dataCacheRepo, entitiesRepository, raiderIoClient, blizzardClient, wowItemsDatabaseRepository))
+        listOf(
+            WowHardcoreEntitySynchronizer(
+                dataCacheRepo,
+                entitiesRepository,
+                raiderIoClient,
+                blizzardClient,
+                wowItemsDatabaseRepository
+            )
+        )
     )
     private val tasksRepo = TasksInMemoryRepository()
     private val runner = CacheWowHcDataTaskRunner(tasksRepo, entitiesService, entitySynchronizerProvider)
@@ -54,19 +62,65 @@ class CacheWowHcDataTaskRunnerTest {
     fun `wow hc entities are synced and task is recorded as successful`() = runBlocking {
         entitiesRepository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
 
-        `when`(blizzardClient.getCharacterProfile(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
+        `when`(
+            blizzardClient.getCharacterProfile(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
+        )
             .thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowHardcoreEntity).map { it.copy(id = 12345) })
-        `when`(blizzardClient.getCharacterMedia(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
+        `when`(
+            blizzardClient.getCharacterMedia(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
+        )
             .thenReturn(BlizzardMockHelper.getCharacterMedia(basicWowHardcoreEntity))
-        `when`(blizzardClient.getCharacterEquipment(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
+        `when`(
+            blizzardClient.getCharacterEquipment(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
+        )
             .thenReturn(BlizzardMockHelper.getCharacterEquipment())
-        `when`(blizzardClient.getCharacterStats(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
+        `when`(
+            blizzardClient.getCharacterStats(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
+        )
             .thenReturn(BlizzardMockHelper.getCharacterStats())
-        `when`(blizzardClient.getCharacterSpecializations(basicWowHardcoreEntity.region, basicWowHardcoreEntity.realm, basicWowHardcoreEntity.name))
+        `when`(
+            blizzardClient.getCharacterSpecializations(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
+        )
             .thenReturn(BlizzardMockHelper.getCharacterSpecializations())
-        `when`(blizzardClient.getItem(basicWowHardcoreEntity.region, 18421)).thenReturn(BlizzardMockHelper.getWowItemResponse())
-        `when`(blizzardClient.getItemMedia(basicWowHardcoreEntity.region, 18421)).thenReturn(BlizzardMockHelper.getItemMedia())
-        `when`(raiderIoClient.wowheadEmbeddedCalculator(basicWowHardcoreEntity))
+        `when`(
+            blizzardClient.getItem(
+                basicWowHardcoreEntity.region,
+                18421
+            )
+        ).thenReturn(BlizzardMockHelper.getWowItemResponse())
+        `when`(
+            blizzardClient.getItemMedia(
+                basicWowHardcoreEntity.region,
+                18421
+            )
+        ).thenReturn(BlizzardMockHelper.getItemMedia())
+        `when`(
+            raiderIoClient.wowheadEmbeddedCalculator(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
+        )
             .thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
 
         val id = UUID.randomUUID().toString()
@@ -85,7 +139,14 @@ class CacheWowHcDataTaskRunnerTest {
     fun `dead wow hardcore entities are non-fatal and task is recorded as successful`() = runBlocking {
         entitiesRepository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
         dataCacheRepo.withState(
-            listOf(wowHardcoreDataCache.copy(data = wowHardcoreDataCache.data.replace(""""isDead": false""", """"isDead": true""")))
+            listOf(
+                wowHardcoreDataCache.copy(
+                    data = wowHardcoreDataCache.data.replace(
+                        """"isDead": false""",
+                        """"isDead": true"""
+                    )
+                )
+            )
         )
 
         val id = UUID.randomUUID().toString()

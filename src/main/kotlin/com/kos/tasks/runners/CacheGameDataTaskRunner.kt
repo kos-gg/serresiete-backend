@@ -29,7 +29,6 @@ abstract class CacheGameDataTaskRunner(
             left = { listOf(SynchronizerNotFound(game)) },
             right = {
                 it.synchronize(entities)
-                    .filter { syncErrors -> synchronizer?.isSyncError(syncErrors) == true }
             }
         )
         if (errors.isEmpty()) {

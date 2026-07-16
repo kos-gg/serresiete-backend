@@ -20,71 +20,10 @@ import org.mockito.Mockito.`when`
 import kotlin.test.Test
 
 class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
+
     @Test
     fun `syncWowHcCharactersProcessor calls cache on VIEW_CREATED with WOW_HC game`() = runBlocking {
-        `when`(
-            blizzardClient.getCharacterProfile(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(
-            BlizzardMockHelper.getCharacterProfile(
-                EntitiesTestHelper.basicWowEntity
-            )
-        )
-        `when`(
-            blizzardClient.getCharacterMedia(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(
-            BlizzardMockHelper.getCharacterMedia(
-                EntitiesTestHelper.basicWowEntity
-            )
-        )
-        `when`(
-            blizzardClient.getCharacterEquipment(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterEquipment())
-
-        `when`(
-            blizzardClient.getCharacterStats(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterStats())
-
-        `when`(
-            blizzardClient.getCharacterSpecializations(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterSpecializations())
-
-        `when`(
-            blizzardClient.getItemMedia(
-                EntitiesTestHelper.basicWowEntity.region,
-                18421
-            )
-        ).thenReturn(BlizzardMockHelper.getItemMedia())
-
-        `when`(
-            blizzardClient.getItem(
-                EntitiesTestHelper.basicWowEntity.region,
-                18421
-            )
-        ).thenReturn(BlizzardMockHelper.getWowItemResponse())
-
-        `when`(
-            raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
-        ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+        stubWowHcEntitySync()
 
         val (charactersService, dataCacheRepository) = createService()
 
@@ -124,69 +63,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `syncWowHcCharactersProcessor calls cache on VIEW_EDITED with WOW game`() = runBlocking {
-        `when`(
-            blizzardClient.getCharacterProfile(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(
-            BlizzardMockHelper.getCharacterProfile(
-                EntitiesTestHelper.basicWowEntity
-            )
-        )
-        `when`(
-            blizzardClient.getCharacterMedia(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(
-            BlizzardMockHelper.getCharacterMedia(
-                EntitiesTestHelper.basicWowEntity
-            )
-        )
-        `when`(
-            blizzardClient.getCharacterEquipment(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterEquipment())
-
-        `when`(
-            blizzardClient.getCharacterStats(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterStats())
-
-        `when`(
-            blizzardClient.getCharacterSpecializations(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterSpecializations())
-
-        `when`(
-            blizzardClient.getItemMedia(
-                EntitiesTestHelper.basicWowEntity.region,
-                18421
-            )
-        ).thenReturn(BlizzardMockHelper.getItemMedia())
-
-        `when`(
-            blizzardClient.getItem(
-                EntitiesTestHelper.basicWowEntity.region,
-                18421
-            )
-        ).thenReturn(BlizzardMockHelper.getWowItemResponse())
-
-        `when`(
-            raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
-        ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+        stubWowHcEntitySync()
 
         val (charactersService, dataCacheRepository) = createService()
 
@@ -225,69 +102,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
 
     @Test
     fun `syncWowHcCharactersProcessor calls cache on VIEW_PATCHED with WOW game`() = runBlocking {
-        `when`(
-            blizzardClient.getCharacterProfile(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(
-            BlizzardMockHelper.getCharacterProfile(
-                EntitiesTestHelper.basicWowEntity
-            )
-        )
-        `when`(
-            blizzardClient.getCharacterMedia(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(
-            BlizzardMockHelper.getCharacterMedia(
-                EntitiesTestHelper.basicWowEntity
-            )
-        )
-        `when`(
-            blizzardClient.getCharacterEquipment(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterEquipment())
-
-        `when`(
-            blizzardClient.getCharacterStats(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterStats())
-
-        `when`(
-            blizzardClient.getCharacterSpecializations(
-                EntitiesTestHelper.basicWowEntity.region,
-                EntitiesTestHelper.basicWowEntity.realm,
-                EntitiesTestHelper.basicWowEntity.name
-            )
-        ).thenReturn(BlizzardMockHelper.getCharacterSpecializations())
-
-        `when`(
-            blizzardClient.getItemMedia(
-                EntitiesTestHelper.basicWowEntity.region,
-                18421
-            )
-        ).thenReturn(BlizzardMockHelper.getItemMedia())
-
-        `when`(
-            blizzardClient.getItem(
-                EntitiesTestHelper.basicWowEntity.region,
-                18421
-            )
-        ).thenReturn(BlizzardMockHelper.getWowItemResponse())
-
-        `when`(
-            raiderIoClient.wowheadEmbeddedCalculator(EntitiesTestHelper.basicWowEntity)
-        ).thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+        stubWowHcEntitySync()
 
         val (charactersService, dataCacheRepository) = createService()
 
@@ -363,5 +178,25 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
                 0
             )
         }
+    }
+
+    private suspend fun stubWowHcEntitySync() {
+        val entity = EntitiesTestHelper.basicWowEntity
+        `when`(blizzardClient.getCharacterProfile(entity.region, entity.realm, entity.name))
+            .thenReturn(BlizzardMockHelper.getCharacterProfile(entity))
+        `when`(blizzardClient.getCharacterMedia(entity.region, entity.realm, entity.name))
+            .thenReturn(BlizzardMockHelper.getCharacterMedia(entity))
+        `when`(blizzardClient.getCharacterEquipment(entity.region, entity.realm, entity.name))
+            .thenReturn(BlizzardMockHelper.getCharacterEquipment())
+        `when`(blizzardClient.getCharacterStats(entity.region, entity.realm, entity.name))
+            .thenReturn(BlizzardMockHelper.getCharacterStats())
+        `when`(blizzardClient.getCharacterSpecializations(entity.region, entity.realm, entity.name))
+            .thenReturn(BlizzardMockHelper.getCharacterSpecializations())
+        `when`(blizzardClient.getItemMedia(entity.region, 18421))
+            .thenReturn(BlizzardMockHelper.getItemMedia())
+        `when`(blizzardClient.getItem(entity.region, 18421))
+            .thenReturn(BlizzardMockHelper.getWowItemResponse())
+        `when`(raiderIoClient.wowheadEmbeddedCalculator(entity.region, entity.realm, entity.name))
+            .thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
     }
 }
