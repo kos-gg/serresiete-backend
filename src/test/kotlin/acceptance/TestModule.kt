@@ -17,13 +17,16 @@ import com.kos.credentials.CredentialsController
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
-import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
+import com.kos.entities.sync.EntitySynchronizerProvider
+import com.kos.entities.sync.SyncEntitySelector
+import com.kos.entities.sync.rules.StalenessSyncRule
+import com.kos.entities.sync.SyncBudget
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
@@ -58,6 +61,7 @@ import com.kos.tasks.TasksController
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.tasks.runners.*
+import com.kos.views.Game
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -144,6 +148,13 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val sourcesService = SourcesService(wowSeasonService)
     val sourcesController = SourcesController(sourcesService)
 
+    val stalenessRule = StalenessSyncRule(
+        entitiesRepository,
+        30,
+        SyncBudget(mapOf(Game.LOL to Int.MAX_VALUE, Game.WOW to Int.MAX_VALUE, Game.WOW_HC to Int.MAX_VALUE))
+    )
+    val syncEntitySelector = SyncEntitySelector(stalenessRule)
+
     val tasksRepository = TasksDatabaseRepository(db)
     val taskRunnerProvider = TaskRunnerProvider(
         listOf(
@@ -153,9 +164,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
-            CacheLolDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheWowDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheWowHcDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
+            CacheLolDataTaskRunner(tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheWowDataTaskRunner(tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheWowHcDataTaskRunner(tasksRepository, syncEntitySelector, entitySynchronizerProvider),
             CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, 300L)
         )
     )

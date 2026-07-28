@@ -329,9 +329,9 @@ abstract class EntitiesRepositoryTestCommon {
                     DataCache(2, "", OffsetDateTime.now().minusMinutes(31), Game.LOL)
                 )
             )
-            val res = repoWithState.getEntitiesToSync(Game.LOL, 30)
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, Int.MAX_VALUE)
 
-            assertEquals(listOf<Long>(2, 3), res.map { it.id })
+            assertEquals(setOf<Long>(2, 3), res.map { it.id }.toSet())
         }
     }
 
@@ -363,7 +363,7 @@ abstract class EntitiesRepositoryTestCommon {
                     DataCache(3, "", OffsetDateTime.now().minusMinutes(31), Game.LOL)
                 )
             )
-            val res = repoWithState.getEntitiesToSync(Game.LOL, 30)
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, Int.MAX_VALUE)
 
             assertEquals(setOf<Long>(1, 2, 3), res.map { it.id }.toSet())
         }
@@ -390,7 +390,7 @@ abstract class EntitiesRepositoryTestCommon {
                 )
             )
 
-            val res = repoWithState.getEntitiesToSync(Game.LOL, 30)
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, Int.MAX_VALUE)
 
             assertEquals(setOf<Long>(1, 2, 3), res.map { it.id }.toSet())
         }
@@ -413,9 +413,79 @@ abstract class EntitiesRepositoryTestCommon {
                     DataCache(1, "", OffsetDateTime.now(), Game.LOL)
                 )
             )
-            val res = repoWithState.getEntitiesToSync(Game.LOL, 30)
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, Int.MAX_VALUE)
 
             assertEquals(listOf(), res.map { it.id })
+        }
+    }
+
+    @Test
+    fun `get characters to sync should filter WOW_HC characters by staleness just like other games`() {
+        runBlocking {
+            val wowHcEntities = (1..3).map {
+                WowEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it.toLong())
+            }
+            val repoWithState = repository.withState(EntitiesState(listOf(), wowHcEntities, listOf()))
+
+            dataCacheRepository.withState(
+                listOf(
+                    DataCache(1, "", OffsetDateTime.now(), Game.WOW_HC),
+                    DataCache(2, "", OffsetDateTime.now().minusMinutes(31), Game.WOW_HC)
+                )
+            )
+            val res = repoWithState.getEntitiesOlderThan(Game.WOW_HC, 30, Int.MAX_VALUE)
+
+            assertEquals(setOf<Long>(2, 3), res.map { it.id }.toSet())
+        }
+    }
+
+    @Test
+    fun `when there are more stale entities than the budget, only budget entities are returned`() {
+        runBlocking {
+            val lolEntities = (1..5).map {
+                LolEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it, it)
+            }
+            val repoWithState = repository.withState(EntitiesState(listOf(), listOf(), lolEntities))
+
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, 2)
+
+            assertEquals(2, res.size)
+        }
+    }
+
+    @Test
+    fun `when the budget is larger than the number of eligible entities, all eligible entities are returned`() {
+        runBlocking {
+            val lolEntities = (1..3).map {
+                LolEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it, it)
+            }
+            val repoWithState = repository.withState(EntitiesState(listOf(), listOf(), lolEntities))
+
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, 10)
+
+            assertEquals(setOf<Long>(1, 2, 3), res.map { it.id }.toSet())
+        }
+    }
+
+    @Test
+    fun `entities that have never been synced are prioritized over stale ones when the budget is exceeded`() {
+        runBlocking {
+            val lolEntities = (1..4).map {
+                LolEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it, it)
+            }
+            val repoWithState = repository.withState(EntitiesState(listOf(), listOf(), lolEntities))
+
+            dataCacheRepository.withState(
+                listOf(
+                    DataCache(3, "", OffsetDateTime.now().minusMinutes(40), Game.LOL),
+                    DataCache(4, "", OffsetDateTime.now().minusMinutes(35), Game.LOL)
+                )
+            )
+
+            val res = repoWithState.getEntitiesOlderThan(Game.LOL, 30, 3)
+
+            assertEquals(setOf<Long>(1, 2), res.map { it.id }.take(2).toSet())
+            assertEquals(3L, res.map { it.id }[2])
         }
     }
 

@@ -3,8 +3,8 @@ package com.kos.tasks.runners
 import com.kos.common.WithLogger
 import com.kos.common.error.SynchronizerNotFound
 import com.kos.common.fold
-import com.kos.datacache.EntitySynchronizerProvider
-import com.kos.entities.EntitiesService
+import com.kos.entities.sync.EntitySynchronizerProvider
+import com.kos.entities.sync.SyncEntitySelector
 import com.kos.tasks.Status
 import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
@@ -16,27 +16,26 @@ import java.time.OffsetDateTime
 abstract class CacheGameDataTaskRunner(
     protected val game: Game,
     private val tasksRepository: TasksRepository,
-    private val entitiesService: EntitiesService,
+    private val syncEntitySelector: SyncEntitySelector,
     private val entitySynchronizerProvider: EntitySynchronizerProvider
 ) : TaskRunner, WithLogger("cacheGameDataTaskRunner") {
 
     override suspend fun run(id: String, arguments: Map<String, String>?) {
         logger.info("Running $type")
-        val entities = entitiesService.getEntitiesToSync(game, 30)
+        val entities = syncEntitySelector.select(game)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
-        val synchronizer = entitySynchronizerProvider.synchronizerFor(game)
-        val errors = synchronizer.fold(
-            left = { listOf(SynchronizerNotFound(game)) },
-            right = {
-                it.synchronize(entities)
-            }
-        )
+        val errors = entitySynchronizerProvider.synchronizerFor(game)
+            .fold(
+                left = { listOf(SynchronizerNotFound(game)) },
+                right = { it.synchronize(entities) }
+            )
+
         if (errors.isEmpty()) {
             tasksRepository.updateTask(
                 Task(
                     id,
                     type,
-                    TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"),
+                    TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString(",")}"),
                     OffsetDateTime.now()
                 )
             )
@@ -55,24 +54,24 @@ abstract class CacheGameDataTaskRunner(
 
 class CacheLolDataTaskRunner(
     tasksRepository: TasksRepository,
-    entitiesService: EntitiesService,
+    syncEntitySelector: SyncEntitySelector,
     entitySynchronizerProvider: EntitySynchronizerProvider
-) : CacheGameDataTaskRunner(Game.LOL, tasksRepository, entitiesService, entitySynchronizerProvider) {
+) : CacheGameDataTaskRunner(Game.LOL, tasksRepository, syncEntitySelector, entitySynchronizerProvider) {
     override val type = TaskType.CACHE_LOL_DATA_TASK
 }
 
 class CacheWowDataTaskRunner(
     tasksRepository: TasksRepository,
-    entitiesService: EntitiesService,
+    syncEntitySelector: SyncEntitySelector,
     entitySynchronizerProvider: EntitySynchronizerProvider
-) : CacheGameDataTaskRunner(Game.WOW, tasksRepository, entitiesService, entitySynchronizerProvider) {
+) : CacheGameDataTaskRunner(Game.WOW, tasksRepository, syncEntitySelector, entitySynchronizerProvider) {
     override val type = TaskType.CACHE_WOW_DATA_TASK
 }
 
 class CacheWowHcDataTaskRunner(
     tasksRepository: TasksRepository,
-    entitiesService: EntitiesService,
+    syncEntitySelector: SyncEntitySelector,
     entitySynchronizerProvider: EntitySynchronizerProvider
-) : CacheGameDataTaskRunner(Game.WOW_HC, tasksRepository, entitiesService, entitySynchronizerProvider) {
+) : CacheGameDataTaskRunner(Game.WOW_HC, tasksRepository, syncEntitySelector, entitySynchronizerProvider) {
     override val type = TaskType.CACHE_WOW_HC_DATA_TASK
 }

@@ -217,23 +217,28 @@ class EntitiesInMemoryRepository(
         }
     }
 
-    override suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long): List<Entity> {
-        val now = OffsetDateTime.now()
+    override suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity> {
+        val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes)
 
         return when (game) {
-            Game.WOW -> wowEntities.filter { entity ->
-                val newestCachedRecord = dataCacheRepository.get(entity.id).maxByOrNull { it.inserted }
-                newestCachedRecord == null || newestCachedRecord.inserted.isBefore(now.minusMinutes(olderThanMinutes))
-            }
-            Game.WOW_HC -> wowHardcoreEntities
-            Game.LOL -> {
-                lolEntities.filter { entity ->
-                    val newestCachedRecord = dataCacheRepository.get(entity.id).maxByOrNull { it.inserted }
-                    newestCachedRecord == null || newestCachedRecord.inserted.isBefore(now.minusMinutes(olderThanMinutes))
-                }
-            }
+            Game.WOW -> entitiesOlderThan(wowEntities, threshold, maxEntities)
+            Game.WOW_HC -> entitiesOlderThan(wowHardcoreEntities, threshold, maxEntities)
+            Game.LOL -> entitiesOlderThan(lolEntities, threshold, maxEntities)
         }
     }
+
+    private suspend fun <T : Entity> entitiesOlderThan(
+        entities: List<T>,
+        threshold: OffsetDateTime,
+        maxEntities: Int
+    ): List<T> =
+        entities
+            .map { entity -> entity to dataCacheRepository.get(entity.id).maxByOrNull { it.inserted }?.inserted }
+            .filter { (_, newestInserted) -> newestInserted == null || newestInserted.isBefore(threshold) }
+            .sortedWith(compareBy(nullsFirst()) { (_, newestInserted) -> newestInserted })
+            .take(maxEntities)
+            .map { (entity, _) -> entity }
+
 
     override suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> {
         return viewsRepository.getViews(game, false, null, null)

@@ -10,7 +10,7 @@
     - Per-entity errors are isolated — a failed sync for one entity no longer aborts the rest.
     - Season and cutoff data are fetched once upfront for all entities rather than once per entity.
 - **30-minute cache filter applied to WoW entity selection**:
-    - `getEntitiesToSync` for WoW now skips entities synced within the last 30 minutes, matching the existing LoL behaviour. Entities with no cache entry are always included.
+    - `getEntitiesOlderThan` for WoW now skips entities synced within the last 30 minutes, matching the existing LoL behaviour. Entities with no cache entry are always included.
 
 ## [5.5.0] - 18-05-2026
 

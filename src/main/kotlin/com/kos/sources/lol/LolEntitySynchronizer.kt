@@ -11,10 +11,10 @@ import com.kos.common.WithLogger
 import com.kos.common._fold
 import com.kos.common.error.ServiceError
 import com.kos.datacache.DataCache
-import com.kos.datacache.EntitySynchronizer
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.LolEntity
+import com.kos.entities.sync.EntitySynchronizer
 import com.kos.views.Game
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

@@ -6,8 +6,8 @@ import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 import com.kos.common.error.toEntityResolverError
-import com.kos.datacache.EntitySynchronizer
 import com.kos.entities.EntitiesService
+import com.kos.entities.sync.EntitySynchronizer
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 

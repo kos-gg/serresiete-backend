@@ -1,4 +1,4 @@
-package com.kos.datacache
+package com.kos.entities.sync
 
 import com.kos.common.error.ServiceError
 import com.kos.entities.domain.Entity

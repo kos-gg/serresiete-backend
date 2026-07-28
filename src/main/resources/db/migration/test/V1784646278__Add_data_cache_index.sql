@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS data_cache_game_entity_id_inserted_idx ON data_cache (game, entity_id, inserted DESC);

@@ -5,8 +5,8 @@ import arrow.core.raise.ensure
 import com.kos.common.WithLogger
 import com.kos.common.error.SynchronizerNotFound
 import com.kos.common.fold
-import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.entities.EntitiesService
+import com.kos.entities.sync.EntitySynchronizerProvider
 import com.kos.tasks.Status
 import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
@@ -46,13 +46,13 @@ class CacheGameViewDataTaskRunner(
             { view ->
                 logger.info("Running $type for game=${view.game} viewId=${view.id}")
                 val entities = view.entitiesIds.mapNotNull { entitiesService.get(it, view.game) }
-                val synchronizer = entitySynchronizerProvider.synchronizerFor(view.game)
 
-                val errors = synchronizer.fold(
-                    left = { listOf(SynchronizerNotFound(view.game)) },
-                    right = {
-                        it.synchronize(entities)
-                    })
+                val errors = entitySynchronizerProvider.synchronizerFor(view.game)
+                    .fold(
+                        left = { listOf(SynchronizerNotFound(view.game)) },
+                        right = {
+                            it.synchronize(entities)
+                        })
 
                 if (errors.isEmpty()) {
                     val syncedAt = OffsetDateTime.now()

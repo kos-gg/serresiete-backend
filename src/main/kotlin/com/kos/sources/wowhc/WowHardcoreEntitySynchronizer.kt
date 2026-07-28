@@ -15,11 +15,11 @@ import com.kos.common.error.SyncProcessingError
 import com.kos.common.fold
 import com.kos.common.split
 import com.kos.datacache.DataCache
-import com.kos.datacache.EntitySynchronizer
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.sync.EntitySynchronizer
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.views.Game
 import kotlinx.coroutines.channels.Channel
@@ -86,9 +86,7 @@ class WowHardcoreEntitySynchronizer(
                     synchronizeWowHcEntity(it)
                         .fold(
                             ifLeft = { errorChannel.send(it) },
-                            ifRight = {
-                                it?.let { dataChannel.send(it) }
-                            }
+                            ifRight = { it?.let { dataChannel.send(it) } }
                         )
                 }
 
