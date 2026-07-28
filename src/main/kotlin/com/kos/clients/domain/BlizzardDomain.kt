@@ -28,25 +28,21 @@ data class TokenResponse(
 )
 
 object NameExtractorSerializer : SingleFieldSerializer<String>(
-    fieldName = "name",
     extractValue = { it.requireString("name") },
     encodeValue = { builder, value -> builder.put("name", value) }
 )
 
 object EffectiveExtractorSerializer : SingleFieldSerializer<Int>(
-    fieldName = "effective",
     extractValue = { it.requireInt("effective") },
     encodeValue = { builder, value -> builder.put("effective", value) }
 )
 
 object ValueExtractorSerializer : SingleFieldSerializer<Double>(
-    fieldName = "value",
     extractValue = { it.requireDouble("value") },
     encodeValue = { builder, value -> builder.put("value", value) }
 )
 
 object NestedDisplayableStringExtractorSerializer : SingleFieldSerializer<String>(
-    fieldName = "display.display_string",
     extractValue = { it.requireNestedString("display", "display_string") },
     encodeValue = { builder, value ->
         builder.putJsonObject("display") {
@@ -56,13 +52,11 @@ object NestedDisplayableStringExtractorSerializer : SingleFieldSerializer<String
 )
 
 object DisplayableStringExtractorSerializer : SingleFieldSerializer<String>(
-    fieldName = "display_string",
     extractValue = { it.requireString("display_string") },
     encodeValue = { builder, value -> builder.put("display_string", value) }
 )
 
 object DescriptionStringExtractorSerializer : SingleFieldSerializer<String>(
-    fieldName = "description",
     extractValue = { it.requireString("description") },
     encodeValue = { builder, value -> builder.put("description", value) }
 )

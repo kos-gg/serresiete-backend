@@ -30,11 +30,10 @@ import com.kos.views.repository.ViewsState
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.*
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import kotlin.test.Test
 
-class WowHardcoreCacheServiceTest {
+class WowHardcoreEntitySynchronizerTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
     private val wowItemsDatabaseRepository = mock(WowItemsDatabaseRepository::class.java)
@@ -77,6 +76,11 @@ class WowHardcoreCacheServiceTest {
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(1, dataCacheRepository.state().size)
+            verify(blizzardClient, times(0)).getCharacterProfile(
+                basicWowHardcoreEntity.region,
+                basicWowHardcoreEntity.realm,
+                basicWowHardcoreEntity.name
+            )
         }
     }
 

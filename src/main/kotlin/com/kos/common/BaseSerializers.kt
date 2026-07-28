@@ -10,7 +10,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 open class SingleFieldSerializer<T>(
-    private val fieldName: String,
     private val extractValue: (JsonObject) -> T,
     private val encodeValue: (JsonObjectBuilder, T) -> Unit
 ) : KSerializer<T> {

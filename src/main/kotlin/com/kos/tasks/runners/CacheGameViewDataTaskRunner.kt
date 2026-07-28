@@ -12,7 +12,6 @@ import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksRepository
-import com.kos.views.SimpleView
 import com.kos.views.ViewsService
 import java.time.OffsetDateTime
 
@@ -27,7 +26,7 @@ class CacheGameViewDataTaskRunner(
     override val type = TaskType.CACHE_GAME_VIEW_DATA_TASK
 
     override suspend fun run(id: String, arguments: Map<String, String>?) {
-        either<TaskStatus, SimpleView> {
+        either {
             val viewId = arguments?.get("viewId")
                 ?: raise(TaskStatus(Status.ERROR, "viewId argument is required"))
             val view = viewsService.getSimple(viewId)
@@ -54,31 +53,18 @@ class CacheGameViewDataTaskRunner(
                             it.synchronize(entities)
                         })
 
-                if (errors.isEmpty()) {
-                    val syncedAt = OffsetDateTime.now()
-                    viewsService.updateLastSyncedAt(view.id, syncedAt)
-                    tasksRepository.updateTask(
-                        Task(
-                            id,
-                            type,
-                            TaskStatus(
-                                Status.SUCCESSFUL,
-                                "entities synced for view ${view.id}",
-                                retryAfter = syncedAt.plusSeconds(cooldownSeconds)
-                            ),
-                            syncedAt
-                        )
+                val now = OffsetDateTime.now()
+                val taskStatus = if (errors.isEmpty()) {
+                    viewsService.updateLastSyncedAt(view.id, now)
+                    TaskStatus(
+                        Status.SUCCESSFUL,
+                        "entities synced for view ${view.id}",
+                        retryAfter = now.plusSeconds(cooldownSeconds)
                     )
-                } else {
-                    tasksRepository.updateTask(
-                        Task(
-                            id,
-                            type,
-                            TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
-                            OffsetDateTime.now()
-                        )
-                    )
-                }
+                } else
+                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() })
+
+                tasksRepository.updateTask(Task(id, type, taskStatus, now))
             }
         )
     }

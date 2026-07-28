@@ -24,9 +24,9 @@ import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.entities.sync.EntitySynchronizerProvider
+import com.kos.entities.sync.SyncBudget
 import com.kos.entities.sync.SyncEntitySelector
 import com.kos.entities.sync.rules.StalenessSyncRule
-import com.kos.entities.sync.SyncBudget
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
@@ -57,6 +57,7 @@ import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
+import com.kos.tasks.TaskType
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
@@ -164,9 +165,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
-            CacheLolDataTaskRunner(tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheWowDataTaskRunner(tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheWowHcDataTaskRunner(tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameDataTaskRunner(Game.LOL, TaskType.CACHE_LOL_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameDataTaskRunner(Game.WOW, TaskType.CACHE_WOW_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameDataTaskRunner(Game.WOW_HC, TaskType.CACHE_WOW_HC_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
             CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, 300L)
         )
     )
