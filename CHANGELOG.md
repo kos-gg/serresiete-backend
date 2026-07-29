@@ -1,4 +1,16 @@
 # Changelog
+## [5.7.0] - 29-07-2026
+
+### Added
+- **Per-game sync budget cap**:
+    - `getEntitiesOlderThan(game, olderThanMinutes, maxEntities)` now caps how many entities are selected per sync cycle, per game, prioritizing never-synced entities over stale ones.
+    - Configurable via `LOL_SYNC_BUDGET` / `WOW_SYNC_BUDGET` / `WOW_HC_SYNC_BUDGET` env vars (defaults 65 / 3300 / 4860).
+    - New `data_cache_game_entity_id_inserted_idx` index supports the ordering/truncation at the query level.
+- WoW HC sync is now also filtered by the 30-minute staleness threshold, matching WoW/LoL (previously synced unconditionally every cycle).
+
+### Refactor
+- `CacheLolDataTaskRunner` / `CacheWowDataTaskRunner` / `CacheWowHcDataTaskRunner` merged into a single `CacheGameDataTaskRunner(game, type, ...)`.
+
 ## [5.6.0] - 12-07-2026
 
 ### Improved
