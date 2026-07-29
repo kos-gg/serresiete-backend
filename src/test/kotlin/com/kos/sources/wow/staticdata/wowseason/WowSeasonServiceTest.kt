@@ -45,7 +45,8 @@ class WowSeasonServiceTest {
     @Test
     fun `i can not add a new mythic plus dungeon season given in repository it already exists the same current season`() {
         runBlocking {
-            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(true, "TWW Season 3", "tww-season-3", 15, listOf())))
+            val expectedExpansionSeasons =
+                ExpansionSeasons(listOf(Season(true, "TWW Season 3", "tww-season-3", 15, listOf())))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
@@ -80,7 +81,8 @@ class WowSeasonServiceTest {
     @Test
     fun `i can not add a new mythic plus dungeon season because there is not current season for the current expansion`() {
         runBlocking {
-            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(false, "TWW Season 3", "tww-season-3", 15, listOf())))
+            val expectedExpansionSeasons =
+                ExpansionSeasons(listOf(Season(false, "TWW Season 3", "tww-season-3", 15, listOf())))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 

@@ -3,8 +3,8 @@ package com.kos.tasks.runners
 import com.kos.common.WithLogger
 import com.kos.common.error.SynchronizerNotFound
 import com.kos.common.fold
-import com.kos.datacache.EntitySynchronizerProvider
-import com.kos.entities.EntitiesService
+import com.kos.entities.sync.EntitySynchronizerProvider
+import com.kos.entities.sync.SyncEntitySelector
 import com.kos.tasks.Status
 import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
@@ -13,66 +13,29 @@ import com.kos.tasks.repository.TasksRepository
 import com.kos.views.Game
 import java.time.OffsetDateTime
 
-abstract class CacheGameDataTaskRunner(
-    protected val game: Game,
+class CacheGameDataTaskRunner(
+    private val game: Game,
+    override val type: TaskType,
     private val tasksRepository: TasksRepository,
-    private val entitiesService: EntitiesService,
+    private val syncEntitySelector: SyncEntitySelector,
     private val entitySynchronizerProvider: EntitySynchronizerProvider
 ) : TaskRunner, WithLogger("cacheGameDataTaskRunner") {
 
     override suspend fun run(id: String, arguments: Map<String, String>?) {
         logger.info("Running $type")
-        val entities = entitiesService.getEntitiesToSync(game, 30)
+        val entities = syncEntitySelector.select(game)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
-        val synchronizer = entitySynchronizerProvider.synchronizerFor(game)
-        val errors = synchronizer.fold(
-            left = { listOf(SynchronizerNotFound(game)) },
-            right = {
-                it.synchronize(entities)
-            }
-        )
-        if (errors.isEmpty()) {
-            tasksRepository.updateTask(
-                Task(
-                    id,
-                    type,
-                    TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString { "," }}"),
-                    OffsetDateTime.now()
-                )
+        val errors = entitySynchronizerProvider.synchronizerFor(game)
+            .fold(
+                left = { listOf(SynchronizerNotFound(game)) },
+                right = { it.synchronize(entities) }
             )
-        } else {
-            tasksRepository.updateTask(
-                Task(
-                    id,
-                    type,
-                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
-                    OffsetDateTime.now()
-                )
-            )
-        }
+
+        val taskStatus = if (errors.isEmpty())
+            TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString(",")}")
+        else
+            TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() })
+
+        tasksRepository.updateTask(Task(id, type, taskStatus, OffsetDateTime.now()))
     }
-}
-
-class CacheLolDataTaskRunner(
-    tasksRepository: TasksRepository,
-    entitiesService: EntitiesService,
-    entitySynchronizerProvider: EntitySynchronizerProvider
-) : CacheGameDataTaskRunner(Game.LOL, tasksRepository, entitiesService, entitySynchronizerProvider) {
-    override val type = TaskType.CACHE_LOL_DATA_TASK
-}
-
-class CacheWowDataTaskRunner(
-    tasksRepository: TasksRepository,
-    entitiesService: EntitiesService,
-    entitySynchronizerProvider: EntitySynchronizerProvider
-) : CacheGameDataTaskRunner(Game.WOW, tasksRepository, entitiesService, entitySynchronizerProvider) {
-    override val type = TaskType.CACHE_WOW_DATA_TASK
-}
-
-class CacheWowHcDataTaskRunner(
-    tasksRepository: TasksRepository,
-    entitiesService: EntitiesService,
-    entitySynchronizerProvider: EntitySynchronizerProvider
-) : CacheGameDataTaskRunner(Game.WOW_HC, tasksRepository, entitiesService, entitySynchronizerProvider) {
-    override val type = TaskType.CACHE_WOW_HC_DATA_TASK
 }

@@ -350,23 +350,46 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
             }
         }
 
-    override suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long): List<Entity> =
+    override suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity> =
         newSuspendedTransaction(Dispatchers.IO, db) {
             when (game) {
-                Game.WOW -> entitiesOlderThan(WowEntities.id, olderThanMinutes, ::resultRowToWowEntity)
-                Game.LOL -> entitiesOlderThan(LolEntities.id, olderThanMinutes, ::resultRowToLolEntity)
-                Game.WOW_HC -> WowHardcoreEntities.selectAll().map { resultRowToWowHardcoreEntity(it) }
+                Game.WOW -> entitiesOlderThan(
+                    WowEntities.id,
+                    game,
+                    olderThanMinutes,
+                    ::resultRowToWowEntity,
+                    maxEntities
+                )
+
+                Game.LOL -> entitiesOlderThan(
+                    LolEntities.id,
+                    game,
+                    olderThanMinutes,
+                    ::resultRowToLolEntity,
+                    maxEntities
+                )
+
+                Game.WOW_HC -> entitiesOlderThan(
+                    WowHardcoreEntities.id,
+                    game,
+                    olderThanMinutes,
+                    ::resultRowToWowHardcoreEntity,
+                    maxEntities
+                )
             }
         }
 
     private fun entitiesOlderThan(
         entityIdColumn: Column<Long>,
+        game: Game,
         olderThanMinutes: Long,
-        mapper: (ResultRow) -> Entity
+        mapper: (ResultRow) -> Entity,
+        limit: Int
     ): List<Entity> {
         val caches = DataCacheDatabaseRepository.DataCaches
         val subQuery = caches
             .select(caches.entityId, caches.inserted.max().alias("inserted"))
+            .where { caches.game eq game.toString() }
             .groupBy(caches.entityId)
         val subQueryAliased = subQuery.alias("dc")
         val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes).toString()
@@ -377,6 +400,8 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 subQueryAliased[caches.inserted].isNull() or
                         (subQueryAliased[caches.inserted] lessEq threshold)
             }
+            .orderBy(subQueryAliased[caches.inserted], SortOrder.ASC_NULLS_FIRST)
+            .limit(limit)
             .map(mapper)
     }
 

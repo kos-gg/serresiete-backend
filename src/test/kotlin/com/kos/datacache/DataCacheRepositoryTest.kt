@@ -108,6 +108,7 @@ abstract class DataCacheRepositoryTestCommon {
             assertEquals(listOf(wowHardcoreDataCache), repositoryWithState.state())
         }
     }
+
 }
 
 class DataCacheInMemoryRepositoryTest : DataCacheRepositoryTestCommon() {

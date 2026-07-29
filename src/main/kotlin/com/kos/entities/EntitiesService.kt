@@ -19,7 +19,8 @@ data class EntitiesService(
     private val wowGuildsRepository: WowGuildsRepository,
     private val entitiesResolverProvider: EntityResolverProvider,
     private val lolUpdater: LolEntityUpdater,
-    private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater
+    private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
+
 ) : WithLogger("EntitiesService") {
 
     suspend fun resolveEntities(
@@ -53,8 +54,6 @@ data class EntitiesService(
 
     suspend fun get(id: Long, game: Game): Entity? = entitiesRepository.get(id, game)
     suspend fun get(game: Game): List<Entity> = entitiesRepository.get(game)
-    suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long) =
-        entitiesRepository.getEntitiesToSync(game, olderThanMinutes)
 
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game) = entitiesRepository.insert(entities, game)
     suspend fun insertGuild(payload: GuildPayload, viewId: String): Either<InsertError, Unit> =

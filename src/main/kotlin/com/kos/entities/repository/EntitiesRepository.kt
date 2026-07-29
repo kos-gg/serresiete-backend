@@ -20,7 +20,7 @@ interface EntitiesRepository : WithState<EntitiesState, EntitiesRepository> {
     suspend fun get(id: Long, game: Game): Entity?
     suspend fun get(request: CreateEntityRequest, game: Game): Entity?
     suspend fun get(game: Game): List<Entity>
-    suspend fun getEntitiesToSync(game: Game, olderThanMinutes: Long): List<Entity>
+    suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity>
     suspend fun get(entity: InsertEntityRequest, game: Game): Entity?
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String>
     suspend fun delete(id: Long): Unit

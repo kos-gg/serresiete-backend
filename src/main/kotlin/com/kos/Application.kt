@@ -19,13 +19,16 @@ import com.kos.credentials.CredentialsController
 import com.kos.credentials.CredentialsService
 import com.kos.credentials.repository.CredentialsDatabaseRepository
 import com.kos.datacache.DataCacheService
-import com.kos.datacache.EntitySynchronizerProvider
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
+import com.kos.entities.sync.EntitySynchronizerProvider
+import com.kos.entities.sync.SyncBudget
+import com.kos.entities.sync.SyncEntitySelector
+import com.kos.entities.sync.rules.StalenessSyncRule
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.EventSubscriptionController
@@ -55,11 +58,13 @@ import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
+import com.kos.tasks.TaskType
 import com.kos.tasks.TasksController
 import com.kos.tasks.TasksLauncher
 import com.kos.tasks.TasksService
 import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.tasks.runners.*
+import com.kos.views.Game
 import com.kos.views.ViewsController
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -201,6 +206,19 @@ fun Application.module() {
     val sourcesService = SourcesService(wowSeasonService)
     val sourcesController = SourcesController(sourcesService)
 
+    val stalenessRule = StalenessSyncRule(
+        entitiesRepository,
+        30,
+        SyncBudget(
+            mapOf(
+                Game.LOL to (System.getenv("LOL_SYNC_BUDGET")?.toInt() ?: 65),
+                Game.WOW to (System.getenv("WOW_SYNC_BUDGET")?.toInt() ?: 3300),
+                Game.WOW_HC to (System.getenv("WOW_HC_SYNC_BUDGET")?.toInt() ?: 4860)
+            )
+        )
+    )
+    val syncEntitySelector = SyncEntitySelector(stalenessRule)
+
     val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     val tasksRepository = TasksDatabaseRepository(db)
 
@@ -212,10 +230,16 @@ fun Application.module() {
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
-            CacheLolDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheWowDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheWowHcDataTaskRunner(tasksRepository, entitiesService, entitySynchronizerProvider),
-            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, System.getenv("VIEW_SYNC_COOLDOWN_SECONDS")?.toLong() ?: 300L)
+            CacheGameDataTaskRunner(Game.LOL, TaskType.CACHE_LOL_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameDataTaskRunner(Game.WOW, TaskType.CACHE_WOW_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameDataTaskRunner(Game.WOW_HC, TaskType.CACHE_WOW_HC_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameViewDataTaskRunner(
+                tasksRepository,
+                viewsService,
+                entitiesService,
+                entitySynchronizerProvider,
+                System.getenv("VIEW_SYNC_COOLDOWN_SECONDS")?.toLong() ?: 300L
+            )
         )
     )
     val tasksService = TasksService(tasksRepository, taskRunnerProvider)
