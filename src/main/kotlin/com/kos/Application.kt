@@ -159,8 +159,14 @@ fun Application.module() {
         raiderIoHTTPClient,
         blizzardClient,
         wowItemsDatabaseRepository,
+        System.getenv("WOW_HC_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )
-    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, seasonRepository)
+    val wowEntitySynchronizer = WowEntitySynchronizer(
+        dataCacheRepository,
+        raiderIoHTTPClient,
+        seasonRepository,
+        System.getenv("WOW_SYNC_CONCURRENCY")?.toInt() ?: 10,
+    )
 
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
@@ -230,9 +236,27 @@ fun Application.module() {
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
-            CacheGameDataTaskRunner(Game.LOL, TaskType.CACHE_LOL_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheGameDataTaskRunner(Game.WOW, TaskType.CACHE_WOW_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheGameDataTaskRunner(Game.WOW_HC, TaskType.CACHE_WOW_HC_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
+            CacheGameDataTaskRunner(
+                Game.LOL,
+                TaskType.CACHE_LOL_DATA_TASK,
+                tasksRepository,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameDataTaskRunner(
+                Game.WOW,
+                TaskType.CACHE_WOW_DATA_TASK,
+                tasksRepository,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameDataTaskRunner(
+                Game.WOW_HC,
+                TaskType.CACHE_WOW_HC_DATA_TASK,
+                tasksRepository,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
             CacheGameViewDataTaskRunner(
                 tasksRepository,
                 viewsService,

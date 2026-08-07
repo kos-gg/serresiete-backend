@@ -1,4 +1,17 @@
 # Changelog
+## [5.8.0] - 07-08-2026
+
+### Improved
+- **WoW and WoW HC sync now process entities concurrently**:
+    - Replaced the sequential `buffer(10).collect{}` entity loop (which never actually ran entities in parallel despite the naming) with `arrow.fx.coroutines.parMap`, bounded by `WOW_SYNC_CONCURRENCY` / `WOW_HC_SYNC_CONCURRENCY` (default 10 each).
+    - A rate-limiter timeout (`RequestNotPermitted`) on one entity no longer aborts the whole sync batch — it's now isolated as a per-entity error like any other sync failure.
+- **Database connection pool size increased**:
+    - `HikariConfig.maximumPoolSize` default raised from 3 to 10, configurable via `POSTGRES_MAX_POOL_SIZE`. The old hardcoded value was shared across all HTTP traffic and background sync work, causing endpoints to stall during sync.
+
+### Fixed
+- **Concurrent WoW sync crash on shared cached data**:
+    - Entities sharing a cached RaiderIO mythic+ run could crash the sync with `IllegalStateException: Flow invariant is violated` once entities were processed concurrently. Fixed by using `parMap`'s ordered variant instead of `parMapUnordered`, which avoids emitting from within the racing coroutine.
+
 ## [5.7.0] - 29-07-2026
 
 ### Added

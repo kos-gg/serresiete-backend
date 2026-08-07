@@ -12,6 +12,7 @@ object DatabaseFactory {
     private val user = System.getenv("POSTGRES_USER") ?: ""
     private val password = System.getenv("POSTGRES_PASSWORD") ?: ""
     private val driver = System.getenv("POSTGRES_DRIVER") ?: "org.h2.Driver"
+    private val maxPoolSize = System.getenv("POSTGRES_MAX_POOL_SIZE")?.toInt() ?: 10
 
     fun pooledDatabase(): Database {
 
@@ -21,7 +22,7 @@ object DatabaseFactory {
             config.jdbcUrl = url
             config.username = user
             config.password = password
-            config.maximumPoolSize = 3
+            config.maximumPoolSize = maxPoolSize
             config.isAutoCommit = false
             config.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             config.validate()
