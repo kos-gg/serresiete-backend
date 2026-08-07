@@ -2,6 +2,7 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
@@ -22,6 +23,9 @@ import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.views.Game
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.asFlow
@@ -41,6 +45,7 @@ class WowHardcoreEntitySynchronizer(
     private val raiderIoClient: RaiderIoClient,
     private val blizzardClient: BlizzardClient,
     private val wowItemsDatabaseRepository: WowItemsDatabaseRepository,
+    private val concurrency: Int = 10,
 ) : EntitySynchronizer, WithLogger("WowHardcoreEntitySynchronizer") {
 
     override val game: Game = Game.WOW_HC
@@ -54,6 +59,7 @@ class WowHardcoreEntitySynchronizer(
         encodeDefaults = false
     }
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
             val wowEntities = entities.filterIsInstance<WowEntity>()
@@ -81,13 +87,14 @@ class WowHardcoreEntitySynchronizer(
             val start = OffsetDateTime.now()
             wowEntities
                 .asFlow()
-                .buffer(10)
-                .collect {
-                    synchronizeWowHcEntity(it)
-                        .fold(
-                            ifLeft = { errorChannel.send(it) },
-                            ifRight = { it?.let { dataChannel.send(it) } }
-                        )
+                .parMap(concurrency = concurrency) { entity ->
+                    synchronizeWowHcEntity(entity)
+                }
+                .collect { result ->
+                    result.fold(
+                        ifLeft = { errorChannel.send(it) },
+                        ifRight = { it?.let { dataChannel.send(it) } }
+                    )
                 }
 
             errorChannel.close()
@@ -283,6 +290,10 @@ class WowHardcoreEntitySynchronizer(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        block().mapLeft { it.toSyncProcessingError(operation) }
+        try {
+            block().mapLeft { it.toSyncProcessingError(operation) }
+        } catch (e: RequestNotPermitted) {
+            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
+        }
 
 }

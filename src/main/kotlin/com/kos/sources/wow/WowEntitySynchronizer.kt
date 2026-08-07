@@ -2,6 +2,7 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
@@ -9,6 +10,7 @@ import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
+import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
@@ -16,6 +18,9 @@ import com.kos.entities.domain.WowEntity
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.asFlow
@@ -36,6 +41,7 @@ class WowEntitySynchronizer(
     private val dataCacheRepository: DataCacheRepository,
     private val raiderIoClient: RaiderIoClient,
     private val wowSeasonRepository: WowSeasonRepository,
+    private val concurrency: Int = 10,
 ) : EntitySynchronizer, WithLogger("WowEntitySynchronizer") {
 
     override val game: Game = Game.WOW
@@ -49,6 +55,7 @@ class WowEntitySynchronizer(
         encodeDefaults = false
     }
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
         coroutineScope {
             val wowEntities = entities.filterIsInstance<WowEntity>()
@@ -87,13 +94,14 @@ class WowEntitySynchronizer(
 
             val start = OffsetDateTime.now()
             wowEntities.asFlow()
-                .buffer(10)
-                .collect { entity ->
+                .parMap(concurrency = concurrency) { entity ->
                     synchronizeWowEntity(entity, currentSeasonSlug, cutoff, runDetailsCache)
-                        .fold(
-                            ifLeft = { errorsChannel.send(it) },
-                            ifRight = { dataChannel.send(it) }
-                        )
+                }
+                .collect { result ->
+                    result.fold(
+                        ifLeft = { errorsChannel.send(it) },
+                        ifRight = { dataChannel.send(it) }
+                    )
                 }
 
             errorsChannel.close()
@@ -103,7 +111,11 @@ class WowEntitySynchronizer(
             dataCollector.join()
 
             logger.info("Finished Caching Wow entities")
-            logger.debug("cached ${entities.size} entities in ${Duration.between(start, OffsetDateTime.now()).toMinutes()} minutes")
+            logger.debug(
+                "cached ${entities.size} entities in ${
+                    Duration.between(start, OffsetDateTime.now()).toMinutes()
+                } minutes"
+            )
             logger.debug("dynamic match cache hit rate: ${runDetailsCache.hitRate}%")
 
             errorsList
@@ -220,5 +232,9 @@ class WowEntitySynchronizer(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        block().mapLeft { it.toSyncProcessingError(operation) }
+        try {
+            block().mapLeft { it.toSyncProcessingError(operation) }
+        } catch (e: RequestNotPermitted) {
+            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
+        }
 }
