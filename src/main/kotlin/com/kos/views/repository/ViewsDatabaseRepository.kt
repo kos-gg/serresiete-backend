@@ -113,14 +113,17 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         extraArguments: ViewExtraArguments?,
     ): SimpleView {
         newSuspendedTransaction(Dispatchers.IO, db) {
-            Views.insert {
-                it[Views.id] = id
-                it[Views.name] = name
-                it[Views.owner] = owner
-                it[published] = true
-                it[Views.game] = game.toString()
-                it[Views.featured] = featured
-                it[Views.extraArguments] = extraArguments?.let { ea -> json.encodeToString<ViewExtraArguments>(ea) }
+            if (Views.selectAll().where { Views.id eq id }.empty()) {
+                Views.insert {
+                    it[Views.id] = id
+                    it[Views.name] = name
+                    it[Views.owner] = owner
+                    it[published] = true
+                    it[Views.game] = game.toString()
+                    it[Views.featured] = featured
+                    it[Views.extraArguments] =
+                        extraArguments?.let { ea -> json.encodeToString<ViewExtraArguments>(ea) }
+                }
             }
             associateEntitiesIdsToViewQuery(entitiesIds, id)
         }

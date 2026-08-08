@@ -43,40 +43,34 @@ class EventSubscription(
         val initialState: SubscriptionState =
             subscriptionsRepository.getState(subscriptionName)
                 ?: throw Exception("Not found subscription $subscriptionName")
-        val hasSucceededWithVersion =
-            eventStore.getEvents(initialState.version)
-                .fold(Pair(true, initialState.version)) { (shouldKeepGoing, version), event ->
-                    if (shouldKeepGoing) {
-                        try {
-                            retryEitherWithExponentialBackoff(retryConfig) { process(event) }
-                                .onLeft { throw Exception(it.toString()) }
-                            subscriptionsRepository.setState(
-                                subscriptionName,
-                                SubscriptionState(SubscriptionStatus.RUNNING, event.version, OffsetDateTime.now())
-                            )
-                            Pair(true, event.version)
-                        } catch (e: Exception) {
-                            subscriptionsRepository.setState(
-                                subscriptionName,
-                                SubscriptionState(
-                                    SubscriptionStatus.FAILED,
-                                    event.version - 1,
-                                    OffsetDateTime.now(),
-                                    e.message
-                                )
-                            )
-                            logger.error("processing event ${event.version} has failed because ${e.message}")
-                            logger.debug(e.stackTraceToString())
-                            Pair(false, event.version)
-                        }
-                    } else Pair(false, version)
+
+        val (finalVersion, lastError) = eventStore.getEvents(initialState.version)
+            .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
+                val error = try {
+                    retryEitherWithExponentialBackoff(retryConfig) { process(event) }
+                        .onLeft { throw Exception(it.error()) }
+                    null
+                } catch (e: Exception) {
+                    logger.error("processing event ${event.version} has failed because ${e.message}, skipping it")
+                    logger.debug(e.stackTraceToString())
+                    e.message
                 }
-        if (hasSucceededWithVersion.first) {
-            subscriptionsRepository.setState(
-                subscriptionName,
-                SubscriptionState(SubscriptionStatus.WAITING, hasSucceededWithVersion.second, OffsetDateTime.now())
-            )
-        }
+                subscriptionsRepository.setState(
+                    subscriptionName,
+                    SubscriptionState(
+                        SubscriptionStatus.RUNNING,
+                        event.version,
+                        OffsetDateTime.now(),
+                        error ?: currentLastError
+                    )
+                )
+                Pair(event.version, error ?: currentLastError)
+            }
+
+        subscriptionsRepository.setState(
+            subscriptionName,
+            SubscriptionState(SubscriptionStatus.WAITING, finalVersion, OffsetDateTime.now(), lastError)
+        )
     }
 }
 

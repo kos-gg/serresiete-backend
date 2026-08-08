@@ -64,7 +64,9 @@ class GameSyncEventProcessor(
                                 .mapLeft { it.toEntityResolverError(payload.game, it.message) }
                                 .bind()
                             val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
-                            val errors = synchronizer.synchronize(entities.map { it.first })
+                            val errors = Either.catch { synchronizer.synchronize(entities.map { it.first }) }
+                                .mapLeft { SyncProcessingError(game.name, it.message ?: it.javaClass.simpleName) }
+                                .bind()
                             if (errors.isNotEmpty()) raise(
                                 SyncProcessingError(
                                     game.name,
@@ -99,11 +101,13 @@ class GameSyncEventProcessor(
         aggregateRoot: String
     ) {
         logger.debug("processing event v${eventWithVersion.version}")
-        //TODO: what if no entities?
-        val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
-        val errors = synchronizer.synchronize(resolved)
-        if (errors.isNotEmpty()) recordFailure(operationId, aggregateRoot, errors.joinToString("; ") { it.error() })
-        else eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+        Either.catch {
+            //TODO: what if no entities?
+            val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
+            val errors = synchronizer.synchronize(resolved)
+            if (errors.isNotEmpty()) recordFailure(operationId, aggregateRoot, errors.joinToString("; ") { it.error() })
+            else eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+        }.onLeft { recordFailure(operationId, aggregateRoot, it.message ?: it.javaClass.simpleName) }
     }
 
     private suspend fun recordFailure(operationId: String, aggregateRoot: String, reason: String) {

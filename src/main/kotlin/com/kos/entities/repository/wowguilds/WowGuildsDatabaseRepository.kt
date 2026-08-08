@@ -36,18 +36,25 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         viewId: String
     ): Either<InsertError, Unit> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            try {
-                WowHardcoreGuilds.insert {
-                    it[WowHardcoreGuilds.blizzardId] = blizzardId
-                    it[WowHardcoreGuilds.name] = name
-                    it[WowHardcoreGuilds.realm] = realm
-                    it[WowHardcoreGuilds.region] = region
-                    it[WowHardcoreGuilds.viewId] = viewId
+            val existingViewId = WowHardcoreGuilds.selectAll()
+                .where { WowHardcoreGuilds.blizzardId eq blizzardId }
+                .singleOrNull()?.get(WowHardcoreGuilds.viewId)
+            when {
+                existingViewId == viewId -> Either.Right(Unit)
+                existingViewId != null -> Either.Left(InsertError("Duplicated guild $name $realm $region"))
+                else -> try {
+                    WowHardcoreGuilds.insert {
+                        it[WowHardcoreGuilds.blizzardId] = blizzardId
+                        it[WowHardcoreGuilds.name] = name
+                        it[WowHardcoreGuilds.realm] = realm
+                        it[WowHardcoreGuilds.region] = region
+                        it[WowHardcoreGuilds.viewId] = viewId
+                    }
+                    Either.Right(Unit)
+                } catch (e: SQLException) {
+                    if (e.sqlState == "23505") Either.Left(InsertError("Duplicated guild $name $realm $region"))
+                    else Either.Left(InsertError(e.message ?: e.stackTraceToString()))
                 }
-                Either.Right(Unit)
-            } catch (e: SQLException) {
-                if (e.sqlState == "23505") Either.Left(InsertError("Duplicated guild $name $realm $region"))
-                else Either.Left(InsertError(e.message ?: e.stackTraceToString()))
             }
         }
     }

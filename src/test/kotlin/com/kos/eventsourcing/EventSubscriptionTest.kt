@@ -83,7 +83,7 @@ class EventSubscriptionTest {
     }
 
     @Test
-    fun `processPendingEvents sets state to FAILED on processing error`() {
+    fun `processPendingEvents skips the failing event and records the error, but still advances`() {
         runBlocking {
             val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
             val event = Event("root", "id", eventData)
@@ -116,14 +116,15 @@ class EventSubscriptionTest {
 
             val finalSubscriptionState = subscriptionsRepository.getState("testSubscription")
 
-            assertEquals(SubscriptionStatus.FAILED, finalSubscriptionState?.status)
-            assertEquals(0, finalSubscriptionState?.version)
+            assertEquals(SubscriptionStatus.WAITING, finalSubscriptionState?.status)
+            assertEquals(1, finalSubscriptionState?.version)
+            assertTrue(finalSubscriptionState?.lastError?.contains("Simulated error") == true)
             assertTrue(initialSubscriptionStateTime.isBefore(finalSubscriptionState?.time))
         }
     }
 
     @Test
-    fun `processPendingEvents sets state to FAILED on processing error and stops processing further events`() {
+    fun `processPendingEvents keeps processing later events after a failing one`() {
         runBlocking {
             val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
             val event = Event("root", "id", eventData)
@@ -157,14 +158,15 @@ class EventSubscriptionTest {
 
             val finalSubscriptionState = subscriptionsRepository.getState("testSubscription")
 
-            assertEquals(SubscriptionStatus.FAILED, finalSubscriptionState?.status)
-            assertEquals(0, finalSubscriptionState?.version)
+            assertEquals(SubscriptionStatus.WAITING, finalSubscriptionState?.status)
+            assertEquals(10, finalSubscriptionState?.version)
+            assertTrue(finalSubscriptionState?.lastError?.contains("Simulated error") == true)
             assertTrue(initialSubscriptionStateTime.isBefore(finalSubscriptionState?.time))
         }
     }
 
     @Test
-    fun `processPendingEvents sets state to FAILED on processing error and stops processing further events when some events were processed`() {
+    fun `processPendingEvents skips a failing event in the middle and still processes the rest`() {
         runBlocking {
             val eventData = ViewToBeCreatedEvent("id", "name", true, listOf(), Game.LOL, "owner", false, null)
             val event = Event("root", "id", eventData)
@@ -192,8 +194,8 @@ class EventSubscriptionTest {
                 subscriptionsRepository = subscriptionsRepository,
                 retryConfig = retryConfig,
                 process = {
-                    if (it.version <= 5) Either.Right(Unit)
-                    else Either.Left(ViewCreateError(eventData, "Simulated error"))
+                    if (it.version == 5L) Either.Left(ViewCreateError(eventData, "Simulated error"))
+                    else Either.Right(Unit)
                 }
             )
 
@@ -201,8 +203,9 @@ class EventSubscriptionTest {
 
             val finalSubscriptionState = subscriptionsRepository.getState("testSubscription")
 
-            assertEquals(SubscriptionStatus.FAILED, finalSubscriptionState?.status)
-            assertEquals(5, finalSubscriptionState?.version)
+            assertEquals(SubscriptionStatus.WAITING, finalSubscriptionState?.status)
+            assertEquals(10, finalSubscriptionState?.version)
+            assertTrue(finalSubscriptionState?.lastError?.contains("Simulated error") == true)
             assertTrue(initialSubscriptionStateTime.isBefore(finalSubscriptionState?.time))
         }
     }

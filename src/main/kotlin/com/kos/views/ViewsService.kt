@@ -110,15 +110,17 @@ class ViewsService(
             val entities = inserted.zip(resolved.entities.map { it.second }) +
                     resolved.existing
 
-            val view = viewsRepository.create(
-                viewToBeCreatedEvent.id,
-                viewToBeCreatedEvent.name,
-                viewToBeCreatedEvent.owner,
-                entities.map { it.first.id to it.second },
-                viewToBeCreatedEvent.game,
-                viewToBeCreatedEvent.featured,
-                viewToBeCreatedEvent.extraArguments
-            )
+            val view = Either.catch {
+                viewsRepository.create(
+                    viewToBeCreatedEvent.id,
+                    viewToBeCreatedEvent.name,
+                    viewToBeCreatedEvent.owner,
+                    entities.map { it.first.id to it.second },
+                    viewToBeCreatedEvent.game,
+                    viewToBeCreatedEvent.featured,
+                    viewToBeCreatedEvent.extraArguments
+                )
+            }.mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message ?: it.javaClass.simpleName) }.bind()
 
             resolved.guild?.let {
                 entitiesService.insertGuild(it, view.id)
@@ -131,7 +133,9 @@ class ViewsService(
                 operationId,
                 ViewCreatedEvent.fromSimpleView(view)
             )
-            eventStore.save(event)
+            Either.catch { eventStore.save(event) }
+                .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message ?: it.javaClass.simpleName) }
+                .bind()
         }
     }
 
@@ -176,7 +180,7 @@ class ViewsService(
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
                     resolved.existing
-            val viewModified =
+            val viewModified = Either.catch {
                 viewsRepository.edit(
                     viewToBeEditedEvent.id,
                     viewToBeEditedEvent.name,
@@ -184,12 +188,16 @@ class ViewsService(
                     entities.map { it.first.id to it.second },
                     viewToBeEditedEvent.featured
                 )
+            }.mapLeft { ViewEditError(viewToBeEditedEvent, it.message ?: it.javaClass.simpleName) }.bind()
+
             val event = Event(
                 aggregateRoot,
                 operationId,
                 ViewEditedEvent.fromViewModified(operationId, viewToBeEditedEvent.game, viewModified)
             )
-            eventStore.save(event)
+            Either.catch { eventStore.save(event) }
+                .mapLeft { ViewEditError(viewToBeEditedEvent, it.message ?: it.javaClass.simpleName) }
+                .bind()
         }
 
     }
@@ -238,19 +246,24 @@ class ViewsService(
                 inserted.zip(resolved.entities.map { it.second }) +
                         resolved.existing
             }
-            val patchedView = viewsRepository.patch(
-                viewToBePatchedEvent.id,
-                viewToBePatchedEvent.name,
-                viewToBePatchedEvent.published,
-                entitiesToInsert?.map { it.first.id to it.second },
-                viewToBePatchedEvent.featured
-            )
+            val patchedView = Either.catch {
+                viewsRepository.patch(
+                    viewToBePatchedEvent.id,
+                    viewToBePatchedEvent.name,
+                    viewToBePatchedEvent.published,
+                    entitiesToInsert?.map { it.first.id to it.second },
+                    viewToBePatchedEvent.featured
+                )
+            }.mapLeft { ViewPatchError(viewToBePatchedEvent, it.message ?: it.javaClass.simpleName) }.bind()
+
             val event = Event(
                 aggregateRoot,
                 operationId,
                 ViewPatchedEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
             )
-            eventStore.save(event)
+            Either.catch { eventStore.save(event) }
+                .mapLeft { ViewPatchError(viewToBePatchedEvent, it.message ?: it.javaClass.simpleName) }
+                .bind()
         }
     }
 
