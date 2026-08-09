@@ -72,7 +72,7 @@ class GameSyncEventProcessor(
                                     game.name,
                                     errors.joinToString("; ") { it.error() })
                             )
-                        }.onLeft { recordFailure(operationId, aggregateRoot, it.error()) }
+                        }.onLeft { saveFailedEvent(operationId, aggregateRoot, it.error()) }
                         Either.Right(Unit)
                     }
 
@@ -105,14 +105,17 @@ class GameSyncEventProcessor(
             //TODO: what if no entities?
             val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
             val errors = synchronizer.synchronize(resolved)
-            if (errors.isNotEmpty()) recordFailure(operationId, aggregateRoot, errors.joinToString("; ") { it.error() })
+            if (errors.isNotEmpty()) saveFailedEvent(
+                operationId,
+                aggregateRoot,
+                errors.joinToString("; ") { it.error() })
             else eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-        }.onLeft { recordFailure(operationId, aggregateRoot, it.message ?: it.javaClass.simpleName) }
+        }.onLeft { saveFailedEvent(operationId, aggregateRoot, it.message ?: it.javaClass.simpleName) }
     }
 
-    private suspend fun recordFailure(operationId: String, aggregateRoot: String, reason: String) {
+    private suspend fun saveFailedEvent(operationId: String, aggregateRoot: String, reason: String) {
         logger.error("operation $operationId failed: $reason")
-        runCatching { eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason))) }
+        runCatching { eventStore.saveFailedEvent(operationId, aggregateRoot, reason) }
             .onFailure { e -> logger.error("failed to store OperationFailedEvent: ${e.message}") }
     }
 }

@@ -4,11 +4,13 @@ import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.*
+import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.ViewsService
 
 class ViewsEventProcessor(
     private val eventWithVersion: EventWithVersion,
-    private val viewsService: ViewsService
+    private val viewsService: ViewsService,
+    private val eventStore: EventStore
 ) : EventProcessor, WithLogger("eventSubscription.viewsProcessor") {
 
     override suspend fun process(): Either<ServiceError, Unit> {
@@ -54,7 +56,7 @@ class ViewsEventProcessor(
 
     private suspend fun recordFailure(operationId: String, aggregateRoot: String, reason: String) {
         logger.error("operation $operationId failed: $reason")
-        runCatching { viewsService.failOperation(operationId, aggregateRoot, reason) }
+        runCatching { eventStore.saveFailedEvent(operationId, aggregateRoot, reason) }
             .onFailure { e -> logger.error("failed to store OperationFailedEvent: ${e.message}") }
     }
 }

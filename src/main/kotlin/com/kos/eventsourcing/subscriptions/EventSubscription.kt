@@ -1,8 +1,6 @@
 package com.kos.eventsourcing.subscriptions
 
 import arrow.core.Either
-import com.kos.clients.Retry.retryEitherWithExponentialBackoff
-import com.kos.clients.RetryConfig
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
@@ -31,7 +29,6 @@ class EventSubscription(
     private val subscriptionName: String,
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val retryConfig: RetryConfig,
     private val process: suspend (EventWithVersion) -> Either<ServiceError, Unit>,
 ) : WithLogger("event-subscription-$subscriptionName") {
 
@@ -47,8 +44,7 @@ class EventSubscription(
         val (finalVersion, lastError) = eventStore.getEvents(initialState.version)
             .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
                 val error = try {
-                    retryEitherWithExponentialBackoff(retryConfig) { process(event) }
-                        .onLeft { throw Exception(it.error()) }
+                    process(event).onLeft { throw Exception(it.error()) }
                     null
                 } catch (e: Exception) {
                     logger.error("processing event ${event.version} has failed because ${e.message}, skipping it")

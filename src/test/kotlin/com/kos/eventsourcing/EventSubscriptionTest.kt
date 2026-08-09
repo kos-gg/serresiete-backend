@@ -2,7 +2,6 @@ package com.kos.eventsourcing
 
 import arrow.core.Either
 import com.kos.assertTrue
-import com.kos.clients.RetryConfig
 import com.kos.common.error.ViewCreateError
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion
@@ -20,7 +19,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class EventSubscriptionTest {
-    private val retryConfig = RetryConfig(1, 1)
 
     @Test
     fun `processPendingEvents throws exception if subscription is not found`() {
@@ -32,7 +30,6 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                retryConfig = retryConfig,
                 process = { Either.Right(Unit) }
             )
 
@@ -68,7 +65,6 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                retryConfig = retryConfig,
                 process = { Either.Right(Unit) }
             )
 
@@ -108,7 +104,6 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                retryConfig = retryConfig,
                 process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
             )
 
@@ -150,7 +145,6 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                retryConfig = retryConfig,
                 process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
             )
 
@@ -192,7 +186,6 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                retryConfig = retryConfig,
                 process = {
                     if (it.version == 5L) Either.Left(ViewCreateError(eventData, "Simulated error"))
                     else Either.Right(Unit)
@@ -237,7 +230,6 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                retryConfig = retryConfig,
                 process = { Either.Right(Unit) }
             )
 

@@ -65,7 +65,7 @@ class ViewsSyncProcessorTest {
                 Event(aggregateRoot, ViewsTestHelper.id, eventData)
             )
 
-            ViewsEventProcessor(eventWithVersion, spiedService).process()
+            ViewsEventProcessor(eventWithVersion, spiedService, eventStore).process()
                 .onLeft { kotlin.test.fail("Expected success") }
                 .onRight {
                     coVerify {
@@ -118,7 +118,7 @@ class ViewsSyncProcessorTest {
                 Event(aggregateRoot, ViewsTestHelper.id, eventData)
             )
 
-            ViewsEventProcessor(eventWithVersion, spiedService).process()
+            ViewsEventProcessor(eventWithVersion, spiedService, eventStore).process()
                 .onLeft { kotlin.test.fail("Expected success") }
                 .onRight {
                     coVerify {
@@ -165,7 +165,7 @@ class ViewsSyncProcessorTest {
                 Event(aggregateRoot, ViewsTestHelper.id, eventData)
             )
 
-            ViewsEventProcessor(eventWithVersion, spiedService).process()
+            ViewsEventProcessor(eventWithVersion, spiedService, eventStore).process()
                 .onLeft { kotlin.test.fail("Expected success") }
                 .onRight {
                     coVerify {

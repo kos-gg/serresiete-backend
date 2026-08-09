@@ -309,10 +309,6 @@ class ViewsService(
             eventStore.save(completionEvent)
         }.mapLeft { ViewDeleteError(event, it.message ?: it.javaClass.simpleName) }
 
-    suspend fun failOperation(operationId: String, aggregateRoot: String, reason: String) {
-        eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
-    }
-
     suspend fun getData(view: View): Either<ServiceError, List<Data>> =
         dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)
 

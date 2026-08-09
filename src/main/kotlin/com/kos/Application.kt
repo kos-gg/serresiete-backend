@@ -273,7 +273,6 @@ fun Application.module() {
 
     coroutineScope.launch { tasksLauncher.launchTasks() }
 
-    val subscriptionsRetryConfig = RetryConfig(10, 100)
     val subscriptionsRepository = SubscriptionsDatabaseRepository(db)
     val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
     val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)
@@ -281,36 +280,31 @@ fun Application.module() {
     val viewsEventSubscription = EventSubscription(
         "views",
         eventStore,
-        subscriptionsRepository,
-        subscriptionsRetryConfig
-    ) { ViewsEventProcessor(it, viewsService).process() }
+        subscriptionsRepository
+    ) { ViewsEventProcessor(it, viewsService, eventStore).process() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",
         eventStore,
-        subscriptionsRepository,
-        subscriptionsRetryConfig
+        subscriptionsRepository
     ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
-        subscriptionsRepository,
-        subscriptionsRetryConfig
+        subscriptionsRepository
     ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
-        subscriptionsRepository,
-        subscriptionsRetryConfig
+        subscriptionsRepository
     ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
-        subscriptionsRepository,
-        subscriptionsRetryConfig
+        subscriptionsRepository
     ) { EntitiesEventProcessor(it, entitiesService).process() }
 
     launchSubscription(viewsEventSubscription)
