@@ -43,13 +43,16 @@ class EventSubscription(
 
         val (finalVersion, lastError) = eventStore.getEvents(initialState.version)
             .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
-                val error = try {
-                    process(event).onLeft { throw Exception(it.error()) }
-                    null
-                } catch (e: Exception) {
-                    logger.error("processing event ${event.version} has failed because ${e.message}, skipping it")
-                    logger.debug(e.stackTraceToString())
-                    e.message
+                val error = when (val outcome = Either.catch { process(event) }) {
+                    is Either.Left -> {
+                        logger.debug(outcome.value.stackTraceToString())
+                        recordFailure(event, outcome.value.message ?: outcome.value.javaClass.simpleName)
+                    }
+
+                    is Either.Right -> outcome.value.fold(
+                        { serviceError -> recordFailure(event, serviceError.error()) },
+                        { null }
+                    )
                 }
                 subscriptionsRepository.setState(
                     subscriptionName,
@@ -67,6 +70,14 @@ class EventSubscription(
             subscriptionName,
             SubscriptionState(SubscriptionStatus.WAITING, finalVersion, OffsetDateTime.now(), lastError)
         )
+    }
+
+    private suspend fun recordFailure(event: EventWithVersion, reason: String): String {
+        logger.error("processing event ${event.version} has failed because $reason, skipping it")
+        runCatching {
+            eventStore.saveFailedEvent(event.event.operationId, event.event.aggregateRoot, reason)
+        }.onFailure { ex -> logger.error("failed to store OperationFailedEvent: ${ex.message}") }
+        return reason
     }
 }
 

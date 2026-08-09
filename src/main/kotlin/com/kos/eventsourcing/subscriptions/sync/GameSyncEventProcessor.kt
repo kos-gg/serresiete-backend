@@ -29,51 +29,50 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> logger.debug("skipping event v${eventWithVersion.version}")
+                    else -> {
+                        logger.debug("skipping event v${eventWithVersion.version}")
+                        Either.Right(Unit)
+                    }
                 }
-                Either.Right(Unit)
             }
 
             EventType.VIEW_EDITED -> {
                 val payload = eventWithVersion.event.eventData as ViewEditedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> logger.debug("skipping event v${eventWithVersion.version}")
+                    else -> {
+                        logger.debug("skipping event v${eventWithVersion.version}")
+                        Either.Right(Unit)
+                    }
                 }
-                Either.Right(Unit)
             }
 
             EventType.VIEW_PATCHED -> {
                 val payload = eventWithVersion.event.eventData as ViewPatchedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> logger.debug("skipping event v${eventWithVersion.version}")
+                    else -> {
+                        logger.debug("skipping event v${eventWithVersion.version}")
+                        Either.Right(Unit)
+                    }
                 }
-                Either.Right(Unit)
             }
 
             EventType.REQUEST_TO_BE_SYNCED -> {
                 val payload = eventWithVersion.event.eventData as RequestToBeSynced
                 when (payload.game) {
-                    game -> {
-                        either {
-                            logger.debug("processing event v${eventWithVersion.version}")
-                            val resolved = entitiesService.resolveEntities(listOf(payload.request), payload.game).bind()
-                            val inserted = entitiesService
-                                .insert(resolved.entities.map { it.first }, payload.game)
-                                .mapLeft { it.toEntityResolverError(payload.game, it.message) }
-                                .bind()
-                            val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
-                            val errors = Either.catch { synchronizer.synchronize(entities.map { it.first }) }
-                                .mapLeft { SyncProcessingError(game.name, it.message ?: it.javaClass.simpleName) }
-                                .bind()
-                            if (errors.isNotEmpty()) raise(
-                                SyncProcessingError(
-                                    game.name,
-                                    errors.joinToString("; ") { it.error() })
-                            )
-                        }.onLeft { saveFailedEvent(operationId, aggregateRoot, it.error()) }
-                        Either.Right(Unit)
+                    game -> either {
+                        logger.debug("processing event v${eventWithVersion.version}")
+                        val resolved = entitiesService.resolveEntities(listOf(payload.request), payload.game).bind()
+                        val inserted = entitiesService
+                            .insert(resolved.entities.map { it.first }, payload.game)
+                            .mapLeft { it.toEntityResolverError(payload.game, it.message) }
+                            .bind()
+                        val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
+                        val errors = synchronizer.synchronize(entities.map { it.first })
+                        if (errors.isNotEmpty()) raise(
+                            SyncProcessingError(game.name, errors.joinToString("; ") { it.error() })
+                        )
                     }
 
                     else -> {
@@ -99,23 +98,12 @@ class GameSyncEventProcessor(
         entities: List<Long>?,
         operationId: String,
         aggregateRoot: String
-    ) {
+    ): Either<ServiceError, Unit> = either {
         logger.debug("processing event v${eventWithVersion.version}")
-        Either.catch {
-            //TODO: what if no entities?
-            val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
-            val errors = synchronizer.synchronize(resolved)
-            if (errors.isNotEmpty()) saveFailedEvent(
-                operationId,
-                aggregateRoot,
-                errors.joinToString("; ") { it.error() })
-            else eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-        }.onLeft { saveFailedEvent(operationId, aggregateRoot, it.message ?: it.javaClass.simpleName) }
-    }
-
-    private suspend fun saveFailedEvent(operationId: String, aggregateRoot: String, reason: String) {
-        logger.error("operation $operationId failed: $reason")
-        runCatching { eventStore.saveFailedEvent(operationId, aggregateRoot, reason) }
-            .onFailure { e -> logger.error("failed to store OperationFailedEvent: ${e.message}") }
-    }
+        //TODO: what if no entities?
+        val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
+        val errors = synchronizer.synchronize(resolved)
+        if (errors.isNotEmpty()) raise(SyncProcessingError(game.name, errors.joinToString("; ") { it.error() }))
+        eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+    }.map { }
 }

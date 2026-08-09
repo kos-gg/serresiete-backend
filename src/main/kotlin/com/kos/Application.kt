@@ -281,7 +281,7 @@ fun Application.module() {
         "views",
         eventStore,
         subscriptionsRepository
-    ) { ViewsEventProcessor(it, viewsService, eventStore).process() }
+    ) { ViewsEventProcessor(it, viewsService).process() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",

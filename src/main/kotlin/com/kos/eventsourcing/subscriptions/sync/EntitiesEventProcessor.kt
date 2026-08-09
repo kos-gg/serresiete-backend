@@ -1,6 +1,7 @@
 package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
+import arrow.core.NonFatal
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.entities.EntitiesService
@@ -17,18 +18,23 @@ class EntitiesEventProcessor(
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_DELETED -> {
                 val payload = eventWithVersion.event.eventData as ViewDeletedEvent
-                Either.Right(payload.entities.map { it to entitiesService.getViewsFromEntity(it, payload.game) }
-                    .forEach {
-                        if (it.second.isEmpty()) {
-                            logger.debug("Deleting entity ${it.first}")
-                            entitiesService.delete(it.first)
+                try {
+                    payload.entities.forEach { entityId ->
+                        val views = entitiesService.getViewsFromEntity(entityId, payload.game)
+                        if (views.isEmpty()) {
+                            logger.debug("Deleting entity $entityId")
+                            entitiesService.delete(entityId)
                         } else logger.debug(
                             "Not deleting character {} because it's still in {}",
-                            it.first,
-                            it.second
+                            entityId,
+                            views
                         )
-
-                    })
+                    }
+                } catch (e: Exception) {
+                    if (!NonFatal(e)) throw e
+                    logger.error("failed cleaning up entities for deleted view: ${e.message}")
+                }
+                Either.Right(Unit)
             }
 
             else -> {

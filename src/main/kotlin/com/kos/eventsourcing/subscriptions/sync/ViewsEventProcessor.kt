@@ -4,13 +4,11 @@ import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.ViewsService
 
 class ViewsEventProcessor(
     private val eventWithVersion: EventWithVersion,
-    private val viewsService: ViewsService,
-    private val eventStore: EventStore
+    private val viewsService: ViewsService
 ) : EventProcessor, WithLogger("eventSubscription.viewsProcessor") {
 
     override suspend fun process(): Either<ServiceError, Unit> {
@@ -18,45 +16,39 @@ class ViewsEventProcessor(
         val aggregateRoot = eventWithVersion.event.aggregateRoot
         logger.debug("processing event v${eventWithVersion.version}")
 
-        val eventType = eventWithVersion.event.eventData.eventType
-        when (eventType) {
+        return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_TO_BE_CREATED ->
                 viewsService.createView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeCreatedEvent
-                ).onLeft { recordFailure(operationId, aggregateRoot, it.error()) }
+                ).map { }
 
             EventType.VIEW_TO_BE_EDITED ->
                 viewsService.editView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeEditedEvent
-                ).onLeft { recordFailure(operationId, aggregateRoot, it.error()) }
+                ).map { }
 
             EventType.VIEW_TO_BE_PATCHED ->
                 viewsService.patchView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBePatchedEvent
-                ).onLeft { recordFailure(operationId, aggregateRoot, it.error()) }
+                ).map { }
 
             EventType.VIEW_TO_BE_DELETED ->
                 viewsService.deleteView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeDeletedEvent
-                ).onLeft { recordFailure(operationId, aggregateRoot, it.error()) }
+                ).map { }
 
-            else -> logger.debug("skipping event v${eventWithVersion.version} (${eventWithVersion.event.eventData.eventType})")
+            else -> {
+                logger.debug("skipping event v${eventWithVersion.version} (${eventWithVersion.event.eventData.eventType})")
+                Either.Right(Unit)
+            }
         }
-
-        return Either.Right(Unit)
-    }
-
-    private suspend fun recordFailure(operationId: String, aggregateRoot: String, reason: String) {
-        logger.error("operation $operationId failed: $reason")
-        runCatching { eventStore.saveFailedEvent(operationId, aggregateRoot, reason) }
-            .onFailure { e -> logger.error("failed to store OperationFailedEvent: ${e.message}") }
     }
 }

@@ -199,7 +199,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
 
     return TestSubscriptions(
         views = EventSubscription("views", eventStore, subscriptionsRepository) {
-            ViewsEventProcessor(it, viewsService, eventStore).process()
+            ViewsEventProcessor(it, viewsService).process()
         },
         syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process()
