@@ -45,13 +45,16 @@ class EventSubscription(
             .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
                 val error = when (val outcome = Either.catch { process(event) }) {
                     is Either.Left -> {
-                        logger.debug(outcome.value.stackTraceToString())
+                        logger.error(outcome.value.stackTraceToString())
                         recordFailure(event, outcome.value.message ?: outcome.value.javaClass.simpleName)
                     }
 
                     is Either.Right -> outcome.value.fold(
-                        { serviceError -> recordFailure(event, serviceError.error()) },
-                        { null }
+                        { recordFailure(event, it.error()) },
+                        {
+                            logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
+                            null
+                        }
                     )
                 }
                 subscriptionsRepository.setState(
