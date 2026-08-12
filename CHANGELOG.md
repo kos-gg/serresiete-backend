@@ -1,4 +1,20 @@
 # Changelog
+## [5.9.0] - 12-08-2026
+
+### Fixed
+- **Event subscriptions could wedge forever on a bad event**:
+    - A processing exception used to leave the subscription's cursor rewound to the same event, retrying it indefinitely and blocking every event behind it. The exponential-backoff retry wrapper around `process()` was removed — it was dead code (no processor ever returned a modeled failure, and thrown exceptions bypassed it anyway) and retrying was the wrong instinct regardless: a failure here means something is broken in the event's own data, not a transient external condition.
+    - Every failure (thrown or modeled) now produces a terminal, redeliverable `OperationFailedEvent`, and the subscription's cursor advances past it instead of stalling.
+- **Operation status could be permanently poisoned by a stale failure**:
+    - `OperationsService.getOperationStatus` used to let any past `OperationFailedEvent` mark an operation `FAILED` forever, even if a later redelivery completed it successfully. Completion now always wins over a stale failure.
+- **Graceful shutdown could be misrecorded as a processing failure**:
+    - `CancellationException`, thrown when a subscription's coroutine is cancelled on shutdown, is a `RuntimeException` subtype and was being caught by the same handler as real failures. It's now excluded via Arrow's `NonFatal`, matching how `Either.catch` already treats it.
+
+### Improved
+- **Failure recording centralized into `EventSubscription`**:
+    - Processors (`ViewsEventProcessor`, `EntitiesEventProcessor`, `GameSyncEventProcessor`) no longer hand-construct failure events — they just propagate `Either<ServiceError, EventProcessOutcome>`, and `EventSubscription.processPendingEvents` is now the single place that records failures and logs outcomes.
+    - Added `EventProcessOutcome` (`Processed`/`Skipped`) so a processor that ignores an event it doesn't own is distinguished from one that actually did work — fixing misleading `INFO ... processed successfully` logs that previously fired from every subscription (`sync-wow`, `sync-wow-hc`, `sync-lol`, etc.) even for events irrelevant to them.
+
 ## [5.8.0] - 07-08-2026
 
 ### Improved
