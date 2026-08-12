@@ -1,8 +1,6 @@
 package com.kos.eventsourcing.subscriptions
 
 import arrow.core.Either
-import com.kos.clients.Retry.retryEitherWithExponentialBackoff
-import com.kos.clients.RetryConfig
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
@@ -18,6 +16,11 @@ enum class SubscriptionStatus {
     FAILED
 }
 
+enum class EventProcessOutcome {
+    Processed,
+    Skipped
+}
+
 @Serializable
 data class SubscriptionState(
     val status: SubscriptionStatus,
@@ -31,8 +34,7 @@ class EventSubscription(
     private val subscriptionName: String,
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val retryConfig: RetryConfig,
-    private val process: suspend (EventWithVersion) -> Either<ServiceError, Unit>,
+    private val process: suspend (EventWithVersion) -> Either<ServiceError, EventProcessOutcome>,
 ) : WithLogger("event-subscription-$subscriptionName") {
 
     init {
@@ -43,40 +45,57 @@ class EventSubscription(
         val initialState: SubscriptionState =
             subscriptionsRepository.getState(subscriptionName)
                 ?: throw Exception("Not found subscription $subscriptionName")
-        val hasSucceededWithVersion =
-            eventStore.getEvents(initialState.version)
-                .fold(Pair(true, initialState.version)) { (shouldKeepGoing, version), event ->
-                    if (shouldKeepGoing) {
-                        try {
-                            retryEitherWithExponentialBackoff(retryConfig) { process(event) }
-                                .onLeft { throw Exception(it.toString()) }
-                            subscriptionsRepository.setState(
-                                subscriptionName,
-                                SubscriptionState(SubscriptionStatus.RUNNING, event.version, OffsetDateTime.now())
-                            )
-                            Pair(true, event.version)
-                        } catch (e: Exception) {
-                            subscriptionsRepository.setState(
-                                subscriptionName,
-                                SubscriptionState(
-                                    SubscriptionStatus.FAILED,
-                                    event.version - 1,
-                                    OffsetDateTime.now(),
-                                    e.message
-                                )
-                            )
-                            logger.error("processing event ${event.version} has failed because ${e.message}")
-                            logger.debug(e.stackTraceToString())
-                            Pair(false, event.version)
+
+        val (finalVersion, lastError) = eventStore.getEvents(initialState.version)
+            .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
+                val error = when (val outcome = Either.catch { process(event) }) {
+                    is Either.Left -> {
+                        logger.error(outcome.value.stackTraceToString())
+                        recordFailure(event, outcome.value.message ?: outcome.value.javaClass.simpleName)
+                    }
+
+                    is Either.Right -> outcome.value.fold(
+                        { recordFailure(event, it.error()) },
+                        {
+                            when (it) {
+                                EventProcessOutcome.Processed ->
+                                    logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
+
+                                EventProcessOutcome.Skipped ->
+                                    logger.debug(
+                                        "skipping event v{} ({})",
+                                        event.version,
+                                        event.event.eventData.eventType
+                                    )
+                            }
+                            null
                         }
-                    } else Pair(false, version)
+                    )
                 }
-        if (hasSucceededWithVersion.first) {
-            subscriptionsRepository.setState(
-                subscriptionName,
-                SubscriptionState(SubscriptionStatus.WAITING, hasSucceededWithVersion.second, OffsetDateTime.now())
-            )
-        }
+                subscriptionsRepository.setState(
+                    subscriptionName,
+                    SubscriptionState(
+                        SubscriptionStatus.RUNNING,
+                        event.version,
+                        OffsetDateTime.now(),
+                        error ?: currentLastError
+                    )
+                )
+                Pair(event.version, error ?: currentLastError)
+            }
+
+        subscriptionsRepository.setState(
+            subscriptionName,
+            SubscriptionState(SubscriptionStatus.WAITING, finalVersion, OffsetDateTime.now(), lastError)
+        )
+    }
+
+    private suspend fun recordFailure(event: EventWithVersion, reason: String): String {
+        logger.error("processing event ${event.version} has failed because $reason, skipping it")
+        runCatching {
+            eventStore.saveFailedEvent(event.event.operationId, event.event.aggregateRoot, reason)
+        }.onFailure { ex -> logger.error("failed to store OperationFailedEvent: ${ex.message}") }
+        return reason
     }
 }
 

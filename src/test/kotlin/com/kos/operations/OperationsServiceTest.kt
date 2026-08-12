@@ -90,15 +90,30 @@ class OperationsServiceTest {
     }
 
     @Test
-    fun `failed takes precedence over completion when both events exist`() {
+    fun `completion takes precedence over a failure recorded on an earlier attempt`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
-            val reason = "something went wrong"
+            val reason = "something went wrong on a prior attempt"
+            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
+            eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+
+            assertEquals(
+                OperationStatus(operationId, OperationStatusType.COMPLETED),
+                service.getOperationStatus(operationId)
+            )
+        }
+    }
+
+    @Test
+    fun `completion takes precedence even when the failure was recorded after it`() {
+        runBlocking {
+            val viewId = UUID.randomUUID().toString()
+            val reason = "a redundant retry failed after completion already happened"
             eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
             eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
 
             assertEquals(
-                OperationStatus(operationId, OperationStatusType.FAILED, reason = reason),
+                OperationStatus(operationId, OperationStatusType.COMPLETED),
                 service.getOperationStatus(operationId)
             )
         }

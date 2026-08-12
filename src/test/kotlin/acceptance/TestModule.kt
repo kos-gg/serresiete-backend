@@ -198,19 +198,19 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     )
 
     return TestSubscriptions(
-        views = EventSubscription("views", eventStore, subscriptionsRepository, retryConfig) {
+        views = EventSubscription("views", eventStore, subscriptionsRepository) {
             ViewsEventProcessor(it, viewsService).process()
         },
-        syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository, retryConfig) {
+        syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process()
         },
-        syncWow = EventSubscription("sync-wow", eventStore, subscriptionsRepository, retryConfig) {
+        syncWow = EventSubscription("sync-wow", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process()
         },
-        syncWowHc = EventSubscription("sync-wow-hc", eventStore, subscriptionsRepository, retryConfig) {
+        syncWowHc = EventSubscription("sync-wow-hc", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process()
         },
-        entities = EventSubscription("entities", eventStore, subscriptionsRepository, retryConfig) {
+        entities = EventSubscription("entities", eventStore, subscriptionsRepository) {
             EntitiesEventProcessor(it, entitiesService).process()
         },
     )

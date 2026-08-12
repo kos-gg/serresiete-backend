@@ -19,14 +19,14 @@ class OperationsService(private val eventStore: EventStore) {
         val completionEvent = events.find { it.event.eventData.eventType in completionEventTypes }
 
         return when {
+            completionEvent != null -> OperationStatus(
+                id = operationId,
+                status = OperationStatusType.COMPLETED
+            )
             failedEvent != null -> OperationStatus(
                 id = operationId,
                 status = OperationStatusType.FAILED,
                 reason = (failedEvent.event.eventData as OperationFailedEvent).reason
-            )
-            completionEvent != null -> OperationStatus(
-                id = operationId,
-                status = OperationStatusType.COMPLETED
             )
             else -> OperationStatus(
                 id = operationId,

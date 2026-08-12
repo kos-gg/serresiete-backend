@@ -87,7 +87,7 @@ class WowHardcoreEntitySynchronizer(
             val start = OffsetDateTime.now()
             wowEntities
                 .asFlow()
-                .parMap(concurrency = concurrency) { entity ->
+                .parMap(concurrency) { entity ->
                     synchronizeWowHcEntity(entity)
                 }
                 .collect { result ->
