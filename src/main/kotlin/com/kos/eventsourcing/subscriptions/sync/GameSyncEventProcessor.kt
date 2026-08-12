@@ -10,6 +10,7 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
+import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 
 class GameSyncEventProcessor(
     private val eventWithVersion: EventWithVersion,
@@ -20,7 +21,7 @@ class GameSyncEventProcessor(
 
     private val game = synchronizer.game
 
-    override suspend fun process(): Either<ServiceError, Unit> {
+    override suspend fun process(): Either<ServiceError, EventProcessOutcome> {
         val operationId = eventWithVersion.event.operationId
         val aggregateRoot = eventWithVersion.event.aggregateRoot
 
@@ -29,10 +30,7 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> {
-                        logger.debug("skipping event v${eventWithVersion.version}")
-                        Either.Right(Unit)
-                    }
+                    else -> Either.Right(EventProcessOutcome.Skipped)
                 }
             }
 
@@ -40,10 +38,7 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewEditedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> {
-                        logger.debug("skipping event v${eventWithVersion.version}")
-                        Either.Right(Unit)
-                    }
+                    else -> Either.Right(EventProcessOutcome.Skipped)
                 }
             }
 
@@ -51,10 +46,7 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewPatchedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> {
-                        logger.debug("skipping event v${eventWithVersion.version}")
-                        Either.Right(Unit)
-                    }
+                    else -> Either.Right(EventProcessOutcome.Skipped)
                 }
             }
 
@@ -73,23 +65,14 @@ class GameSyncEventProcessor(
                         if (errors.isNotEmpty()) raise(
                             SyncProcessingError(game.name, errors.joinToString("; ") { it.error() })
                         )
+                        EventProcessOutcome.Processed
                     }
 
-                    else -> {
-                        logger.debug("skipping event v${eventWithVersion.version}")
-                        Either.Right(Unit)
-                    }
+                    else -> Either.Right(EventProcessOutcome.Skipped)
                 }
             }
 
-            else -> {
-                logger.debug(
-                    "skipping event v{} ({})",
-                    eventWithVersion.version,
-                    eventWithVersion.event.eventData.eventType
-                )
-                Either.Right(Unit)
-            }
+            else -> Either.Right(EventProcessOutcome.Skipped)
         }
     }
 
@@ -98,12 +81,13 @@ class GameSyncEventProcessor(
         entities: List<Long>?,
         operationId: String,
         aggregateRoot: String
-    ): Either<ServiceError, Unit> = either {
+    ): Either<ServiceError, EventProcessOutcome> = either {
         logger.debug("processing event v${eventWithVersion.version}")
         //TODO: what if no entities?
         val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
         val errors = synchronizer.synchronize(resolved)
         if (errors.isNotEmpty()) raise(SyncProcessingError(game.name, errors.joinToString("; ") { it.error() }))
         eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-    }.map { }
+        EventProcessOutcome.Processed
+    }
 }

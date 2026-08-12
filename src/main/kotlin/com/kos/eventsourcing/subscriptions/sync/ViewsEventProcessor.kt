@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.*
+import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 import com.kos.views.ViewsService
 
 class ViewsEventProcessor(
@@ -11,7 +12,7 @@ class ViewsEventProcessor(
     private val viewsService: ViewsService
 ) : EventProcessor, WithLogger("eventSubscription.viewsProcessor") {
 
-    override suspend fun process(): Either<ServiceError, Unit> {
+    override suspend fun process(): Either<ServiceError, EventProcessOutcome> {
         val operationId = eventWithVersion.event.operationId
         val aggregateRoot = eventWithVersion.event.aggregateRoot
         logger.debug("processing event v${eventWithVersion.version}")
@@ -22,33 +23,30 @@ class ViewsEventProcessor(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeCreatedEvent
-                ).map { }
+                ).map { EventProcessOutcome.Processed }
 
             EventType.VIEW_TO_BE_EDITED ->
                 viewsService.editView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeEditedEvent
-                ).map { }
+                ).map { EventProcessOutcome.Processed }
 
             EventType.VIEW_TO_BE_PATCHED ->
                 viewsService.patchView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBePatchedEvent
-                ).map { }
+                ).map { EventProcessOutcome.Processed }
 
             EventType.VIEW_TO_BE_DELETED ->
                 viewsService.deleteView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeDeletedEvent
-                ).map { }
+                ).map { EventProcessOutcome.Processed }
 
-            else -> {
-                logger.debug("skipping event v${eventWithVersion.version} (${eventWithVersion.event.eventData.eventType})")
-                Either.Right(Unit)
-            }
+            else -> Either.Right(EventProcessOutcome.Skipped)
         }
     }
 }

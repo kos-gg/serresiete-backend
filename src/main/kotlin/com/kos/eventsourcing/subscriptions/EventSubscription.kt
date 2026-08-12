@@ -16,6 +16,11 @@ enum class SubscriptionStatus {
     FAILED
 }
 
+enum class EventProcessOutcome {
+    Processed,
+    Skipped
+}
+
 @Serializable
 data class SubscriptionState(
     val status: SubscriptionStatus,
@@ -29,7 +34,7 @@ class EventSubscription(
     private val subscriptionName: String,
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val process: suspend (EventWithVersion) -> Either<ServiceError, Unit>,
+    private val process: suspend (EventWithVersion) -> Either<ServiceError, EventProcessOutcome>,
 ) : WithLogger("event-subscription-$subscriptionName") {
 
     init {
@@ -52,7 +57,17 @@ class EventSubscription(
                     is Either.Right -> outcome.value.fold(
                         { recordFailure(event, it.error()) },
                         {
-                            logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
+                            when (it) {
+                                EventProcessOutcome.Processed ->
+                                    logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
+
+                                EventProcessOutcome.Skipped ->
+                                    logger.debug(
+                                        "skipping event v{} ({})",
+                                        event.version,
+                                        event.event.eventData.eventType
+                                    )
+                            }
                             null
                         }
                     )

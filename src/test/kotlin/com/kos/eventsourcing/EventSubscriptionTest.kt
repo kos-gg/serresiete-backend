@@ -11,6 +11,7 @@ import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.SubscriptionState
 import com.kos.eventsourcing.subscriptions.SubscriptionStatus
+import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsInMemoryRepository
 import com.kos.views.Game
 import kotlinx.coroutines.CancellationException
@@ -32,7 +33,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Right(Unit) }
+                process = { Either.Right(EventProcessOutcome.Processed) }
             )
 
             assertThrows<Exception> {
@@ -67,7 +68,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Right(Unit) }
+                process = { Either.Right(EventProcessOutcome.Processed) }
             )
 
             subscription.processPendingEvents()
@@ -190,7 +191,7 @@ class EventSubscriptionTest {
                 subscriptionsRepository = subscriptionsRepository,
                 process = {
                     if (it.version == 5L) Either.Left(ViewCreateError(eventData, "Simulated error"))
-                    else Either.Right(Unit)
+                    else Either.Right(EventProcessOutcome.Processed)
                 }
             )
 
@@ -232,7 +233,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Right(Unit) }
+                process = { Either.Right(EventProcessOutcome.Processed) }
             )
 
             subscription.processPendingEvents()

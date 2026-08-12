@@ -8,13 +8,14 @@ import com.kos.entities.EntitiesService
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.ViewDeletedEvent
+import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 
 class EntitiesEventProcessor(
     private val eventWithVersion: EventWithVersion,
     private val entitiesService: EntitiesService,
 ) : EventProcessor, WithLogger("eventSubscription.entitiesProcessor") {
 
-    override suspend fun process(): Either<ServiceError, Unit> {
+    override suspend fun process(): Either<ServiceError, EventProcessOutcome> {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_DELETED -> {
                 val payload = eventWithVersion.event.eventData as ViewDeletedEvent
@@ -34,17 +35,10 @@ class EntitiesEventProcessor(
                     if (!NonFatal(e)) throw e
                     logger.error("failed cleaning up entities for deleted view: ${e.message}")
                 }
-                Either.Right(Unit)
+                Either.Right(EventProcessOutcome.Processed)
             }
 
-            else -> {
-                logger.debug(
-                    "skipping event v{} ({})",
-                    eventWithVersion.version,
-                    eventWithVersion.event.eventData.eventType
-                )
-                Either.Right(Unit)
-            }
+            else -> Either.Right(EventProcessOutcome.Skipped)
         }
     }
 }
