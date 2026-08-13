@@ -2,6 +2,8 @@ package acceptance.steps
 
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
+import acceptance.toGame
+import acceptance.wowEntityRequest
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.LolEnrichedEntityRequest
@@ -32,12 +34,12 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
 
     @Given("a {string} entity {string} on realm {string} region {string} exists with cached data {string}")
     fun entityExistsWithCachedData(game: String, name: String, realm: String, region: String, jsonFile: String) {
-        val resolvedGame = Game.valueOf(game.uppercase())
+        val resolvedGame = game.toGame()
         val entitiesRepo = EntitiesDatabaseRepository(db)
         val dataCacheRepo = DataCacheDatabaseRepository(db)
 
         val entity = runBlocking {
-            entitiesRepo.insert(listOf(WowEntityRequest(name, region, realm)), resolvedGame)
+            entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
         }.getOrNull()!!.first()
 
         val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
@@ -51,10 +53,10 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
 
     @Given("a {string} entity {string} on realm {string} region {string} exists in the database")
     fun entityExistsWithoutCachedData(game: String, name: String, realm: String, region: String) {
-        val resolvedGame = Game.valueOf(game.uppercase())
+        val resolvedGame = game.toGame()
         val entitiesRepo = EntitiesDatabaseRepository(db)
         runBlocking {
-            entitiesRepo.insert(listOf(WowEntityRequest(name, region, realm)), resolvedGame)
+            entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
         }
     }
 
@@ -62,7 +64,45 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
     fun lolEntityExists(name: String, tag: String) {
         val entitiesRepo = EntitiesDatabaseRepository(db)
         runBlocking {
-            entitiesRepo.insert(listOf(LolEnrichedEntityRequest(name, tag, "test-puuid-${name.replace(" ", "-")}", 0, 0)), Game.LOL)
+            entitiesRepo.insert(
+                listOf(
+                    LolEnrichedEntityRequest(
+                        name,
+                        tag,
+                        "test-puuid-${name.replace(" ", "-")}",
+                        0,
+                        0
+                    )
+                ), Game.LOL
+            )
+        }
+    }
+
+    @Given("a LOL entity {string} with tag {string} exists with cached data {string}")
+    fun lolEntityExistsWithCachedData(name: String, tag: String, jsonFile: String) {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val dataCacheRepo = DataCacheDatabaseRepository(db)
+
+        val entity = runBlocking {
+            entitiesRepo.insert(
+                listOf(
+                    LolEnrichedEntityRequest(
+                        name,
+                        tag,
+                        "test-puuid-${name.replace(" ", "-")}",
+                        0,
+                        0
+                    )
+                ), Game.LOL
+            )
+        }.getOrNull()!!.first()
+
+        val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
+            .bufferedReader()
+            .readText()
+
+        runBlocking {
+            dataCacheRepo.insert(listOf(DataCache(entity.id, data, OffsetDateTime.now(), Game.LOL)))
         }
     }
 
@@ -98,17 +138,12 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         assertNull(data?.takeIf { it.toString() != "null" })
     }
 
-    @And("the response contains entity data")
-    fun responseContainsEntityData() {
-        val body = runBlocking { scenarioVariables.response.bodyAsText() }
-        val data = Json.parseToJsonElement(body).jsonObject["data"]
-        assertNotNull(data?.takeIf { it.toString() != "null" })
-    }
-
     @And("the response data is a valid WOW entity")
     fun responseDataIsValidWowEntity() {
         val body = runBlocking { scenarioVariables.response.bodyAsText() }
-        val data = Json.parseToJsonElement(body).jsonObject["data"]!!.jsonObject
+        val dataElement = Json.parseToJsonElement(body).jsonObject["data"]
+        assertNotNull(dataElement?.takeIf { it.toString() != "null" }, "Expected response data to be present")
+        val data = dataElement!!.jsonObject
         assertEquals("com.kos.clients.domain.RaiderIoData", data["type"]!!.jsonPrimitive.content)
         assertNotNull(data["name"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
         assertNotNull(data["score"])
@@ -118,7 +153,9 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
     @And("the response data is a valid LOL entity")
     fun responseDataIsValidLolEntity() {
         val body = runBlocking { scenarioVariables.response.bodyAsText() }
-        val data = Json.parseToJsonElement(body).jsonObject["data"]!!.jsonObject
+        val dataElement = Json.parseToJsonElement(body).jsonObject["data"]
+        assertNotNull(dataElement?.takeIf { it.toString() != "null" }, "Expected response data to be present")
+        val data = dataElement!!.jsonObject
         assertEquals("com.kos.clients.domain.RiotData", data["type"]!!.jsonPrimitive.content)
         assertNotNull(data["summonerName"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
         assertNotNull(data["summonerTag"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
@@ -142,17 +179,17 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
     @And("a sync event exists for {string} entity {string} on realm {string} region {string}")
     fun syncEventExistsForEntity(game: String, name: String, realm: String, region: String) {
         val eventStore = EventStoreDatabase(db)
-        val resolvedGame = Game.valueOf(game.uppercase())
+        val resolvedGame = game.toGame()
         runBlocking {
             val events = eventStore.state()
             assertTrue(
                 events.any { eventWithVersion ->
                     val data = eventWithVersion.event.eventData
                     data is RequestToBeSynced &&
-                        data.game == resolvedGame &&
-                        (data.request as? WowEntityRequest)?.let {
-                            it.name == name && it.realm == realm && it.region == region
-                        } == true
+                            data.game == resolvedGame &&
+                            (data.request as? WowEntityRequest)?.let {
+                                it.name == name && it.realm == realm && it.region == region
+                            } == true
                 },
                 "Expected a sync event for $game entity $name on $realm/$region but none found"
             )

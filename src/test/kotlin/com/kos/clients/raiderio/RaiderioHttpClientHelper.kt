@@ -27,7 +27,7 @@ object RaiderIoHttpClientHelper {
                 when (request.url.encodedPath) {
 
                     "/api/v1/mythic-plus/static-data" -> {
-                        val response = ResourceLoader.readResource("wow/raiderio-tww-seasons.json")
+                        val response = ResourceLoader.readResource("unit/wow/raiderio-tww-seasons.json")
                         respond(
                             content = response,
                             status = HttpStatusCode.OK,
@@ -36,7 +36,7 @@ object RaiderIoHttpClientHelper {
                     }
 
                     "/api/v1/mythic-plus/season-cutoffs" -> {
-                        val response = ResourceLoader.readResource("wow/raiderio-cutoff-response.json")
+                        val response = ResourceLoader.readResource("unit/wow/raiderio-cutoff-response.json")
                         respond(
                             content = response,
                             status = HttpStatusCode.OK,
@@ -46,8 +46,8 @@ object RaiderIoHttpClientHelper {
 
                     "/api/v1/characters/profile" -> {
                         val response = when (request.url.parameters["fields"]) {
-                            "talents" -> ResourceLoader.readResource("wow/raiderio-classic-talents-response.json")
-                            else -> ResourceLoader.readResource("wow/raiderio-profile-response.json")
+                            "talents" -> ResourceLoader.readResource("unit/wow/raiderio-classic-talents-response.json")
+                            else -> ResourceLoader.readResource("unit/wow/raiderio-profile-response.json")
                         }
                         respond(
                             content = response,
@@ -57,7 +57,7 @@ object RaiderIoHttpClientHelper {
                     }
 
                     "/api/v1/mythic-plus/run-details" -> {
-                        val response = ResourceLoader.readResource("wow/raiderio-run-details-response.json")
+                        val response = ResourceLoader.readResource("unit/wow/raiderio-run-details-response.json")
                         respond(
                             content = response,
                             status = HttpStatusCode.OK,

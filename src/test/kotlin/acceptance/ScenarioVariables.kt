@@ -5,6 +5,7 @@ import io.ktor.client.statement.*
 
 class ScenarioVariables {
     var token: String? = null
+    var refreshToken: String? = null
     var operationId: String? = null
     var viewId: String? = null
     var game: Game? = null

@@ -8,10 +8,10 @@ import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.OperationFailedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
+import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import com.kos.eventsourcing.subscriptions.SubscriptionState
 import com.kos.eventsourcing.subscriptions.SubscriptionStatus
-import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsInMemoryRepository
 import com.kos.views.Game
 import kotlinx.coroutines.CancellationException
@@ -255,7 +255,8 @@ class EventSubscriptionTest {
 
             val eventStore = EventStoreInMemory().withState(listOf(eventWithVersion))
 
-            val subscriptionState = SubscriptionState(SubscriptionStatus.WAITING, version = 0, time = OffsetDateTime.now())
+            val subscriptionState =
+                SubscriptionState(SubscriptionStatus.WAITING, version = 0, time = OffsetDateTime.now())
             val subscriptionsRepository = SubscriptionsInMemoryRepository().withState(
                 mapOf("testSubscription" to subscriptionState)
             )
@@ -288,7 +289,8 @@ class EventSubscriptionTest {
 
             val eventStore = EventStoreInMemory().withState(listOf(eventWithVersion))
 
-            val subscriptionState = SubscriptionState(SubscriptionStatus.WAITING, version = 0, time = OffsetDateTime.now())
+            val subscriptionState =
+                SubscriptionState(SubscriptionStatus.WAITING, version = 0, time = OffsetDateTime.now())
             val subscriptionsRepository = SubscriptionsInMemoryRepository().withState(
                 mapOf("testSubscription" to subscriptionState)
             )
