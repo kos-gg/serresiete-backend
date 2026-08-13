@@ -2,6 +2,7 @@ package acceptance.steps
 
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
+import acceptance.toGame
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest
@@ -26,7 +27,7 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
 
     @When("they create a {string} view")
     fun createView(game: String) {
-        val resolvedGame = Game.valueOf(game.uppercase())
+        val resolvedGame = game.toGame()
         scenarioVariables.game = resolvedGame
         scenarioVariables.response = runBlocking {
             client.post("/api/views") {

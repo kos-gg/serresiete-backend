@@ -2,11 +2,12 @@ package acceptance.steps
 
 import acceptance.MockConfig
 import acceptance.SharedInfrastructure
+import acceptance.toGame
+import acceptance.wowEntityRequest
 import com.kos.clients.domain.HardcoreData
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.CreateEntityRequest
 import com.kos.entities.domain.LolEntityRequest
-import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventType
@@ -84,7 +85,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
 
     @Then("the WOW_HC data cache for {string} {string} {string} has not been updated")
     fun wowHcCacheHasNotBeenUpdated(name: String, realm: String, region: String) {
-        val request = WowEntityRequest(name, region, realm)
+        val request = wowEntityRequest(name, realm, region)
         runBlocking {
             val entity = entitiesRepo.get(request as CreateEntityRequest, Game.WOW_HC)
             assertNotNull(entity, "Entity $name not found in database")
@@ -95,7 +96,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
 
     @Then("{string} {string} {string} is marked as dead in the WOW_HC data cache")
     fun characterIsMarkedAsDeadInCache(name: String, realm: String, region: String) {
-        val request = WowEntityRequest(name, region, realm)
+        val request = wowEntityRequest(name, realm, region)
         runBlocking {
             val entity = entitiesRepo.get(request as CreateEntityRequest, Game.WOW_HC)
             assertNotNull(entity, "Entity $name not found in database")
@@ -120,6 +121,11 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
     @And("the raiderIo cutoff API returns an error")
     fun raiderIoCutoffReturnsError() {
         MockConfig.raiderIoCutoffStatusOverride = HttpStatusCode.InternalServerError
+    }
+
+    @And("the raiderIo profile API returns an error")
+    fun raiderIoProfileReturnsError() {
+        MockConfig.raiderIoProfileStatusOverride = HttpStatusCode.InternalServerError
     }
 
     @Then("a failure event is saved for the operation")
@@ -148,9 +154,9 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
     }
 
     private fun getWowEntityRequest(game: String, name: String, realmOrTag: String, region: String): Pair<Game, CreateEntityRequest> {
-        val resolvedGame = Game.valueOf(game.uppercase())
+        val resolvedGame = game.toGame()
         val request: CreateEntityRequest = when (resolvedGame) {
-            Game.WOW, Game.WOW_HC -> WowEntityRequest(name, region, realmOrTag)
+            Game.WOW, Game.WOW_HC -> wowEntityRequest(name, realmOrTag, region)
             else -> throw IllegalArgumentException("Unknown game $resolvedGame")
         }
         return Pair(resolvedGame, request)

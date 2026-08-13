@@ -6,8 +6,11 @@ import arrow.core.getOrElse
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.datacache.repository.DataCacheDatabaseRepository
+import com.kos.entities.domain.LolEnrichedEntityRequest
+import com.kos.entities.domain.LolEntity
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.tasks.Status
 import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
@@ -15,6 +18,7 @@ import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.views.Game
 import com.kos.views.SimpleView
+import com.kos.views.ViewEntity
 import com.kos.views.repository.ViewsDatabaseRepository
 import com.kos.views.repository.ViewsState
 import io.cucumber.java.en.And
@@ -165,13 +169,42 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
 
     @And("a LOL view {string} exists")
     fun lolViewExists(viewId: String) {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val entity = runBlocking {
+            entitiesRepo.insert(listOf(LolEnrichedEntityRequest("GTP ZeroMVPs", "EUW", "test-puuid-GTP-ZeroMVPs", 0, 0)), Game.LOL)
+        }.getOrNull()!!.first()
+
         val viewsRepo = ViewsDatabaseRepository(db)
         runBlocking {
             viewsRepo.withState(
                 ViewsState(
-                    views = listOf(SimpleView(viewId, "Test LOL View", "sanxei", false, emptyList(), Game.LOL, false)),
-                    viewEntities = emptyList()
+                    views = listOf(SimpleView(viewId, "Test LOL View", "sanxei", false, listOf(entity.id), Game.LOL, false)),
+                    viewEntities = listOf(ViewEntity(entity.id, viewId, null))
                 )
+            )
+        }
+    }
+
+    @Then("the LOL entity has been renamed to {string} {string}")
+    fun lolEntityHasBeenRenamed(newName: String, newTag: String) {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        runBlocking {
+            val entities = entitiesRepo.get(Game.LOL)
+            assertTrue(
+                entities.any { (it as? LolEntity)?.let { e -> e.name == newName && e.tag == newTag } == true },
+                "Expected a LOL entity renamed to $newName#$newTag but found: $entities"
+            )
+        }
+    }
+
+    @Then("a new WOW season {string} has been added")
+    fun newWowSeasonHasBeenAdded(seasonName: String) {
+        val seasonRepo = WowSeasonDatabaseRepository(db)
+        runBlocking {
+            val seasons = seasonRepo.state().wowSeasons
+            assertTrue(
+                seasons.any { it.name == seasonName },
+                "Expected a WOW season named \"$seasonName\" to have been added but found: ${seasons.map { it.name }}"
             )
         }
     }
