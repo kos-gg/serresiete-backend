@@ -8,7 +8,7 @@ import com.kos.common.error.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
@@ -337,7 +337,7 @@ class ViewsService(
 
     private suspend fun ensureMaxNumberOfEntities(
         owner: String,
-        entities: List<CreateEntityRequest>?
+        entities: List<EntityRequest>?
     ): Either<ControllerError, Unit> {
         return either {
             val ownerMaxNumberOfEntities = getMaxNumberOfEntitiesByRole(owner).bind()

@@ -278,7 +278,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         }
     }
 
-    override suspend fun get(request: CreateEntityRequest, game: Game): Entity? {
+    override suspend fun get(request: EntityRequest, game: Game): Entity? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             when (game) {
                 Game.WOW -> {

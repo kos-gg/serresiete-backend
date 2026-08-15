@@ -21,7 +21,7 @@ data class WithAlias<T>(
 sealed interface Entity {
     val id: Long
     val name: String
-    fun toRequest(): CreateEntityRequest
+    fun toRequest(): EntityRequest
 }
 
 class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSerializer<WithAlias<T>> {
@@ -53,7 +53,7 @@ class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSer
 
 @Polymorphic
 @Serializable
-sealed interface CreateEntityRequest {
+sealed interface EntityRequest {
     val name: String
     val alias: String?
     fun same(other: Entity): Boolean
@@ -63,7 +63,7 @@ sealed interface InsertEntityRequest {
     val name: String
     fun toEntity(id: Long): Entity
     fun same(other: Entity): Boolean
-    fun toRequest(): CreateEntityRequest
+    fun toRequest(): EntityRequest
 }
 
 typealias EntityWithAlias = WithAlias<Entity>
@@ -76,7 +76,7 @@ data class EntityDataResponse(val data: Data?, val operation: Operation?)
 
 @Serializable
 data class EntitiesExistRequest(
-    val entities: List<CreateEntityRequest>,
+    val entities: List<EntityRequest>,
     val game: Game
 )
 

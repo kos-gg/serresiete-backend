@@ -30,7 +30,7 @@ class WowHardcoreEntityResolver(
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
-        requested: List<CreateEntityRequest>,
+        requested: List<EntityRequest>,
         extra: ViewExtraArguments?
     ): Either<ServiceError, ResolvedEntities> = either {
         val args = extra as? WowHardcoreExtraArguments

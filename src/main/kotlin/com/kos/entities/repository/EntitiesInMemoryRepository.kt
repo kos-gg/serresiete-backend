@@ -172,7 +172,7 @@ class EntitiesInMemoryRepository(
         }
     }
 
-    override suspend fun get(request: CreateEntityRequest, game: Game): Entity? =
+    override suspend fun get(request: EntityRequest, game: Game): Entity? =
         when (game) {
             Game.WOW -> wowEntities.find {
                 request as WowEntityRequest

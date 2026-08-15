@@ -1,6 +1,6 @@
 package com.kos.eventsourcing.events
 
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.views.*
 import kotlinx.serialization.Serializable
 
@@ -68,7 +68,7 @@ data class ViewToBeCreatedEvent(
     val id: String,
     val name: String,
     val published: Boolean,
-    val entities: List<CreateEntityRequest>,
+    val entities: List<EntityRequest>,
     val game: Game,
     val owner: String,
     val featured: Boolean,
@@ -82,7 +82,7 @@ data class ViewToBeEditedEvent(
     val id: String,
     val name: String,
     val published: Boolean,
-    val entities: List<CreateEntityRequest>,
+    val entities: List<EntityRequest>,
     val game: Game,
     val featured: Boolean
 ) : EventData {
@@ -94,7 +94,7 @@ data class ViewToBePatchedEvent(
     val id: String,
     val name: String?,
     val published: Boolean?,
-    val entities: List<CreateEntityRequest>?,
+    val entities: List<EntityRequest>?,
     val game: Game,
     val featured: Boolean?
 ) : EventData {
@@ -202,7 +202,7 @@ data class ViewDeletedEvent(
 
 @Serializable
 data class RequestToBeSynced(
-    val request: CreateEntityRequest,
+    val request: EntityRequest,
     val game: Game
 ): EventData {
     override val eventType: EventType = EventType.REQUEST_TO_BE_SYNCED

@@ -10,7 +10,7 @@ import com.kos.common.WithLogger
 import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError
 import com.kos.datacache.repository.DataCacheRepository
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.eventsourcing.events.Event
@@ -63,7 +63,7 @@ data class DataCacheService(
     suspend fun clearCache(game: Game?): Int =
         dataCacheRepository.clearRecords(game)
 
-    suspend fun getOrSync(request: Pair<CreateEntityRequest, Game>): Either<ServiceError, EntityDataResponse> {
+    suspend fun getOrSync(request: Pair<EntityRequest, Game>): Either<ServiceError, EntityDataResponse> {
 
         suspend fun syncOperation(entityId: Long): Operation {
             val eventData = RequestToBeSynced(request.first, request.second)

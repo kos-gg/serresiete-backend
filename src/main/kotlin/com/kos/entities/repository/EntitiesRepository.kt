@@ -18,7 +18,7 @@ interface EntitiesRepository : WithState<EntitiesState, EntitiesRepository> {
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game): Either<InsertError, List<Entity>>
     suspend fun update(id: Long, entity: InsertEntityRequest, game: Game): Either<InsertError, Int>
     suspend fun get(id: Long, game: Game): Entity?
-    suspend fun get(request: CreateEntityRequest, game: Game): Entity?
+    suspend fun get(request: EntityRequest, game: Game): Entity?
     suspend fun get(game: Game): List<Entity>
     suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity>
     suspend fun get(entity: InsertEntityRequest, game: Game): Entity?

@@ -1,6 +1,6 @@
 package com.kos.plugins
 
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import io.ktor.serialization.kotlinx.json.*
@@ -13,7 +13,7 @@ import kotlinx.serialization.modules.polymorphic
 
 fun Application.configureSerialization() {
     val sm = SerializersModule {
-        polymorphic(CreateEntityRequest::class) {
+        polymorphic(EntityRequest::class) {
             subclass(LolEntityRequest::class, LolEntityRequest.serializer())
             subclass(WowEntityRequest::class, WowEntityRequest.serializer())
         }

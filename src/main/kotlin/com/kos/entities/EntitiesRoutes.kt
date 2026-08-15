@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntitiesExistRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
@@ -23,7 +23,7 @@ fun Route.entitiesRouting(
     authenticate("auth-jwt") {
         route("/entities") {
             get {
-                fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<CreateEntityRequest, Game>> {
+                fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
                     return either {
                         val name = parameters["name"]
                         when (val game = parameters["game"]) {

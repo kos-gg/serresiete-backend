@@ -6,7 +6,7 @@ import acceptance.toGame
 import acceptance.wowEntityRequest
 import com.kos.clients.domain.HardcoreData
 import com.kos.datacache.repository.DataCacheDatabaseRepository
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.Event
@@ -44,7 +44,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
 
     @Given("a LOL sync event is posted for {string} {string}")
     fun lolSyncEventPosted(name: String, tag: String) {
-        val request: CreateEntityRequest = LolEntityRequest(name, tag)
+        val request: EntityRequest = LolEntityRequest(name, tag)
         val operationId = UUID.randomUUID().toString()
         scenarioVariables.operationId = operationId
         runBlocking {
@@ -87,7 +87,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
     fun wowHcCacheHasNotBeenUpdated(name: String, realm: String, region: String) {
         val request = wowEntityRequest(name, realm, region)
         runBlocking {
-            val entity = entitiesRepo.get(request as CreateEntityRequest, Game.WOW_HC)
+            val entity = entitiesRepo.get(request as EntityRequest, Game.WOW_HC)
             assertNotNull(entity, "Entity $name not found in database")
             val entries = dataCacheRepo.get(entity.id)
             assertTrue(entries.size == 1, "Expected exactly 1 cache entry (no sync), but found ${entries.size}")
@@ -98,7 +98,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
     fun characterIsMarkedAsDeadInCache(name: String, realm: String, region: String) {
         val request = wowEntityRequest(name, realm, region)
         runBlocking {
-            val entity = entitiesRepo.get(request as CreateEntityRequest, Game.WOW_HC)
+            val entity = entitiesRepo.get(request as EntityRequest, Game.WOW_HC)
             assertNotNull(entity, "Entity $name not found in database")
             val cached = dataCacheRepo.get(entity.id).maxByOrNull { it.inserted }
             assertNotNull(cached, "No data cache entry found for entity $name")
@@ -109,7 +109,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
 
     @Then("the LOL data cache contains an entry for {string} {string}")
     fun lolDataCacheContainsEntry(name: String, tag: String) {
-        val request: CreateEntityRequest = LolEntityRequest(name, tag)
+        val request: EntityRequest = LolEntityRequest(name, tag)
         runBlocking {
             val entity = entitiesRepo.get(request, Game.LOL)
             assertNotNull(entity, "Entity $name not found in database after sync")
@@ -153,9 +153,9 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         }
     }
 
-    private fun getWowEntityRequest(game: String, name: String, realmOrTag: String, region: String): Pair<Game, CreateEntityRequest> {
+    private fun getWowEntityRequest(game: String, name: String, realmOrTag: String, region: String): Pair<Game, EntityRequest> {
         val resolvedGame = game.toGame()
-        val request: CreateEntityRequest = when (resolvedGame) {
+        val request: EntityRequest = when (resolvedGame) {
             Game.WOW, Game.WOW_HC -> wowEntityRequest(name, realmOrTag, region)
             else -> throw IllegalArgumentException("Unknown game $resolvedGame")
         }

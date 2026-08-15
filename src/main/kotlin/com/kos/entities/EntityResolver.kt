@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.fx.coroutines.parMap
 import com.kos.common.error.ServiceError
 import com.kos.common.split
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
@@ -19,16 +19,16 @@ interface EntityResolver {
     val game: Game
 
     suspend fun resolve(
-        requested: List<CreateEntityRequest>,
+        requested: List<EntityRequest>,
         extra: ViewExtraArguments?
     ): Either<ServiceError, ResolvedEntities>
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     suspend fun getCurrentAndNewEntities(
         repo: EntitiesRepository,
-        entities: List<CreateEntityRequest>,
+        entities: List<EntityRequest>,
         game: Game
-    ): Pair<List<EntityWithAlias>, List<CreateEntityRequest>> {
+    ): Pair<List<EntityWithAlias>, List<EntityRequest>> {
         return entities.asFlow()
             .parMap(3) { req ->
                 val existing = repo.get(req, game)

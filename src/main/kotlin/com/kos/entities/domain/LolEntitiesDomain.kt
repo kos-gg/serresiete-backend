@@ -19,7 +19,7 @@ data class LolEntityRequest(
     override val name: String,
     val tag: String,
     override val alias: String? = null
-) : CreateEntityRequest {
+) : EntityRequest {
 
     override fun same(other: Entity): Boolean {
         return when (other) {
@@ -55,5 +55,5 @@ data class LolEnrichedEntityRequest(
         }
     }
 
-    override fun toRequest(): CreateEntityRequest = LolEntityRequest(this.name, this.tag, null)
+    override fun toRequest(): EntityRequest = LolEntityRequest(this.name, this.tag, null)
 }

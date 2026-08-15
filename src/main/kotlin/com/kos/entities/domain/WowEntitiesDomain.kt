@@ -9,7 +9,7 @@ data class Class(val `class`: String, val specs: List<Spec>)
 data class WowEntityRequest(
     override val name: String, val region: String, val realm: String, override val alias: String? = null
 ) :
-    CreateEntityRequest, InsertEntityRequest {
+    EntityRequest, InsertEntityRequest {
     override fun toEntity(id: Long) = WowEntity(id, name, region, realm, null)
     override fun same(other: Entity): Boolean {
         return when (other) {
@@ -18,7 +18,7 @@ data class WowEntityRequest(
         }
     }
 
-    override fun toRequest(): CreateEntityRequest = this
+    override fun toRequest(): EntityRequest = this
 }
 
 data class WowEnrichedEntityRequest(
@@ -38,7 +38,7 @@ data class WowEnrichedEntityRequest(
         }
     }
 
-    override fun toRequest(): CreateEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
+    override fun toRequest(): EntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
 }
 
 @Serializable

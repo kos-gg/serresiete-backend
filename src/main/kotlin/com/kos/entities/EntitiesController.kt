@@ -8,7 +8,7 @@ import com.kos.common.error.EntityError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.datacache.DataCacheService
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
 import com.kos.views.Game
 
@@ -19,7 +19,7 @@ class EntitiesController(
     suspend fun getEntityData(
         client: String?,
         activities: Set<Activity>,
-        maybeSearchRequestAndGame: Pair<CreateEntityRequest, Game>
+        maybeSearchRequestAndGame: Pair<EntityRequest, Game>
     ): Either<ControllerError, EntityDataResponse> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
@@ -35,9 +35,9 @@ class EntitiesController(
     suspend fun exists(
         client: String?,
         activities: Set<Activity>,
-        entities: List<CreateEntityRequest>,
+        entities: List<EntityRequest>,
         game: Game,
-    ): Either<ControllerError, List<CreateEntityRequest>> {
+    ): Either<ControllerError, List<EntityRequest>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {

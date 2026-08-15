@@ -8,7 +8,7 @@ import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.isDefined
 import com.kos.entities.EntityResolver
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.ResolvedEntities
@@ -30,7 +30,7 @@ class LolEntityResolver(
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
-        requested: List<CreateEntityRequest>,
+        requested: List<EntityRequest>,
         extra: ViewExtraArguments?
     ): Either<ServiceError, ResolvedEntities> = either {
         val (existing, newRequests) = getCurrentAndNewEntities(repo, requested, Game.LOL)
