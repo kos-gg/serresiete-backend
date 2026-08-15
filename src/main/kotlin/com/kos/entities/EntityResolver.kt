@@ -1,6 +1,7 @@
 package com.kos.entities
 
 import arrow.core.Either
+import arrow.fx.coroutines.parMap
 import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.domain.CreateEntityRequest
@@ -9,15 +10,11 @@ import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 
-//TODO - Classes that extend from this need testing suite
 interface EntityResolver {
     val game: Game
 
@@ -26,25 +23,19 @@ interface EntityResolver {
         extra: ViewExtraArguments?
     ): Either<ServiceError, ResolvedEntities>
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     suspend fun getCurrentAndNewEntities(
         repo: EntitiesRepository,
         entities: List<CreateEntityRequest>,
         game: Game
-    ): Pair<List<EntityWithAlias>, List<CreateEntityRequest>> = coroutineScope {
-        val resolved = entities.asFlow()
-            .map { req ->
-                async {
-                    val existing = repo.get(req, game)
-                    if (existing == null) Either.Right(req)
-                    else Either.Left(EntityWithAlias(existing, req.alias))
-                }
+    ): Pair<List<EntityWithAlias>, List<CreateEntityRequest>> {
+        return entities.asFlow()
+            .parMap(3) { req ->
+                val existing = repo.get(req, game)
+                if (existing == null) Either.Right(req)
+                else Either.Left(EntityWithAlias(existing, req.alias))
             }
-            .buffer(3)
             .toList()
-            .awaitAll()
-
-        resolved.split()
+            .split()
     }
-
-
 }

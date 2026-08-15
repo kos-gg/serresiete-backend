@@ -2,6 +2,7 @@ package com.kos.entities.domain
 
 import com.kos.clients.domain.Data
 import com.kos.eventsourcing.events.Operation
+import com.kos.views.Game
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -20,6 +21,7 @@ data class WithAlias<T>(
 sealed interface Entity {
     val id: Long
     val name: String
+    fun toRequest(): CreateEntityRequest
 }
 
 class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSerializer<WithAlias<T>> {
@@ -61,6 +63,7 @@ sealed interface InsertEntityRequest {
     val name: String
     fun toEntity(id: Long): Entity
     fun same(other: Entity): Boolean
+    fun toRequest(): CreateEntityRequest
 }
 
 typealias EntityWithAlias = WithAlias<Entity>
@@ -70,6 +73,12 @@ fun <T> T.withAlias(alias: String?): WithAlias<T> = WithAlias(this, alias)
 
 @Serializable
 data class EntityDataResponse(val data: Data?, val operation: Operation?)
+
+@Serializable
+data class EntitiesExistRequest(
+    val entities: List<CreateEntityRequest>,
+    val game: Game
+)
 
 data class GuildPayload(
     val name: String,

@@ -17,6 +17,8 @@ data class WowEntityRequest(
             else -> false
         }
     }
+
+    override fun toRequest(): CreateEntityRequest = this
 }
 
 data class WowEnrichedEntityRequest(
@@ -35,6 +37,8 @@ data class WowEnrichedEntityRequest(
             else -> false
         }
     }
+
+    override fun toRequest(): CreateEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
 }
 
 @Serializable
@@ -46,9 +50,10 @@ data class WowEntity(
     val blizzardId: Long?
 ) : Entity {
     fun specsWithName(`class`: String): List<Spec> = classes.find { it.`class` == `class` }?.specs.orEmpty()
-    fun toRequest(): WowEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
+    override fun toRequest(): WowEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
 }
 
+//TODO: this should be static data in db
 val classes: List<Class> = listOf(
     Class(
         "Priest", listOf(

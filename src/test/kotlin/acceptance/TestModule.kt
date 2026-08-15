@@ -141,7 +141,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         lolUpdater,
         wowHardcoreGuildUpdater
     )
-    val entitiesController = EntitiesController(dataCacheService)
+    val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
     val viewsService = ViewsService(viewsRepository, entitiesService, dataCacheService, credentialsService, eventStore)
     val viewsController = ViewsController(viewsService)

@@ -23,6 +23,18 @@ data class EntitiesService(
 
 ) : WithLogger("EntitiesService") {
 
+    suspend fun exists(
+        requestedEntities: List<CreateEntityRequest>,
+        game: Game
+    ): Either<ServiceError, List<CreateEntityRequest>> {
+        return resolveEntities(requestedEntities, game)
+            .map { resolved ->
+                val existInThirdParty = resolved.entities.map { it.first.toRequest() }
+                val existsInRepository = resolved.existing.map { it.first.toRequest() }
+                existInThirdParty + existsInRepository
+            }
+    }
+
     suspend fun resolveEntities(
         requestedEntities: List<CreateEntityRequest>,
         game: Game,

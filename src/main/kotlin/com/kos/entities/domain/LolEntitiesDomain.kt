@@ -10,7 +10,9 @@ data class LolEntity(
     val puuid: String,
     val summonerIcon: Int,
     val summonerLevel: Int
-) : Entity
+) : Entity {
+    override fun toRequest(): LolEntityRequest = LolEntityRequest(this.name, this.tag, null)
+}
 
 @Serializable
 data class LolEntityRequest(
@@ -52,4 +54,6 @@ data class LolEnrichedEntityRequest(
             else -> false
         }
     }
+
+    override fun toRequest(): CreateEntityRequest = LolEntityRequest(this.name, this.tag, null)
 }

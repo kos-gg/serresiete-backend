@@ -3,6 +3,7 @@ package com.kos.sources.wowhc
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.fx.coroutines.parMap
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.toSyncProcessingError
@@ -16,9 +17,10 @@ import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
 import com.kos.views.WowHardcoreExtraArguments
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.toList
 
 class WowHardcoreEntityResolver(
     private val repo: EntitiesRepository,
@@ -26,6 +28,7 @@ class WowHardcoreEntityResolver(
 ) : EntityResolver, WithLogger("WowHardcoreResolver") {
     override val game: Game = Game.WOW_HC
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
         requested: List<CreateEntityRequest>,
         extra: ViewExtraArguments?
@@ -51,34 +54,34 @@ class WowHardcoreEntityResolver(
 
         val (existing, newRequests) = getCurrentAndNewEntities(repo, effectiveRequests, Game.WOW_HC)
 
-        val validatedTuples: List<Pair<InsertEntityRequest, String?>> = coroutineScope {
-            val (errors, oks) = newRequests.map { req ->
-                async {
-                    either {
-                        req as WowEntityRequest
-                        val profile = blizzardClient.getCharacterProfile(
-                            req.region, req.realm, req.name
-                        ).bind()
+        val (errors, oks) = newRequests.asFlow()
+            .parMap(10) { req ->
+                either {
+                    req as WowEntityRequest
+                    val profile = blizzardClient.getCharacterProfile(
+                        req.region, req.realm, req.name
+                    ).bind()
 
-                        val realm = blizzardClient.getRealm(req.region, profile.realm.id).bind()
+                    val realm = blizzardClient.getRealm(req.region, profile.realm.id).bind()
 
-                        ensure(
-                            realm.category == "Hardcore" || realm.category == "Anniversary"
-                        ) { NonHardcoreCharacter(req) }
+                    ensure(
+                        realm.category == "Hardcore" || realm.category == "Anniversary"
+                    ) { NonHardcoreCharacter(req) }
 
-                        WowEnrichedEntityRequest(
-                            req.name,
-                            req.region,
-                            req.realm,
-                            profile.id
-                        ) to req.alias
-                    }
+                    WowEnrichedEntityRequest(
+                        req.name,
+                        req.region,
+                        req.realm,
+                        profile.id
+                    ) to req.alias
                 }
-            }.awaitAll().split()
+            }
+            .toList()
+            .split()
 
-            errors.forEach { logger.error(it.toString()) }
-            oks
-        }
+        errors.forEach { logger.error(it.toString()) }
+
+        val validatedTuples: List<Pair<InsertEntityRequest, String?>> = oks
 
         ResolvedEntities(
             entities = validatedTuples,

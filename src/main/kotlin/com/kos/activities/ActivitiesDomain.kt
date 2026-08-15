@@ -40,5 +40,6 @@ object Activities {
     const val featureView = "feature view"
     const val getWowStaticData = "get wow static data"
     const val getOperationStatus = "get operation status"
+    const val checkEntitiesExist = "check entities exist"
 }
 typealias Activity = String

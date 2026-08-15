@@ -16,6 +16,8 @@ import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.EntitiesTestHelper.basicWowRequest
+import com.kos.entities.EntitiesTestHelper.basicWowRequest2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.gigaLolCharacterRequestList
 import com.kos.entities.EntitiesTestHelper.gigaLolEntityList
@@ -487,6 +489,34 @@ class EntitiesServiceTest {
 
     fun `insert`() {
 
+    }
+
+    @Test
+    fun `exists merges characters confirmed by the repository and by the third party into a single list`() {
+        runBlocking {
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
+
+            val entitiesService = createService(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
+
+            val result = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
+
+            result.onLeft { fail() }.onRight { res ->
+                assertEquals(setOf(basicWowRequest, basicWowRequest2), res.toSet())
+            }
+        }
+    }
+
+    @Test
+    fun `exists excludes characters that don't exist anywhere`() {
+        runBlocking {
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(false)
+
+            val entitiesService = createService(emptyEntitiesState)
+
+            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+
+            result.onLeft { fail() }.onRight { res -> assertEquals(listOf(), res) }
+        }
     }
 
     private suspend fun createService(entitiesState: EntitiesState): EntitiesService {

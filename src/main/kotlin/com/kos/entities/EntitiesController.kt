@@ -13,7 +13,8 @@ import com.kos.entities.domain.EntityDataResponse
 import com.kos.views.Game
 
 class EntitiesController(
-    private val dataCacheService: DataCacheService
+    private val dataCacheService: DataCacheService,
+    private val entitiesService: EntitiesService
 ) {
     suspend fun getEntityData(
         client: String?,
@@ -27,6 +28,22 @@ class EntitiesController(
                     dataCacheService.getOrSync(maybeSearchRequestAndGame)
                         .mapLeft { EntityError(it.error()) }
                 } else Either.Left(NotEnoughPermissions(client))
+            }
+        }
+    }
+
+    suspend fun exists(
+        client: String?,
+        activities: Set<Activity>,
+        entities: List<CreateEntityRequest>,
+        game: Game,
+    ): Either<ControllerError, List<CreateEntityRequest>> {
+        return when (client) {
+            null -> Either.Left(NotAuthorized)
+            else -> {
+                if (activities.contains(Activities.checkEntitiesExist))
+                    entitiesService.exists(entities, game).mapLeft { EntityError(it.error()) }
+                else Either.Left(NotEnoughPermissions(client))
             }
         }
     }
