@@ -487,12 +487,8 @@ class EntitiesServiceTest {
         }
     }
 
-    fun `insert`() {
-
-    }
-
     @Test
-    fun `exists merges characters confirmed by the repository and by the third party into a single list`() {
+    fun `exists merges characters confirmed by the repository and by the third party into exist`() {
         runBlocking {
             `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
 
@@ -501,13 +497,17 @@ class EntitiesServiceTest {
             val result = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
 
             result.onLeft { fail() }.onRight { res ->
-                assertEquals(setOf(basicWowRequest, basicWowRequest2), res.toSet())
+                assertEquals(
+                    setOf(basicWowRequest.toResponse(), basicWowRequest2.toResponse()),
+                    res.exist.toSet()
+                )
+                assertEquals(listOf(), res.nonExisting)
             }
         }
     }
 
     @Test
-    fun `exists excludes characters that don't exist anywhere`() {
+    fun `exists reports characters that don't exist anywhere as nonExisting`() {
         runBlocking {
             `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(false)
 
@@ -515,7 +515,10 @@ class EntitiesServiceTest {
 
             val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res -> assertEquals(listOf(), res) }
+            result.onLeft { fail() }.onRight { res ->
+                assertEquals(listOf(), res.exist)
+                assertEquals(listOf(basicWowRequest.toResponse()), res.nonExisting)
+            }
         }
     }
 

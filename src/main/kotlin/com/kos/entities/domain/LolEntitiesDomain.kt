@@ -27,7 +27,15 @@ data class LolEntityRequest(
             else -> false
         }
     }
+
+    override fun toResponse(): EntityResponse = LolEntityResponse(name, tag)
 }
+
+@Serializable
+data class LolEntityResponse(
+    override val name: String,
+    val tag: String
+) : EntityResponse
 
 data class LolEnrichedEntityRequest(
     override val name: String,

@@ -8,6 +8,7 @@ import com.kos.common.error.EntityError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.datacache.DataCacheService
+import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
 import com.kos.views.Game
@@ -37,7 +38,7 @@ class EntitiesController(
         activities: Set<Activity>,
         entities: List<EntityRequest>,
         game: Game,
-    ): Either<ControllerError, List<EntityRequest>> {
+    ): Either<ControllerError, EntitiesExistResponse> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {

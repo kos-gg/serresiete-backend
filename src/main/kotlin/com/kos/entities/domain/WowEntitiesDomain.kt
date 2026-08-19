@@ -19,7 +19,15 @@ data class WowEntityRequest(
     }
 
     override fun toRequest(): EntityRequest = this
+    override fun toResponse(): EntityResponse = WowEntityResponse(name, region, realm)
 }
+
+@Serializable
+data class WowEntityResponse(
+    override val name: String,
+    val region: String,
+    val realm: String
+) : EntityResponse
 
 data class WowEnrichedEntityRequest(
     override val name: String,

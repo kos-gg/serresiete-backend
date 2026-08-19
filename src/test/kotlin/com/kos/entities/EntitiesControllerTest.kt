@@ -8,6 +8,7 @@ import com.kos.common.error.NotEnoughPermissions
 import com.kos.common.error.ResolverNotFound
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
+import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
@@ -38,8 +39,9 @@ class EntitiesControllerTest {
     @Test
     fun `exists delegates to the service and returns its result`() {
         runBlocking {
+            val response = EntitiesExistResponse(exist = listOf(basicWowRequest.toResponse()), nonExisting = listOf())
             `when`(entitiesService.exists(listOf(basicWowRequest), Game.WOW))
-                .thenReturn(Either.Right(listOf(basicWowRequest)))
+                .thenReturn(Either.Right(response))
 
             val result = controller.exists(
                 "client",
@@ -48,7 +50,7 @@ class EntitiesControllerTest {
                 Game.WOW
             )
 
-            assertEquals(Either.Right(listOf(basicWowRequest)), result)
+            assertEquals(Either.Right(response), result)
         }
     }
 

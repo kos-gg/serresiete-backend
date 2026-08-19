@@ -26,12 +26,18 @@ data class EntitiesService(
     suspend fun exists(
         requestedEntities: List<EntityRequest>,
         game: Game
-    ): Either<ServiceError, List<EntityRequest>> {
+    ): Either<ServiceError, EntitiesExistResponse> {
         return resolveEntities(requestedEntities, game)
             .map { resolved ->
                 val existInThirdParty = resolved.entities.map { it.first.toRequest() }
                 val existsInRepository = resolved.existing.map { it.first.toRequest() }
-                existInThirdParty + existsInRepository
+                val exist = existInThirdParty + existsInRepository
+                val nonExisting = requestedEntities.filterNot { it in exist }
+
+                EntitiesExistResponse(
+                    exist = exist.map { it.toResponse() },
+                    nonExisting = nonExisting.map { it.toResponse() }
+                )
             }
     }
 
