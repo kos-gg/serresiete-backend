@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.ClientError
 import com.kos.clients.RetryConfig
+import com.kos.clients.TimeoutError
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfileResponse
@@ -46,15 +47,37 @@ class RaiderIoHTTPClientTest {
     @Test
     fun `test exists() method with successful response`() {
         runBlocking {
-            assertTrue(
-                raiderIoClient.exists(
-                    WowEntityRequest(
-                        basicWowEntity.name,
-                        basicWowEntity.region,
-                        basicWowEntity.realm
-                    )
+            val result = raiderIoClient.exists(
+                WowEntityRequest(
+                    basicWowEntity.name,
+                    basicWowEntity.region,
+                    basicWowEntity.realm
                 )
             )
+
+            assertEquals(Either.Right(true), result)
+        }
+    }
+
+    @Test
+    fun `test exists() method returns false on a 404 response`() {
+        runBlocking {
+            val result = raiderIoClient.exists(
+                WowEntityRequest("unknown-character", "eu", "zuljin")
+            )
+
+            assertEquals(Either.Right(false), result)
+        }
+    }
+
+    @Test
+    fun `test exists() method returns a Left instead of throwing on a request timeout`() {
+        runBlocking {
+            val result = raiderIoClient.exists(
+                WowEntityRequest("timeout-character", "eu", "zuljin")
+            )
+
+            result.onRight { fail() }.onLeft { error -> assertTrue(error is TimeoutError) }
         }
     }
 

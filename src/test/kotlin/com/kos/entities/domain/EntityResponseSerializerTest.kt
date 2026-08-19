@@ -46,7 +46,8 @@ class EntityResponseSerializerTest {
     fun `round trips a mixed list inside EntitiesExistResponse`() {
         val response = EntitiesExistResponse(
             exist = listOf(WowEntityResponse("kakarona", "eu", "zuljin")),
-            nonExisting = listOf(LolEntityResponse("sanxei", "EUW"))
+            nonExisting = listOf(LolEntityResponse("sanxei", "EUW")),
+            unchecked = listOf(WowEntityResponse("unknown", "eu", "zuljin"))
         )
 
         val decoded = json.decodeFromString<EntitiesExistResponse>(json.encodeToString(response))

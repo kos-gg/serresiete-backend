@@ -1,6 +1,7 @@
 package com.kos.entities.domain
 
 import com.kos.clients.domain.Data
+import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.Operation
 import com.kos.views.Game
 import kotlinx.serialization.KSerializer
@@ -64,7 +65,8 @@ data class EntitiesExistRequest(
 @Serializable
 data class EntitiesExistResponse(
     val exist: List<EntityResponse>,
-    val nonExisting: List<EntityResponse>
+    val nonExisting: List<EntityResponse>,
+    val unchecked: List<EntityResponse>
 )
 
 data class GuildPayload(
@@ -77,7 +79,8 @@ data class GuildPayload(
 data class ResolvedEntities(
     val entities: List<Pair<InsertEntityRequest, String?>>,
     val existing: List<Pair<Entity, String?>>,
-    val guild: GuildPayload?
+    val unchecked: List<Pair<EntityRequest, ServiceError>> = emptyList(),
+    val guild: GuildPayload?,
 )
 
 class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSerializer<WithAlias<T>> {

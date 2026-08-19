@@ -2,6 +2,7 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.ClientError
+import com.kos.clients.HttpError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
@@ -22,6 +23,7 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.serialization.json.JsonElement
 import java.net.URI
 import java.time.Duration
 
@@ -110,10 +112,21 @@ data class RaiderIoHTTPClient(
         }
     }
 
-    override suspend fun exists(wowEntityRequest: WowEntityRequest): Boolean {
-        val response = getRaiderIoProfile(wowEntityRequest.region, wowEntityRequest.realm, wowEntityRequest.name)
-        return response.status.value < 300
-    }
+    override suspend fun exists(wowEntityRequest: WowEntityRequest): Either<ClientError, Boolean> =
+        retryEitherWithFixedDelay(
+            retryConfig = retryConfig,
+            functionName = "raiderIoExists",
+        ) {
+            fetchFromApi<JsonElement> {
+                getRaiderIoProfile(wowEntityRequest.region, wowEntityRequest.realm, wowEntityRequest.name)
+            }
+        }.fold(
+            ifLeft = { error ->
+                if (error is HttpError && error.status == 404) Either.Right(false)
+                else Either.Left(error)
+            },
+            ifRight = { Either.Right(true) }
+        )
 
     override suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff> {
         return fetchFromApi(
@@ -169,10 +182,6 @@ data class RaiderIoHTTPClient(
                 parameters.append("region", region)
                 parameters.append("realm", realm)
                 parameters.append("name", name)
-                parameters.append(
-                    "fields",
-                    "mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks"
-                )
             }
         }
 

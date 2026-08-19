@@ -39,7 +39,7 @@ class EntitiesControllerTest {
     @Test
     fun `exists delegates to the service and returns its result`() {
         runBlocking {
-            val response = EntitiesExistResponse(exist = listOf(basicWowRequest.toResponse()), nonExisting = listOf())
+            val response = EntitiesExistResponse(exist = listOf(basicWowRequest.toResponse()), nonExisting = listOf(), unchecked = listOf())
             `when`(entitiesService.exists(listOf(basicWowRequest), Game.WOW))
                 .thenReturn(Either.Right(response))
 

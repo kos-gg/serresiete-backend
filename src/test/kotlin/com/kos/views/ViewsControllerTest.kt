@@ -1,5 +1,6 @@
 package com.kos.views
 
+import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
@@ -469,7 +470,7 @@ class ViewsControllerTest {
                 listOf(lolDataCache)
             )
 
-            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(Either.Right(true))
 
             val viewRequest = ViewRequest("new-name", false, entities = listOf(basicWowRequest2), Game.WOW, false)
 
@@ -497,7 +498,7 @@ class ViewsControllerTest {
                 listOf(lolDataCache)
             )
 
-            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(true)
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(Either.Right(true))
 
             val viewRequest = ViewRequest("new-name", false, entities = listOf(basicWowRequest2), Game.WOW, true)
 

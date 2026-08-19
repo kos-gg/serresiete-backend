@@ -585,10 +585,10 @@ class ViewsServiceTest {
                 val request3 = WowEntityRequest("c", "r", "r")
                 val request4 = WowEntityRequest("d", "r", "r")
 
-                `when`(raiderIoClient.exists(request1)).thenReturn(true)
-                `when`(raiderIoClient.exists(request2)).thenReturn(true)
-                `when`(raiderIoClient.exists(request3)).thenReturn(true)
-                `when`(raiderIoClient.exists(request4)).thenReturn(true)
+                `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request3)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request4)).thenReturn(Either.Right(true))
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(
@@ -874,10 +874,10 @@ class ViewsServiceTest {
                 val request3 = WowEntityRequest("c", "r", "r")
                 val request4 = WowEntityRequest("d", "r", "r")
 
-                `when`(raiderIoClient.exists(request1)).thenReturn(true)
-                `when`(raiderIoClient.exists(request2)).thenReturn(true)
-                `when`(raiderIoClient.exists(request3)).thenReturn(true)
-                `when`(raiderIoClient.exists(request4)).thenReturn(true)
+                `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request3)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request4)).thenReturn(Either.Right(true))
 
 
                 val (eventStore, viewsService) = createService(

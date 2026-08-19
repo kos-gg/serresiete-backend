@@ -1,5 +1,7 @@
 package com.kos.sources.wow
 
+import arrow.core.Either
+import com.kos.clients.TimeoutError
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
@@ -18,7 +20,7 @@ class WowEntityResolverTest {
     @Test
     fun `resolves a new character that exists in raiderio`() {
         runBlocking {
-            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(true)
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Right(true))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, raiderIoClient)
@@ -28,6 +30,7 @@ class WowEntityResolverTest {
                 .onRight { res ->
                     assertEquals(listOf(basicWowRequest to null), res.entities)
                     assertEquals(listOf(), res.existing)
+                    assertEquals(listOf(), res.unchecked)
                 }
         }
     }
@@ -35,14 +38,17 @@ class WowEntityResolverTest {
     @Test
     fun `does not resolve a new character that does not exist in raiderio`() {
         runBlocking {
-            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(false)
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Right(false))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, raiderIoClient)
 
             resolver.resolve(listOf(basicWowRequest), null)
                 .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(), res.entities) }
+                .onRight { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf(), res.unchecked)
+                }
         }
     }
 
@@ -67,8 +73,8 @@ class WowEntityResolverTest {
     @Test
     fun `resolves a batch of new characters concurrently, keeping only the ones that exist`() {
         runBlocking {
-            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(true)
-            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(false)
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Right(true))
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(Either.Right(false))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, raiderIoClient)
@@ -76,6 +82,47 @@ class WowEntityResolverTest {
             resolver.resolve(listOf(basicWowRequest, basicWowRequest2), null)
                 .onLeft { fail() }
                 .onRight { res -> assertEquals(listOf(basicWowRequest to null), res.entities) }
+        }
+    }
+
+    @Test
+    fun `resolve reports a raiderio failure as unchecked instead of lying that the character doesn't exist`() {
+        runBlocking {
+            val timeoutError = TimeoutError("Request timeout has expired")
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Left(timeoutError))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = WowEntityResolver(repo, raiderIoClient)
+
+            resolver.resolve(listOf(basicWowRequest), null)
+                .onLeft { fail() }
+                .onRight { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(1, res.unchecked.size)
+                    assertEquals(basicWowRequest, res.unchecked.single().first)
+                }
+        }
+    }
+
+    @Test
+    fun `resolve partitions a mixed batch into resolved entities and unchecked ones`() {
+        runBlocking {
+            val timeoutError = TimeoutError("Request timeout has expired")
+            val basicWowRequest3 = basicWowRequest2.copy(name = "thirdcharacter")
+
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Right(true))
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(Either.Right(false))
+            `when`(raiderIoClient.exists(basicWowRequest3)).thenReturn(Either.Left(timeoutError))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = WowEntityResolver(repo, raiderIoClient)
+
+            resolver.resolve(listOf(basicWowRequest, basicWowRequest2, basicWowRequest3), null)
+                .onLeft { fail() }
+                .onRight { res ->
+                    assertEquals(listOf(basicWowRequest to null), res.entities)
+                    assertEquals(listOf(basicWowRequest3), res.unchecked.map { it.first })
+                }
         }
     }
 }

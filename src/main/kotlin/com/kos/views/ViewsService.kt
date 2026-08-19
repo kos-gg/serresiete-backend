@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.clients.domain.Data
+import com.kos.common.WithLogger
 import com.kos.common.error.*
 import com.kos.credentials.CredentialsService
 import com.kos.datacache.DataCacheService
@@ -22,7 +23,7 @@ class ViewsService(
     private val dataCacheService: DataCacheService,
     private val credentialsService: CredentialsService,
     private val eventStore: EventStore
-) {
+) : WithLogger("ViewsService") {
 
     suspend fun getOwnViews(owner: String): List<SimpleView> = viewsRepository.getOwnViews(owner)
     suspend fun getViews(
@@ -102,6 +103,10 @@ class ViewsService(
                     viewToBeCreatedEvent.extraArguments
                 ).bind()
 
+            if (resolved.unchecked.isNotEmpty()) {
+                logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
+            }
+
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
                 .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message) }
@@ -173,6 +178,10 @@ class ViewsService(
                     viewToBeEditedEvent.game
                 ).bind()
 
+            if (resolved.unchecked.isNotEmpty()) {
+                logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
+            }
+
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
                 .mapLeft { ViewEditError(viewToBeEditedEvent, it.message) }
@@ -237,6 +246,10 @@ class ViewsService(
                         entitiesToInsert,
                         viewToBePatchedEvent.game
                     ).bind()
+
+                if (resolved.unchecked.isNotEmpty()) {
+                    logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
+                }
 
                 val inserted = entitiesService
                     .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)

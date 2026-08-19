@@ -4,8 +4,10 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.collect
 import com.kos.common.error.ServiceError
+import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.ResolvedEntities
@@ -31,21 +33,24 @@ class WowEntityResolver(
     ): Either<ServiceError, ResolvedEntities> = either {
         val (existing, newRequests) = getCurrentAndNewEntities(repo, requested, Game.WOW)
 
-        val validated = newRequests.asFlow()
+        val (unchecked, checked) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
-                val exists = raiderioClient.exists(req)
-                req to exists
+                raiderioClient.exists(req).fold(
+                    ifLeft = { error -> Either.Left(req to error.toSyncProcessingError("raiderIoExists")) },
+                    ifRight = { exists -> Either.Right(req to exists) }
+                )
             }
             .toList()
-            .collect(
-                filter = { it.second },
-                map = { it.first to it.first.alias }
-            )
+            .split()
 
         ResolvedEntities(
-            entities = validated,
+            entities = checked.collect(
+                filter = { it.second },
+                map = { it.first to it.first.alias }
+            ),
             existing = existing.map { it.value to it.alias },
+            unchecked = unchecked,
             guild = null
         )
     }
