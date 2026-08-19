@@ -44,6 +44,23 @@ class RetryTest {
     }
 
     @Test
+    fun `retryEitherWithFixedDelay retries upon a TimeoutError`() {
+        runBlocking {
+            val attempts = mutableListOf<Either<ClientError, String>>()
+
+            val block: suspend () -> Either<ClientError, String> = {
+                val result = Either.Left(TimeoutError("Request timeout has expired"))
+                attempts.add(result)
+                result
+            }
+
+            val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
+            assertEquals(Either.Left(TimeoutError("Request timeout has expired")), result)
+            assertEquals(4, attempts.size)
+        }
+    }
+
+    @Test
     fun `retryEitherWithFixedDelay stops retrying upon a JsonParseError error`() {
         runBlocking {
             val attempts = mutableListOf<Either<ClientError, String>>()
