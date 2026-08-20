@@ -1,0 +1,26 @@
+{
+  "is_main_season": true,
+  "name": "Mythic+ Season 3",
+  "slug": "mythic-plus-season-3",
+  "blizzard_season_id": 12,
+  "dungeons": [
+    {
+      "name": "The Nokhud Offensive",
+      "short_name": "NO",
+      "challenge_mode_id": 2516,
+      "icon_url": "https://cdn.raiderio.net/images/wow/icons/large/inv_achievement_dungeon_thenokhudoffensive.jpg"
+    },
+    {
+      "name": "Algeth'ar Academy",
+      "short_name": "AA",
+      "challenge_mode_id": 2520,
+      "icon_url": "https://cdn.raiderio.net/images/wow/icons/large/inv_achievement_dungeon_algetharacademy.jpg"
+    },
+    {
+      "name": "Ruby Life Pools",
+      "short_name": "RLP",
+      "challenge_mode_id": 2521,
+      "icon_url": "https://cdn.raiderio.net/images/wow/icons/large/inv_achievement_dungeon_rubylifepools.jpg"
+    }
+  ]
+}
