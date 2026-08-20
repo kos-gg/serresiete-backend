@@ -48,8 +48,15 @@ object RaiderIoHttpClientHelper {
                     "/api/v1/characters/profile" -> {
                         when (request.url.parameters["name"]) {
                             "unknown-character" -> respond(
-                                content = "",
-                                status = HttpStatusCode.NotFound
+                                content = """{"statusCode":400,"error":"Bad Request","message":"Could not find requested character"}""",
+                                status = HttpStatusCode.BadRequest,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json")
+                            )
+
+                            "malformed-request-character" -> respond(
+                                content = """{"statusCode":400,"error":"Bad Request","message":"Invalid request query input"}""",
+                                status = HttpStatusCode.BadRequest,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json")
                             )
 
                             "timeout-character" -> throw HttpRequestTimeoutException(request.url.toString(), null)

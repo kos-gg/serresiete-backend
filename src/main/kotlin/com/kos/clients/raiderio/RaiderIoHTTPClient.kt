@@ -122,7 +122,9 @@ data class RaiderIoHTTPClient(
             }
         }.fold(
             ifLeft = { error ->
-                if (error is HttpError && error.status == 404) Either.Right(false)
+                if (error is HttpError && error.status == 400 &&
+                    error.body?.contains("Could not find requested character") == true
+                ) Either.Right(false)
                 else Either.Left(error)
             },
             ifRight = { Either.Right(true) }
