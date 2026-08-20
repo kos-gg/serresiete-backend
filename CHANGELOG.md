@@ -1,4 +1,22 @@
 # Changelog
+## [5.10.0] - 20-08-2026
+
+### Added
+- **`POST /entities/exists`**:
+    - Checks whether a batch of characters exist for a game (WOW/LOL/WOW_HC) before adding them to a view, reusing each game's existing `EntityResolver`. Response is `{exist, nonExisting, unchecked}` — `unchecked` (WOW only so far) separates "confirmed doesn't exist" from "couldn't confirm due to a third-party error", so a transient RaiderIO hiccup no longer gets reported as a nonexistent character.
+    - Gated by a new `check entities exist` activity.
+    - `CreateEntityRequest` renamed to `EntityRequest` project-wide (it now also backs search and existence-checking, not just creation) — pure rename, no wire-format change.
+
+### Fixed
+- **Third-party request timeouts surfaced as unhandled exceptions**: `fetchFromApi` now catches `HttpRequestTimeoutException` and maps it to a modeled `TimeoutError` instead of letting it escape as a raw exception.
+- **RaiderIO "character not found" was indistinguishable from a malformed request**: both return HTTP 400. `RaiderIoClient.exists()` now returns `Either<ClientError, Boolean>` (previously a bare `Boolean` that silently treated any failure as "doesn't exist") and disambiguates "not found" by checking the response body's message text.
+
+### Improved
+- **Resolver concurrency**: `WowEntityResolver`/`WowHardcoreEntityResolver`/`LolEntityResolver.resolve()` and `EntityResolver.getCurrentAndNewEntities` now use bounded `arrow.fx.coroutines.parMap` instead of unbounded `map { async {} }.awaitAll()`, closing the same class of unbounded-concurrency risk previously fixed in the sync layer — WOW_HC could otherwise cancel an entire batch via one timed-out Blizzard call.
+
+### Removed
+- Unused exponential-backoff retry helper (`Retry.retryEitherWithExponentialBackoff`) — dead code, no caller.
+
 ## [5.9.0] - 12-08-2026
 
 ### Fixed
