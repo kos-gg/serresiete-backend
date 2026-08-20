@@ -2,6 +2,7 @@ package com.kos.sources
 
 import com.kos.activities.Activities
 import com.kos.clients.domain.Season
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import kotlinx.coroutines.runBlocking
@@ -14,31 +15,7 @@ import kotlin.test.fail
 
 class SourcesControllerTest {
     private val sourcesService = mock(SourcesService::class.java)
-    private val seasonData = """
-                {
-                  "is_main_season": true,
-                  "name": "Mythic+ Season 3",
-                  "slug": "mythic-plus-season-3",
-                  "blizzard_season_id": 12,
-                  "dungeons": [
-                    {
-                      "name": "The Nokhud Offensive",
-                      "short_name": "NO",
-                      "challenge_mode_id": 2516
-                    },
-                    {
-                      "name": "Algeth'ar Academy",
-                      "short_name": "AA",
-                      "challenge_mode_id": 2520
-                    },
-                    {
-                      "name": "Ruby Life Pools",
-                      "short_name": "RLP",
-                      "challenge_mode_id": 2521
-                    }
-                  ]
-                }
-            """.trimIndent()
+    private val seasonData = RaiderIoHttpClientHelper.ResourceLoader.readResource("unit/wow/season-response.json")
     private val season = Json.decodeFromString<Season>(seasonData)
 
     @Test
