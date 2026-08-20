@@ -16,7 +16,7 @@ data class NotEnoughPermissions(val user: String) : ControllerError
 data class CantDeleteYourself(val user: String, val userToRemove: String) : ControllerError
 data class AuthenticationError(val message: String) : ControllerError
 data class ViewDataError(val message: String) : ControllerError
-data class EntityError(val message: String): ControllerError
+data class EntityError(val message: String) : ControllerError
 data class NotFound(val id: String) : ControllerError {
     fun error(): String = "Not found $id"
 }

@@ -204,7 +204,7 @@ data class ViewDeletedEvent(
 data class RequestToBeSynced(
     val request: EntityRequest,
     val game: Game
-): EventData {
+) : EventData {
     override val eventType: EventType = EventType.REQUEST_TO_BE_SYNCED
 }
 

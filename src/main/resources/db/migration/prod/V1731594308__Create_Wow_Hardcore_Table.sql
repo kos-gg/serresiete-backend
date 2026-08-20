@@ -1,4 +1,3 @@
-
 create table wow_hardcore_characters
 (
     id     integer default nextval('characters_ids') primary key,
@@ -8,5 +7,7 @@ create table wow_hardcore_characters
     constraint uchc UNIQUE (name, region, realm)
 );
 
-insert into subscriptions (name) values ('sync-wow');
-insert into subscriptions (name) values ('sync-wow-hc');
+insert into subscriptions (name)
+values ('sync-wow');
+insert into subscriptions (name)
+values ('sync-wow-hc');

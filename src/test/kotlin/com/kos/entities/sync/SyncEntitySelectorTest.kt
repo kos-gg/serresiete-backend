@@ -23,7 +23,8 @@ class SyncEntitySelectorTest {
     fun `staleness rule excludes entities with fresh cache`() {
         runBlocking {
             val freshCache = wowDataCache.copy(entityId = basicWowEntity.id)
-            val staleCache = wowDataCache.copy(entityId = basicWowEntity2.id, inserted = wowDataCache.inserted.minusHours(2))
+            val staleCache =
+                wowDataCache.copy(entityId = basicWowEntity2.id, inserted = wowDataCache.inserted.minusHours(2))
 
             val selector = createSelector(listOf(freshCache, staleCache))
             val result = selector.select(Game.WOW)

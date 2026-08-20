@@ -9,8 +9,16 @@
   "spec": "Arms",
   "quantile": 0.99,
   "mythicPlusRanks": {
-    "overall": { "world": 100, "region": 50, "realm": 1 },
-    "class": { "world": 50, "region": 25, "realm": 1 },
+    "overall": {
+      "world": 100,
+      "region": 50,
+      "realm": 1
+    },
+    "class": {
+      "world": 50,
+      "region": 25,
+      "realm": 1
+    },
     "specs": []
   },
   "mythicPlusBestRuns": [],

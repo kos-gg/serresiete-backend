@@ -3,7 +3,7 @@ package com.kos.activities
 object Activities {
     const val searchEntity = "search entity"
     const val deleteActivityFromRole = "delete activity from role"
-    const val addActivityToRole= "add activity to role"
+    const val addActivityToRole = "add activity to role"
     const val deleteCredentials = "delete credentials"
     const val getAnyCredentials = "get any credentials"
     const val getAnyCredential = "get any credential"

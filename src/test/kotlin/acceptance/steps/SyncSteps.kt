@@ -153,7 +153,12 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         }
     }
 
-    private fun getWowEntityRequest(game: String, name: String, realmOrTag: String, region: String): Pair<Game, EntityRequest> {
+    private fun getWowEntityRequest(
+        game: String,
+        name: String,
+        realmOrTag: String,
+        region: String
+    ): Pair<Game, EntityRequest> {
         val resolvedGame = game.toGame()
         val request: EntityRequest = when (resolvedGame) {
             Game.WOW, Game.WOW_HC -> wowEntityRequest(name, realmOrTag, region)

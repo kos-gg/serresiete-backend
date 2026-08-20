@@ -35,7 +35,11 @@ class TasksController(private val tasksService: TasksService) {
         }
     }
 
-    suspend fun getTasks(client: String?, activities: Set<Activity>, taskType: TaskType?): Either<ControllerError, List<Task>> {
+    suspend fun getTasks(
+        client: String?,
+        activities: Set<Activity>,
+        taskType: TaskType?
+    ): Either<ControllerError, List<Task>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {

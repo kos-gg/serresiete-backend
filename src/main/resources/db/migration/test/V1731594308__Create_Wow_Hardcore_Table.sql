@@ -7,5 +7,7 @@ create table wow_hardcore_characters
     constraint uchc UNIQUE (name, region, realm)
 );
 
-insert into subscriptions (name) values ('sync-wow');
-insert into subscriptions (name) values ('sync-wow-hc');
+insert into subscriptions (name)
+values ('sync-wow');
+insert into subscriptions (name)
+values ('sync-wow-hc');

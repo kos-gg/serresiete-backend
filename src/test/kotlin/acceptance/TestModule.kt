@@ -165,10 +165,34 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
-            CacheGameDataTaskRunner(Game.LOL, TaskType.CACHE_LOL_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheGameDataTaskRunner(Game.WOW, TaskType.CACHE_WOW_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheGameDataTaskRunner(Game.WOW_HC, TaskType.CACHE_WOW_HC_DATA_TASK, tasksRepository, syncEntitySelector, entitySynchronizerProvider),
-            CacheGameViewDataTaskRunner(tasksRepository, viewsService, entitiesService, entitySynchronizerProvider, 300L)
+            CacheGameDataTaskRunner(
+                Game.LOL,
+                TaskType.CACHE_LOL_DATA_TASK,
+                tasksRepository,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameDataTaskRunner(
+                Game.WOW,
+                TaskType.CACHE_WOW_DATA_TASK,
+                tasksRepository,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameDataTaskRunner(
+                Game.WOW_HC,
+                TaskType.CACHE_WOW_HC_DATA_TASK,
+                tasksRepository,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameViewDataTaskRunner(
+                tasksRepository,
+                viewsService,
+                entitiesService,
+                entitySynchronizerProvider,
+                300L
+            )
         )
     )
     val tasksService = TasksService(tasksRepository, taskRunnerProvider)

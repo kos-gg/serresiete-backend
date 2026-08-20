@@ -28,7 +28,8 @@ class SubscriptionsDatabaseRepository(private val db: Database) : SubscriptionsR
 
     override suspend fun getState(name: String): SubscriptionState? =
         newSuspendedTransaction(Dispatchers.IO, db) {
-            Subscriptions.selectAll().where { Subscriptions.name.eq(name) }.map { resultRowToSubscriptionState(it) }.singleOrNull()
+            Subscriptions.selectAll().where { Subscriptions.name.eq(name) }.map { resultRowToSubscriptionState(it) }
+                .singleOrNull()
         }
 
     override suspend fun setState(subscriptionName: String, subscriptionState: SubscriptionState) {

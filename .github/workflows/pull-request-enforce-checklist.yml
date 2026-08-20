@@ -2,7 +2,7 @@ name: Enforce PR Checklist
 
 on:
   pull_request:
-    types: [opened, edited, synchronize]
+    types: [ opened, edited, synchronize ]
 
 env:
   changelog_checkbox: "i didn't add a changelog entry because this feature didn't need to update changelog"
@@ -23,7 +23,7 @@ jobs:
         env:
           BODY: ${{ github.event.pull_request.body }}
         id: checklist
-        run: |          
+        run: |
           UNCHECKED_CHANGELOG="\[ \] $changelog_checkbox"
           MARKED_CHANGELOG="\[x\] $changelog_checkbox"
           

@@ -20,6 +20,13 @@ class TokenCleanupTaskRunner(
         logger.info("Running token cleanup task")
         val deletedTokens = authService.deleteExpiredTokens()
         logger.info("Deleted $deletedTokens expired tokens")
-        tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTokens expired tokens"), OffsetDateTime.now()))
+        tasksRepository.updateTask(
+            Task(
+                id,
+                type,
+                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTokens expired tokens"),
+                OffsetDateTime.now()
+            )
+        )
     }
 }

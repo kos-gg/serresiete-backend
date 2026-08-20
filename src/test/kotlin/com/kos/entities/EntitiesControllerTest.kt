@@ -23,7 +23,8 @@ class EntitiesControllerTest {
     @Test
     fun `exists returns not authorized for an anonymous client`() {
         runBlocking {
-            val result = controller.exists(null, setOf(Activities.checkEntitiesExist), listOf(basicWowRequest), Game.WOW)
+            val result =
+                controller.exists(null, setOf(Activities.checkEntitiesExist), listOf(basicWowRequest), Game.WOW)
             assertEquals(Either.Left(NotAuthorized), result)
         }
     }
@@ -39,7 +40,11 @@ class EntitiesControllerTest {
     @Test
     fun `exists delegates to the service and returns its result`() {
         runBlocking {
-            val response = EntitiesExistResponse(exist = listOf(basicWowRequest.toResponse()), nonExisting = listOf(), unchecked = listOf())
+            val response = EntitiesExistResponse(
+                exist = listOf(basicWowRequest.toResponse()),
+                nonExisting = listOf(),
+                unchecked = listOf()
+            )
             `when`(entitiesService.exists(listOf(basicWowRequest), Game.WOW))
                 .thenReturn(Either.Right(response))
 

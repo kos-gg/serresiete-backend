@@ -39,11 +39,20 @@ fun Route.tasksRouting(tasksController: TasksController) {
                     val taskTypeParameter = "type"
                     val taskType: TaskType? =
                         call.request.queryParameters[taskTypeParameter].recoverToEither(
-                            { InvalidQueryParameter(taskTypeParameter, it, TaskType.entries.map { taskTypes -> taskTypes.toString() }) },
+                            {
+                                InvalidQueryParameter(
+                                    taskTypeParameter,
+                                    it,
+                                    TaskType.entries.map { taskTypes -> taskTypes.toString() })
+                            },
                             { TaskType.fromString(it) }
                         ).bind()
 
-                    tasksController.getTasks(userWithActivities?.name, userWithActivities?.activities.orEmpty(), taskType).bind()
+                    tasksController.getTasks(
+                        userWithActivities?.name,
+                        userWithActivities?.activities.orEmpty(),
+                        taskType
+                    ).bind()
                 }.fold({
                     call.respondWithHandledError(it)
                 }, {

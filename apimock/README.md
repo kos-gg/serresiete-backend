@@ -1,6 +1,8 @@
 # Mock Server for API
 
-This mock server is built with Express to simulate backend responses, allowing frontend developers to test the API without connecting to the real server. The server runs on the same port as the production server (port 8080), so ensure the real server is not running simultaneously when using this mock.
+This mock server is built with Express to simulate backend responses, allowing frontend developers to test the API
+without connecting to the real server. The server runs on the same port as the production server (port 8080), so ensure
+the real server is not running simultaneously when using this mock.
 
 ## Table of Contents
 
@@ -27,9 +29,11 @@ To start the mock server, use the following command:
 ```bash
 npm start
 ```
+
 ## Available Endpoints
 
 ### 1. `GET /api/views/:id/data`
+
 - **Description**: Returns data for a specific view.
 - **Path Parameter**:
     - `id` (string): The ID of the view.
@@ -40,6 +44,7 @@ npm start
    ```
 
 ### 2. `GET /api/views/:id/cached-data`
+
 - **Description**: Returns cached data for a specific view.
 - **Path Parameter**:
     - `id` (string): The ID of the view.
@@ -50,6 +55,7 @@ npm start
    ```
 
 ### 3. `GET /api/views`
+
 - **Description**: Returns a list of available views.
 - **Response**: Sends the contents of `resources/views.json`.
 - **Example Request**:

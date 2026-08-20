@@ -1,1 +1,2 @@
-alter table data_cache add column game varchar(32) not null default 'lol';
+alter table data_cache
+    add column game varchar(32) not null default 'lol';

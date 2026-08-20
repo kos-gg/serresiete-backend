@@ -58,7 +58,13 @@ class CacheGameViewDataTaskRunnerTest {
     private val entitySynchronizerProvider = EntitySynchronizerProvider(
         listOf(
             LolEntitySynchronizer(dataCacheRepo, riotClient),
-            WowHardcoreEntitySynchronizer(dataCacheRepo, entitiesRepo, raiderIoClient, blizzardClient, wowItemsDatabaseRepository)
+            WowHardcoreEntitySynchronizer(
+                dataCacheRepo,
+                entitiesRepo,
+                raiderIoClient,
+                blizzardClient,
+                wowItemsDatabaseRepository
+            )
         )
     )
     private val viewsService = ViewsService(
@@ -74,7 +80,8 @@ class CacheGameViewDataTaskRunnerTest {
     )
 
     private val lolView = SimpleView("test-view", "Test View", "sanxei", false, emptyList(), Game.LOL, false)
-    private val wowHcView = SimpleView("wohc-view", "WowHC View", "sanxei", false, listOf(basicWowHardcoreEntity.id), Game.WOW_HC, false)
+    private val wowHcView =
+        SimpleView("wohc-view", "WowHC View", "sanxei", false, listOf(basicWowHardcoreEntity.id), Game.WOW_HC, false)
 
     @Test
     fun `view entities are synced and task is recorded as successful`() = runBlocking {
@@ -137,7 +144,14 @@ class CacheGameViewDataTaskRunnerTest {
     fun `dead wow hardcore entities are non-fatal and task is recorded as successful`() = runBlocking {
         entitiesRepo.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
         dataCacheRepo.withState(
-            listOf(wowHardcoreDataCache.copy(data = wowHardcoreDataCache.data.replace(""""isDead": false""", """"isDead": true""")))
+            listOf(
+                wowHardcoreDataCache.copy(
+                    data = wowHardcoreDataCache.data.replace(
+                        """"isDead": false""",
+                        """"isDead": true"""
+                    )
+                )
+            )
         )
         viewsRepo.withState(ViewsState(listOf(wowHcView), emptyList()))
         val id = UUID.randomUUID().toString()
