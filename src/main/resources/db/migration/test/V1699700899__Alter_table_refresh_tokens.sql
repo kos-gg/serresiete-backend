@@ -1,2 +1,1 @@
-alter table authorizations
-    add column is_access boolean not null default true;
+alter table authorizations add column is_access boolean not null default true;

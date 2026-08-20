@@ -1,2 +1,1 @@
-alter table views
-    add column featured boolean not null default false
+alter table views add column featured boolean not null default false

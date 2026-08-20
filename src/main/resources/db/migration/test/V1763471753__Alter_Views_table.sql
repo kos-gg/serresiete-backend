@@ -1,2 +1,1 @@
-alter table views
-    add column extra_arguments text null;
+alter table views add column extra_arguments text null;

@@ -1,2 +1,1 @@
-ALTER TABLE views
-    ADD COLUMN last_synced_at text NULL;
+ALTER TABLE views ADD COLUMN last_synced_at text NULL;

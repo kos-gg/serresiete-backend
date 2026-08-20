@@ -1,2 +1,1 @@
-alter table views
-    add column name varchar(128) not null default 'created-when-view-name-was-not-a-thing';
+alter table views add column name varchar(128) not null default 'created-when-view-name-was-not-a-thing';

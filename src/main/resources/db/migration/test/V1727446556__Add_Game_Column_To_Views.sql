@@ -1,2 +1,1 @@
-alter table views
-    add column game text not null default 'wow'
+alter table views add column game text not null default 'wow'

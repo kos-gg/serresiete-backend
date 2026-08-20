@@ -1,2 +1,1 @@
-alter table views
-    add column published boolean not null default true
+alter table views add column published boolean not null default true

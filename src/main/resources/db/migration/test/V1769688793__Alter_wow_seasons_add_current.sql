@@ -1,2 +1,1 @@
-ALTER TABLE mythic_plus_seasons
-    ADD COLUMN is_current_season boolean DEFAULT true;
+ALTER TABLE mythic_plus_seasons ADD COLUMN is_current_season boolean DEFAULT true;

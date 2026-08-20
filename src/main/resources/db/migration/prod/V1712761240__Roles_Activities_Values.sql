@@ -1,60 +1,31 @@
-insert into roles_activities
-values ('admin', 'get any activities');
-insert into roles_activities
-values ('admin', 'get any roles');
-insert into roles_activities
-values ('admin', 'create activities');
-insert into roles_activities
-values ('admin', 'create roles');
-insert into roles_activities
-values ('admin', 'delete activities');
-insert into roles_activities
-values ('admin', 'delete roles');
+insert into roles_activities values('admin', 'get any activities');
+insert into roles_activities values('admin', 'get any roles');
+insert into roles_activities values('admin', 'create activities');
+insert into roles_activities values('admin', 'create roles');
+insert into roles_activities values('admin', 'delete activities');
+insert into roles_activities values('admin', 'delete roles');
 
-insert into roles
-values ('admin');
-insert into roles
-values ('user');
-insert into roles
-values ('service');
+insert into roles values('admin');
+insert into roles values('user');
+insert into roles values('service');
 
-insert into activities
-values ('create a view');
-insert into activities
-values ('get any views');
-insert into activities
-values ('get any view');
-insert into activities
-values ('get own views');
-insert into activities
-values ('get own view');
-insert into activities
-values ('get view data');
-insert into activities
-values ('get view cached data');
-insert into activities
-values ('edit own view');
-insert into activities
-values ('edit any view');
-insert into activities
-values ('delete own view');
-insert into activities
-values ('delete any view');
-insert into activities
-values ('create credentials');
-insert into activities
-values ('logout');
-insert into activities
-values ('login');
-insert into activities
-values ('get any activities');
-insert into activities
-values ('get any roles');
-insert into activities
-values ('create activities');
-insert into activities
-values ('create roles');
-insert into activities
-values ('delete activities');
-insert into activities
-values ('delete roles');
+insert into activities values('create a view');
+insert into activities values('get any views');
+insert into activities values('get any view');
+insert into activities values('get own views');
+insert into activities values('get own view');
+insert into activities values('get view data');
+insert into activities values('get view cached data');
+insert into activities values('edit own view');
+insert into activities values('edit any view');
+insert into activities values('delete own view');
+insert into activities values('delete any view');
+insert into activities values('create credentials');
+insert into activities values('logout');
+insert into activities values('login');
+insert into activities values('get any activities');
+insert into activities values('get any roles');
+insert into activities values('create activities');
+insert into activities values('create roles');
+insert into activities values('delete activities');
+insert into activities values('delete roles');

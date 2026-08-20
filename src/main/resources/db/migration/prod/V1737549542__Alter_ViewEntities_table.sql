@@ -1,2 +1,1 @@
-alter table view_entities
-    add column alias text null;
+alter table view_entities add column alias text null;
