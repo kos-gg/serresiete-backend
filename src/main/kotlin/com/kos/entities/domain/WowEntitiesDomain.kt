@@ -9,7 +9,7 @@ data class Class(val `class`: String, val specs: List<Spec>)
 data class WowEntityRequest(
     override val name: String, val region: String, val realm: String, override val alias: String? = null
 ) :
-    CreateEntityRequest, InsertEntityRequest {
+    EntityRequest, InsertEntityRequest {
     override fun toEntity(id: Long) = WowEntity(id, name, region, realm, null)
     override fun same(other: Entity): Boolean {
         return when (other) {
@@ -17,7 +17,17 @@ data class WowEntityRequest(
             else -> false
         }
     }
+
+    override fun toRequest(): EntityRequest = this
+    override fun toResponse(): EntityResponse = WowEntityResponse(name, region, realm)
 }
+
+@Serializable
+data class WowEntityResponse(
+    override val name: String,
+    val region: String,
+    val realm: String
+) : EntityResponse
 
 data class WowEnrichedEntityRequest(
     override val name: String,
@@ -35,6 +45,8 @@ data class WowEnrichedEntityRequest(
             else -> false
         }
     }
+
+    override fun toRequest(): EntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
 }
 
 @Serializable
@@ -46,9 +58,10 @@ data class WowEntity(
     val blizzardId: Long?
 ) : Entity {
     fun specsWithName(`class`: String): List<Spec> = classes.find { it.`class` == `class` }?.specs.orEmpty()
-    fun toRequest(): WowEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
+    override fun toRequest(): WowEntityRequest = WowEntityRequest(this.name, this.region, this.realm, null)
 }
 
+//TODO: this should be static data in db
 val classes: List<Class> = listOf(
     Class(
         "Priest", listOf(

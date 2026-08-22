@@ -56,6 +56,7 @@ object RiotHTTPClientHelper {
                             responseFromResource("unit/lol/riot-get-account-by-puuid-response.json"),
                             HttpStatusCode.OK
                         )
+
                     else -> error("Unhandled ${request.url.encodedPath}")
                 }
             }

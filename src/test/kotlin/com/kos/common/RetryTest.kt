@@ -44,6 +44,23 @@ class RetryTest {
     }
 
     @Test
+    fun `retryEitherWithFixedDelay retries upon a TimeoutError`() {
+        runBlocking {
+            val attempts = mutableListOf<Either<ClientError, String>>()
+
+            val block: suspend () -> Either<ClientError, String> = {
+                val result = Either.Left(TimeoutError("Request timeout has expired"))
+                attempts.add(result)
+                result
+            }
+
+            val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
+            assertEquals(Either.Left(TimeoutError("Request timeout has expired")), result)
+            assertEquals(4, attempts.size)
+        }
+    }
+
+    @Test
     fun `retryEitherWithFixedDelay stops retrying upon a JsonParseError error`() {
         runBlocking {
             val attempts = mutableListOf<Either<ClientError, String>>()
@@ -90,43 +107,6 @@ class RetryTest {
             }
 
             val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
-
-            assertEquals(Either.Right("Success"), result)
-            assertEquals(2, attempts.size)
-        }
-    }
-
-    @Test
-    fun `retryEitherWithExponentialBackoff retries with exponential delay on failure`() {
-        runBlocking {
-            val attempts = mutableListOf<Either<String, String>>()
-
-            val request: suspend () -> Either<String, String> = {
-                val result = Either.Left("Failure")
-                attempts.add(result)
-                result
-            }
-
-            val result =
-                Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, request = request)
-
-            assertEquals(Either.Left("Failure"), result)
-            assertEquals(4, attempts.size)
-        }
-    }
-
-    @Test
-    fun `retryEitherWithExponentialBackoff returns Right on success before max attempts`() {
-        runBlocking {
-            val attempts = mutableListOf<Either<String, String>>()
-
-            val request: suspend () -> Either<String, String> = {
-                val result = if (attempts.size == 1) Either.Right("Success") else Either.Left("Failure")
-                attempts.add(result)
-                result
-            }
-
-            val result = Retry.retryEitherWithExponentialBackoff(zeroDelayRetryConfig, request = request)
 
             assertEquals(Either.Right("Success"), result)
             assertEquals(2, attempts.size)

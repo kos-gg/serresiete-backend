@@ -11,8 +11,7 @@ interface RaiderIoClient {
     suspend fun get(wowEntity: WowEntity): Either<ClientError, RaiderIoResponse>
     suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, ExpansionSeasons>
     suspend fun getRunDetails(season: String, runId: String): Either<ClientError, RunDetails>
-
-    suspend fun exists(wowEntityRequest: WowEntityRequest): Boolean
+    suspend fun exists(wowEntityRequest: WowEntityRequest): Either<ClientError, Boolean>
     suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff>
     suspend fun wowheadEmbeddedCalculator(
         region: String,

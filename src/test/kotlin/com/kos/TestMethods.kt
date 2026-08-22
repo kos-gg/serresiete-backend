@@ -9,7 +9,7 @@ fun assertTrue(boolean: Boolean?) = when (boolean) {
     else -> assertTrue(boolean)
 }
 
-fun assertFalse(boolean: Boolean?) =  when (boolean) {
+fun assertFalse(boolean: Boolean?) = when (boolean) {
     null -> fail()
     else -> assertFalse(boolean)
 }

@@ -29,7 +29,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
@@ -585,10 +585,10 @@ class ViewsServiceTest {
                 val request3 = WowEntityRequest("c", "r", "r")
                 val request4 = WowEntityRequest("d", "r", "r")
 
-                `when`(raiderIoClient.exists(request1)).thenReturn(true)
-                `when`(raiderIoClient.exists(request2)).thenReturn(true)
-                `when`(raiderIoClient.exists(request3)).thenReturn(true)
-                `when`(raiderIoClient.exists(request4)).thenReturn(true)
+                `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request3)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request4)).thenReturn(Either.Right(true))
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(
@@ -874,10 +874,10 @@ class ViewsServiceTest {
                 val request3 = WowEntityRequest("c", "r", "r")
                 val request4 = WowEntityRequest("d", "r", "r")
 
-                `when`(raiderIoClient.exists(request1)).thenReturn(true)
-                `when`(raiderIoClient.exists(request2)).thenReturn(true)
-                `when`(raiderIoClient.exists(request3)).thenReturn(true)
-                `when`(raiderIoClient.exists(request4)).thenReturn(true)
+                `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request3)).thenReturn(Either.Right(true))
+                `when`(raiderIoClient.exists(request4)).thenReturn(Either.Right(true))
 
 
                 val (eventStore, viewsService) = createService(
@@ -1015,7 +1015,7 @@ class ViewsServiceTest {
         aggregateRoot: String,
         viewName: String,
         published: Boolean,
-        characters: List<CreateEntityRequest>,
+        characters: List<EntityRequest>,
         game: Game,
         featured: Boolean,
     ) {

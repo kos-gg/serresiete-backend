@@ -56,10 +56,14 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
             WowGuildsState(listOf(Pair(GuildPayload(guild, realm, region, blizzardId), "1")))
         )
         `when`(blizzardClient.getGuildRoster(region, realm, guild))
-            .thenReturn(Either.Right(GetWowRosterResponse(
-                listOf(WowMemberResponse(WowCharacterResponse(character, 60))),
-                WowGuildResponse(blizzardId)
-            )))
+            .thenReturn(
+                Either.Right(
+                    GetWowRosterResponse(
+                        listOf(WowMemberResponse(WowCharacterResponse(character, 60))),
+                        WowGuildResponse(blizzardId)
+                    )
+                )
+            )
         `when`(blizzardClient.getCharacterProfile(region, realm, character.toLowerCasePreservingASCIIRules()))
             .thenReturn(Either.Right(getWowCharacterResponse.copy(name = character, guild = guild)))
         `when`(blizzardClient.getRealm(region, 5220))

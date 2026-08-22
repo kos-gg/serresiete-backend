@@ -37,7 +37,10 @@ fun Application.configureAuthentication(credentialsService: CredentialsService, 
                 //TODO: Would be nice to provide why validation went wrong
                 if (TokenMode.fromString(token.payload.getClaim("mode").asString()) != TokenMode.ACCESS) null
                 //TODO: Maybe check that expiresAtAsInstant can only be null if user has service role
-                else if (token.payload.expiresAtAsInstant != null && token.payload.expiresAtAsInstant.isBefore(OffsetDateTime.now().toInstant())) null
+                else if (token.payload.expiresAtAsInstant != null && token.payload.expiresAtAsInstant.isBefore(
+                        OffsetDateTime.now().toInstant()
+                    )
+                ) null
                 else {
                     val username = token.payload.getClaim("username").asString()
                     val activities = token.payload.getClaim("activities").asList(String::class.java).toSet()

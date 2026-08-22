@@ -26,7 +26,7 @@ class RolesController(private val rolesService: RolesService) {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if(activities.contains(Activities.getAnyRoles)) Either.Right(rolesService.getRole(role))
+                if (activities.contains(Activities.getAnyRoles)) Either.Right(rolesService.getRole(role))
                 else Either.Left(NotEnoughPermissions(client))
             }
         }
@@ -41,7 +41,12 @@ class RolesController(private val rolesService: RolesService) {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if(activities.contains(Activities.addActivityToRole)) Either.Right(rolesService.setActivitiesToRole(role, request.activities))
+                if (activities.contains(Activities.addActivityToRole)) Either.Right(
+                    rolesService.setActivitiesToRole(
+                        role,
+                        request.activities
+                    )
+                )
                 else Either.Left(NotEnoughPermissions(client))
             }
         }

@@ -91,7 +91,10 @@ class CredentialsController(val credentialsService: CredentialsService) {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.getAnyCredentialsRoles) || (client == user && activities.contains(Activities.getOwnCredentialsRoles) )) {
+                if (activities.contains(Activities.getAnyCredentialsRoles) || (client == user && activities.contains(
+                        Activities.getOwnCredentialsRoles
+                    ))
+                ) {
                     when (val credential = credentialsService.getCredential(user)) {
                         null -> Either.Left(NotFound(user))
                         else -> Either.Right(credential)

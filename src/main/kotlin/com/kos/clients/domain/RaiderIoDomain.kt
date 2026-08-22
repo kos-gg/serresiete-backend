@@ -101,7 +101,9 @@ data class Dungeon(
     @SerialName("short_name")
     val shortName: String,
     @SerialName("challenge_mode_id")
-    val dungeonId: Int
+    val dungeonId: Int,
+    @SerialName("icon_url")
+    val icon: String,
 )
 
 @Serializable

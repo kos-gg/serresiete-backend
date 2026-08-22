@@ -22,7 +22,14 @@ class UpdateWowHardcoreGuildsTaskRunner(
         if (errors.isEmpty()) {
             tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
         } else {
-            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }), OffsetDateTime.now()))
+            tasksRepository.updateTask(
+                Task(
+                    id,
+                    type,
+                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
+                    OffsetDateTime.now()
+                )
+            )
         }
     }
 }

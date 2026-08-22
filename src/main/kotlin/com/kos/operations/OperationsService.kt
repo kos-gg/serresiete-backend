@@ -23,11 +23,13 @@ class OperationsService(private val eventStore: EventStore) {
                 id = operationId,
                 status = OperationStatusType.COMPLETED
             )
+
             failedEvent != null -> OperationStatus(
                 id = operationId,
                 status = OperationStatusType.FAILED,
                 reason = (failedEvent.event.eventData as OperationFailedEvent).reason
             )
+
             else -> OperationStatus(
                 id = operationId,
                 status = OperationStatusType.PENDING

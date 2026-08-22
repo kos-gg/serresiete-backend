@@ -1,1528 +1,1528 @@
 {
-	"info": {
-		"_postman_id": "f1d6c4ec-961c-4f3c-a076-7184345bdec5",
-		"name": "raiderio-ladder-backend",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "30887858"
-	},
-	"item": [
-		{
-			"name": "views",
-			"item": [
-				{
-					"name": "Get Own Views",
-					"protocolProfileBehavior": {
-						"disabledSystemHeaders": {}
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/views",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get View",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Referer",
-								"value": "http://localhost:3000",
-								"type": "default"
-							},
-							{
-								"key": "Access-Control-Allow-Origin",
-								"value": "*",
-								"type": "default"
-							}
-						],
-						"url": {
-							"raw": "{{baseUri}}/api/views/{{viewId}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views",
-								"{{viewId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get View Data",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true,
-						"disabledSystemHeaders": {}
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/views/{{viewId}}/data",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views",
-								"{{viewId}}",
-								"data"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get View Cached Data",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true,
-						"disabledSystemHeaders": {}
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/views/{{viewId}}/cached-data",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views",
-								"{{viewId}}",
-								"cached-data"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create View",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody)",
-									"pm.collectionVariables.set(\"viewId\", jsonData.id);"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"LEC\",\n    \"characters\": [\n        {\n            \"name\": \"Rydle\",\n            \"tag\": \"KEK\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"kaczynski\",\n            \"tag\": \"theo\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"LaianPage\",\n            \"tag\": \"KEKW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Endika Gear\",\n            \"tag\": \"EUSK\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"calla egirl\",\n            \"tag\": \"0000\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Flakked Wannabe\",\n            \"tag\": \"HRTS\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"moonata\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"greed\",\n            \"tag\": \"elo\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"ivanperez55\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"4Sueee\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"OVJ XxKeviNxX997\",\n            \"tag\": \"OJJ\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"FãƒîTø Kµþ\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Isirigal19\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"MVP VI\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Soldier Boy\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Freeze Machine\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Ruthless\",\n            \"tag\": \"1511\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Mehrrez\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"ISupZeRool\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"mohamed1112\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        }\n    ],\n    \"published\": true,\n    \"game\": \"LOL\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/views",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views"
-							]
-						}
-					},
-					"response": [
-						{
-							"name": "Create WOW View",
-							"originalRequest": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"wow-view-example-entities\",\n    \"game\": \"WOW\",\n    \"published\": true,\n    \"featured\": true,\n    \"entities\": [\n        {\n            \"name\": \"kumii\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"osborno\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"sanxxei\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        }\n    ]\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{baseUri}}/api/views",
-									"host": [
-										"{{baseUri}}"
-									],
-									"path": [
-										"api",
-										"views"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Vary",
-									"value": "Origin"
-								},
-								{
-									"key": "Content-Length",
-									"value": "72"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"viewId\": \"3da5cfbc-06a5-43e0-aad5-96dbdaf3743b\",\n    \"characters\": [\n        2,\n        16,\n        14\n    ]\n}"
-						},
-						{
-							"name": "Create LOL View",
-							"originalRequest": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"lol-view-example\",\n    \"game\": \"LOL\",\n    \"published\": true,\n    \"featured\": false,\n    \"entities\": [\n        {\n            \"name\": \"sanxei\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Handx\",\n            \"tag\": \"013\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Mogge\",\n            \"tag\": \"EUW12\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        }\n    ]\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{baseUri}}/api/views",
-									"host": [
-										"{{baseUri}}"
-									],
-									"path": [
-										"api",
-										"views"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Vary",
-									"value": "Origin"
-								},
-								{
-									"key": "Content-Length",
-									"value": "67"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"viewId\": \"83607273-e2d9-44db-8d12-ad4dec00ecc0\",\n    \"characters\": [\n        49\n    ]\n}"
-						},
-						{
-							"name": "Create WOW HC View",
-							"originalRequest": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"Onlyfangs 2\",\n    \"game\": \"WOW_HC\",\n    \"published\": true,\n    \"entities\": [\n        {\n            \"name\": \"Shuloneta\",\n            \"region\": \"eu\",\n            \"realm\": \"soulseeker\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"Surmana\",\n            \"region\": \"eu\",\n            \"realm\": \"soulseeker\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        }\n    ],\n    \"featured\": false\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{baseUri}}/api/views",
-									"host": [
-										"{{baseUri}}"
-									],
-									"path": [
-										"api",
-										"views"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "plain",
-							"header": [
-								{
-									"key": "vary",
-									"value": "Origin"
-								},
-								{
-									"key": "www-authenticate",
-									"value": "Bearer realm=\"Ktor Server\""
-								},
-								{
-									"key": "date",
-									"value": "Fri, 15 Nov 2024 22:08:18 GMT"
-								},
-								{
-									"key": "server",
-									"value": "Fly/bc77ddfa7 (2024-11-15)"
-								},
-								{
-									"key": "via",
-									"value": "1.1 fly.io"
-								},
-								{
-									"key": "fly-request-id",
-									"value": "01JCRXX7BNRKZ9H3JA59EW9HS3-mad"
-								},
-								{
-									"key": "content-length",
-									"value": "0"
-								}
-							],
-							"cookie": [],
-							"body": null
-						}
-					]
-				},
-				{
-					"name": "Edit View",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"LEC\",\n    \"entities\": [\n        {\n            \"name\": \"CABALLO GANADOR\",\n            \"tag\": \"CTANG\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Wesley Warren Jr\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"qrds\",\n            \"tag\": \"211\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        }\n    ],\n    \"published\": true,\n    \"featured\": false,\n    \"game\": \"LOL\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/views/{{viewId}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views",
-								"{{viewId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete View",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/views/{{viewId}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views",
-								"{{viewId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Patch View",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"LEC-2\",\n    \"game\": \"LOL\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/views/{{viewId}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"views",
-								"{{viewId}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "auth",
-			"item": [
-				{
-					"name": "login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody)",
-									"pm.collectionVariables.set(\"token\", jsonData.accessToken);",
-									"pm.collectionVariables.set(\"refreshToken\", jsonData.refreshToken);"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{user}}",
-									"type": "string"
-								},
-								{
-									"key": "password",
-									"value": "{{password}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/auth",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"auth"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "refresh",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody)",
-									"pm.collectionVariables.set(\"token\", jsonData.accessToken);"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{refreshToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/auth/refresh",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"auth",
-								"refresh"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "logout",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.collectionVariables.set(\"token\", \"\");"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/auth",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"auth"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "credentials",
-			"item": [
-				{
-					"name": "Create Credentials",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"userName\": \"testUser3\",\n    \"password\": \"testPassword\",\n    \"roles\": [\"USER\"]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/credentials",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"credentials"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Edit Credentials",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"password\": \"latarea\",\n    \"roles\": [\"ADMIN\", \"USER\"]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/credentials/{{newUser}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"credentials",
-								"{{newUser}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Patch Credential",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"password\": \"latarea\",\n    \"roles\": [\"ADMIN\", \"USER\"]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/credentials/{{user}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"credentials",
-								"{{user}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Roles From User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/credentials/{{user}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"credentials",
-								"{{user}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "roles",
-			"item": [
-				{
-					"name": "Get Roles",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/roles",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"roles"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Role",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/roles/{{role}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"roles",
-								"{{role}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Put activities to role",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"activities\": [\n        \"aaalooool\",\n        \"add activity to role\",\n        \"add role to user\",\n        \"create a view\",\n        \"create activities\",\n        \"create credentials\",\n        \"create roles\",\n        \"delete activities\",\n        \"delete activity from role\",\n        \"delete any view\",\n        \"delete credentials\",\n        \"delete own view\",\n        \"delete role from user\",\n        \"delete roles\",\n        \"edit any view\",\n        \"edit credentials\",\n        \"edit own view\",\n        \"get all credentials\",\n        \"get all views\",\n        \"get any activities\",\n        \"get any credential\",\n        \"get any credentials\",\n        \"get any credentials roles\",\n        \"get any roles\",\n        \"get any view\",\n        \"get any views\",\n        \"get own credentials roles\",\n        \"get own view\",\n        \"get own views\",\n        \"get task\",\n        \"get tasks\",\n        \"get view cached data\",\n        \"get view data\",\n        \"get views\",\n        \"login\",\n        \"logout\",\n        \"patch credentials\",\n        \"run task\"\n    ]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/roles/{{role}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"roles",
-								"{{role}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "activities",
-			"item": [
-				{
-					"name": "Get Activities",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/activities",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"activities"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "tasks",
-			"item": [
-				{
-					"name": "Run task",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const locationHeader = pm.response.headers.get('Location');",
-									"const id = locationHeader.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)[1];",
-									"",
-									"pm.collectionVariables.set(\"taskId\", id);"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"type\": \"CACHE_LOL_DATA_TASK\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUri}}/api/tasks",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"tasks"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get tasks",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/tasks",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"tasks"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get task",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUri}}/api/tasks/{{taskId}}",
-							"host": [
-								"{{baseUri}}"
-							],
-							"path": [
-								"api",
-								"tasks",
-								"{{taskId}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "subscriptions",
-			"item": [
-				{
-					"name": "Get Subscriptions",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Blizzard Request Examples",
-			"item": [
-				{
-					"name": "GET Character Equipment",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Battlenet-Namespace",
-								"value": "profile-classic1x-eu",
-								"type": "text"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
-								"type": "text"
-							},
-							{
-								"key": "Battlenet-Locale",
-								"value": "en_US",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"url": {
-							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/equipment?namespace=profile-classic1x-eu&locale=en_US",
-							"protocol": "https",
-							"host": [
-								"eu",
-								"api",
-								"blizzard",
-								"com"
-							],
-							"path": [
-								"profile",
-								"wow",
-								"character",
-								"stitches",
-								"kumii",
-								"equipment"
-							],
-							"query": [
-								{
-									"key": "namespace",
-									"value": "profile-classic1x-eu"
-								},
-								{
-									"key": "locale",
-									"value": "en_US"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GET Character Appreance",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Battlenet-Namespace",
-								"value": "profile-classic1x-eu",
-								"type": "text"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
-								"type": "text"
-							},
-							{
-								"key": "Battlenet-Locale",
-								"value": "en_US",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"url": {
-							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/equipment?namespace=profile-classic1x-eu&locale=en_US",
-							"protocol": "https",
-							"host": [
-								"eu",
-								"api",
-								"blizzard",
-								"com"
-							],
-							"path": [
-								"profile",
-								"wow",
-								"character",
-								"stitches",
-								"kumii",
-								"equipment"
-							],
-							"query": [
-								{
-									"key": "namespace",
-									"value": "profile-classic1x-eu"
-								},
-								{
-									"key": "locale",
-									"value": "en_US"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GET Character",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii?namespace=profile-classic1x-eu&locale=en_US",
-							"protocol": "https",
-							"host": [
-								"eu",
-								"api",
-								"blizzard",
-								"com"
-							],
-							"path": [
-								"profile",
-								"wow",
-								"character",
-								"stitches",
-								"kumii"
-							],
-							"query": [
-								{
-									"key": "namespace",
-									"value": "profile-classic1x-eu"
-								},
-								{
-									"key": "locale",
-									"value": "en_US"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GET Character Statistics",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/cleanjuice/statistics?namespace=profile-classic1x-eu&local=en_US",
-							"protocol": "https",
-							"host": [
-								"eu",
-								"api",
-								"blizzard",
-								"com"
-							],
-							"path": [
-								"profile",
-								"wow",
-								"character",
-								"stitches",
-								"cleanjuice",
-								"statistics"
-							],
-							"query": [
-								{
-									"key": "namespace",
-									"value": "profile-classic1x-eu"
-								},
-								{
-									"key": "local",
-									"value": "en_US"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GET Character Talents",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/specializations?namespace=profile-classic1x-eu&locale=en_US",
-							"protocol": "https",
-							"host": [
-								"eu",
-								"api",
-								"blizzard",
-								"com"
-							],
-							"path": [
-								"profile",
-								"wow",
-								"character",
-								"stitches",
-								"kumii",
-								"specializations"
-							],
-							"query": [
-								{
-									"key": "namespace",
-									"value": "profile-classic1x-eu"
-								},
-								{
-									"key": "locale",
-									"value": "en_US"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "blizzard-character-example Copy",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				},
-				{
-					"name": "blizzard-character-example Copy 2",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				},
-				{
-					"name": "blizzard-character-example Copy",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Battlenet-Namespace",
-								"value": "profile-classic1x-eu",
-								"type": "text"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
-								"type": "text"
-							},
-							{
-								"key": "Battlenet-Locale",
-								"value": "en_US",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"url": {
-							"raw": "https://eu.api.blizzard.com/profile/wow/character/lone-wolf/camilo?locale=en_US",
-							"protocol": "https",
-							"host": [
-								"eu",
-								"api",
-								"blizzard",
-								"com"
-							],
-							"path": [
-								"profile",
-								"wow",
-								"character",
-								"lone-wolf",
-								"camilo"
-							],
-							"query": [
-								{
-									"key": "locale",
-									"value": "en_US"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "blizzard-character-example Copy 2",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				},
-				{
-					"name": "blizzard-character-example Copy 2",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				}
-			],
-			"auth": {
-				"type": "bearer",
-				"bearer": [
-					{
-						"key": "token",
-						"value": "EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
-						"type": "string"
-					}
-				]
-			},
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"type": "text/javascript",
-						"packages": {},
-						"exec": [
-							""
-						]
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"packages": {},
-						"exec": [
-							""
-						]
-					}
-				}
-			]
-		},
-		{
-			"name": "raiderio-example",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "https://raider.io/api/v1/characters/profile?region=eu&realm=zuljin&name=kakarøna&fields=mythic_plus_scores_by_season%3Acurrent,mythic_plus_best_runs%3Aall,mythic_plus_ranks,mythic_plus_alternate_runs%3Aall",
-					"protocol": "https",
-					"host": [
-						"raider",
-						"io"
-					],
-					"path": [
-						"api",
-						"v1",
-						"characters",
-						"profile"
-					],
-					"query": [
-						{
-							"key": "region",
-							"value": "eu"
-						},
-						{
-							"key": "realm",
-							"value": "zuljin"
-						},
-						{
-							"key": "name",
-							"value": "kakarøna"
-						},
-						{
-							"key": "fields",
-							"value": "mythic_plus_scores_by_season%3Acurrent,mythic_plus_best_runs%3Aall,mythic_plus_ranks,mythic_plus_alternate_runs%3Aall"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "raiderio-example-cutoff",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "https://raider.io/api/v1/mythic-plus/season-cutoffs?region=eu&season=season-df-2",
-					"protocol": "https",
-					"host": [
-						"raider",
-						"io"
-					],
-					"path": [
-						"api",
-						"v1",
-						"mythic-plus",
-						"season-cutoffs"
-					],
-					"query": [
-						{
-							"key": "region",
-							"value": "eu"
-						},
-						{
-							"key": "season",
-							"value": "season-df-2"
-						}
-					]
-				}
-			},
-			"response": []
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "viewId",
-			"value": ""
-		},
-		{
-			"key": "token",
-			"value": ""
-		},
-		{
-			"key": "user",
-			"value": "eric",
-			"type": "default"
-		},
-		{
-			"key": "password",
-			"value": "tareaMod",
-			"type": "default"
-		},
-		{
-			"key": "baseUri",
-			"value": "http://localhost:8080"
-		},
-		{
-			"key": "refreshToken",
-			"value": ""
-		},
-		{
-			"key": "activity",
-			"value": ""
-		},
-		{
-			"key": "role",
-			"value": "admin"
-		},
-		{
-			"key": "role2",
-			"value": "nefertiti"
-		},
-		{
-			"key": "activity2",
-			"value": "play ping pong"
-		},
-		{
-			"key": "taskId",
-			"value": "fdbb48d1-b846-4912-849d-2545dfd498a2"
-		},
-		{
-			"key": "prodUri",
-			"value": "https://raiderio-ladder-backend.fly.dev",
-			"type": "string"
-		},
-		{
-			"key": "newUser",
-			"value": "testUser2"
-		}
-	]
+  "info": {
+    "_postman_id": "f1d6c4ec-961c-4f3c-a076-7184345bdec5",
+    "name": "raiderio-ladder-backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "30887858"
+  },
+  "item": [
+    {
+      "name": "views",
+      "item": [
+        {
+          "name": "Get Own Views",
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/views",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get View",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Referer",
+                "value": "http://localhost:3000",
+                "type": "default"
+              },
+              {
+                "key": "Access-Control-Allow-Origin",
+                "value": "*",
+                "type": "default"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUri}}/api/views/{{viewId}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views",
+                "{{viewId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get View Data",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true,
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/views/{{viewId}}/data",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views",
+                "{{viewId}}",
+                "data"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get View Cached Data",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true,
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/views/{{viewId}}/cached-data",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views",
+                "{{viewId}}",
+                "cached-data"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create View",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody)",
+                  "pm.collectionVariables.set(\"viewId\", jsonData.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"LEC\",\n    \"characters\": [\n        {\n            \"name\": \"Rydle\",\n            \"tag\": \"KEK\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"kaczynski\",\n            \"tag\": \"theo\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"LaianPage\",\n            \"tag\": \"KEKW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Endika Gear\",\n            \"tag\": \"EUSK\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"calla egirl\",\n            \"tag\": \"0000\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Flakked Wannabe\",\n            \"tag\": \"HRTS\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"moonata\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"greed\",\n            \"tag\": \"elo\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"ivanperez55\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"4Sueee\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"OVJ XxKeviNxX997\",\n            \"tag\": \"OJJ\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"FãƒîTø Kµþ\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Isirigal19\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"MVP VI\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Soldier Boy\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Freeze Machine\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Ruthless\",\n            \"tag\": \"1511\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"Mehrrez\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"ISupZeRool\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        },\n        {\n            \"name\": \"mohamed1112\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.characters.LolCharacterRequest\"\n        }\n    ],\n    \"published\": true,\n    \"game\": \"LOL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/views",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create WOW View",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"wow-view-example-entities\",\n    \"game\": \"WOW\",\n    \"published\": true,\n    \"featured\": true,\n    \"entities\": [\n        {\n            \"name\": \"kumii\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"osborno\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"sanxxei\",\n            \"region\": \"eu\",\n            \"realm\": \"zuljin\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUri}}/api/views",
+                  "host": [
+                    "{{baseUri}}"
+                  ],
+                  "path": [
+                    "api",
+                    "views"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "72"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"viewId\": \"3da5cfbc-06a5-43e0-aad5-96dbdaf3743b\",\n    \"characters\": [\n        2,\n        16,\n        14\n    ]\n}"
+            },
+            {
+              "name": "Create LOL View",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"lol-view-example\",\n    \"game\": \"LOL\",\n    \"published\": true,\n    \"featured\": false,\n    \"entities\": [\n        {\n            \"name\": \"sanxei\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Handx\",\n            \"tag\": \"013\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Mogge\",\n            \"tag\": \"EUW12\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUri}}/api/views",
+                  "host": [
+                    "{{baseUri}}"
+                  ],
+                  "path": [
+                    "api",
+                    "views"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "67"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"viewId\": \"83607273-e2d9-44db-8d12-ad4dec00ecc0\",\n    \"characters\": [\n        49\n    ]\n}"
+            },
+            {
+              "name": "Create WOW HC View",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Onlyfangs 2\",\n    \"game\": \"WOW_HC\",\n    \"published\": true,\n    \"entities\": [\n        {\n            \"name\": \"Shuloneta\",\n            \"region\": \"eu\",\n            \"realm\": \"soulseeker\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        },\n        {\n            \"name\": \"Surmana\",\n            \"region\": \"eu\",\n            \"realm\": \"soulseeker\",\n            \"type\": \"com.kos.entities.WowEntityRequest\"\n        }\n    ],\n    \"featured\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUri}}/api/views",
+                  "host": [
+                    "{{baseUri}}"
+                  ],
+                  "path": [
+                    "api",
+                    "views"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "plain",
+              "header": [
+                {
+                  "key": "vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "www-authenticate",
+                  "value": "Bearer realm=\"Ktor Server\""
+                },
+                {
+                  "key": "date",
+                  "value": "Fri, 15 Nov 2024 22:08:18 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "Fly/bc77ddfa7 (2024-11-15)"
+                },
+                {
+                  "key": "via",
+                  "value": "1.1 fly.io"
+                },
+                {
+                  "key": "fly-request-id",
+                  "value": "01JCRXX7BNRKZ9H3JA59EW9HS3-mad"
+                },
+                {
+                  "key": "content-length",
+                  "value": "0"
+                }
+              ],
+              "cookie": [],
+              "body": null
+            }
+          ]
+        },
+        {
+          "name": "Edit View",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"LEC\",\n    \"entities\": [\n        {\n            \"name\": \"CABALLO GANADOR\",\n            \"tag\": \"CTANG\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"Wesley Warren Jr\",\n            \"tag\": \"EUW\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        },\n        {\n            \"name\": \"qrds\",\n            \"tag\": \"211\",\n            \"type\": \"com.kos.entities.LolEntityRequest\"\n        }\n    ],\n    \"published\": true,\n    \"featured\": false,\n    \"game\": \"LOL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/views/{{viewId}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views",
+                "{{viewId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete View",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/views/{{viewId}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views",
+                "{{viewId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Patch View",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"LEC-2\",\n    \"game\": \"LOL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/views/{{viewId}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "views",
+                "{{viewId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody)",
+                  "pm.collectionVariables.set(\"token\", jsonData.accessToken);",
+                  "pm.collectionVariables.set(\"refreshToken\", jsonData.refreshToken);"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{user}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/auth",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "auth"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody)",
+                  "pm.collectionVariables.set(\"token\", jsonData.accessToken);"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{refreshToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/auth/refresh",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set(\"token\", \"\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/auth",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "auth"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "credentials",
+      "item": [
+        {
+          "name": "Create Credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userName\": \"testUser3\",\n    \"password\": \"testPassword\",\n    \"roles\": [\"USER\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/credentials",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "credentials"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Credentials",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"password\": \"latarea\",\n    \"roles\": [\"ADMIN\", \"USER\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/credentials/{{newUser}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "credentials",
+                "{{newUser}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Patch Credential",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"password\": \"latarea\",\n    \"roles\": [\"ADMIN\", \"USER\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/credentials/{{user}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "credentials",
+                "{{user}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Roles From User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/credentials/{{user}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "credentials",
+                "{{user}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "item": [
+        {
+          "name": "Get Roles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/roles",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/roles/{{role}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "{{role}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Put activities to role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"activities\": [\n        \"aaalooool\",\n        \"add activity to role\",\n        \"add role to user\",\n        \"create a view\",\n        \"create activities\",\n        \"create credentials\",\n        \"create roles\",\n        \"delete activities\",\n        \"delete activity from role\",\n        \"delete any view\",\n        \"delete credentials\",\n        \"delete own view\",\n        \"delete role from user\",\n        \"delete roles\",\n        \"edit any view\",\n        \"edit credentials\",\n        \"edit own view\",\n        \"get all credentials\",\n        \"get all views\",\n        \"get any activities\",\n        \"get any credential\",\n        \"get any credentials\",\n        \"get any credentials roles\",\n        \"get any roles\",\n        \"get any view\",\n        \"get any views\",\n        \"get own credentials roles\",\n        \"get own view\",\n        \"get own views\",\n        \"get task\",\n        \"get tasks\",\n        \"get view cached data\",\n        \"get view data\",\n        \"get views\",\n        \"login\",\n        \"logout\",\n        \"patch credentials\",\n        \"run task\"\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/roles/{{role}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "{{role}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "activities",
+      "item": [
+        {
+          "name": "Get Activities",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/activities",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "activities"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "tasks",
+      "item": [
+        {
+          "name": "Run task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const locationHeader = pm.response.headers.get('Location');",
+                  "const id = locationHeader.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)[1];",
+                  "",
+                  "pm.collectionVariables.set(\"taskId\", id);"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"type\": \"CACHE_LOL_DATA_TASK\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUri}}/api/tasks",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get tasks",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/tasks",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUri}}/api/tasks/{{taskId}}",
+              "host": [
+                "{{baseUri}}"
+              ],
+              "path": [
+                "api",
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "subscriptions",
+      "item": [
+        {
+          "name": "Get Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Blizzard Request Examples",
+      "item": [
+        {
+          "name": "GET Character Equipment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Battlenet-Namespace",
+                "value": "profile-classic1x-eu",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+                "type": "text"
+              },
+              {
+                "key": "Battlenet-Locale",
+                "value": "en_US",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/equipment?namespace=profile-classic1x-eu&locale=en_US",
+              "protocol": "https",
+              "host": [
+                "eu",
+                "api",
+                "blizzard",
+                "com"
+              ],
+              "path": [
+                "profile",
+                "wow",
+                "character",
+                "stitches",
+                "kumii",
+                "equipment"
+              ],
+              "query": [
+                {
+                  "key": "namespace",
+                  "value": "profile-classic1x-eu"
+                },
+                {
+                  "key": "locale",
+                  "value": "en_US"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Character Appreance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Battlenet-Namespace",
+                "value": "profile-classic1x-eu",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+                "type": "text"
+              },
+              {
+                "key": "Battlenet-Locale",
+                "value": "en_US",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/equipment?namespace=profile-classic1x-eu&locale=en_US",
+              "protocol": "https",
+              "host": [
+                "eu",
+                "api",
+                "blizzard",
+                "com"
+              ],
+              "path": [
+                "profile",
+                "wow",
+                "character",
+                "stitches",
+                "kumii",
+                "equipment"
+              ],
+              "query": [
+                {
+                  "key": "namespace",
+                  "value": "profile-classic1x-eu"
+                },
+                {
+                  "key": "locale",
+                  "value": "en_US"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Character",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii?namespace=profile-classic1x-eu&locale=en_US",
+              "protocol": "https",
+              "host": [
+                "eu",
+                "api",
+                "blizzard",
+                "com"
+              ],
+              "path": [
+                "profile",
+                "wow",
+                "character",
+                "stitches",
+                "kumii"
+              ],
+              "query": [
+                {
+                  "key": "namespace",
+                  "value": "profile-classic1x-eu"
+                },
+                {
+                  "key": "locale",
+                  "value": "en_US"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Character Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/cleanjuice/statistics?namespace=profile-classic1x-eu&local=en_US",
+              "protocol": "https",
+              "host": [
+                "eu",
+                "api",
+                "blizzard",
+                "com"
+              ],
+              "path": [
+                "profile",
+                "wow",
+                "character",
+                "stitches",
+                "cleanjuice",
+                "statistics"
+              ],
+              "query": [
+                {
+                  "key": "namespace",
+                  "value": "profile-classic1x-eu"
+                },
+                {
+                  "key": "local",
+                  "value": "en_US"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Character Talents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://eu.api.blizzard.com/profile/wow/character/stitches/kumii/specializations?namespace=profile-classic1x-eu&locale=en_US",
+              "protocol": "https",
+              "host": [
+                "eu",
+                "api",
+                "blizzard",
+                "com"
+              ],
+              "path": [
+                "profile",
+                "wow",
+                "character",
+                "stitches",
+                "kumii",
+                "specializations"
+              ],
+              "query": [
+                {
+                  "key": "namespace",
+                  "value": "profile-classic1x-eu"
+                },
+                {
+                  "key": "locale",
+                  "value": "en_US"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "blizzard-character-example Copy",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "blizzard-character-example Copy 2",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "blizzard-character-example Copy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Battlenet-Namespace",
+                "value": "profile-classic1x-eu",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+                "type": "text"
+              },
+              {
+                "key": "Battlenet-Locale",
+                "value": "en_US",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "https://eu.api.blizzard.com/profile/wow/character/lone-wolf/camilo?locale=en_US",
+              "protocol": "https",
+              "host": [
+                "eu",
+                "api",
+                "blizzard",
+                "com"
+              ],
+              "path": [
+                "profile",
+                "wow",
+                "character",
+                "lone-wolf",
+                "camilo"
+              ],
+              "query": [
+                {
+                  "key": "locale",
+                  "value": "en_US"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "blizzard-character-example Copy 2",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "blizzard-character-example Copy 2",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "EUkE2bdZiAqdX1XixY69zBsLZLi1vGwXc8",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "raiderio-example",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://raider.io/api/v1/characters/profile?region=eu&realm=zuljin&name=kakarøna&fields=mythic_plus_scores_by_season%3Acurrent,mythic_plus_best_runs%3Aall,mythic_plus_ranks,mythic_plus_alternate_runs%3Aall",
+          "protocol": "https",
+          "host": [
+            "raider",
+            "io"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "characters",
+            "profile"
+          ],
+          "query": [
+            {
+              "key": "region",
+              "value": "eu"
+            },
+            {
+              "key": "realm",
+              "value": "zuljin"
+            },
+            {
+              "key": "name",
+              "value": "kakarøna"
+            },
+            {
+              "key": "fields",
+              "value": "mythic_plus_scores_by_season%3Acurrent,mythic_plus_best_runs%3Aall,mythic_plus_ranks,mythic_plus_alternate_runs%3Aall"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "raiderio-example-cutoff",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://raider.io/api/v1/mythic-plus/season-cutoffs?region=eu&season=season-df-2",
+          "protocol": "https",
+          "host": [
+            "raider",
+            "io"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "mythic-plus",
+            "season-cutoffs"
+          ],
+          "query": [
+            {
+              "key": "region",
+              "value": "eu"
+            },
+            {
+              "key": "season",
+              "value": "season-df-2"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "viewId",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "user",
+      "value": "eric",
+      "type": "default"
+    },
+    {
+      "key": "password",
+      "value": "tareaMod",
+      "type": "default"
+    },
+    {
+      "key": "baseUri",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "activity",
+      "value": ""
+    },
+    {
+      "key": "role",
+      "value": "admin"
+    },
+    {
+      "key": "role2",
+      "value": "nefertiti"
+    },
+    {
+      "key": "activity2",
+      "value": "play ping pong"
+    },
+    {
+      "key": "taskId",
+      "value": "fdbb48d1-b846-4912-849d-2545dfd498a2"
+    },
+    {
+      "key": "prodUri",
+      "value": "https://raiderio-ladder-backend.fly.dev",
+      "type": "string"
+    },
+    {
+      "key": "newUser",
+      "value": "testUser2"
+    }
+  ]
 }

@@ -18,15 +18,28 @@
   "avatar": "https://render.worldofwarcraft.com/classic1x-eu/character/silvermoon/1/30758927-avatar.jpg",
   "stats": {
     "health": 3323,
-    "resource": { "type": "Mana", "value": 2775 },
+    "resource": {
+      "type": "Mana",
+      "value": 2775
+    },
     "strength": 52,
     "agility": 269,
     "intellect": 89,
     "stamina": 179,
     "meleeCrit": 11.9641,
     "attackPower": 627,
-    "mainHandStats": { "minDamage": 289.27142, "maxDamage": 358.27142, "speed": 3.4, "dps": 95.22688 },
-    "offHandStats": { "minDamage": 45.357147, "maxDamage": 45.357147, "speed": 2.0, "dps": 22.678574 },
+    "mainHandStats": {
+      "minDamage": 289.27142,
+      "maxDamage": 358.27142,
+      "speed": 3.4,
+      "dps": 95.22688
+    },
+    "offHandStats": {
+      "minDamage": 45.357147,
+      "maxDamage": 45.357147,
+      "speed": 2.0,
+      "dps": 22.678574
+    },
     "spellPower": 0.0,
     "spellPenetration": 0.0,
     "spellCrit": 5.0685,
@@ -39,7 +52,13 @@
     "rangedCrit": 17.084099,
     "spirit": 79,
     "defense": 285,
-    "resistances": { "fire": 0, "holy": 0, "shadow": 0, "nature": 10, "arcane": 0 }
+    "resistances": {
+      "fire": 0,
+      "holy": 0,
+      "shadow": 0,
+      "nature": 10,
+      "arcane": 0
+    }
   },
   "specializations": {
     "wowHeadEmbeddedTalents": null,

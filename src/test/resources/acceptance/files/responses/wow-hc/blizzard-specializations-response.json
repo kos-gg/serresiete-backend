@@ -6,7 +6,9 @@
         {
           "talents": [
             {
-              "talent": { "id": 1382 },
+              "talent": {
+                "id": 1382
+              },
               "talent_rank": 2
             }
           ],

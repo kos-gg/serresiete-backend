@@ -3,6 +3,7 @@ package com.kos.clients.raiderio
 import com.kos.clients.domain.*
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -45,15 +46,33 @@ object RaiderIoHttpClientHelper {
                     }
 
                     "/api/v1/characters/profile" -> {
-                        val response = when (request.url.parameters["fields"]) {
-                            "talents" -> ResourceLoader.readResource("unit/wow/raiderio-classic-talents-response.json")
-                            else -> ResourceLoader.readResource("unit/wow/raiderio-profile-response.json")
+                        when (request.url.parameters["name"]) {
+                            "unknown-character" -> respond(
+                                content = """{"statusCode":400,"error":"Bad Request","message":"Could not find requested character"}""",
+                                status = HttpStatusCode.BadRequest,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json")
+                            )
+
+                            "malformed-request-character" -> respond(
+                                content = """{"statusCode":400,"error":"Bad Request","message":"Invalid request query input"}""",
+                                status = HttpStatusCode.BadRequest,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json")
+                            )
+
+                            "timeout-character" -> throw HttpRequestTimeoutException(request.url.toString(), null)
+
+                            else -> {
+                                val response = when (request.url.parameters["fields"]) {
+                                    "talents" -> ResourceLoader.readResource("unit/wow/raiderio-classic-talents-response.json")
+                                    else -> ResourceLoader.readResource("unit/wow/raiderio-profile-response.json")
+                                }
+                                respond(
+                                    content = response,
+                                    status = HttpStatusCode.OK,
+                                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                                )
+                            }
                         }
-                        respond(
-                            content = response,
-                            status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType, "application/json")
-                        )
                     }
 
                     "/api/v1/mythic-plus/run-details" -> {
@@ -235,12 +254,24 @@ object RaiderIoHttpClientHelper {
     val runDetails = RunDetails(
         roster = listOf(
             RunDetailsRosterEntry(
-                character = RunDetailsCharacter("Nareez", RunDetailsCharacterClass("Warlock"), RunDetailsCharacterSpec("Affliction"), RunDetailsCharacterRealm(1, "Blackrock", "blackrock"), usRegion),
+                character = RunDetailsCharacter(
+                    "Nareez",
+                    RunDetailsCharacterClass("Warlock"),
+                    RunDetailsCharacterSpec("Affliction"),
+                    RunDetailsCharacterRealm(1, "Blackrock", "blackrock"),
+                    usRegion
+                ),
                 role = "dps",
                 ranks = RunDetailsRosterRanks(3200.5)
             ),
             RunDetailsRosterEntry(
-                character = RunDetailsCharacter("Surmana", RunDetailsCharacterClass("Warrior"), RunDetailsCharacterSpec("Protection"), RunDetailsCharacterRealm(2, "Soulseeker", "soulseeker"), usRegion),
+                character = RunDetailsCharacter(
+                    "Surmana",
+                    RunDetailsCharacterClass("Warrior"),
+                    RunDetailsCharacterSpec("Protection"),
+                    RunDetailsCharacterRealm(2, "Soulseeker", "soulseeker"),
+                    usRegion
+                ),
                 role = "tank",
                 ranks = RunDetailsRosterRanks(2800.0)
             )

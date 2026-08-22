@@ -10,12 +10,14 @@ import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.common._fold
 import com.kos.common.error.ServiceError
+import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.LolEntity
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.views.Game
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
@@ -99,7 +101,11 @@ class LolEntitySynchronizer(
             dataCollector.join()
 
             logger.info("Finished Caching Lol entities")
-            logger.debug("cached ${entities.size} entities in ${Duration.between(start, OffsetDateTime.now()).toMinutes()} minutes")
+            logger.debug(
+                "cached ${entities.size} entities in ${
+                    Duration.between(start, OffsetDateTime.now()).toMinutes()
+                } minutes"
+            )
             logger.debug("dynamic match cache hit rate: ${matchCache.hitRate}%")
             errorsList
         }
@@ -173,5 +179,9 @@ class LolEntitySynchronizer(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        block().mapLeft { it.toSyncProcessingError(operation) }
+        try {
+            block().mapLeft { it.toSyncProcessingError(operation) }
+        } catch (e: RequestNotPermitted) {
+            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
+        }
 }

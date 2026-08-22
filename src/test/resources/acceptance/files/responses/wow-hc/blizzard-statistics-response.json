@@ -5,11 +5,27 @@
     "name": "Mana",
     "id": 0
   },
-  "strength": { "base": 52, "effective": 52 },
-  "agility": { "base": 130, "effective": 269 },
-  "intellect": { "base": 65, "effective": 89 },
-  "stamina": { "base": 89, "effective": 179 },
-  "melee_crit": { "rating": 0, "rating_bonus": 0.0, "value": 11.9641 },
+  "strength": {
+    "base": 52,
+    "effective": 52
+  },
+  "agility": {
+    "base": 130,
+    "effective": 269
+  },
+  "intellect": {
+    "base": 65,
+    "effective": 89
+  },
+  "stamina": {
+    "base": 89,
+    "effective": 179
+  },
+  "melee_crit": {
+    "rating": 0,
+    "rating_bonus": 0.0,
+    "value": 11.9641
+  },
   "attack_power": 627,
   "main_hand_damage_min": 289.27142,
   "main_hand_damage_max": 358.27142,
@@ -21,19 +37,63 @@
   "off_hand_dps": 22.678574,
   "spell_power": 0,
   "spell_penetration": 0,
-  "spell_crit": { "rating": 0, "rating_bonus": 0.0, "value": 5.0685 },
+  "spell_crit": {
+    "rating": 0,
+    "rating_bonus": 0.0,
+    "value": 5.0685
+  },
   "mana_regen": 77.0,
   "mana_regen_combat": 77.0,
-  "armor": { "base": 2082, "effective": 2122 },
-  "dodge": { "rating": 0, "rating_bonus": 0.0, "value": 10.5413 },
-  "parry": { "rating": 0, "rating_bonus": 0.0, "value": 6.3999996 },
-  "block": { "rating": 0, "rating_bonus": 0.0, "value": 0.0 },
-  "ranged_crit": { "rating": 0, "rating_bonus": 0.0, "value": 17.084099 },
-  "spirit": { "base": 70, "effective": 79 },
-  "defense": { "base": 285, "effective": 285 },
-  "fire_resistance": { "base": 0, "effective": 0 },
-  "holy_resistance": { "base": 0, "effective": 0 },
-  "shadow_resistance": { "base": 0, "effective": 0 },
-  "nature_resistance": { "base": 10, "effective": 10 },
-  "arcane_resistance": { "base": 0, "effective": 0 }
+  "armor": {
+    "base": 2082,
+    "effective": 2122
+  },
+  "dodge": {
+    "rating": 0,
+    "rating_bonus": 0.0,
+    "value": 10.5413
+  },
+  "parry": {
+    "rating": 0,
+    "rating_bonus": 0.0,
+    "value": 6.3999996
+  },
+  "block": {
+    "rating": 0,
+    "rating_bonus": 0.0,
+    "value": 0.0
+  },
+  "ranged_crit": {
+    "rating": 0,
+    "rating_bonus": 0.0,
+    "value": 17.084099
+  },
+  "spirit": {
+    "base": 70,
+    "effective": 79
+  },
+  "defense": {
+    "base": 285,
+    "effective": 285
+  },
+  "fire_resistance": {
+    "base": 0,
+    "effective": 0
+  },
+  "holy_resistance": {
+    "base": 0,
+    "effective": 0
+  },
+  "shadow_resistance": {
+    "base": 0,
+    "effective": 0
+  },
+  "nature_resistance": {
+    "base": 10,
+    "effective": 10
+  },
+  "arcane_resistance": {
+    "base": 0,
+    "effective": 0
+  }
 }

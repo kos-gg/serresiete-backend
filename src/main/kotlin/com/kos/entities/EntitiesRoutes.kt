@@ -4,7 +4,8 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.EntitiesExistRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.plugins.UserWithActivities
@@ -12,16 +13,17 @@ import com.kos.views.Game
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.entitiesRouting(
     entitiesController: EntitiesController
 ) {
-    route("/entities") {
-        authenticate("auth-jwt") {
+    authenticate("auth-jwt") {
+        route("/entities") {
             get {
-                fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<CreateEntityRequest, Game>> {
+                fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
                     return either {
                         val name = parameters["name"]
                         when (val game = parameters["game"]) {
@@ -68,8 +70,22 @@ fun Route.entitiesRouting(
                         })
                     }
                 )
+            }
 
+            post("/exists") {
+                val request = call.receive<EntitiesExistRequest>()
+                val userWithActivities = call.principal<UserWithActivities>()
 
+                entitiesController.exists(
+                    userWithActivities?.name,
+                    userWithActivities?.activities.orEmpty(),
+                    request.entities,
+                    request.game
+                ).fold({
+                    call.respondWithHandledError(it)
+                }, {
+                    call.respond(HttpStatusCode.OK, it)
+                })
             }
         }
     }
