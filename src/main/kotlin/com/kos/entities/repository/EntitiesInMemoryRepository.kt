@@ -32,17 +32,18 @@ class EntitiesInMemoryRepository(
         val wowInitialEntities = this.wowEntities.toList()
         val wowHardcoreInitialEntities = this.wowHardcoreEntities.toList()
         val lolInitialEntities = this.lolEntities.toList()
-        when (game) {
+        return when (game) {
             Game.WOW -> {
                 val inserted = entities.fold(listOf<Entity>()) { acc, it ->
                     when (it) {
                         is WowEntityRequest -> {
-                            if (this.wowEntities.any { entity -> it.same(entity) }) {
+                            val normalized = it.copy(name = it.name.lowercase())
+                            if (this.wowEntities.any { entity -> normalized.same(entity) }) {
                                 this.wowEntities.clear()
                                 this.wowEntities.addAll(wowInitialEntities)
                                 return Either.Left(InsertError("Error inserting entity $it"))
                             }
-                            val entity = it.toEntity(nextId())
+                            val entity = normalized.toEntity(nextId())
                             this.wowEntities.add(entity)
                             acc + entity
                         }
@@ -54,7 +55,7 @@ class EntitiesInMemoryRepository(
                         }
                     }
                 }
-                return Either.Right(inserted)
+                Either.Right(inserted)
             }
 
             Game.LOL -> {
@@ -78,19 +79,20 @@ class EntitiesInMemoryRepository(
                         }
                     }
                 }
-                return Either.Right(inserted)
+                Either.Right(inserted)
             }
 
             Game.WOW_HC -> {
                 val inserted = entities.fold(listOf<Entity>()) { acc, it ->
                     when (it) {
                         is WowEnrichedEntityRequest -> {
-                            if (this.wowHardcoreEntities.any { entity -> it.same(entity) }) {
+                            val normalized = it.copy(name = it.name.lowercase())
+                            if (this.wowHardcoreEntities.any { entity -> normalized.same(entity) }) {
                                 this.wowHardcoreEntities.clear()
                                 this.wowHardcoreEntities.addAll(wowHardcoreInitialEntities)
                                 return Either.Left(InsertError("Error inserting entity $it"))
                             }
-                            val entity = it.toEntity(nextId())
+                            val entity = normalized.toEntity(nextId())
                             this.wowHardcoreEntities.add(entity)
                             acc + entity
                         }
@@ -102,7 +104,7 @@ class EntitiesInMemoryRepository(
                         }
                     }
                 }
-                return Either.Right(inserted)
+                Either.Right(inserted)
             }
         }
     }
@@ -138,7 +140,7 @@ class EntitiesInMemoryRepository(
                     wowEntities.removeAt(index)
                     val c = WowEntity(
                         id,
-                        entity.name,
+                        entity.name.lowercase(),
                         entity.region,
                         entity.realm,
                         null
@@ -158,7 +160,7 @@ class EntitiesInMemoryRepository(
                     wowHardcoreEntities.removeAt(index)
                     val c = WowEntity(
                         id,
-                        entity.name,
+                        entity.name.lowercase(),
                         entity.region,
                         entity.realm,
                         actualInsertedCharacter.blizzardId
@@ -176,7 +178,7 @@ class EntitiesInMemoryRepository(
         when (game) {
             Game.WOW -> wowEntities.find {
                 request as WowEntityRequest
-                it.name == request.name &&
+                it.name == request.name.lowercase() &&
                         it.realm == request.realm &&
                         it.region == request.region
             }
@@ -189,7 +191,7 @@ class EntitiesInMemoryRepository(
 
             Game.WOW_HC -> wowHardcoreEntities.find {
                 request as WowEntityRequest
-                it.name == request.name &&
+                it.name == request.name.lowercase() &&
                         it.realm == request.realm &&
                         it.region == request.region
             }
@@ -210,10 +212,15 @@ class EntitiesInMemoryRepository(
         }
 
     override suspend fun get(entity: InsertEntityRequest, game: Game): Entity? {
+        val normalized = when (entity) {
+            is WowEntityRequest -> entity.copy(name = entity.name.lowercase())
+            is WowEnrichedEntityRequest -> entity.copy(name = entity.name.lowercase())
+            is LolEnrichedEntityRequest -> entity
+        }
         return when (game) {
-            Game.WOW -> wowEntities.find { entity.same(it) }
-            Game.LOL -> lolEntities.find { entity.same(it) }
-            Game.WOW_HC -> wowHardcoreEntities.find { entity.same(it) }
+            Game.WOW -> wowEntities.find { normalized.same(it) }
+            Game.LOL -> lolEntities.find { normalized.same(it) }
+            Game.WOW_HC -> wowHardcoreEntities.find { normalized.same(it) }
         }
     }
 
@@ -270,8 +277,8 @@ class EntitiesInMemoryRepository(
     }
 
     override suspend fun withState(initialState: EntitiesState): EntitiesInMemoryRepository {
-        wowEntities.addAll(initialState.wowEntities)
-        wowHardcoreEntities.addAll(initialState.wowHardcoreEntities)
+        wowEntities.addAll(initialState.wowEntities.map { it.copy(name = it.name.lowercase()) })
+        wowHardcoreEntities.addAll(initialState.wowHardcoreEntities.map { it.copy(name = it.name.lowercase()) })
         lolEntities.addAll(initialState.lolEntities)
         return this
     }

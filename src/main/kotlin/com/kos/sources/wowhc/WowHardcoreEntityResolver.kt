@@ -104,7 +104,7 @@ class WowHardcoreEntityResolver(
             val memberReqs = roster.members
                 .asSequence()
                 .filter { it.character.level >= 10 }
-                .map { m -> WowEntityRequest(m.character.name.lowercase(), region, realm) }
+                .map { WowEntityRequest(it.character.name, region, realm) }
                 .toList()
 
             Pair(roster, memberReqs)
