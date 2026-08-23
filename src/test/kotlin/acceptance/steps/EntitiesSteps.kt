@@ -2,6 +2,10 @@ package acceptance.steps
 
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
+import acceptance.entityRequest
+import acceptance.entityRequestJson
+import acceptance.existingEntityRow
+import acceptance.newEntityRow
 import acceptance.toGame
 import acceptance.wowEntityRequest
 import com.kos.datacache.DataCache
@@ -12,15 +16,21 @@ import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.RequestToBeSynced
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.views.Game
+import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.When
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -78,6 +88,32 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         }
     }
 
+    @Given("a {string} entity already exists in the database")
+    fun anEntityAlreadyExistsInTheDatabase(game: String) {
+        val resolvedGame = game.toGame()
+        val row = existingEntityRow(resolvedGame)
+        when (resolvedGame) {
+            Game.WOW, Game.WOW_HC -> entityExistsWithoutCachedData(
+                game, row.getValue("name"), row.getValue("realm"), row.getValue("region")
+            )
+
+            Game.LOL -> lolEntityExists(row.getValue("name"), row.getValue("tag"))
+        }
+    }
+
+    @And("the resolved entities for the {string} view are persisted in the database")
+    fun resolvedEntitiesArePersisted(game: String) {
+        val resolvedGame = game.toGame()
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val expectedRows = listOf(existingEntityRow(resolvedGame), newEntityRow(resolvedGame))
+        runBlocking {
+            expectedRows.forEach { row ->
+                val entity = entitiesRepo.get(resolvedGame.entityRequest(row), resolvedGame)
+                assertNotNull(entity, "Expected entity $row to be resolved and persisted for game $game")
+            }
+        }
+    }
+
     @Given("a LOL entity {string} with tag {string} exists with cached data {string}")
     fun lolEntityExistsWithCachedData(name: String, tag: String, jsonFile: String) {
         val entitiesRepo = EntitiesDatabaseRepository(db)
@@ -129,6 +165,33 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
                 parameter("tag", tag)
             }
         }
+    }
+
+    @When("they check existence of {string} entities:")
+    fun checkEntitiesExist(game: String, dataTable: DataTable) {
+        val resolvedGame = game.toGame()
+        val entities = dataTable.asMaps(String::class.java, String::class.java).map { row ->
+            resolvedGame.entityRequestJson(row)
+        }
+        val requestBody = buildJsonObject {
+            put("entities", JsonArray(entities))
+            put("game", resolvedGame.name)
+        }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/entities/exists") {
+                contentType(ContentType.Application.Json)
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(requestBody.toString())
+            }
+        }
+    }
+
+    @And("{string} is in the {string} bucket")
+    fun entityIsInBucket(name: String, bucket: String) {
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
+        val json = Json.parseToJsonElement(body).jsonObject
+        val names = json[bucket]!!.jsonArray.map { it.jsonObject["name"]!!.jsonPrimitive.content }
+        assertTrue(names.contains(name), "Expected \"$name\" to be in the \"$bucket\" bucket, got $names")
     }
 
     @And("the response data is null")

@@ -11,6 +11,7 @@ class RolesService(
     suspend fun getRoles(): List<Role> = rolesRepository.getRoles()
     suspend fun getRole(role: Role): Pair<Role, Set<Activity>> =
         Pair(role, rolesActivitiesRepository.getActivitiesFromRole(role))
+
     suspend fun setActivitiesToRole(role: Role, activities: Set<Activity>) {
         rolesActivitiesRepository.updateActivitiesFromRole(role, activities)
     }

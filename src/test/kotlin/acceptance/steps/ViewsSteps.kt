@@ -2,6 +2,9 @@ package acceptance.steps
 
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
+import acceptance.entityRequestJson
+import acceptance.existingEntityRow
+import acceptance.newEntityRow
 import acceptance.toGame
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
@@ -15,9 +18,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import kotlin.test.assertEquals
 
 class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
@@ -33,7 +39,45 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
             client.post("/api/views") {
                 contentType(ContentType.Application.Json)
                 scenarioVariables.token?.let { bearerAuth(it) }
-                setBody(ViewRequest(name = "My View", published = false, entities = emptyList(), game = resolvedGame, featured = false))
+                setBody(
+                    ViewRequest(
+                        name = "My View",
+                        published = false,
+                        entities = emptyList(),
+                        game = resolvedGame,
+                        featured = false
+                    )
+                )
+            }
+        }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            val json = Json.parseToJsonElement(body).jsonObject
+            scenarioVariables.operationId = json["id"]!!.jsonPrimitive.content
+            scenarioVariables.viewId = json["resourceId"]!!.jsonPrimitive.content
+        }
+    }
+
+    // One entity already exists in the database (resolver should find it via the repository)
+    // and one is new (resolver has to confirm it against the third party) - see TestData.kt.
+    @When("they create a {string} view with an existing and a new entity")
+    fun createViewWithExistingAndNewEntity(game: String) {
+        val resolvedGame = game.toGame()
+        scenarioVariables.game = resolvedGame
+        val entities = listOf(existingEntityRow(resolvedGame), newEntityRow(resolvedGame))
+            .map { resolvedGame.entityRequestJson(it) }
+        val requestBody = buildJsonObject {
+            put("name", "My View")
+            put("published", false)
+            put("entities", JsonArray(entities))
+            put("game", resolvedGame.name)
+            put("featured", false)
+        }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/views") {
+                contentType(ContentType.Application.Json)
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(requestBody.toString())
             }
         }
         if (scenarioVariables.response.status == HttpStatusCode.OK) {
@@ -82,7 +126,15 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
             client.put("/api/views/${scenarioVariables.viewId}") {
                 contentType(ContentType.Application.Json)
                 scenarioVariables.token?.let { bearerAuth(it) }
-                setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = scenarioVariables.game!!, featured = false))
+                setBody(
+                    ViewRequest(
+                        name = name,
+                        published = false,
+                        entities = emptyList(),
+                        game = scenarioVariables.game!!,
+                        featured = false
+                    )
+                )
             }
         }
         if (scenarioVariables.response.status == HttpStatusCode.OK) {
@@ -97,7 +149,15 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
             client.put(path) {
                 contentType(ContentType.Application.Json)
                 scenarioVariables.token?.let { bearerAuth(it) }
-                setBody(ViewRequest(name = name, published = false, entities = emptyList(), game = Game.LOL, featured = false))
+                setBody(
+                    ViewRequest(
+                        name = name,
+                        published = false,
+                        entities = emptyList(),
+                        game = Game.LOL,
+                        featured = false
+                    )
+                )
             }
         }
     }

@@ -21,10 +21,29 @@ data class EntitiesService(
     private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
 
-) : WithLogger("EntitiesService") {
+    ) : WithLogger("EntitiesService") {
+
+    suspend fun exists(
+        requestedEntities: List<EntityRequest>,
+        game: Game
+    ): Either<ServiceError, EntitiesExistResponse> {
+        return resolveEntities(requestedEntities, game)
+            .map { resolved ->
+                val exist =
+                    resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
+                val unchecked = resolved.unchecked.map { it.first }
+                val nonExisting = requestedEntities.filterNot { it in exist || it in unchecked }
+
+                EntitiesExistResponse(
+                    exist = exist.map { it.toResponse() },
+                    nonExisting = nonExisting.map { it.toResponse() },
+                    unchecked = unchecked.map { it.toResponse() }
+                )
+            }
+    }
 
     suspend fun resolveEntities(
-        requestedEntities: List<CreateEntityRequest>,
+        requestedEntities: List<EntityRequest>,
         game: Game,
         extraArguments: ViewExtraArguments? = null
     ): Either<ServiceError, ResolvedEntities> {

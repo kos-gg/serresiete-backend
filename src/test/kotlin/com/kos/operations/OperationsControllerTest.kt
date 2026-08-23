@@ -55,7 +55,8 @@ class OperationsControllerTest {
         runBlocking {
             assertEquals(
                 NotFound("unknown-op"),
-                controller.getOperationStatus("sanxei", "unknown-op", setOf(Activities.getOperationStatus)).getLeftOrNull()
+                controller.getOperationStatus("sanxei", "unknown-op", setOf(Activities.getOperationStatus))
+                    .getLeftOrNull()
             )
         }
     }
@@ -63,9 +64,13 @@ class OperationsControllerTest {
     @Test
     fun `returns pending status for an in-progress operation`() {
         runBlocking {
-            eventStore.save(Event(aggregateRoot, operationId, ViewToBeCreatedEvent(
-                UUID.randomUUID().toString(), "view-name", false, listOf(), Game.WOW, "sanxei", false, null
-            )))
+            eventStore.save(
+                Event(
+                    aggregateRoot, operationId, ViewToBeCreatedEvent(
+                        UUID.randomUUID().toString(), "view-name", false, listOf(), Game.WOW, "sanxei", false, null
+                    )
+                )
+            )
 
             assertEquals(
                 OperationStatus(operationId, OperationStatusType.PENDING),

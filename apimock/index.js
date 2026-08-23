@@ -28,29 +28,29 @@ app.get('/api/views', (req, res) => {
     const game = req.query.game;
 
     fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ error: 'Failed to read file' });
+        if (err) return res.status(500).json({error: 'Failed to read file'});
 
         const parsedData = JSON.parse(data);
-        const { records, metadata } = parsedData;
+        const {records, metadata} = parsedData;
 
         if (game) {
             const filteredRecords = records.filter(view => view.game === game.toUpperCase());
-            return res.json({ metadata, records: filteredRecords });
+            return res.json({metadata, records: filteredRecords});
         }
         return res.json(parsedData);
     });
 });
 
 app.post('/api/auth', (req, res) => {
-    const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+    const {authorization} = req.headers;
+    if (!authorization) return res.status(401).json({error: 'Unauthorized'});
 
     const credentials = Buffer.from(authorization.split(' ')[1], 'base64').toString('utf-8');
     const [userName, password] = credentials.split(':');
     const filePath = join(__dirname, 'resources', 'auth.json');
 
     fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ error: 'Failed to read file' });
+        if (err) return res.status(500).json({error: 'Failed to read file'});
 
         const auth = JSON.parse(data);
 
@@ -61,26 +61,26 @@ app.post('/api/auth', (req, res) => {
             });
         }
 
-        return res.status(401).json({ error: 'Invalid username or password' });
+        return res.status(401).json({error: 'Invalid username or password'});
     });
 });
 
 app.delete('/api/auth', (req, res) => {
-    const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+    const {authorization} = req.headers;
+    if (!authorization) return res.status(401).json({error: 'Unauthorized'});
 
     const token = authorization.split(' ')[1];
     const filePath = join(__dirname, 'resources', 'auth.json');
 
 
     fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ error: 'Failed to read file' });
+        if (err) return res.status(500).json({error: 'Failed to read file'});
 
         const auth = JSON.parse(data);
 
-        if (token === auth.accessToken) return res.status(200).json({ message: 'Logout successful'})
-        return res.status(401).json({ error: 'Invalid token'})
-        });
+        if (token === auth.accessToken) return res.status(200).json({message: 'Logout successful'})
+        return res.status(401).json({error: 'Invalid token'})
+    });
 })
 
 app.get('/api/credentials/:userName', (req, res) => {
@@ -88,7 +88,7 @@ app.get('/api/credentials/:userName', (req, res) => {
     const filePath = join(__dirname, 'resources', 'user.json')
 
     fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ error: 'Failed to read file' });
+        if (err) return res.status(500).json({error: 'Failed to read file'});
 
         const user = JSON.parse(data);
 
@@ -100,11 +100,11 @@ app.get('/api/credentials/:userName', (req, res) => {
 })
 
 app.post('/api/views', (req, res) => {
-    const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+    const {authorization} = req.headers;
+    if (!authorization) return res.status(401).json({error: 'Unauthorized'});
 
     const token = authorization.split(' ')[1];
-    if (token !== 'mock-access-token') return res.status(401).json({ error: 'Invalid token' });
+    if (token !== 'mock-access-token') return res.status(401).json({error: 'Invalid token'});
 
     res.status(200).json(req.body);
 })
@@ -121,13 +121,13 @@ app.get('/api/views/:id', (req, res) => {
 app.put('/api/views/:id', (req, res) => {
     const viewId = req.params.id;
 
-    const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+    const {authorization} = req.headers;
+    if (!authorization) return res.status(401).json({error: 'Unauthorized'});
 
     const token = authorization.split(' ')[1];
-    if (token !== 'mock-access-token') return res.status(401).json({ error: 'Invalid token' });
+    if (token !== 'mock-access-token') return res.status(401).json({error: 'Invalid token'});
 
-    const updatedView = { ...req.body, id: viewId };
+    const updatedView = {...req.body, id: viewId};
 
     return res.status(200).json(updatedView);
 })
@@ -136,11 +136,11 @@ app.delete('/api/views/:id', (req, res) => {
     const viewId = req.params.id;
     const filePath = join(__dirname, 'resources', 'views.json')
 
-    const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+    const {authorization} = req.headers;
+    if (!authorization) return res.status(401).json({error: 'Unauthorized'});
 
     const token = authorization.split(' ')[1];
-    if (token !== 'mock-access-token') return res.status(401).json({ error: 'Invalid token' });
+    if (token !== 'mock-access-token') return res.status(401).json({error: 'Invalid token'});
 
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) throw new Error('Failed to read views data');
@@ -159,18 +159,18 @@ app.delete('/api/views/:id', (req, res) => {
 app.patch('/api/views/:id', (req, res) => {
     const viewId = req.params.id;
 
-    const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Unauthorized' });
+    const {authorization} = req.headers;
+    if (!authorization) return res.status(401).json({error: 'Unauthorized'});
 
     const token = authorization.split(' ')[1];
-    if (token !== 'mock-access-token') return res.status(401).json({ error: 'Invalid token' });
+    if (token !== 'mock-access-token') return res.status(401).json({error: 'Invalid token'});
 
-    const { published, featured } = req.body;
+    const {published, featured} = req.body;
 
     const updatedView = {
         id: viewId,
-        ...(published !== undefined && { published }),
-        ...(featured !== undefined && { featured }),
+        ...(published !== undefined && {published}),
+        ...(featured !== undefined && {featured}),
     };
 
     return res.status(200).json(updatedView);

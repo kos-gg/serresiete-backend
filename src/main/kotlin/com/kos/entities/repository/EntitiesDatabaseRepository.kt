@@ -31,13 +31,13 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
 
             WowEntities.batchInsert(initialState.wowEntities) {
                 this[WowEntities.id] = it.id
-                this[WowEntities.name] = it.name
+                this[WowEntities.name] = it.name.lowercase()
                 this[WowEntities.region] = it.region
                 this[WowEntities.realm] = it.realm
             }
             WowHardcoreEntities.batchInsert(initialState.wowHardcoreEntities) {
                 this[WowHardcoreEntities.id] = it.id
-                this[WowHardcoreEntities.name] = it.name
+                this[WowHardcoreEntities.name] = it.name.lowercase()
                 this[WowHardcoreEntities.region] = it.region
                 this[WowHardcoreEntities.realm] = it.realm
                 //TODO: at some point this should stop being nullable
@@ -129,10 +129,10 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
             val charsToInsert: List<Entity> = entities.map {
                 val nextId = selectNextId()
                 when (it) {
-                    is WowEntityRequest -> WowEntity(nextId, it.name, it.region, it.realm, 0)
+                    is WowEntityRequest -> WowEntity(nextId, it.name.lowercase(), it.region, it.realm, 0)
                     is WowEnrichedEntityRequest -> WowEntity(
                         nextId,
-                        it.name,
+                        it.name.lowercase(),
                         it.region,
                         it.realm,
                         it.blizzardId
@@ -235,7 +235,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 Game.WOW -> when (entity) {
                     is WowEntityRequest -> {
                         Either.Right(WowEntities.update({ WowEntities.id eq id }) {
-                            it[name] = entity.name
+                            it[name] = entity.name.lowercase()
                             it[region] = entity.region
                             it[realm] = entity.realm
                         })
@@ -247,7 +247,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 Game.WOW_HC -> when (entity) {
                     is WowEntityRequest -> {
                         Either.Right(WowHardcoreEntities.update({ WowHardcoreEntities.id eq id }) {
-                            it[name] = entity.name
+                            it[name] = entity.name.lowercase()
                             it[region] = entity.region
                             it[realm] = entity.realm
                         })
@@ -278,13 +278,13 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         }
     }
 
-    override suspend fun get(request: CreateEntityRequest, game: Game): Entity? {
+    override suspend fun get(request: EntityRequest, game: Game): Entity? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             when (game) {
                 Game.WOW -> {
                     request as WowEntityRequest
                     WowEntities.selectAll().where {
-                        WowEntities.name.eq(request.name)
+                        WowEntities.name.eq(request.name.lowercase())
                             .and(WowEntities.realm.eq(request.realm))
                             .and(WowEntities.region.eq(request.region))
                     }.map { resultRowToWowEntity(it) }
@@ -301,7 +301,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 Game.WOW_HC -> {
                     request as WowEntityRequest
                     WowHardcoreEntities.selectAll().where {
-                        WowHardcoreEntities.name.eq(request.name)
+                        WowHardcoreEntities.name.eq(request.name.lowercase())
                             .and(WowHardcoreEntities.realm.eq(request.realm))
                             .and(WowHardcoreEntities.region.eq(request.region))
                     }.map { resultRowToWowHardcoreEntity(it) }
@@ -316,7 +316,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 Game.WOW -> {
                     entity as WowEntityRequest
                     WowEntities.selectAll().where {
-                        WowEntities.name.eq(entity.name)
+                        WowEntities.name.eq(entity.name.lowercase())
                             .and(WowEntities.realm.eq(entity.realm))
                             .and(WowEntities.region.eq(entity.region))
                     }.map { resultRowToWowEntity(it) }
@@ -332,7 +332,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                 Game.WOW_HC -> {
                     entity as WowEntityRequest
                     WowHardcoreEntities.selectAll().where {
-                        WowHardcoreEntities.name.eq(entity.name)
+                        WowHardcoreEntities.name.eq(entity.name.lowercase())
                             .and(WowHardcoreEntities.realm.eq(entity.realm))
                             .and(WowHardcoreEntities.region.eq(entity.region))
                     }.map { resultRowToWowHardcoreEntity(it) }

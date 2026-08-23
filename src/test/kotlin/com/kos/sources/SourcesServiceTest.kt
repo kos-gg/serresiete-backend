@@ -1,6 +1,7 @@
 package com.kos.sources
 
 import com.kos.clients.domain.Season
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -15,31 +16,7 @@ class SourcesServiceTest {
     @Test
     fun `it should return current wow season`() {
         runBlocking {
-            val seasonData = """
-                {
-                  "is_main_season": true,
-                  "name": "Mythic+ Season 3",
-                  "slug": "mythic-plus-season-3",
-                  "blizzard_season_id": 12,
-                  "dungeons": [
-                    {
-                      "name": "The Nokhud Offensive",
-                      "short_name": "NO",
-                      "challenge_mode_id": 2516
-                    },
-                    {
-                      "name": "Algeth'ar Academy",
-                      "short_name": "AA",
-                      "challenge_mode_id": 2520
-                    },
-                    {
-                      "name": "Ruby Life Pools",
-                      "short_name": "RLP",
-                      "challenge_mode_id": 2521
-                    }
-                  ]
-                }
-            """.trimIndent()
+            val seasonData = RaiderIoHttpClientHelper.ResourceLoader.readResource("unit/wow/season-response.json")
             val season = Json.decodeFromString<Season>(seasonData)
             `when`(wowSeasonsService.getWowCurrentSeason()).thenReturn(season)
             val service = SourcesService(wowSeasonsService)

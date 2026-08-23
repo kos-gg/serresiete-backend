@@ -266,14 +266,16 @@ abstract class EntitiesRepositoryTestCommon {
     fun `whatever`() {
         runBlocking {
             repository.withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
-            repository.insert(listOf(
-                WowEnrichedEntityRequest(
-                    basicWowHardcoreEntity.name,
-                    basicWowHardcoreEntity.region,
-                    basicWowHardcoreEntity.realm,
-                    basicWowHardcoreEntity.blizzardId
-                )
-            ), Game.WOW_HC)
+            repository.insert(
+                listOf(
+                    WowEnrichedEntityRequest(
+                        basicWowHardcoreEntity.name,
+                        basicWowHardcoreEntity.region,
+                        basicWowHardcoreEntity.realm,
+                        basicWowHardcoreEntity.blizzardId
+                    )
+                ), Game.WOW_HC
+            )
                 .onRight { fail() }
                 .onLeft { print(it.message) }
         }

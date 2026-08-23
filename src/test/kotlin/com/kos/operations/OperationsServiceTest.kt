@@ -49,9 +49,13 @@ class OperationsServiceTest {
     fun `returns completed when a view sync completed event exists`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
-            eventStore.save(Event(aggregateRoot, operationId, ViewToBeCreatedEvent(
-                viewId, "view-name", false, listOf(), Game.WOW, "sanxei", false, null
-            )))
+            eventStore.save(
+                Event(
+                    aggregateRoot, operationId, ViewToBeCreatedEvent(
+                        viewId, "view-name", false, listOf(), Game.WOW, "sanxei", false, null
+                    )
+                )
+            )
             eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
 
             assertEquals(
@@ -65,9 +69,13 @@ class OperationsServiceTest {
     fun `returns completed when a view deleted event exists`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
-            eventStore.save(Event(aggregateRoot, operationId, ViewDeletedEvent(
-                viewId, "view-name", "sanxei", listOf(), false, Game.WOW, false
-            )))
+            eventStore.save(
+                Event(
+                    aggregateRoot, operationId, ViewDeletedEvent(
+                        viewId, "view-name", "sanxei", listOf(), false, Game.WOW, false
+                    )
+                )
+            )
 
             assertEquals(
                 OperationStatus(operationId, OperationStatusType.COMPLETED),

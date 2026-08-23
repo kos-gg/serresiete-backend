@@ -32,4 +32,12 @@ object ViewsTestHelper {
 }
 
 fun View.toSimple() =
-    SimpleView(this.id, this.name, this.owner, this.published, this.entities.map { it.value.id }, this.game, this.featured)
+    SimpleView(
+        this.id,
+        this.name,
+        this.owner,
+        this.published,
+        this.entities.map { it.value.id },
+        this.game,
+        this.featured
+    )

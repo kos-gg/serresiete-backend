@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import io.ktor.client.call.*
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
@@ -16,7 +17,11 @@ suspend inline fun <reified A> fetchFromApi(
     crossinline request: suspend () -> HttpResponse
 ): Either<ClientError, A> =
     either {
-        val response = request()
+        val response = try {
+            request()
+        } catch (e: HttpRequestTimeoutException) {
+            raise(TimeoutError(e.message ?: "Request timeout"))
+        }
 
         ensure(response.status.isSuccess()) {
             HttpError(
@@ -44,7 +49,11 @@ suspend inline fun <reified A> fetchFromApi(
     parseResponse: (String) -> A
 ): Either<ClientError, A> =
     either {
-        val response = request()
+        val response = try {
+            request()
+        } catch (e: HttpRequestTimeoutException) {
+            raise(TimeoutError(e.message ?: "Request timeout"))
+        }
 
         ensure(response.status.isSuccess()) {
             HttpError(

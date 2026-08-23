@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.domain.Data
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.error.InvalidGameType
-import com.kos.entities.domain.CreateEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
@@ -84,7 +84,7 @@ data class View(
 data class ViewRequest(
     val name: String,
     val published: Boolean,
-    val entities: List<CreateEntityRequest>,
+    val entities: List<EntityRequest>,
     val game: Game,
     val featured: Boolean,
     val extraArguments: ViewExtraArguments? = null
@@ -94,7 +94,7 @@ data class ViewRequest(
 data class ViewPatchRequest(
     val name: String? = null,
     val published: Boolean? = null,
-    val entities: List<CreateEntityRequest>? = null,
+    val entities: List<EntityRequest>? = null,
     val game: Game,
     val featured: Boolean? = null
 )

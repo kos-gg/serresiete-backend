@@ -49,7 +49,11 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
         row[Authorizations.isAccess]
     )
 
-    override suspend fun insertToken(userName: String, token: String, isAccess: Boolean): Either<InsertError, Authorization?> =
+    override suspend fun insertToken(
+        userName: String,
+        token: String,
+        isAccess: Boolean
+    ): Either<InsertError, Authorization?> =
         newSuspendedTransaction(Dispatchers.IO, db) {
             try {
                 val insertStatement = Authorizations.insert {
@@ -57,7 +61,8 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
                     it[this.token] = token
                     it[lastUsed] = OffsetDateTime.now().toString()
                     it[validUntil] = OffsetDateTime.now()
-                        .plusDays(if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires).toString()
+                        .plusDays(if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires)
+                        .toString()
                     it[Authorizations.isAccess] = isAccess
                 }
 
@@ -76,7 +81,8 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
 
     override suspend fun getAuthorization(token: String): Authorization? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Authorizations.selectAll().where { Authorizations.token eq token }.map { resultRowToAuthorization(it) }.singleOrNull()
+            Authorizations.selectAll().where { Authorizations.token eq token }.map { resultRowToAuthorization(it) }
+                .singleOrNull()
         }
     }
 

@@ -194,7 +194,7 @@ fun Application.module() {
         wowHardcoreGuildUpdater
     )
     //TODO: This feels weird. Probably the responsibility of getOrSync should be on EntitiesService rather than DataCacheService
-    val entitiesController = EntitiesController(dataCacheService)
+    val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
     val viewsService =
         ViewsService(

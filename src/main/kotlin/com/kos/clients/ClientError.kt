@@ -8,10 +8,12 @@ sealed class ClientError
 
 data class HttpError(val status: Int, val body: String?) : ClientError()
 data class JsonParseError(val raw: String, val error: String) : ClientError()
+data class TimeoutError(val message: String) : ClientError()
 
 fun ClientError.toSyncProcessingError(operation: String): ServiceError =
     when (this) {
         is HttpError -> SyncProcessingError("HTTP_ERROR", "Failed $operation: $status $body")
         is JsonParseError -> SyncProcessingError("JSON_PARSE_ERROR", "JSON parse error on $operation: $error")
+        is TimeoutError -> SyncProcessingError("TIMEOUT_ERROR", "Timeout on $operation: $message")
     }
 

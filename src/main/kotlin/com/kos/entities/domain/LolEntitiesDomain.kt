@@ -10,14 +10,16 @@ data class LolEntity(
     val puuid: String,
     val summonerIcon: Int,
     val summonerLevel: Int
-) : Entity
+) : Entity {
+    override fun toRequest(): LolEntityRequest = LolEntityRequest(this.name, this.tag, null)
+}
 
 @Serializable
 data class LolEntityRequest(
     override val name: String,
     val tag: String,
     override val alias: String? = null
-) : CreateEntityRequest {
+) : EntityRequest {
 
     override fun same(other: Entity): Boolean {
         return when (other) {
@@ -25,7 +27,15 @@ data class LolEntityRequest(
             else -> false
         }
     }
+
+    override fun toResponse(): EntityResponse = LolEntityResponse(name, tag)
 }
+
+@Serializable
+data class LolEntityResponse(
+    override val name: String,
+    val tag: String
+) : EntityResponse
 
 data class LolEnrichedEntityRequest(
     override val name: String,
@@ -52,4 +62,6 @@ data class LolEnrichedEntityRequest(
             else -> false
         }
     }
+
+    override fun toRequest(): EntityRequest = LolEntityRequest(this.name, this.tag, null)
 }

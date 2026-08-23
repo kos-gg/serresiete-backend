@@ -60,8 +60,8 @@ class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepos
                 }
                 Either.Right(Unit)
             } catch (e: SQLException) {
-                if (e.sqlState=="23505") Either.Left(InsertError("Duplicated user $userName"))
-                else Either.Left(InsertError(e.message?:e.stackTraceToString()))
+                if (e.sqlState == "23505") Either.Left(InsertError("Duplicated user $userName"))
+                else Either.Left(InsertError(e.message ?: e.stackTraceToString()))
             }
         }
     }

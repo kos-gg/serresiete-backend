@@ -15,11 +15,12 @@ fun Route.sourcesRouting(
         authenticate("auth-jwt") {
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
-                sourcesController.getWowStaticData(userWithActivities?.name, userWithActivities?.activities.orEmpty()).fold({
-                    call.respondWithHandledError(it)
-                }, {
-                    call.respond(HttpStatusCode.OK, it)
-                })
+                sourcesController.getWowStaticData(userWithActivities?.name, userWithActivities?.activities.orEmpty())
+                    .fold({
+                        call.respondWithHandledError(it)
+                    }, {
+                        call.respond(HttpStatusCode.OK, it)
+                    })
             }
         }
     }

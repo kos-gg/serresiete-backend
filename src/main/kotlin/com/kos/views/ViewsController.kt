@@ -82,7 +82,8 @@ class ViewsController(
                     else -> {
                         if (activities.contains(Activities.getViewData) && maybeView.published) {
                             either {
-                                ViewData(maybeView.name, viewsService.getData(maybeView)
+                                ViewData(
+                                    maybeView.name, viewsService.getData(maybeView)
                                     .mapLeft { ViewDataError(it.error()) }
                                     .bind())
                             }
@@ -107,7 +108,8 @@ class ViewsController(
                     else -> {
                         if (activities.contains(Activities.getViewCachedData) && maybeView.published)
                             either {
-                                ViewData(maybeView.name, viewsService.getCachedData(maybeView)
+                                ViewData(
+                                    maybeView.name, viewsService.getCachedData(maybeView)
                                     .mapLeft { ViewDataError(it.error()) }
                                     .bind())
                             }

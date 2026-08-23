@@ -3,7 +3,9 @@ package com.kos.clients.raiderio
 import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.ClientError
+import com.kos.clients.HttpError
 import com.kos.clients.RetryConfig
+import com.kos.clients.TimeoutError
 import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfileResponse
@@ -38,7 +40,16 @@ class RaiderIoHTTPClientTest {
             result.onRight {
                 assertEquals(it.seasons[0].name, "TWW Season 3")
                 assertTrue(it.seasons[0].isCurrentSeason)
-                assertTrue(it.seasons[0].dungeons.contains(Dungeon("Eco-Dome Al'dani", "EDA", 542)))
+                assertTrue(
+                    it.seasons[0].dungeons.contains(
+                        Dungeon(
+                            "Eco-Dome Al'dani",
+                            "EDA",
+                            542,
+                            "https://cdn.raiderio.net/images/wow/icons/large/inv_112_achievement_dungeon_ecodome.jpg"
+                        )
+                    )
+                )
             }
         }
     }
@@ -46,15 +57,48 @@ class RaiderIoHTTPClientTest {
     @Test
     fun `test exists() method with successful response`() {
         runBlocking {
-            assertTrue(
-                raiderIoClient.exists(
-                    WowEntityRequest(
-                        basicWowEntity.name,
-                        basicWowEntity.region,
-                        basicWowEntity.realm
-                    )
+            val result = raiderIoClient.exists(
+                WowEntityRequest(
+                    basicWowEntity.name,
+                    basicWowEntity.region,
+                    basicWowEntity.realm
                 )
             )
+
+            assertEquals(Either.Right(true), result)
+        }
+    }
+
+    @Test
+    fun `test exists() method returns false when raiderio confirms the character was not found`() {
+        runBlocking {
+            val result = raiderIoClient.exists(
+                WowEntityRequest("unknown-character", "eu", "zuljin")
+            )
+
+            assertEquals(Either.Right(false), result)
+        }
+    }
+
+    @Test
+    fun `test exists() method does not treat an unrelated 400 as the character not existing`() {
+        runBlocking {
+            val result = raiderIoClient.exists(
+                WowEntityRequest("malformed-request-character", "eu", "zuljin")
+            )
+
+            result.onRight { fail() }.onLeft { error -> assertTrue(error is HttpError) }
+        }
+    }
+
+    @Test
+    fun `test exists() method returns a Left instead of throwing on a request timeout`() {
+        runBlocking {
+            val result = raiderIoClient.exists(
+                WowEntityRequest("timeout-character", "eu", "zuljin")
+            )
+
+            result.onRight { fail() }.onLeft { error -> assertTrue(error is TimeoutError) }
         }
     }
 

@@ -12,8 +12,13 @@ class AuthInMemoryRepository : AuthRepository, InMemoryRepository {
     private val daysBeforeRefreshTokenExpires: Long = 30
     private val authorizations = mutableListOf<Authorization>()
 
-    override suspend fun insertToken(userName: String, token: String, isAccess: Boolean): Either<InsertError, Authorization?> {
-        return if(authorizations.map { it.token }.contains(token)) Either.Left(InsertError("Error inserting token $token"))
+    override suspend fun insertToken(
+        userName: String,
+        token: String,
+        isAccess: Boolean
+    ): Either<InsertError, Authorization?> {
+        return if (authorizations.map { it.token }
+                .contains(token)) Either.Left(InsertError("Error inserting token $token"))
         else {
             val authorization = Authorization(
                 userName, token, OffsetDateTime.now(), OffsetDateTime.now().plusDays(

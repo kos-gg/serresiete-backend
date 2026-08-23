@@ -62,6 +62,7 @@ class CredentialsServiceTest {
             assertNotEquals(credentialsInMemoryRepository.getCredentials(user)?.password, encryptedCredentials.password)
         }
     }
+
     @Test
     fun `i can patch credentials`() {
         runBlocking {

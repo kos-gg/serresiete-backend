@@ -1,6 +1,7 @@
 package com.kos.entities
 
 import arrow.core.Either
+import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
@@ -16,6 +17,8 @@ import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.EntitiesTestHelper.basicWowRequest
+import com.kos.entities.EntitiesTestHelper.basicWowRequest2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.gigaLolCharacterRequestList
 import com.kos.entities.EntitiesTestHelper.gigaLolEntityList
@@ -49,8 +52,8 @@ class EntitiesServiceTest {
                 WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
             val request2 = WowEntityRequest("kakarøna", basicWowEntity.region, basicWowEntity.realm)
 
-            `when`(raiderIoClient.exists(request1)).thenReturn(true)
-            `when`(raiderIoClient.exists(request2)).thenReturn(true)
+            `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
+            `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
 
 
             val entitiesService = createService(emptyEntitiesState)
@@ -117,7 +120,7 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(),
                 listOf(),
-                null
+                guild = null
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
@@ -133,8 +136,8 @@ class EntitiesServiceTest {
                 WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
             val request2 = WowEntityRequest("kakarøna", basicWowEntity.region, basicWowEntity.realm)
 
-            `when`(raiderIoClient.exists(request1)).thenReturn(true)
-            `when`(raiderIoClient.exists(request2)).thenReturn(false)
+            `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
+            `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(false))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -142,7 +145,7 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(request1 to null),
                 listOf(),
-                null
+                guild = null
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
@@ -179,7 +182,7 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(),
                 listOf(basicWowHardcoreEntity to null),
-                null
+                guild = null
             )
             entitiesService.resolveEntities(listOf(request), Game.WOW_HC)
                 .onLeft { fail() }
@@ -344,7 +347,7 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(),
                 listOf(),
-                null
+                guild = null
             )
 
             val resolvedEntities = entitiesService.resolveEntities(listOf(request), Game.LOL)
@@ -469,7 +472,7 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(insertRequest to alias2),
                 listOf(basicLolEntity to alias),
-                null
+                guild = null,
             )
             val result = entitiesService.resolveEntities(listOf(request, requestNotInState), Game.LOL)
 
@@ -485,8 +488,56 @@ class EntitiesServiceTest {
         }
     }
 
-    fun `insert`() {
+    @Test
+    fun `exists merges characters confirmed by the repository and by the third party into exist`() {
+        runBlocking {
+            `when`(raiderIoClient.exists(basicWowRequest2)).thenReturn(Either.Right(true))
 
+            val entitiesService = createService(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
+
+            val result = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
+
+            result.onLeft { fail() }.onRight { res ->
+                assertEquals(
+                    setOf(basicWowRequest.toResponse(), basicWowRequest2.toResponse()),
+                    res.exist.toSet()
+                )
+                assertEquals(listOf(), res.nonExisting)
+            }
+        }
+    }
+
+    @Test
+    fun `exists reports characters that don't exist anywhere as nonExisting`() {
+        runBlocking {
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Right(false))
+
+            val entitiesService = createService(emptyEntitiesState)
+
+            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+
+            result.onLeft { fail() }.onRight { res ->
+                assertEquals(listOf(), res.exist)
+                assertEquals(listOf(basicWowRequest.toResponse()), res.nonExisting)
+            }
+        }
+    }
+
+    @Test
+    fun `exists reports a character as unchecked instead of nonExisting when raiderio can't be reached`() {
+        runBlocking {
+            `when`(raiderIoClient.exists(basicWowRequest)).thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
+
+            val entitiesService = createService(emptyEntitiesState)
+
+            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+
+            result.onLeft { fail() }.onRight { res ->
+                assertEquals(listOf(), res.exist)
+                assertEquals(listOf(), res.nonExisting)
+                assertEquals(listOf(basicWowRequest.toResponse()), res.unchecked)
+            }
+        }
     }
 
     private suspend fun createService(entitiesState: EntitiesState): EntitiesService {

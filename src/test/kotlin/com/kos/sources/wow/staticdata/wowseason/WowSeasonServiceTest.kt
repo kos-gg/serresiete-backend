@@ -5,6 +5,7 @@ import com.kos.clients.HttpError
 import com.kos.clients.domain.ExpansionSeasons
 import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
@@ -101,31 +102,7 @@ class WowSeasonServiceTest {
     fun `i can retrieve wow current season`() {
         runBlocking {
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
-            val seasonData = """
-                {
-                  "is_main_season": true,
-                  "name": "Mythic+ Season 3",
-                  "slug": "mythic-plus-season-3",
-                  "blizzard_season_id": 12,
-                  "dungeons": [
-                    {
-                      "name": "The Nokhud Offensive",
-                      "short_name": "NO",
-                      "challenge_mode_id": 2516
-                    },
-                    {
-                      "name": "Algeth'ar Academy",
-                      "short_name": "AA",
-                      "challenge_mode_id": 2520
-                    },
-                    {
-                      "name": "Ruby Life Pools",
-                      "short_name": "RLP",
-                      "challenge_mode_id": 2521
-                    }
-                  ]
-                }
-            """.trimIndent()
+            val seasonData = RaiderIoHttpClientHelper.ResourceLoader.readResource("unit/wow/season-response.json")
             val season = WowSeason(15, "TWW Season 3", "tww-season-3", 10, seasonData, true)
             val wowSeasonsState = WowSeasonsState(listOf(season))
             val service = createService(wowExpansionState, wowSeasonsState)

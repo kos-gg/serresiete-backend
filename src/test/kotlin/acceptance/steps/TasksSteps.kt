@@ -171,14 +171,34 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
     fun lolViewExists(viewId: String) {
         val entitiesRepo = EntitiesDatabaseRepository(db)
         val entity = runBlocking {
-            entitiesRepo.insert(listOf(LolEnrichedEntityRequest("GTP ZeroMVPs", "EUW", "test-puuid-GTP-ZeroMVPs", 0, 0)), Game.LOL)
+            entitiesRepo.insert(
+                listOf(
+                    LolEnrichedEntityRequest(
+                        "GTP ZeroMVPs",
+                        "EUW",
+                        "test-puuid-GTP-ZeroMVPs",
+                        0,
+                        0
+                    )
+                ), Game.LOL
+            )
         }.getOrNull()!!.first()
 
         val viewsRepo = ViewsDatabaseRepository(db)
         runBlocking {
             viewsRepo.withState(
                 ViewsState(
-                    views = listOf(SimpleView(viewId, "Test LOL View", "sanxei", false, listOf(entity.id), Game.LOL, false)),
+                    views = listOf(
+                        SimpleView(
+                            viewId,
+                            "Test LOL View",
+                            "sanxei",
+                            false,
+                            listOf(entity.id),
+                            Game.LOL,
+                            false
+                        )
+                    ),
                     viewEntities = listOf(ViewEntity(entity.id, viewId, null))
                 )
             )

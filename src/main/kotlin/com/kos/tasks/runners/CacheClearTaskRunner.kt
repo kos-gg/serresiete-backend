@@ -25,6 +25,13 @@ class CacheClearTaskRunner(
         logger.info("Running cache cleanup task")
         val deletedRecords = dataCacheService.clearCache(game)
         logger.info("Deleted $deletedRecords records")
-        tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "Deleted $deletedRecords old tasks"), OffsetDateTime.now()))
+        tasksRepository.updateTask(
+            Task(
+                id,
+                type,
+                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedRecords old tasks"),
+                OffsetDateTime.now()
+            )
+        )
     }
 }

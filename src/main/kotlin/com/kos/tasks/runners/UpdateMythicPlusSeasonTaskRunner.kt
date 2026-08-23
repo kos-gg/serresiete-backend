@@ -20,10 +20,24 @@ class UpdateMythicPlusSeasonTaskRunner(
         logger.info("Running $type with id=$id")
         wowSeasonsService.addNewMythicPlusSeason()
             .onLeft {
-                tasksRepository.updateTask(Task(id, type, TaskStatus(Status.ERROR, it.toString()), OffsetDateTime.now()))
+                tasksRepository.updateTask(
+                    Task(
+                        id,
+                        type,
+                        TaskStatus(Status.ERROR, it.toString()),
+                        OffsetDateTime.now()
+                    )
+                )
             }
             .onRight {
-                tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, "Updated Wow Season to season ${it.id} - ${it.name}"), OffsetDateTime.now()))
+                tasksRepository.updateTask(
+                    Task(
+                        id,
+                        type,
+                        TaskStatus(Status.SUCCESSFUL, "Updated Wow Season to season ${it.id} - ${it.name}"),
+                        OffsetDateTime.now()
+                    )
+                )
             }
     }
 }
