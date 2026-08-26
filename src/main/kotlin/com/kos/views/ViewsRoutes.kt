@@ -1,5 +1,7 @@
 package com.kos.views
 
+import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.raise.either
 import com.kos.common.error.InvalidQueryParameter
 import com.kos.common.error.respondWithHandledError
@@ -12,6 +14,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+fun parsePositiveIntQueryParam(param: String, rawValue: String?): Either<InvalidQueryParameter, Int?> =
+    rawValue.recoverToEither(
+        { InvalidQueryParameter(param, it, listOf("a positive integer")) },
+        { value ->
+            Either.catch { value.toInt() }
+                .flatMap { parsed -> if (parsed >= 1) Either.Right(parsed) else Either.Left(IllegalArgumentException()) }
+        }
+    )
 
 fun Route.viewsRouting(
     viewsController: ViewsController
@@ -36,18 +46,14 @@ fun Route.viewsRouting(
                     val featured: Boolean =
                         call.request.queryParameters["featured"]?.toBoolean() ?: false
 
-                    val page = call.request.queryParameters["page"]?.toInt()
-                    val limit = call.request.queryParameters["limit"]?.toInt()
+                    val page = parsePositiveIntQueryParam("page", call.request.queryParameters["page"]).bind()
+                    val limit = parsePositiveIntQueryParam("limit", call.request.queryParameters["limit"]).bind()
                     val includeMetadata = call.request.queryParameters["include"] == "metadata"
 
                     viewsController.getViews(
                         userWithActivities?.name,
                         userWithActivities?.activities.orEmpty(),
-                        game,
-                        featured,
-                        page,
-                        limit,
-                        includeMetadata
+                        GetViewsQuery(game, featured, page, limit, includeMetadata)
                     ).bind()
                 }.fold({
                     call.respondWithHandledError(it)

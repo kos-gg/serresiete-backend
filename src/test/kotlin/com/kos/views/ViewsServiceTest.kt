@@ -111,7 +111,7 @@ class ViewsServiceTest {
                 )
                 assertEquals(
                     limit,
-                    viewsService.getViews(Game.WOW, false, null, limit).second.size
+                    viewsService.getViews(GetViewsQuery(Game.WOW, false, null, limit, true)).second.size
                 )
             }
         }
@@ -130,8 +130,24 @@ class ViewsServiceTest {
                 )
                 assertEquals(
                     0,
-                    viewsService.getViews(Game.WOW, false, page, limit).second.size
+                    viewsService.getViews(GetViewsQuery(Game.WOW, false, page, limit, true)).second.size
                 )
+            }
+        }
+
+        @Test
+        fun `i can get views without metadata, and totalCount is not computed`() {
+            runBlocking {
+                val (_, viewsService) = createService(
+                    ViewsState(basicSimpleGameViews, listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    emptyCredentialsInitialState
+                )
+
+                val views = viewsService.getViews(GetViewsQuery(Game.WOW, false, null, null, false))
+
+                assertEquals(null, views.first.totalCount)
             }
         }
 
@@ -161,7 +177,7 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                assertEquals(basicSimpleLolViews, viewsService.getViews(Game.LOL, false, null, null).second)
+                assertEquals(basicSimpleLolViews, viewsService.getViews(GetViewsQuery(Game.LOL, false, null, null, true)).second)
             }
         }
 
@@ -177,7 +193,7 @@ class ViewsServiceTest {
 
                 assertEquals(
                     listOf(basicSimpleWowView.copy(id = "3", featured = true)),
-                    viewsService.getViews(Game.WOW, true, null, null).second
+                    viewsService.getViews(GetViewsQuery(Game.WOW, true, null, null, true)).second
                 )
             }
         }

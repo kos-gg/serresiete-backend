@@ -14,24 +14,15 @@ class ViewsController(
     suspend fun getViews(
         client: String?,
         activities: Set<Activity>,
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?,
-        includeMetadata: Boolean
+        query: GetViewsQuery
     ): Either<ControllerError, Pair<ViewMetadata?, List<SimpleView>>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
                 if (activities.contains(Activities.getAnyViews)) {
-                    val anyViews = viewsService.getViews(
-                        game,
-                        featured,
-                        page,
-                        limit
-                    )
+                    val anyViews = viewsService.getViews(query)
                     Either.Right(
-                        when (includeMetadata) {
+                        when (query.includeMetadata) {
                             false -> Pair(null, anyViews.second)
                             true -> anyViews
                         }

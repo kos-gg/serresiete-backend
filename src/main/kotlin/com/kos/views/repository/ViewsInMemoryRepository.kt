@@ -84,12 +84,8 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         viewEntities.removeIf { it.viewId == id }
     }
 
-    override suspend fun getViews(
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?
-    ): Pair<ViewMetadata, List<SimpleView>> {
+    override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> {
+        val (game, featured, page, limit, includeMetadata) = query
         val allViews = views.toList()
         val maybeFeaturedViews = if (featured) allViews.filter { it.featured } else allViews
 
@@ -103,7 +99,8 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             { filteredQuery.drop(((page ?: 1) - 1) * it).take(it) }
         )
 
-        return Pair(ViewMetadata(allViews.count()), views)
+        val totalCount = if (includeMetadata) filteredQuery.count() else null
+        return Pair(ViewMetadata(totalCount), views)
     }
 
     override suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity? {

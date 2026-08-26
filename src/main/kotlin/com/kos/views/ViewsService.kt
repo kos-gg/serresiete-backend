@@ -26,13 +26,8 @@ class ViewsService(
 ) : WithLogger("ViewsService") {
 
     suspend fun getOwnViews(owner: String): List<SimpleView> = viewsRepository.getOwnViews(owner)
-    suspend fun getViews(
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?
-    ): Pair<ViewMetadata, List<SimpleView>> =
-        viewsRepository.getViews(game, featured, page, limit)
+    suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        viewsRepository.getViews(query)
 
     suspend fun get(id: String): View? {
         return when (val simpleView = viewsRepository.get(id)) {

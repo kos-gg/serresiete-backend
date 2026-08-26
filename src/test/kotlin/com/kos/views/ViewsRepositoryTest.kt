@@ -3,6 +3,7 @@ package com.kos.views
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.EntitiesInMemoryRepository
@@ -41,7 +42,10 @@ abstract class ViewsRepositoryTest {
     fun `given a repository with views i can retrieve the views of a game`() {
         runBlocking {
             val repositoryWithState = repository.withState(ViewsState(basicSimpleGameViews, listOf()))
-            assertEquals(basicSimpleLolViews, repositoryWithState.getViews(Game.LOL, featured, null, null).second)
+            assertEquals(
+                basicSimpleLolViews,
+                repositoryWithState.getViews(GetViewsQuery(Game.LOL, featured, null, null, true)).second
+            )
         }
     }
 
@@ -51,7 +55,7 @@ abstract class ViewsRepositoryTest {
             val repositoryWithState = repository.withState(ViewsState(basicSimpleGameViews, listOf()))
             assertEquals(
                 listOf(basicSimpleWowView.copy(id = "3", featured = true)),
-                repositoryWithState.getViews(Game.WOW, true, null, null).second
+                repositoryWithState.getViews(GetViewsQuery(Game.WOW, true, null, null, true)).second
             )
         }
     }
@@ -72,7 +76,7 @@ abstract class ViewsRepositoryTest {
                 )
             assertEquals(
                 listOf(featuredWowView),
-                repositoryWithState.getViews(Game.WOW, true, null, null).second
+                repositoryWithState.getViews(GetViewsQuery(Game.WOW, true, null, null, true)).second
             )
         }
     }
@@ -83,10 +87,10 @@ abstract class ViewsRepositoryTest {
             val limit = 1
             val repositoryWithState = repository.withState(ViewsState(gigaSimpleGameViews, listOf()))
 
-            val views = repositoryWithState.getViews(Game.LOL, false, null, limit)
+            val views = repositoryWithState.getViews(GetViewsQuery(Game.LOL, false, null, limit, true))
 
             assertEquals(listOf(basicSimpleLolView), views.second)
-            assertEquals(gigaSimpleGameViews.size, views.first.totalCount)
+            assertEquals(gigaSimpleGameViews.count { it.game == Game.LOL }, views.first.totalCount)
         }
     }
 
@@ -96,10 +100,77 @@ abstract class ViewsRepositoryTest {
             val page = 2
             val limit = 5
             val repositoryWithState = repository.withState(ViewsState(gigaSimpleGameViews, listOf()))
-            assertEquals(
-                gigaSimpleGameViews.takeLast(4),
-                repositoryWithState.getViews(null, false, page, limit).second
+            val views = repositoryWithState.getViews(GetViewsQuery(null, false, page, limit, true))
+            assertEquals(gigaSimpleGameViews.takeLast(4), views.second)
+            assertEquals(gigaSimpleGameViews.size, views.first.totalCount)
+        }
+    }
+
+    @Test
+    fun `totalCount in metadata reflects the game and featured filters, not the whole repository`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(ViewsState(gigaSimpleGameViews, listOf()))
+
+            val views = repositoryWithState.getViews(GetViewsQuery(Game.WOW, true, null, null, true))
+
+            val expectedFiltered = gigaSimpleGameViews.filter { it.game == Game.WOW && it.featured }
+            assertEquals(expectedFiltered, views.second)
+            assertEquals(expectedFiltered.size, views.first.totalCount)
+        }
+    }
+
+    @Test
+    fun `totalCount in metadata stays equal to the full filtered count across pages`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(ViewsState(gigaSimpleGameViews, listOf()))
+            val expectedTotal = gigaSimpleGameViews.count { it.game == Game.LOL }
+
+            val firstPage = repositoryWithState.getViews(GetViewsQuery(Game.LOL, false, 1, 2, true))
+            val secondPage = repositoryWithState.getViews(GetViewsQuery(Game.LOL, false, 2, 2, true))
+
+            assertEquals(expectedTotal, firstPage.first.totalCount)
+            assertEquals(expectedTotal, secondPage.first.totalCount)
+        }
+    }
+
+    @Test
+    fun `totalCount is null when includeMetadata is false, but records are still filtered and paginated`() {
+        runBlocking {
+            val repositoryWithState = repository.withState(ViewsState(gigaSimpleGameViews, listOf()))
+
+            val views = repositoryWithState.getViews(GetViewsQuery(Game.LOL, false, null, 1, false))
+
+            assertEquals(listOf(basicSimpleLolView), views.second)
+            assertEquals(null, views.first.totalCount)
+        }
+    }
+
+    @Test
+    fun `getViews assembles each view's own entities and does not mix them up between views`() {
+        runBlocking {
+            entitiesRepository.withState(
+                EntitiesState(
+                    wowEntities = listOf(basicWowEntity, basicWowEntity2),
+                    wowHardcoreEntities = listOf(),
+                    lolEntities = listOf()
+                )
             )
+            val viewA = basicSimpleWowView.copy(id = "view-a", entitiesIds = listOf(basicWowEntity.id))
+            val viewB = basicSimpleWowView.copy(id = "view-b", entitiesIds = listOf(basicWowEntity2.id))
+            repository.withState(
+                ViewsState(
+                    listOf(viewA, viewB),
+                    listOf(
+                        ViewEntity(basicWowEntity.id, viewA.id, "alias-a"),
+                        ViewEntity(basicWowEntity2.id, viewB.id, "alias-b")
+                    )
+                )
+            )
+
+            val views = repository.getViews(GetViewsQuery(Game.WOW, false, null, null, false)).second
+
+            assertEquals(listOf(basicWowEntity.id), views.first { it.id == "view-a" }.entitiesIds)
+            assertEquals(listOf(basicWowEntity2.id), views.first { it.id == "view-b" }.entitiesIds)
         }
     }
 
@@ -114,7 +185,7 @@ abstract class ViewsRepositoryTest {
                 repository.withState(ViewsState(basicSimpleGameViews.plus(featuredLolView), listOf()))
             assertEquals(
                 listOf(featuredWowView, featuredLolView),
-                repositoryWithState.getViews(null, true, null, null).second
+                repositoryWithState.getViews(GetViewsQuery(null, true, null, null, true)).second
             )
         }
     }

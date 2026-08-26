@@ -51,6 +51,14 @@ data class GetViewsResponse(val metadata: ViewMetadata? = null, val records: Lis
 @Serializable
 data class ViewMetadata(val totalCount: Int?)
 
+data class GetViewsQuery(
+    val game: Game?,
+    val featured: Boolean,
+    val page: Int?,
+    val limit: Int?,
+    val includeMetadata: Boolean
+)
+
 @Serializable
 data class SimpleView(
     val id: String,
