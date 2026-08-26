@@ -101,12 +101,6 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         row[ViewEntities.alias]
     )
 
-    override suspend fun getOwnViews(owner: String): List<SimpleView> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            resultRowsToSimpleViews(Views.selectAll().where { Views.owner.eq(owner) }.toList())
-        }
-    }
-
     override suspend fun get(id: String): SimpleView? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             resultRowsToSimpleViews(Views.selectAll().where { Views.id.eq(id) }.toList())
@@ -198,17 +192,25 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         newSuspendedTransaction(Dispatchers.IO, db) { Views.deleteWhere { Views.id.eq(id) } }
     }
 
-    override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> {
+    override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        queryViews(owner = null, query)
+
+    override suspend fun getOwnViews(owner: String, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        queryViews(owner = owner, query)
+
+    private suspend fun queryViews(owner: String?, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> {
         val (game, featured, page, limit, includeMetadata) = query
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val featuredCondition = if (featured) Views.featured eq true else null
             val gameCondition = game?.let { Views.game eq it.toString() }
+            val ownerCondition = owner?.let { Views.owner eq it }
 
             val queryWithWhere =
                 Views.selectAll().adjustWhere {
                     Op.TRUE
                         .andIfNotNull(featuredCondition)
                         .andIfNotNull(gameCondition)
+                        .andIfNotNull(ownerCondition)
                 }
 
             val totalRows = if (includeMetadata) queryWithWhere.count().toInt() else null

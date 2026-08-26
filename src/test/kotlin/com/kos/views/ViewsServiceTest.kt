@@ -85,16 +85,20 @@ class ViewsServiceTest {
     @Nested
     inner class BehaviorOfGetViews {
         @Test
-        fun `i can get own views`() {
+        fun `i can get own views with a query, paginated and with metadata`() {
             runBlocking {
+                val myViews = (1..3).map { basicSimpleWowView.copy(id = "own-$it") }
                 val (_, viewsService) = createService(
-                    ViewsState(listOf(basicSimpleWowView), listOf()),
+                    ViewsState(myViews, listOf()),
                     emptyEntitiesState,
                     listOf(),
                     emptyCredentialsInitialState
                 )
 
-                assertEquals(listOf(basicSimpleWowView), viewsService.getOwnViews(owner))
+                val result = viewsService.getOwnViews(owner, GetViewsQuery(null, false, 1, 2, true))
+
+                assertEquals(myViews.take(2), result.second)
+                assertEquals(3, result.first.totalCount)
             }
         }
 

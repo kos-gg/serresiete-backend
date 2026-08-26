@@ -254,6 +254,28 @@ class ViewsControllerTest {
     }
 
     @Test
+    fun `i can get own views paginated and with metadata`() {
+        runBlocking {
+            val myViews = (1..3).map { basicSimpleWowView.copy(id = "own-$it") }
+            val controller = createController(
+                emptyCredentialsState,
+                ViewsState(myViews, listOf()),
+                emptyEntitiesState,
+                listOf()
+            )
+
+            val result = controller.getViews(
+                "owner",
+                setOf(Activities.getOwnViews),
+                GetViewsQuery(null, false, 1, 2, true)
+            ).getOrNull()
+
+            assertEquals(myViews.take(2), result?.second)
+            assertEquals(3, result?.first?.totalCount)
+        }
+    }
+
+    @Test
     fun `i can get views returns all views if perms are given`() {
         runBlocking {
             val notOwnerView = basicSimpleWowView.copy(owner = "not-owner")

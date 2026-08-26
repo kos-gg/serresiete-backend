@@ -194,9 +194,46 @@ abstract class ViewsRepositoryTest {
     fun `given a repository with views i can retrieve them`() {
         runBlocking {
             val repositoryWithState = repository.withState(ViewsState(listOf(basicSimpleWowView), listOf()))
-            assertEquals(listOf(basicSimpleWowView), repositoryWithState.getOwnViews(owner))
+            assertEquals(
+                listOf(basicSimpleWowView),
+                repositoryWithState.getOwnViews(owner, GetViewsQuery(null, false, null, null, false)).second
+            )
         }
     }
+
+    @Test
+    fun `getOwnViews with a query filters by owner, game, and featured, and includes totalCount`() {
+        runBlocking {
+            val myLolView1 = basicSimpleLolView.copy(id = "own-1", owner = owner)
+            val myLolView2 = basicSimpleLolView.copy(id = "own-2", owner = owner, featured = true)
+            val myWowView = basicSimpleWowView.copy(id = "own-3", owner = owner)
+            val someoneElsesView = basicSimpleLolView.copy(id = "other-1", owner = "someone-else")
+
+            val repositoryWithState = repository.withState(
+                ViewsState(listOf(myLolView1, myLolView2, myWowView, someoneElsesView), listOf())
+            )
+
+            val result =
+                repositoryWithState.getOwnViews(owner, GetViewsQuery(Game.LOL, false, null, null, true))
+
+            assertEquals(listOf(myLolView1, myLolView2), result.second)
+            assertEquals(2, result.first.totalCount)
+        }
+    }
+
+    @Test
+    fun `getOwnViews with a query paginates results`() {
+        runBlocking {
+            val myViews = (1..3).map { basicSimpleLolView.copy(id = "own-$it", owner = owner) }
+            val repositoryWithState = repository.withState(ViewsState(myViews, listOf()))
+
+            val page = repositoryWithState.getOwnViews(owner, GetViewsQuery(null, false, 2, 1, false))
+
+            assertEquals(listOf(myViews[1]), page.second)
+            assertEquals(null, page.first.totalCount)
+        }
+    }
+
 
     @Test
     fun `given a repository with views i can retrieve a certain view`() {

@@ -1,6 +1,5 @@
 package com.kos.views
 
-import com.kos.common.error.InvalidQueryParameter
 import com.kos.common.getLeftOrNull
 import kotlin.test.Test
 import kotlin.test.assertEquals

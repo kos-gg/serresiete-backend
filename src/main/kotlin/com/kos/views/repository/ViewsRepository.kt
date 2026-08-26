@@ -10,7 +10,7 @@ data class ViewsState(
 )
 
 interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
-    suspend fun getOwnViews(owner: String): List<SimpleView>
+    suspend fun getOwnViews(owner: String, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>>
     suspend fun get(id: String): SimpleView?
     suspend fun create(
         id: String,
