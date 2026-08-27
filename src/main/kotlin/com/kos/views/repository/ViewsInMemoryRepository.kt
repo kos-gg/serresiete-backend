@@ -118,6 +118,21 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         id: String
     ) {
         entities.forEach { viewEntities.add(ViewEntity(it.first, id, it.second)) }
+        val index = views.indexOfFirst { it.id == id }
+        if (index != -1) {
+            views[index] = views[index].copy(entitiesIds = views[index].entitiesIds + entities.map { it.first })
+        }
+    }
+
+    override suspend fun disassociateEntitiesFromView(
+        entities: Set<Long>,
+        id: String
+    ) {
+        viewEntities.removeIf { it.viewId == id && it.entityId in entities }
+        val index = views.indexOfFirst { it.id == id }
+        if (index != -1) {
+            views[index] = views[index].copy(entitiesIds = views[index].entitiesIds.toSet().minus(entities).toList())
+        }
     }
 
     override suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime) {

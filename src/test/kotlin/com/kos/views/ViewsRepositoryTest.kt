@@ -398,6 +398,70 @@ abstract class ViewsRepositoryTest {
     }
 
     @Test
+    fun `associateEntitiesIdsToView adds the entities to both the view's entitiesIds and its view entities`() {
+        runBlocking {
+            repository.withState(ViewsState(listOf(basicSimpleWowView), listOf()))
+            entitiesRepository.withState(
+                EntitiesState(
+                    wowEntities = listOf(basicWowEntity, basicWowEntity2),
+                    wowHardcoreEntities = listOf(),
+                    lolEntities = listOf()
+                )
+            )
+
+            repository.associateEntitiesIdsToView(
+                listOf(basicWowEntity.id to "alias-a", basicWowEntity2.id to null),
+                basicSimpleWowView.id
+            )
+
+            val updatedView = repository.get(basicSimpleWowView.id)!!
+            assertEquals(
+                (basicSimpleWowView.entitiesIds + listOf(basicWowEntity.id, basicWowEntity2.id)).toSet(),
+                updatedView.entitiesIds.toSet()
+            )
+            assertEquals(
+                ViewEntity(basicWowEntity.id, basicSimpleWowView.id, "alias-a"),
+                repository.getViewEntity(basicSimpleWowView.id, basicWowEntity.id)
+            )
+        }
+    }
+
+    @Test
+    fun `disassociateEntitiesFromView removes the entities from both the view's entitiesIds and its view entities`() {
+        runBlocking {
+            entitiesRepository.withState(
+                EntitiesState(
+                    wowEntities = listOf(basicWowEntity, basicWowEntity2),
+                    wowHardcoreEntities = listOf(),
+                    lolEntities = listOf()
+                )
+            )
+            val viewWithBothEntities = basicSimpleWowView.copy(
+                entitiesIds = listOf(basicWowEntity.id, basicWowEntity2.id)
+            )
+            repository.withState(
+                ViewsState(
+                    listOf(viewWithBothEntities),
+                    listOf(
+                        ViewEntity(basicWowEntity.id, viewWithBothEntities.id, "alias-a"),
+                        ViewEntity(basicWowEntity2.id, viewWithBothEntities.id, "alias-b")
+                    )
+                )
+            )
+
+            repository.disassociateEntitiesFromView(setOf(basicWowEntity.id), viewWithBothEntities.id)
+
+            val updatedView = repository.get(viewWithBothEntities.id)!!
+            assertEquals(listOf(basicWowEntity2.id), updatedView.entitiesIds)
+            assertEquals(null, repository.getViewEntity(viewWithBothEntities.id, basicWowEntity.id))
+            assertEquals(
+                ViewEntity(basicWowEntity2.id, viewWithBothEntities.id, "alias-b"),
+                repository.getViewEntity(viewWithBothEntities.id, basicWowEntity2.id)
+            )
+        }
+    }
+
+    @Test
     fun `given a repository with view entities i can retrieve then `() {
         runBlocking {
             val lolEntities = listOf(basicLolEntity, basicLolEntity2)

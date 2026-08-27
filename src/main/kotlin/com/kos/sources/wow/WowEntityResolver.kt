@@ -93,7 +93,7 @@ class WowEntityResolver(
         Pair(roster, memberReqs)
     }
 
-    private suspend fun resolveGuildMembers(
+    suspend fun resolveGuildMembers(
         newRequests: List<EntityRequest>
     ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ServiceError>>> {
         val (errors, oks) = newRequests.asFlow()

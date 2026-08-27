@@ -11,6 +11,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.OffsetDateTime
 
@@ -186,6 +187,15 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         id: String
     ) {
         newSuspendedTransaction(Dispatchers.IO, db) { associateEntitiesIdsToViewQuery(entities, id) }
+    }
+
+    override suspend fun disassociateEntitiesFromView(
+        entities: Set<Long>,
+        id: String
+    ) {
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            ViewEntities.deleteWhere { viewId.eq(id) and entityId.inList(entities) }
+        }
     }
 
     override suspend fun delete(id: String): Unit {
