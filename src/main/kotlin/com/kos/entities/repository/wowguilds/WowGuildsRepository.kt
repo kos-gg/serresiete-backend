@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.common.WithState
 import com.kos.common.error.InsertError
 import com.kos.entities.domain.GuildPayload
+import com.kos.views.Game
 
 interface WowGuildsRepository : WithState<WowGuildsState, WowGuildsRepository> {
     suspend fun insertGuild(
@@ -11,12 +12,13 @@ interface WowGuildsRepository : WithState<WowGuildsState, WowGuildsRepository> {
         name: String,
         realm: String,
         region: String,
-        viewId: String
+        viewId: String,
+        game: Game
     ): Either<InsertError, Unit>
 
-    suspend fun getGuilds(): List<Pair<GuildPayload, String>>
+    suspend fun getGuilds(game: Game): List<Pair<GuildPayload, String>>
 }
 
 data class WowGuildsState(
-    val guilds: List<Pair<GuildPayload, String>>
+    val guilds: List<Triple<GuildPayload, String, Game>>
 )

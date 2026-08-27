@@ -545,7 +545,7 @@ class EntitiesServiceTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
         val viewsRepository = ViewsInMemoryRepository()
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 

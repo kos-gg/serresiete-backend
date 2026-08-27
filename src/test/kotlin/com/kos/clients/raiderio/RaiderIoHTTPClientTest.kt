@@ -103,6 +103,28 @@ class RaiderIoHTTPClientTest {
     }
 
     @Test
+    fun `test getScore() method with successful response`() {
+        runBlocking {
+            val result = raiderIoClient.getScore(
+                WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
+            )
+
+            assertEquals(Either.Right(1234.5), result)
+        }
+    }
+
+    @Test
+    fun `test getScore() method does not swallow a not-found character, unlike exists()`() {
+        runBlocking {
+            val result = raiderIoClient.getScore(
+                WowEntityRequest("unknown-character", "eu", "zuljin")
+            )
+
+            result.onRight { fail() }.onLeft { error -> assertTrue(error is HttpError) }
+        }
+    }
+
+    @Test
     fun `test getRunDetails() method with successful response`() {
         runBlocking {
             val result = raiderIoClient.getRunDetails("season-mn-1", "3415343")

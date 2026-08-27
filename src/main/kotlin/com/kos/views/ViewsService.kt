@@ -125,7 +125,7 @@ class ViewsService(
             }.mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message ?: it.javaClass.simpleName) }.bind()
 
             resolved.guild?.let {
-                entitiesService.insertGuild(it, view.id)
+                entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
                     .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message) }
                     .bind()
             }

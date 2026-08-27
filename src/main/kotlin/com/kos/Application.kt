@@ -132,7 +132,7 @@ fun Application.module() {
     val entitiesRepository = EntitiesDatabaseRepository(db)
     val wowGuildsDatabaseRepository = WowGuildsDatabaseRepository(db)
 
-    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient)
+    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
     val entityResolverProvider = EntityResolverProvider(

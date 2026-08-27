@@ -133,7 +133,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = emptyList()
                 )
             )
-            guildsRepo.insertGuild(12345, guildName, realm, region, viewId)
+            guildsRepo.insertGuild(12345, guildName, realm, region, viewId, Game.WOW_HC)
         }
     }
 

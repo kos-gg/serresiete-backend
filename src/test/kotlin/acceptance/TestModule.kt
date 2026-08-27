@@ -112,7 +112,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val staticDataRepository = WowExpansionDatabaseRepository(db)
     val viewsRepository = ViewsDatabaseRepository(db)
 
-    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient)
+    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
     val entityResolverProvider = EntityResolverProvider(listOf(lolResolver, wowResolver, wowHardcoreResolver))

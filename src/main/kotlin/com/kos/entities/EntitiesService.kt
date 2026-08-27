@@ -67,7 +67,7 @@ data class EntitiesService(
     }
 
     suspend fun updateWowHardcoreGuilds(): List<ServiceError> {
-        val guildsWithViewId = wowGuildsRepository.getGuilds()
+        val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW_HC)
         return wowHardcoreGuildUpdater.update(guildsWithViewId)
     }
 
@@ -75,8 +75,10 @@ data class EntitiesService(
     suspend fun get(game: Game): List<Entity> = entitiesRepository.get(game)
 
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game) = entitiesRepository.insert(entities, game)
-    suspend fun insertGuild(payload: GuildPayload, viewId: String): Either<InsertError, Unit> =
-        wowGuildsRepository.insertGuild(payload.blizzardId, payload.name, payload.realm, payload.region, viewId)
+    suspend fun insertGuild(payload: GuildPayload, viewId: String, game: Game): Either<InsertError, Unit> =
+        wowGuildsRepository.insertGuild(
+            payload.blizzardId, payload.name, payload.realm, payload.region, viewId, game
+        )
 
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =
         entitiesRepository.getViewsFromEntity(id, game)

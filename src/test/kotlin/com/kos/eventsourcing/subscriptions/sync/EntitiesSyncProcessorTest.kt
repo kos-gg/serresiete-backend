@@ -64,7 +64,7 @@ class EntitiesSyncProcessorTest {
 
             val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-            val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+            val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
             val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
             val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 

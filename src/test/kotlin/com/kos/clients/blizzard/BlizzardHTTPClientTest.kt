@@ -135,6 +135,16 @@ class BlizzardHTTPClientTest {
     }
 
 
+    @Test
+    fun `getRetailGuildRoster returns successful response`() = runBlocking {
+        givenAValidToken()
+
+        val result =
+            blizzardClient.getRetailGuildRoster("us", "realm", "guild")
+
+        assertEquals(Either.Right(BlizzardMockHelper.getWowRetailGuildRosterResponse), result)
+    }
+
     private suspend fun givenAValidToken() {
         `when`(blizzardAuthClient.getAccessToken())
             .thenReturn(BlizzardMockHelper.getToken())

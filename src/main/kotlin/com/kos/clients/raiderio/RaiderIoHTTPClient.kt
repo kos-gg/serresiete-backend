@@ -130,6 +130,26 @@ data class RaiderIoHTTPClient(
             ifRight = { Either.Right(true) }
         )
 
+    override suspend fun getScore(wowEntityRequest: WowEntityRequest): Either<ClientError, Double> =
+        retryEitherWithFixedDelay(
+            retryConfig = retryConfig,
+            functionName = "raiderIoScore",
+        ) {
+            fetchFromApi<RaiderIoScoreResponse> {
+                apiGet(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
+                    headers {
+                        append(HttpHeaders.Accept, "*/*")
+                    }
+                    url {
+                        parameters.append("region", wowEntityRequest.region)
+                        parameters.append("realm", wowEntityRequest.realm)
+                        parameters.append("name", wowEntityRequest.name)
+                        parameters.append("fields", "mythic_plus_scores_by_season:current")
+                    }
+                }
+            }
+        }.map { it.seasonScores.firstOrNull()?.scores?.all ?: 0.0 }
+
     override suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff> {
         return fetchFromApi(
             request = {

@@ -17,6 +17,7 @@ import com.kos.tasks.Task
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
+import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
@@ -53,7 +54,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
         val character = "Surmana"
 
         wowGuildsRepository.withState(
-            WowGuildsState(listOf(Pair(GuildPayload(guild, realm, region, blizzardId), "1")))
+            WowGuildsState(listOf(Triple(GuildPayload(guild, realm, region, blizzardId), "1", Game.WOW_HC)))
         )
         `when`(blizzardClient.getGuildRoster(region, realm, guild))
             .thenReturn(

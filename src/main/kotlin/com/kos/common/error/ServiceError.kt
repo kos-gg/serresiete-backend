@@ -32,6 +32,13 @@ data class NonHardcoreCharacter(
         "${wowEntity.realm} realm is not hardcore"
 }
 
+data class NotCompetitiveCharacter(
+    val wowEntity: WowEntityRequest
+) : ServiceError() {
+    override fun error(): String =
+        "${wowEntity.name}-${wowEntity.realm} does not meet the minimum mythic+ score"
+}
+
 data class ResolveEntityError(
     val game: Game,
     val message: String

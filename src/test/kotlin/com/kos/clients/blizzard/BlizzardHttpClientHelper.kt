@@ -6,6 +6,7 @@ import com.kos.datacache.BlizzardMockHelper.getWowEquipmentResponseString
 import com.kos.datacache.BlizzardMockHelper.getWowGuildRosterResponse
 import com.kos.datacache.BlizzardMockHelper.getWowItemMediaResponse
 import com.kos.datacache.BlizzardMockHelper.getWowItemResponseString
+import com.kos.datacache.BlizzardMockHelper.getWowRetailGuildRosterResponse
 import com.kos.datacache.BlizzardMockHelper.getWowSpecializationsResponseString
 import com.kos.datacache.BlizzardMockHelper.getWowStatsResponse
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
@@ -59,7 +60,13 @@ object BlizzardHttpClientHelper {
                         respond(json.encodeToString(notHardcoreRealm), HttpStatusCode.OK)
 
                     "/data/wow/guild/realm/guild/roster" ->
-                        respond(json.encodeToString(getWowGuildRosterResponse), HttpStatusCode.OK)
+                        when (request.url.parameters["namespace"]) {
+                            "profile-us" ->
+                                respond(json.encodeToString(getWowRetailGuildRosterResponse), HttpStatusCode.OK)
+
+                            else ->
+                                respond(json.encodeToString(getWowGuildRosterResponse), HttpStatusCode.OK)
+                        }
 
                     else ->
                         error("Unhandled ${request.url.encodedPath}")

@@ -41,22 +41,22 @@ class WowGuildsDatabaseRepositoryTest {
         embeddedPostgres.close()
     }
 
-    private suspend fun createView(owner: String): String {
+    private suspend fun createView(owner: String, game: Game): String {
         val id = UUID.randomUUID().toString()
-        viewsRepository.create(id, "view-$id", owner, listOf(), Game.WOW_HC, false, null)
+        viewsRepository.create(id, "view-$id", owner, listOf(), game, false, null)
         return id
     }
 
     @Test
     fun `redelivering the same guild insert for the same view succeeds as a no-op`() {
         runBlocking {
-            val viewId = createView("sanxei")
+            val viewId = createView("sanxei", Game.WOW)
 
-            val first = repository.insertGuild(1L, "guild", "realm", "region", viewId)
+            val first = repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
             assertEquals(Either.Right(Unit), first)
 
             // simulates redelivery of the same event after a prior attempt already inserted the guild
-            val second = repository.insertGuild(1L, "guild", "realm", "region", viewId)
+            val second = repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
             assertEquals(Either.Right(Unit), second)
         }
     }
@@ -64,14 +64,44 @@ class WowGuildsDatabaseRepositoryTest {
     @Test
     fun `inserting a guild already tracked by a different view still fails`() {
         runBlocking {
-            val viewA = createView("sanxei")
-            val viewB = createView("sanxei")
+            val viewA = createView("sanxei", Game.WOW)
+            val viewB = createView("sanxei", Game.WOW)
 
-            val first = repository.insertGuild(1L, "guild", "realm", "region", viewA)
+            val first = repository.insertGuild(1L, "guild", "realm", "region", viewA, Game.WOW)
             assertEquals(Either.Right(Unit), first)
 
-            val second = repository.insertGuild(1L, "guild", "realm", "region", viewB)
+            val second = repository.insertGuild(1L, "guild", "realm", "region", viewB, Game.WOW)
             assertIs<Either.Left<*>>(second)
+        }
+    }
+
+    @Test
+    fun `the same blizzard guild id can be tracked independently for wow and wow_hc`() {
+        runBlocking {
+            val wowView = createView("sanxei", Game.WOW)
+            val wowHcView = createView("sanxei", Game.WOW_HC)
+
+            val wowInsert = repository.insertGuild(1L, "guild", "realm", "region", wowView, Game.WOW)
+            val wowHcInsert = repository.insertGuild(1L, "guild", "realm", "region", wowHcView, Game.WOW_HC)
+
+            assertEquals(Either.Right(Unit), wowInsert)
+            assertEquals(Either.Right(Unit), wowHcInsert)
+        }
+    }
+
+    @Test
+    fun `getGuilds only returns guilds tracked for the requested game`() {
+        runBlocking {
+            val wowView = createView("sanxei", Game.WOW)
+            val wowHcView = createView("sanxei", Game.WOW_HC)
+
+            repository.insertGuild(1L, "wow-guild", "realm", "region", wowView, Game.WOW)
+            repository.insertGuild(2L, "hc-guild", "realm", "region", wowHcView, Game.WOW_HC)
+
+            val wowGuilds = repository.getGuilds(Game.WOW)
+
+            assertEquals(1, wowGuilds.size)
+            assertEquals("wow-guild", wowGuilds.single().first.name)
         }
     }
 }
