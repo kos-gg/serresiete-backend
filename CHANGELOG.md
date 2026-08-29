@@ -1,5 +1,38 @@
 # Changelog
 
+## [5.11.0] - 29-08-2026
+
+### Added
+
+- **WoW retail guild views**:
+    - `WowEntityResolver` now supports `isGuild` for WOW (previously only WOW_HC), resolving the current roster from
+      Blizzard's retail guild endpoint (new `BlizzardClient.getRetailGuildRoster()`) and filtering to max-level (90)
+      characters.
+    - Guild members are only tracked if they hold a RaiderIO mythic+ score — new `RaiderIoClient.getScore()` — rather
+      than merely existing. Characters with no score are reported as `unchecked` (`NotCompetitiveCharacter`) instead
+      of being silently dropped or included.
+- **`UPDATE_WOW_GUILDS` task**:
+    - New `UpdateWowGuildsTaskRunner` + `WowGuildUpdater`, scheduled daily like the existing
+      `UPDATE_WOW_HARDCORE_GUILDS`. Refreshes each tracked WOW guild view's roster: inserts newly-qualifying members
+      and disassociates entities that have left the guild since the last sync.
+
+### Changed
+
+- **`wow_guild` / `wow_hardcore_guild` tables merged**: both guild types are now stored in a single `wow_guild` table,
+  distinguished by `game` (`WOW` vs `WOW_HC`). `WowGuildsRepository` (`insertGuild`/`getGuilds`) now takes/filters by
+  `game` accordingly.
+
+### Fixed
+
+- **RaiderIO "character not found" no longer misclassified in `getScore()`**: the same disambiguation `exists()`
+  already had (a 400 with "Could not find requested character" in the body isn't a real failure) is now applied to
+  `getScore()` too — resolves to a score of `0.0` instead of noisy retry-abort logging and an incorrect `unchecked`
+  result.
+- **WOW_HC roster resolution could crash on mixed-case character names**: `WowHardcoreEntityResolver` built lookup
+  requests directly from Blizzard's roster response, which preserves the original name casing, surfacing as a
+  `NullPointerException` inside `resolve()`. Character names from the roster are now normalized to lowercase before
+  use, matching how WOW character names are stored everywhere else.
+
 ## [5.10.0] - 20-08-2026
 
 ### Added
