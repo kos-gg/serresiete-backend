@@ -119,16 +119,8 @@ data class RaiderIoHTTPClient(
         ) {
             fetchFromApi<JsonElement> {
                 getRaiderIoProfile(wowEntityRequest.region, wowEntityRequest.realm, wowEntityRequest.name)
-            }
-        }.fold(
-            ifLeft = { error ->
-                if (error is HttpError && error.status == 400 &&
-                    error.body?.contains("Could not find requested character") == true
-                ) Either.Right(false)
-                else Either.Left(error)
-            },
-            ifRight = { Either.Right(true) }
-        )
+            }.map { true }.orCharacterNotFound(false)
+        }
 
     override suspend fun getScore(wowEntityRequest: WowEntityRequest): Either<ClientError, Double> =
         retryEitherWithFixedDelay(
@@ -147,8 +139,8 @@ data class RaiderIoHTTPClient(
                         parameters.append("fields", "mythic_plus_scores_by_season:current")
                     }
                 }
-            }
-        }.map { it.seasonScores.firstOrNull()?.scores?.all ?: 0.0 }
+            }.map { it.seasonScores.firstOrNull()?.scores?.all ?: 0.0 }.orCharacterNotFound(0.0)
+        }
 
     override suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff> {
         return fetchFromApi(
@@ -224,4 +216,15 @@ data class RaiderIoHTTPClient(
                 url { parameters.append("access_key", apiKey) }
             }
         }
+
+    private fun <T> Either<ClientError, T>.orCharacterNotFound(fallback: T): Either<ClientError, T> =
+        fold(
+            ifLeft = { error ->
+                if (error is HttpError && error.status == 400 &&
+                    error.body?.contains("Could not find requested character") == true
+                ) Either.Right(fallback)
+                else Either.Left(error)
+            },
+            ifRight = { Either.Right(it) }
+        )
 }

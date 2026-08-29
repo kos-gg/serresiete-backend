@@ -1,5 +1,6 @@
 package acceptance.steps
 
+import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
 import arrow.core.getOrElse
@@ -8,6 +9,7 @@ import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntity
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
@@ -37,6 +39,13 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
 
     private val client = SharedInfrastructure.client
     private val db = SharedInfrastructure.db
+
+    private val wowGuildViewId = "test-view-id"
+    private val wowGuildName = "Method"
+    private val wowGuildRealm = "Twisting-Nether"
+    private val wowGuildRegion = "eu"
+    private val wowGuildExistingMemberName = "Sanxei"
+    private val wowGuildNewMemberName = "Newmember"
 
     @And("an expired token exists for {string} in the database")
     fun expiredTokenExistsForUser(username: String) {
@@ -143,6 +152,71 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         runBlocking {
             val entities = entitiesRepo.get(Game.WOW_HC)
             assertTrue(entities.isNotEmpty(), "Expected WOW_HC entities to be inserted after guild update")
+        }
+    }
+
+    @And("a WOW guild view exists in the repository with entities associated")
+    fun wowGuildViewExistsWithEntitiesAssociated() {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val existingEntity = runBlocking {
+            entitiesRepo.insert(
+                listOf(
+                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm),
+                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
+                ), Game.WOW
+            )
+        }.getOrNull()!!.first()
+
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val guildsRepo = WowGuildsDatabaseRepository(db)
+        runBlocking {
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(
+                        SimpleView(
+                            wowGuildViewId, "Test View", "sanxei", false, listOf(existingEntity.id), Game.WOW, false
+                        )
+                    ),
+                    viewEntities = listOf(ViewEntity(existingEntity.id, wowGuildViewId, null))
+                )
+            )
+            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId, Game.WOW)
+        }
+    }
+
+    @And("the current roster is retrieved from the Blizzard API")
+    fun theCurrentRosterIsRetrievedFromBlizzard() {
+        MockConfig.wowGuildRosterMembers = listOf(
+            wowGuildExistingMemberName to 90,
+            wowGuildNewMemberName to 90
+        )
+    }
+
+    @When("the WOW guild updater is processed")
+    fun theWowGuildUpdaterIsProcessed() {
+        scenarioVariables.response = runBlocking {
+            client.post("/api/tasks") {
+                scenarioVariables.token?.let { bearerAuth(it) }
+                contentType(ContentType.Application.Json)
+                setBody("""{"type":"${TaskType.UPDATE_WOW_GUILDS.name}"}""")
+            }
+        }
+    }
+
+    @Then("the associated view is updated with the current roster")
+    fun theAssociatedViewIsUpdatedWithCurrentRoster() {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val expectedNames = setOf(wowGuildExistingMemberName.lowercase(), wowGuildNewMemberName.lowercase())
+        runBlocking {
+            assertUntil(5, 1000) {
+                val view = viewsRepo.get(wowGuildViewId)!!
+                val entityNames = entitiesRepo.get(Game.WOW)
+                    .filter { it.id in view.entitiesIds }
+                    .map { it.name }
+                    .toSet()
+                assertEquals(expectedNames, entityNames)
+            }
         }
     }
 

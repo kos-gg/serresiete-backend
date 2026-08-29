@@ -10,6 +10,7 @@ import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
 import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
@@ -20,6 +21,7 @@ data class EntitiesService(
     private val entitiesResolverProvider: EntityResolverProvider,
     private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
+    private val wowGuildUpdater: WowGuildUpdater,
 
     ) : WithLogger("EntitiesService") {
 
@@ -69,6 +71,11 @@ data class EntitiesService(
     suspend fun updateWowHardcoreGuilds(): List<ServiceError> {
         val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW_HC)
         return wowHardcoreGuildUpdater.update(guildsWithViewId)
+    }
+
+    suspend fun updateWowGuilds(): List<ServiceError> {
+        val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW)
+        return wowGuildUpdater.update(guildsWithViewId)
     }
 
     suspend fun get(id: Long, game: Game): Entity? = entitiesRepository.get(id, game)

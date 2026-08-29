@@ -114,10 +114,21 @@ class RaiderIoHTTPClientTest {
     }
 
     @Test
-    fun `test getScore() method does not swallow a not-found character, unlike exists()`() {
+    fun `test getScore() method returns a score of 0 when raiderio confirms the character was not found`() {
         runBlocking {
             val result = raiderIoClient.getScore(
                 WowEntityRequest("unknown-character", "eu", "zuljin")
+            )
+
+            assertEquals(Either.Right(0.0), result)
+        }
+    }
+
+    @Test
+    fun `test getScore() method does not treat an unrelated 400 as the character not existing`() {
+        runBlocking {
+            val result = raiderIoClient.getScore(
+                WowEntityRequest("malformed-request-character", "eu", "zuljin")
             )
 
             result.onRight { fail() }.onLeft { error -> assertTrue(error is HttpError) }

@@ -1,5 +1,6 @@
 package com.kos.sources.wow
 
+import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.toEntityResolverError
 import com.kos.common.split
@@ -13,9 +14,12 @@ class WowGuildUpdater(
     private val resolver: WowEntityResolver,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
-) : EntityUpdater<Pair<GuildPayload, String>> {
+) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("wowGuildUpdater") {
 
     override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<ServiceError> {
+
+        val guild = entities.first().first
+        logger.info("Updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region}")
 
         val (initialErrors, resolvedRostersWithViewId) =
             entities.map { (guild, viewId) ->
@@ -33,6 +37,8 @@ class WowGuildUpdater(
                     listOf(insertError.toEntityResolverError(Game.WOW, insertError.message))
                 },
                 ifRight = { inserted ->
+                    logger.info("Inserted new entities $inserted to EntityRepository")
+
                     val insertedWithAlias =
                         inserted.zip(newMembers) { entity, member ->
                             entity.id to member.second
@@ -40,11 +46,24 @@ class WowGuildUpdater(
 
                     val currentRoster = viewsRepository.get(viewId)?.entitiesIds?.toSet()
 
-                    currentRoster?.minus((insertedWithAlias.map { it.first } + current.map { it.value.id }).toSet())
-                        ?.let { viewsRepository.disassociateEntitiesFromView(it, viewId) }
+                    val entitiesThatLeftGuild =
+                        currentRoster?.minus((insertedWithAlias.map { it.first } + current.map { it.value.id }).toSet())
+                    entitiesThatLeftGuild?.let {
+                        if (it.isNotEmpty()) {
+                            logger.info("Disassociating ${it.size} entities from viewId $viewId and guild ${guild.name}")
+                            viewsRepository.disassociateEntitiesFromView(it, viewId)
+                        }
+                    }
 
-                    if (insertedWithAlias.isNotEmpty()) viewsRepository.associateEntitiesIdsToView(insertedWithAlias, viewId)
+                    if (insertedWithAlias.isNotEmpty()) {
+                        logger.info("Associating [${insertedWithAlias.map { it.first }}] entities to viewId $viewId and guild ${guild.name}")
+                        viewsRepository.associateEntitiesIdsToView(
+                            insertedWithAlias,
+                            viewId
+                        )
+                    }
 
+                    logger.info("Finished updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region}")
                     emptyList()
                 }
             )

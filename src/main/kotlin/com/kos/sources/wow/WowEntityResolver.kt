@@ -33,7 +33,6 @@ class WowEntityResolver(
 
     companion object {
         private const val MAX_CHARACTER_LEVEL = 90
-        private const val MINIMUM_COMPETITIVE_SCORE = 1000.0
     }
 
     override suspend fun resolve(
@@ -104,7 +103,7 @@ class WowEntityResolver(
                         .mapLeft { it.toSyncProcessingError("raiderIoScore") }
                         .bind()
 
-                    ensure(score >= MINIMUM_COMPETITIVE_SCORE) { NotCompetitiveCharacter(req) }
+                    ensure(score > 0.0) { NotCompetitiveCharacter(req) }
 
                     req to req.alias
                 }.mapLeft { req to it }

@@ -44,6 +44,7 @@ data class TasksLauncher(
         val tasksCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TASK_CLEANUP_TASK, oneWeekDelay)
         val updateLolEntitiesInitDelay: Long = getTaskInitialDelay(now, TaskType.UPDATE_LOL_ENTITIES_TASK, oneWeekDelay)
         val updateWowGuildsInitDelay: Long = getTaskInitialDelay(now, TaskType.UPDATE_WOW_HARDCORE_GUILDS, oneDayDelay)
+        val updateWowRetailGuildsInitDelay: Long = getTaskInitialDelay(now, TaskType.UPDATE_WOW_GUILDS, oneDayDelay)
 
         logger.info("Setting $cacheWowDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_WOW_DATA_TASK}")
         logger.info("Setting $cacheLolDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_LOL_DATA_TASK}")
@@ -51,6 +52,8 @@ data class TasksLauncher(
         logger.info("Setting $tokenCleanupInitDelay minutes of delay before launching ${TaskType.TOKEN_CLEANUP_TASK}")
         logger.info("Setting $tasksCleanupInitDelay minutes of delay before launching ${TaskType.TASK_CLEANUP_TASK}")
         logger.info("Setting $updateLolEntitiesInitDelay minutes of delay before launching ${TaskType.UPDATE_LOL_ENTITIES_TASK}")
+        logger.info("Setting $updateWowGuildsInitDelay minutes of delay before launching ${TaskType.UPDATE_WOW_HARDCORE_GUILDS}")
+        logger.info("Setting $updateWowRetailGuildsInitDelay minutes of delay before launching ${TaskType.UPDATE_WOW_GUILDS}")
 
         executorService.scheduleAtFixedRate(
             ScheduledTaskRunnable(tasksService, TaskType.TOKEN_CLEANUP_TASK, coroutineScope),
@@ -103,6 +106,11 @@ data class TasksLauncher(
         executorService.scheduleAtFixedRate(
             ScheduledTaskRunnable(tasksService, TaskType.UPDATE_WOW_HARDCORE_GUILDS, coroutineScope),
             updateWowGuildsInitDelay, oneDayDelay.toLong(), TimeUnit.MINUTES
+        )
+
+        executorService.scheduleAtFixedRate(
+            ScheduledTaskRunnable(tasksService, TaskType.UPDATE_WOW_GUILDS, coroutineScope),
+            updateWowRetailGuildsInitDelay, oneDayDelay.toLong(), TimeUnit.MINUTES
         )
 
         Runtime.getRuntime().addShutdownHook(Thread {

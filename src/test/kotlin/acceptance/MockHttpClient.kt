@@ -1,8 +1,14 @@
 package acceptance
 
+import com.kos.clients.domain.GetWowRosterResponse
+import com.kos.clients.domain.WowCharacterResponse
+import com.kos.clients.domain.WowGuildResponse
+import com.kos.clients.domain.WowMemberResponse
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 private fun readResource(path: String): String =
     object {}.javaClass.classLoader.getResourceAsStream(path)!!
@@ -49,12 +55,25 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
-                path.contains("/data/wow/guild/") ->
-                    respond(
-                        readResource("acceptance/files/responses/wow-hc/blizzard-guild-roster-response.json"),
-                        HttpStatusCode.OK,
-                        json
-                    )
+                path.contains("/data/wow/guild/") -> {
+                    val namespace = request.url.parameters["namespace"]
+                    if (namespace == "profile-classic1x-eu") {
+                        respond(
+                            readResource("acceptance/files/responses/wow-hc/blizzard-guild-roster-response.json"),
+                            HttpStatusCode.OK,
+                            json
+                        )
+                    } else {
+                        val members = (MockConfig.wowGuildRosterMembers ?: emptyList()).map { (name, level) ->
+                            WowMemberResponse(WowCharacterResponse(name, level))
+                        }
+                        respond(
+                            Json.encodeToString(GetWowRosterResponse(members, WowGuildResponse(12345))),
+                            HttpStatusCode.OK,
+                            json
+                        )
+                    }
+                }
 
                 path.contains("/data/wow/realm/") ->
                     respond(

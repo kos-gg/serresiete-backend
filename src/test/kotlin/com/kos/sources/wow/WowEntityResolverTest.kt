@@ -198,7 +198,7 @@ class WowEntityResolverTest {
     }
 
     @Test
-    fun `reports a new guild member below the score threshold as unchecked instead of resolving it`() {
+    fun `reports a new guild member with no score as unchecked instead of resolving it`() {
         runBlocking {
             val member = WowEntityRequest("notcompeting", guildRequest.region, guildRequest.realm)
 
@@ -211,7 +211,7 @@ class WowEntityResolverTest {
                         )
                     )
                 )
-            `when`(raiderIoClient.getScore(member)).thenReturn(Either.Right(999.0))
+            `when`(raiderIoClient.getScore(member)).thenReturn(Either.Right(0.0))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, raiderIoClient, blizzardClient)
@@ -227,7 +227,7 @@ class WowEntityResolverTest {
     }
 
     @Test
-    fun `a new guild member with exactly the score threshold passes the filter`() {
+    fun `a new guild member with any score passes the filter`() {
         runBlocking {
             val member = WowEntityRequest("borderline", guildRequest.region, guildRequest.realm)
 
@@ -240,7 +240,7 @@ class WowEntityResolverTest {
                         )
                     )
                 )
-            `when`(raiderIoClient.getScore(member)).thenReturn(Either.Right(1000.0))
+            `when`(raiderIoClient.getScore(member)).thenReturn(Either.Right(0.1))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, raiderIoClient, blizzardClient)

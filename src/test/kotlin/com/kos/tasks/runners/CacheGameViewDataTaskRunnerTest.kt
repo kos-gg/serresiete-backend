@@ -53,6 +53,7 @@ class CacheGameViewDataTaskRunnerTest {
         WowGuildsInMemoryRepository(),
         EntityResolverProvider(listOf(LolEntityResolver(entitiesRepo, riotClient))),
         mock(),
+        mock(),
         mock()
     )
     private val entitySynchronizerProvider = EntitySynchronizerProvider(

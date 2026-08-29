@@ -51,6 +51,7 @@ import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
@@ -185,13 +186,15 @@ fun Application.module() {
         )
 
     val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+    val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
 
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
         entityResolverProvider,
         lolUpdater,
-        wowHardcoreGuildUpdater
+        wowHardcoreGuildUpdater,
+        wowGuildUpdater
     )
     //TODO: This feels weird. Probably the responsibility of getOrSync should be on EntitiesService rather than DataCacheService
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
@@ -235,6 +238,7 @@ fun Application.module() {
             UpdateLolEntitiesTaskRunner(tasksRepository, entitiesService),
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
+            UpdateWowGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,

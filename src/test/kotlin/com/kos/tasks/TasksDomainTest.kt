@@ -17,7 +17,8 @@ class TasksDomainTest {
             "cacheClearTask",
             "updateWowHardcoreGuilds",
             "updateMythicPlusSeason",
-            "cacheGameViewDataTask"
+            "cacheGameViewDataTask",
+            "updateWowGuilds"
         )
         assertEquals(expected, TaskType.entries.map { it.toString() })
     }
