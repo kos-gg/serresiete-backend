@@ -60,19 +60,29 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         override val primaryKey = PrimaryKey(id)
     }
 
-    private fun resultRowToSimpleView(row: ResultRow): SimpleView {
+    private fun resultRowToSimpleView(row: ResultRow, entityIds: List<Long>): SimpleView {
         return SimpleView(
             row[Views.id],
             row[Views.name],
             row[Views.owner],
             row[Views.published],
-            ViewEntities.selectAll().where { ViewEntities.viewId.eq(row[Views.id]) }
-                .map { resultRowToViewEntity(it).entityId },
+            entityIds,
             Game.fromString(row[Views.game]).getOrThrow(),
             row[Views.featured],
             row[Views.extraArguments]?.let { json.decodeFromString<ViewExtraArguments>(it) },
             row[Views.lastSyncedAt]?.let { OffsetDateTime.parse(it) }
         )
+    }
+
+    private fun resultRowsToSimpleViews(rows: List<ResultRow>): List<SimpleView> {
+        if (rows.isEmpty()) return emptyList()
+        val viewIds = rows.map { it[Views.id] }
+        val entityIdsByView = ViewEntities.selectAll()
+            .where { ViewEntities.viewId inList viewIds }
+            .map { resultRowToViewEntity(it) }
+            .groupBy({ it.viewId }, { it.entityId })
+
+        return rows.map { row -> resultRowToSimpleView(row, entityIdsByView[row[Views.id]] ?: emptyList()) }
     }
 
     object ViewEntities : Table("view_entities") {
@@ -91,15 +101,9 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         row[ViewEntities.alias]
     )
 
-    override suspend fun getOwnViews(owner: String): List<SimpleView> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            Views.selectAll().where { Views.owner.eq(owner) }.map { resultRowToSimpleView(it) }
-        }
-    }
-
     override suspend fun get(id: String): SimpleView? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Views.selectAll().where { Views.id.eq(id) }.map { resultRowToSimpleView(it) }
+            resultRowsToSimpleViews(Views.selectAll().where { Views.id.eq(id) }.toList())
         }.singleOrNull()
     }
 
@@ -188,31 +192,35 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         newSuspendedTransaction(Dispatchers.IO, db) { Views.deleteWhere { Views.id.eq(id) } }
     }
 
-    override suspend fun getViews(
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?,
-    ): Pair<ViewMetadata, List<SimpleView>> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            val baseQuery = Views.selectAll()
-            //TODO: we must find a way to retrieve the count in a single query
-            val totalRows = baseQuery.count().toInt()
+    override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        queryViews(owner = null, query)
 
+    override suspend fun getOwnViews(owner: String, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        queryViews(owner = owner, query)
+
+    private suspend fun queryViews(owner: String?, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> {
+        val (game, featured, page, limit, includeMetadata) = query
+        return newSuspendedTransaction(Dispatchers.IO, db) {
             val featuredCondition = if (featured) Views.featured eq true else null
             val gameCondition = game?.let { Views.game eq it.toString() }
+            val ownerCondition = owner?.let { Views.owner eq it }
 
             val queryWithWhere =
-                baseQuery.adjustWhere {
+                Views.selectAll().adjustWhere {
                     Op.TRUE
                         .andIfNotNull(featuredCondition)
                         .andIfNotNull(gameCondition)
+                        .andIfNotNull(ownerCondition)
                 }
 
-            val views = limit.fold(
-                { queryWithWhere },
-                { queryWithWhere.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
-            ).map { resultRowToSimpleView(it) }
+            val totalRows = if (includeMetadata) queryWithWhere.count().toInt() else null
+
+            val views = resultRowsToSimpleViews(
+                limit.fold(
+                    { queryWithWhere },
+                    { queryWithWhere.limit(it, offset = ((page ?: 1) - 1).toLong() * it) }
+                ).toList()
+            )
 
             Pair(ViewMetadata(totalRows), views)
         }
@@ -236,7 +244,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
     override suspend fun state(): ViewsState {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             ViewsState(
-                Views.selectAll().map { resultRowToSimpleView(it) },
+                resultRowsToSimpleViews(Views.selectAll().toList()),
                 ViewEntities.selectAll().map { resultRowToViewEntity(it) }
             )
         }

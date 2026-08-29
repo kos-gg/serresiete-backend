@@ -14,39 +14,23 @@ class ViewsController(
     suspend fun getViews(
         client: String?,
         activities: Set<Activity>,
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?,
-        includeMetadata: Boolean
+        query: GetViewsQuery
     ): Either<ControllerError, Pair<ViewMetadata?, List<SimpleView>>> {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
                 if (activities.contains(Activities.getAnyViews)) {
-                    val anyViews = viewsService.getViews(
-                        game,
-                        featured,
-                        page,
-                        limit
-                    )
-                    Either.Right(
-                        when (includeMetadata) {
-                            false -> Pair(null, anyViews.second)
-                            true -> anyViews
-                        }
-                    )
+                    Either.Right(viewsService.getViews(query).withMetadataIfRequested(query.includeMetadata))
                 } else if (activities.contains(Activities.getOwnViews))
-                    Either.Right(
-                        Pair(
-                            null,
-                            viewsService.getOwnViews(client)
-                        )
-                    )
+                    Either.Right(viewsService.getOwnViews(client, query).withMetadataIfRequested(query.includeMetadata))
                 else Either.Left(NotEnoughPermissions(client))
             }
         }
     }
+
+    private fun Pair<ViewMetadata, List<SimpleView>>.withMetadataIfRequested(
+        includeMetadata: Boolean
+    ): Pair<ViewMetadata?, List<SimpleView>> = if (includeMetadata) this else Pair(null, second)
 
     suspend fun getView(
         client: String?,
@@ -84,8 +68,8 @@ class ViewsController(
                             either {
                                 ViewData(
                                     maybeView.name, viewsService.getData(maybeView)
-                                    .mapLeft { ViewDataError(it.error()) }
-                                    .bind())
+                                        .mapLeft { ViewDataError(it.error()) }
+                                        .bind())
                             }
                         } else if (!maybeView.published) Either.Left(NotPublished(id))
                         else Either.Left(NotEnoughPermissions(client))
@@ -110,8 +94,8 @@ class ViewsController(
                             either {
                                 ViewData(
                                     maybeView.name, viewsService.getCachedData(maybeView)
-                                    .mapLeft { ViewDataError(it.error()) }
-                                    .bind())
+                                        .mapLeft { ViewDataError(it.error()) }
+                                        .bind())
                             }
                         else if (!maybeView.published) Either.Left(NotPublished(id))
                         else Either.Left(NotEnoughPermissions(client))

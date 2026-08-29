@@ -6,6 +6,7 @@ import com.kos.common.error.InsertError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.domain.*
 import com.kos.views.Game
+import com.kos.views.GetViewsQuery
 import com.kos.views.repository.ViewsInMemoryRepository
 import java.time.OffsetDateTime
 
@@ -248,7 +249,7 @@ class EntitiesInMemoryRepository(
 
 
     override suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> {
-        return viewsRepository.getViews(game, false, null, null)
+        return viewsRepository.getViews(GetViewsQuery(game, false, null, null, includeMetadata = false))
             .second
             .filter { id in it.entitiesIds }
             .map { it.id }

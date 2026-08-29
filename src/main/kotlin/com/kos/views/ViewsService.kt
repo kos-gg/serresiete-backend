@@ -25,14 +25,11 @@ class ViewsService(
     private val eventStore: EventStore
 ) : WithLogger("ViewsService") {
 
-    suspend fun getOwnViews(owner: String): List<SimpleView> = viewsRepository.getOwnViews(owner)
-    suspend fun getViews(
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?
-    ): Pair<ViewMetadata, List<SimpleView>> =
-        viewsRepository.getViews(game, featured, page, limit)
+    suspend fun getOwnViews(owner: String, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        viewsRepository.getOwnViews(owner, query)
+
+    suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        viewsRepository.getViews(query)
 
     suspend fun get(id: String): View? {
         return when (val simpleView = viewsRepository.get(id)) {
@@ -344,7 +341,9 @@ class ViewsService(
     private suspend fun ensureMaxNumberOfViews(owner: String): Either<ControllerError, Unit> {
         return either {
             val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
-            ensure(viewsRepository.getOwnViews(owner).size < ownerMaxViews) { TooMuchViews }
+            val ownViewsCount =
+                viewsRepository.getOwnViews(owner, GetViewsQuery(null, false, null, null, false)).second.size
+            ensure(ownViewsCount < ownerMaxViews) { TooMuchViews }
         }
     }
 

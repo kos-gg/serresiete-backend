@@ -151,7 +151,11 @@ class ViewsControllerTest {
             )
             assertEquals(
                 limit,
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, limit, false)
+                controller.getViews(
+                    "owner",
+                    setOf(Activities.getAnyViews),
+                    GetViewsQuery(Game.WOW, true, null, limit, false)
+                )
                     .getOrNull()?.second?.size
             )
         }
@@ -171,7 +175,11 @@ class ViewsControllerTest {
             )
             assertEquals(
                 0,
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, page, limit, false)
+                controller.getViews(
+                    "owner",
+                    setOf(Activities.getAnyViews),
+                    GetViewsQuery(Game.WOW, true, page, limit, false)
+                )
                     .getOrNull()?.second?.size
             )
         }
@@ -190,8 +198,11 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(featuredView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, null, false)
-                    .getOrNull()?.second
+                controller.getViews(
+                    "owner",
+                    setOf(Activities.getAnyViews),
+                    GetViewsQuery(Game.WOW, true, null, null, false)
+                ).getOrNull()?.second
             )
         }
     }
@@ -209,11 +220,14 @@ class ViewsControllerTest {
             )
 
             val featuredViews =
-                controller.getViews("owner", setOf(Activities.getAnyViews), Game.WOW, true, null, null, true)
-                    .getOrNull()
+                controller.getViews(
+                    "owner",
+                    setOf(Activities.getAnyViews),
+                    GetViewsQuery(Game.WOW, true, null, null, true)
+                ).getOrNull()
 
             assertEquals(
-                views.size,
+                views.count { it.game == Game.WOW && it.featured },
                 featuredViews?.first?.totalCount
             )
         }
@@ -230,9 +244,34 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView),
-                controller.getViews("owner", setOf(Activities.getOwnViews), null, false, null, null, false)
-                    .getOrNull()?.second
+                controller.getViews(
+                    "owner",
+                    setOf(Activities.getOwnViews),
+                    GetViewsQuery(null, false, null, null, false)
+                ).getOrNull()?.second
             )
+        }
+    }
+
+    @Test
+    fun `i can get own views paginated and with metadata`() {
+        runBlocking {
+            val myViews = (1..3).map { basicSimpleWowView.copy(id = "own-$it") }
+            val controller = createController(
+                emptyCredentialsState,
+                ViewsState(myViews, listOf()),
+                emptyEntitiesState,
+                listOf()
+            )
+
+            val result = controller.getViews(
+                "owner",
+                setOf(Activities.getOwnViews),
+                GetViewsQuery(null, false, 1, 2, true)
+            ).getOrNull()
+
+            assertEquals(myViews.take(2), result?.second)
+            assertEquals(3, result?.first?.totalCount)
         }
     }
 
@@ -248,8 +287,11 @@ class ViewsControllerTest {
             )
             assertEquals(
                 listOf(basicSimpleWowView, notOwnerView),
-                controller.getViews("owner", setOf(Activities.getAnyViews), null, false, null, null, false)
-                    .getOrNull()?.second
+                controller.getViews(
+                    "owner",
+                    setOf(Activities.getAnyViews),
+                    GetViewsQuery(null, false, null, null, false)
+                ).getOrNull()?.second
             )
         }
     }

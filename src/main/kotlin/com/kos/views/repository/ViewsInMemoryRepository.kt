@@ -10,7 +10,8 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
     private val views: MutableList<SimpleView> = mutableListOf()
     private val viewEntities: MutableList<ViewEntity> = mutableListOf()
 
-    override suspend fun getOwnViews(owner: String): List<SimpleView> = views.filter { it.owner == owner }
+    override suspend fun getOwnViews(owner: String, query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        paginate(views.filter { it.owner == owner }, query)
 
     override suspend fun get(id: String): SimpleView? = views.find { it.id == id }
 
@@ -84,26 +85,28 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         viewEntities.removeIf { it.viewId == id }
     }
 
-    override suspend fun getViews(
-        game: Game?,
-        featured: Boolean,
-        page: Int?,
-        limit: Int?
-    ): Pair<ViewMetadata, List<SimpleView>> {
-        val allViews = views.toList()
-        val maybeFeaturedViews = if (featured) allViews.filter { it.featured } else allViews
+    override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
+        paginate(views.toList(), query)
 
-        val filteredQuery = game.fold(
+    private suspend fun paginate(
+        candidates: List<SimpleView>,
+        query: GetViewsQuery
+    ): Pair<ViewMetadata, List<SimpleView>> {
+        val (game, featured, page, limit, includeMetadata) = query
+        val maybeFeaturedViews = if (featured) candidates.filter { it.featured } else candidates
+
+        val filteredViews = game.fold(
             { maybeFeaturedViews },
             { maybeFeaturedViews.filter { it.game == game } }
         )
 
-        val views = limit.fold(
-            { filteredQuery },
-            { filteredQuery.drop(((page ?: 1) - 1) * it).take(it) }
+        val pagedViews = limit.fold(
+            { filteredViews },
+            { filteredViews.drop(((page ?: 1) - 1) * it).take(it) }
         )
 
-        return Pair(ViewMetadata(allViews.count()), views)
+        val totalCount = if (includeMetadata) filteredViews.count() else null
+        return Pair(ViewMetadata(totalCount), pagedViews)
     }
 
     override suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity? {
