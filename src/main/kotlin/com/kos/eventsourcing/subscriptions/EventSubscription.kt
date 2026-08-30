@@ -3,7 +3,6 @@ package com.kos.eventsourcing.subscriptions
 import arrow.core.Either
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
@@ -34,7 +33,7 @@ class EventSubscription(
     private val subscriptionName: String,
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val process: suspend (EventWithVersion) -> Either<ServiceError, EventProcessOutcome>,
+    private val process: suspend (EventWithVersion) -> EventProcessOutcome,
 ) : WithLogger("event-subscription-$subscriptionName") {
 
     init {
@@ -48,16 +47,14 @@ class EventSubscription(
 
         val (finalVersion, lastError) = eventStore.getEvents(initialState.version)
             .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
-                val error = when (val outcome = Either.catch { process(event) }) {
-                    is Either.Left -> {
-                        logger.error(outcome.value.stackTraceToString())
-                        recordFailure(event, outcome.value.message ?: outcome.value.javaClass.simpleName)
-                    }
-
-                    is Either.Right -> outcome.value.fold(
-                        { recordFailure(event, it.error()) },
-                        {
-                            when (it) {
+                val error = Either.catch { process(event) }
+                    .fold(
+                        { throwable ->
+                            logger.error(throwable.stackTraceToString())
+                            recordFailure(event, throwable.message ?: throwable.javaClass.simpleName)
+                        },
+                        { outcome ->
+                            when (outcome) {
                                 EventProcessOutcome.Processed ->
                                     logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
 
@@ -71,7 +68,6 @@ class EventSubscription(
                             null
                         }
                     )
-                }
                 subscriptionsRepository.setState(
                     subscriptionName,
                     SubscriptionState(

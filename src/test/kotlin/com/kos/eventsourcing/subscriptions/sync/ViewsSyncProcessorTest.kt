@@ -67,16 +67,13 @@ class ViewsSyncProcessorTest {
             )
 
             ViewsEventProcessor(eventWithVersion, spiedService).process()
-                .onLeft { kotlin.test.fail("Expected success") }
-                .onRight {
-                    coVerify {
-                        spiedService.createView(
-                            eq(ViewsTestHelper.id),
-                            eq(aggregateRoot),
-                            eq(eventData)
-                        )
-                    }
-                }
+            coVerify {
+                spiedService.createView(
+                    eq(ViewsTestHelper.id),
+                    eq(aggregateRoot),
+                    eq(eventData)
+                )
+            }
 
 
             assertEventStoredCorrectly(
@@ -120,16 +117,13 @@ class ViewsSyncProcessorTest {
             )
 
             ViewsEventProcessor(eventWithVersion, spiedService).process()
-                .onLeft { kotlin.test.fail("Expected success") }
-                .onRight {
-                    coVerify {
-                        spiedService.editView(
-                            eq(ViewsTestHelper.id),
-                            eq(aggregateRoot),
-                            eq(eventData)
-                        )
-                    }
-                }
+            coVerify {
+                spiedService.editView(
+                    eq(ViewsTestHelper.id),
+                    eq(aggregateRoot),
+                    eq(eventData)
+                )
+            }
 
             assertEventStoredCorrectly(
                 eventStore,
@@ -167,16 +161,13 @@ class ViewsSyncProcessorTest {
             )
 
             ViewsEventProcessor(eventWithVersion, spiedService).process()
-                .onLeft { kotlin.test.fail("Expected success") }
-                .onRight {
-                    coVerify {
-                        spiedService.patchView(
-                            eq(ViewsTestHelper.id),
-                            eq(aggregateRoot),
-                            eq(eventData)
-                        )
-                    }
-                }
+            coVerify {
+                spiedService.patchView(
+                    eq(ViewsTestHelper.id),
+                    eq(aggregateRoot),
+                    eq(eventData)
+                )
+            }
 
 
             assertEventStoredCorrectly(

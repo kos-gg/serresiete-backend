@@ -94,7 +94,7 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Either<ServiceError, Operation> {
-        val toError = { msg: String -> ViewCreateError(viewToBeCreatedEvent, msg) }
+        val toError = { msg: String -> ViewEventError("create", viewToBeCreatedEvent, msg) }
         return either {
             val resolved = resolveEntitiesForCreate(viewToBeCreatedEvent).bind()
 
@@ -198,7 +198,8 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeEditedEvent: ViewToBeEditedEvent
     ): Either<ServiceError, Operation> {
-        val toError = { msg: String -> ViewEditError(viewToBeEditedEvent, msg) }
+        val toError = { msg: String -> ViewEventError("edit", viewToBeEditedEvent, msg) }
+
         return either {
             val resolved =
                 entitiesService.resolveEntities(
@@ -263,7 +264,7 @@ class ViewsService(
         aggregateRoot: String,
         viewToBePatchedEvent: ViewToBePatchedEvent
     ): Either<ServiceError, Operation> {
-        val toError = { msg: String -> ViewPatchError(viewToBePatchedEvent, msg) }
+        val toError = { msg: String -> ViewEventError("patch", viewToBePatchedEvent, msg) }
         return either {
             val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
                 val resolved =
@@ -325,7 +326,7 @@ class ViewsService(
         aggregateRoot: String,
         event: ViewToBeDeletedEvent
     ): Either<ServiceError, Operation> {
-        val toError = { msg: String -> ViewDeleteError(event, msg) }
+        val toError = { msg: String -> ViewEventError("delete", event, msg) }
         return either {
             viewsRepository.delete(event.id).mapLeft { toError(it.message) }.bind()
             val completionEvent = Event(

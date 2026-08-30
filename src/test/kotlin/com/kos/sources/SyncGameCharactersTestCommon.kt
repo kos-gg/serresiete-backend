@@ -103,25 +103,20 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = GameSyncEventProcessor(
+        GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
             lolEntitySynchronizer,
             EventStoreInMemory()
         ).process()
 
-        result.fold(
-            { fail("Expected success") },
-            {
-                if (shouldCache) {
-                    coVerify {
-                        lolEntitySynchronizer.synchronize(eq(listOf(entityToVerify)))
-                    }
-                } else {
-                    coVerify(exactly = 0) { lolEntitySynchronizer.synchronize(any()) }
-                }
+        if (shouldCache) {
+            coVerify {
+                lolEntitySynchronizer.synchronize(eq(listOf(entityToVerify)))
             }
-        )
+        } else {
+            coVerify(exactly = 0) { lolEntitySynchronizer.synchronize(any()) }
+        }
 
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
     }
@@ -136,25 +131,20 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = GameSyncEventProcessor(
+        GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
             wowEntityCacheService,
             EventStoreInMemory()
         ).process()
 
-        result.fold(
-            { fail("Expected success") },
-            {
-                if (shouldCache) {
-                    coVerify {
-                        wowEntityCacheService.synchronize(eq(listOf(entityToVerify)))
-                    }
-                } else {
-                    coVerify(exactly = 0) { wowEntityCacheService.synchronize(any()) }
-                }
+        if (shouldCache) {
+            coVerify {
+                wowEntityCacheService.synchronize(eq(listOf(entityToVerify)))
             }
-        )
+        } else {
+            coVerify(exactly = 0) { wowEntityCacheService.synchronize(any()) }
+        }
 
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
     }
@@ -168,25 +158,20 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = GameSyncEventProcessor(
+        GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
             wowHardcoreEntityCacheService,
             EventStoreInMemory()
         ).process()
 
-        result.fold(
-            { fail("Expected success") },
-            {
-                if (shouldCache) {
-                    coVerify {
-                        wowHardcoreEntityCacheService.synchronize(eq(listOf(entityToVerify)))
-                    }
-                } else {
-                    coVerify(exactly = 0) { wowHardcoreEntityCacheService.synchronize(any()) }
-                }
+        if (shouldCache) {
+            coVerify {
+                wowHardcoreEntityCacheService.synchronize(eq(listOf(entityToVerify)))
             }
-        )
+        } else {
+            coVerify(exactly = 0) { wowHardcoreEntityCacheService.synchronize(any()) }
+        }
 
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
     }

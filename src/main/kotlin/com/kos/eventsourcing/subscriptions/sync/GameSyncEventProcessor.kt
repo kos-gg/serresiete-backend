@@ -1,11 +1,10 @@
 package com.kos.eventsourcing.subscriptions.sync
 
-import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
-import com.kos.common.error.toEntityResolverError
+import com.kos.common.orFail
 import com.kos.entities.EntitiesService
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.eventsourcing.events.*
@@ -21,7 +20,7 @@ class GameSyncEventProcessor(
 
     private val game = synchronizer.game
 
-    override suspend fun process(): Either<ServiceError, EventProcessOutcome> {
+    override suspend fun process(): EventProcessOutcome {
         val operationId = eventWithVersion.event.operationId
         val aggregateRoot = eventWithVersion.event.aggregateRoot
 
@@ -30,7 +29,7 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewCreatedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> Either.Right(EventProcessOutcome.Skipped)
+                    else -> EventProcessOutcome.Skipped
                 }
             }
 
@@ -38,7 +37,7 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewEditedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> Either.Right(EventProcessOutcome.Skipped)
+                    else -> EventProcessOutcome.Skipped
                 }
             }
 
@@ -46,7 +45,7 @@ class GameSyncEventProcessor(
                 val payload = eventWithVersion.event.eventData as ViewPatchedEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> Either.Right(EventProcessOutcome.Skipped)
+                    else -> EventProcessOutcome.Skipped
                 }
             }
 
@@ -61,7 +60,7 @@ class GameSyncEventProcessor(
                         }
                         val inserted = entitiesService
                             .insert(resolved.entities.map { it.first }, payload.game)
-                            .mapLeft { it.toEntityResolverError(payload.game, it.message) }
+                            .mapLeft { SyncProcessingError(payload.game.name, it.message) }
                             .bind()
                         val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
                         val errors = synchronizer.synchronize(entities.map { it.first })
@@ -69,13 +68,13 @@ class GameSyncEventProcessor(
                             SyncProcessingError(game.name, errors.joinToString("; ") { it.error() })
                         )
                         EventProcessOutcome.Processed
-                    }
+                    }.orFail()
 
-                    else -> Either.Right(EventProcessOutcome.Skipped)
+                    else -> EventProcessOutcome.Skipped
                 }
             }
 
-            else -> Either.Right(EventProcessOutcome.Skipped)
+            else -> EventProcessOutcome.Skipped
         }
     }
 
@@ -84,7 +83,7 @@ class GameSyncEventProcessor(
         entities: List<Long>?,
         operationId: String,
         aggregateRoot: String
-    ): Either<ServiceError, EventProcessOutcome> = either {
+    ): EventProcessOutcome = either<ServiceError, EventProcessOutcome> {
         logger.debug("processing event v${eventWithVersion.version}")
         //TODO: what if no entities?
         val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
@@ -94,5 +93,5 @@ class GameSyncEventProcessor(
             .mapLeft { SyncProcessingError(game.name, it.message) }
             .bind()
         EventProcessOutcome.Processed
-    }
+    }.orFail()
 }
