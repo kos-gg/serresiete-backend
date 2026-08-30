@@ -763,8 +763,11 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                val result = viewsService.delete(owner, basicSimpleWowView)
-                assertOperation(result, EventType.VIEW_TO_BE_DELETED)
+                viewsService.delete(owner, basicSimpleWowView).onRight {
+                    assertOperation(it, EventType.VIEW_TO_BE_DELETED)
+                }.onLeft {
+                    fail(it.toStr())
+                }
                 assertEventStoredCorrectly(
                     eventStore,
                     ViewToBeDeletedEvent(

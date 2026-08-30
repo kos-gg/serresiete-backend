@@ -85,7 +85,7 @@ class ViewsService(
                     request.extraArguments
                 )
             )
-            eventStore.save(event).copy(resourceId = viewId)
+            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind().copy(resourceId = viewId)
         }
     }
 
@@ -94,7 +94,7 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Either<ServiceError, Operation> {
-        //TODO: i think we can do either.catch and unify all to one viewcreate error
+        val toError = { msg: String -> ViewCreateError(viewToBeCreatedEvent, msg) }
         return either {
             val resolved = resolveEntitiesForCreate(viewToBeCreatedEvent).bind()
 
@@ -104,27 +104,25 @@ class ViewsService(
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
-                .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message) }
+                .mapLeft { toError(it.message) }
                 .bind()
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
                     resolved.existing
 
-            val view = Either.catch {
-                viewsRepository.create(
-                    viewToBeCreatedEvent.id,
-                    viewToBeCreatedEvent.name,
-                    viewToBeCreatedEvent.owner,
-                    entities.map { it.first.id to it.second },
-                    viewToBeCreatedEvent.game,
-                    viewToBeCreatedEvent.featured,
-                    viewToBeCreatedEvent.extraArguments
-                )
-            }.mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message ?: it.javaClass.simpleName) }.bind()
+            val view = viewsRepository.create(
+                viewToBeCreatedEvent.id,
+                viewToBeCreatedEvent.name,
+                viewToBeCreatedEvent.owner,
+                entities.map { it.first.id to it.second },
+                viewToBeCreatedEvent.game,
+                viewToBeCreatedEvent.featured,
+                viewToBeCreatedEvent.extraArguments
+            ).mapLeft { toError(it.message) }.bind()
 
             resolved.guild?.let {
                 entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
-                    .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message) }
+                    .mapLeft { toError(it.message) }
                     .bind()
             }
 
@@ -133,9 +131,7 @@ class ViewsService(
                 operationId,
                 ViewCreatedEvent.fromSimpleView(view)
             )
-            Either.catch { eventStore.save(event) }
-                .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message ?: it.javaClass.simpleName) }
-                .bind()
+            eventStore.save(event).mapLeft { toError(it.message) }.bind()
         }
     }
 
@@ -193,7 +189,7 @@ class ViewsService(
                     request.featured
                 )
             )
-            eventStore.save(event)
+            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind()
         }
     }
 
@@ -202,6 +198,7 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeEditedEvent: ViewToBeEditedEvent
     ): Either<ServiceError, Operation> {
+        val toError = { msg: String -> ViewEditError(viewToBeEditedEvent, msg) }
         return either {
             val resolved =
                 entitiesService.resolveEntities(
@@ -215,29 +212,25 @@ class ViewsService(
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
-                .mapLeft { ViewEditError(viewToBeEditedEvent, it.message) }
+                .mapLeft { toError(it.message) }
                 .bind()
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
                     resolved.existing
-            val viewModified = Either.catch {
-                viewsRepository.edit(
-                    viewToBeEditedEvent.id,
-                    viewToBeEditedEvent.name,
-                    viewToBeEditedEvent.published,
-                    entities.map { it.first.id to it.second },
-                    viewToBeEditedEvent.featured
-                )
-            }.mapLeft { ViewEditError(viewToBeEditedEvent, it.message ?: it.javaClass.simpleName) }.bind()
+            val viewModified = viewsRepository.edit(
+                viewToBeEditedEvent.id,
+                viewToBeEditedEvent.name,
+                viewToBeEditedEvent.published,
+                entities.map { it.first.id to it.second },
+                viewToBeEditedEvent.featured
+            ).mapLeft { toError(it.message) }.bind()
 
             val event = Event(
                 aggregateRoot,
                 operationId,
                 ViewEditedEvent.fromViewModified(operationId, viewToBeEditedEvent.game, viewModified)
             )
-            Either.catch { eventStore.save(event) }
-                .mapLeft { ViewEditError(viewToBeEditedEvent, it.message ?: it.javaClass.simpleName) }
-                .bind()
+            eventStore.save(event).mapLeft { toError(it.message) }.bind()
         }
 
     }
@@ -261,7 +254,7 @@ class ViewsService(
                 )
             )
 
-            eventStore.save(event)
+            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind()
         }
     }
 
@@ -270,6 +263,7 @@ class ViewsService(
         aggregateRoot: String,
         viewToBePatchedEvent: ViewToBePatchedEvent
     ): Either<ServiceError, Operation> {
+        val toError = { msg: String -> ViewPatchError(viewToBePatchedEvent, msg) }
         return either {
             val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
                 val resolved =
@@ -284,34 +278,30 @@ class ViewsService(
 
                 val inserted = entitiesService
                     .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)
-                    .mapLeft { ViewPatchError(viewToBePatchedEvent, it.message) }
+                    .mapLeft { toError(it.message) }
                     .bind()
 
                 inserted.zip(resolved.entities.map { it.second }) +
                         resolved.existing
             }
-            val patchedView = Either.catch {
-                viewsRepository.patch(
-                    viewToBePatchedEvent.id,
-                    viewToBePatchedEvent.name,
-                    viewToBePatchedEvent.published,
-                    entitiesToInsert?.map { it.first.id to it.second },
-                    viewToBePatchedEvent.featured
-                )
-            }.mapLeft { ViewPatchError(viewToBePatchedEvent, it.message ?: it.javaClass.simpleName) }.bind()
+            val patchedView = viewsRepository.patch(
+                viewToBePatchedEvent.id,
+                viewToBePatchedEvent.name,
+                viewToBePatchedEvent.published,
+                entitiesToInsert?.map { it.first.id to it.second },
+                viewToBePatchedEvent.featured
+            ).mapLeft { toError(it.message) }.bind()
 
             val event = Event(
                 aggregateRoot,
                 operationId,
                 ViewPatchedEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
             )
-            Either.catch { eventStore.save(event) }
-                .mapLeft { ViewPatchError(viewToBePatchedEvent, it.message ?: it.javaClass.simpleName) }
-                .bind()
+            eventStore.save(event).mapLeft { toError(it.message) }.bind()
         }
     }
 
-    suspend fun delete(owner: String, viewToDelete: SimpleView): Operation {
+    suspend fun delete(owner: String, viewToDelete: SimpleView): Either<ControllerError, Operation> {
         val operationId = UUID.randomUUID().toString()
         val aggregateRoot = "/credentials/$owner"
         val event = Event(
@@ -327,16 +317,17 @@ class ViewsService(
                 viewToDelete.featured
             )
         )
-        return eventStore.save(event)
+        return eventStore.save(event).mapLeft { ViewDataError(it.message) }
     }
 
     suspend fun deleteView(
         operationId: String,
         aggregateRoot: String,
         event: ViewToBeDeletedEvent
-    ): Either<ServiceError, Operation> =
-        Either.catch {
-            viewsRepository.delete(event.id)
+    ): Either<ServiceError, Operation> {
+        val toError = { msg: String -> ViewDeleteError(event, msg) }
+        return either {
+            viewsRepository.delete(event.id).mapLeft { toError(it.message) }.bind()
             val completionEvent = Event(
                 aggregateRoot,
                 operationId,
@@ -350,8 +341,9 @@ class ViewsService(
                     event.featured
                 )
             )
-            eventStore.save(completionEvent)
-        }.mapLeft { ViewDeleteError(event, it.message ?: it.javaClass.simpleName) }
+            eventStore.save(completionEvent).mapLeft { toError(it.message) }.bind()
+        }
+    }
 
     suspend fun getData(view: View): Either<ServiceError, List<Data>> =
         dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)

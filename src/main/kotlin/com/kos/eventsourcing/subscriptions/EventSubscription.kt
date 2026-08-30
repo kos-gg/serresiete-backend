@@ -92,9 +92,8 @@ class EventSubscription(
 
     private suspend fun recordFailure(event: EventWithVersion, reason: String): String {
         logger.error("processing event ${event.version} has failed because $reason, skipping it")
-        runCatching {
-            eventStore.saveFailedEvent(event.event.operationId, event.event.aggregateRoot, reason)
-        }.onFailure { ex -> logger.error("failed to store OperationFailedEvent: ${ex.message}") }
+        eventStore.saveFailedEvent(event.event.operationId, event.event.aggregateRoot, reason)
+            .onLeft { logger.error("failed to store OperationFailedEvent: ${it.message}") }
         return reason
     }
 }

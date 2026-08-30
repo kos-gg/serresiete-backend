@@ -2,7 +2,7 @@ package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import com.kos.entities.domain.GuildPayload
 import com.kos.views.Game
 
@@ -22,7 +22,7 @@ class WowGuildsInMemoryRepository() :
         region: String,
         viewId: String,
         game: Game
-    ): Either<InsertError, Unit> {
+    ): Either<RepositoryError, Unit> {
         val guildPayload = GuildPayload(name.lowercase(), realm.lowercase(), region.lowercase(), blizzardId)
         val alreadyTracked = guilds.any { it.first.blizzardId == blizzardId && it.third == game && it.second == viewId }
         return when {

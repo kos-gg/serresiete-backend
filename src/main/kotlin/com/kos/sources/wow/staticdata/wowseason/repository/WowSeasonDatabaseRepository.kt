@@ -1,7 +1,7 @@
 package com.kos.sources.wow.staticdata.wowseason.repository
 
 import arrow.core.Either
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
@@ -19,7 +19,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
         override val primaryKey = PrimaryKey(seasonId, expansionId)
     }
 
-    override suspend fun insert(season: WowSeason): Either<InsertError, Boolean> {
+    override suspend fun insert(season: WowSeason): Either<RepositoryError, Boolean> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             Either.catch {
                 if (season.isCurrentSeason)
@@ -35,7 +35,7 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
                     it[isCurrentSeason] = season.isCurrentSeason
                 }
                 true
-            }.onLeft { rollback() }.mapLeft { InsertError(it.message ?: it.stackTraceToString()) }
+            }.onLeft { rollback() }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
         }
     }
 

@@ -1,6 +1,8 @@
 package com.kos.eventsourcing.events.repository
 
+import arrow.core.Either
 import com.kos.common._fold
+import com.kos.common.error.RepositoryError
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
@@ -65,17 +67,19 @@ class EventStoreDatabase(private val db: Database) : EventStore {
         )
 
 
-    override suspend fun save(event: Event): Operation {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            val id = selectNextId()
-            Events.insert {
-                it[aggregateRoot] = event.aggregateRoot
-                it[operationId] = event.operationId
-                it[version] = id
-                it[eventType] = event.eventData.eventType.toString()
-                it[data] = json.encodeToString(event.eventData)
-            }.resultedValues?.map { resultRowToOperation(it) }?.singleOrNull() ?: throw Exception(":(")
-        }
+    override suspend fun save(event: Event): Either<RepositoryError, Operation> {
+        return Either.catch {
+            newSuspendedTransaction(Dispatchers.IO, db) {
+                val id = selectNextId()
+                Events.insert {
+                    it[aggregateRoot] = event.aggregateRoot
+                    it[operationId] = event.operationId
+                    it[version] = id
+                    it[eventType] = event.eventData.eventType.toString()
+                    it[data] = json.encodeToString(event.eventData)
+                }.resultedValues?.map { resultRowToOperation(it) }?.singleOrNull() ?: throw Exception(":(")
+            }
+        }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
     }
 
     override suspend fun getEvents(version: Long?): Sequence<EventWithVersion> {

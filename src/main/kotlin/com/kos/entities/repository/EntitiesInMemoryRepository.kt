@@ -2,7 +2,7 @@ package com.kos.entities.repository
 
 import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.domain.*
 import com.kos.views.Game
@@ -29,7 +29,7 @@ class EntitiesInMemoryRepository(
     override suspend fun insert(
         entities: List<InsertEntityRequest>,
         game: Game
-    ): Either<InsertError, List<Entity>> {
+    ): Either<RepositoryError, List<Entity>> {
         val wowInitialEntities = this.wowEntities.toList()
         val wowHardcoreInitialEntities = this.wowHardcoreEntities.toList()
         val lolInitialEntities = this.lolEntities.toList()
@@ -42,7 +42,7 @@ class EntitiesInMemoryRepository(
                             if (this.wowEntities.any { entity -> normalized.same(entity) }) {
                                 this.wowEntities.clear()
                                 this.wowEntities.addAll(wowInitialEntities)
-                                return Either.Left(InsertError("Error inserting entity $it"))
+                                return Either.Left(RepositoryError("Error inserting entity $it"))
                             }
                             val entity = normalized.toEntity(nextId())
                             this.wowEntities.add(entity)
@@ -52,7 +52,7 @@ class EntitiesInMemoryRepository(
                         is LolEnrichedEntityRequest, is WowEnrichedEntityRequest -> {
                             this.wowEntities.clear()
                             this.wowEntities.addAll(wowInitialEntities)
-                            return Either.Left(InsertError("Error inserting entity $it"))
+                            return Either.Left(RepositoryError("Error inserting entity $it"))
                         }
                     }
                 }
@@ -65,14 +65,14 @@ class EntitiesInMemoryRepository(
                         is WowEntityRequest, is WowEnrichedEntityRequest -> {
                             this.lolEntities.clear()
                             this.lolEntities.addAll(lolInitialEntities)
-                            return Either.Left(InsertError("Error inserting chracter $it"))
+                            return Either.Left(RepositoryError("Error inserting chracter $it"))
                         }
 
                         is LolEnrichedEntityRequest -> {
                             if (this.lolEntities.any { entity -> it.same(entity) }) {
                                 this.lolEntities.clear()
                                 this.lolEntities.addAll(lolInitialEntities)
-                                return Either.Left(InsertError("Error inserting chracter $it"))
+                                return Either.Left(RepositoryError("Error inserting chracter $it"))
                             }
                             val entity = it.toEntity(nextId())
                             this.lolEntities.add(entity)
@@ -91,7 +91,7 @@ class EntitiesInMemoryRepository(
                             if (this.wowHardcoreEntities.any { entity -> normalized.same(entity) }) {
                                 this.wowHardcoreEntities.clear()
                                 this.wowHardcoreEntities.addAll(wowHardcoreInitialEntities)
-                                return Either.Left(InsertError("Error inserting entity $it"))
+                                return Either.Left(RepositoryError("Error inserting entity $it"))
                             }
                             val entity = normalized.toEntity(nextId())
                             this.wowHardcoreEntities.add(entity)
@@ -101,7 +101,7 @@ class EntitiesInMemoryRepository(
                         is LolEnrichedEntityRequest, is WowEntityRequest -> {
                             this.wowHardcoreEntities.clear()
                             this.wowHardcoreEntities.addAll(wowInitialEntities)
-                            return Either.Left(InsertError("Error inserting entity $it"))
+                            return Either.Left(RepositoryError("Error inserting entity $it"))
                         }
                     }
                 }
@@ -114,7 +114,7 @@ class EntitiesInMemoryRepository(
         id: Long,
         entity: InsertEntityRequest,
         game: Game
-    ): Either<InsertError, Int> {
+    ): Either<RepositoryError, Int> {
         return when (game) {
             Game.LOL -> when (entity) {
                 is LolEnrichedEntityRequest -> {
@@ -132,7 +132,7 @@ class EntitiesInMemoryRepository(
                     Either.Right(1)
                 }
 
-                else -> Either.Left(InsertError("error updating $id $entity for $game"))
+                else -> Either.Left(RepositoryError("error updating $id $entity for $game"))
             }
 
             Game.WOW -> when (entity) {
@@ -150,7 +150,7 @@ class EntitiesInMemoryRepository(
                     Either.Right(1)
                 }
 
-                else -> Either.Left(InsertError("error updating $id $entity for $game"))
+                else -> Either.Left(RepositoryError("error updating $id $entity for $game"))
             }
 
             Game.WOW_HC -> when (entity) {
@@ -170,7 +170,7 @@ class EntitiesInMemoryRepository(
                     Either.Right(1)
                 }
 
-                else -> Either.Left(InsertError("error updating $id $entity for $game"))
+                else -> Either.Left(RepositoryError("error updating $id $entity for $game"))
             }
         }
     }

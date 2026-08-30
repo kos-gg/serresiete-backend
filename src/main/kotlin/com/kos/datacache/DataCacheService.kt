@@ -9,6 +9,7 @@ import com.kos.clients.domain.RiotData
 import com.kos.common.WithLogger
 import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError
+import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
@@ -65,32 +66,26 @@ data class DataCacheService(
 
     suspend fun getOrSync(request: Pair<EntityRequest, Game>): Either<ServiceError, EntityDataResponse> {
 
-        suspend fun syncOperation(entityId: Long): Operation {
+        suspend fun syncOperation(entityId: Long): Either<ServiceError, Operation> {
             val eventData = RequestToBeSynced(request.first, request.second)
             return eventStore.save(Event("/entity/$entityId", UUID.randomUUID().toString(), eventData))
+                .mapLeft { SyncProcessingError(request.second.name, it.message) }
         }
 
-        return when (val maybeEntity = entitiesRepository.get(request.first, request.second)) {
-            null -> {
-                val operation = syncOperation(-1)
-                Either.Right(EntityDataResponse(null, operation))
-            }
+        return either {
+            when (val maybeEntity = entitiesRepository.get(request.first, request.second)) {
+                null -> EntityDataResponse(null, syncOperation(-1).bind())
 
-            else -> {
-                when (val maybeCachedRecord = get(maybeEntity.id).maxByOrNull { it.inserted }) {
-                    null -> {
-                        val operation = syncOperation(maybeEntity.id)
-                        Either.Right(EntityDataResponse(null, operation))
-                    }
+                else -> {
+                    when (val maybeCachedRecord = get(maybeEntity.id).maxByOrNull { it.inserted }) {
+                        null -> EntityDataResponse(null, syncOperation(maybeEntity.id).bind())
 
-                    else -> {
-                        if (maybeCachedRecord.isTooOld()) {
-                            val operation = syncOperation(maybeEntity.id)
-                            parseData(maybeCachedRecord).map {
-                                EntityDataResponse(it, operation)
+                        else -> {
+                            if (maybeCachedRecord.isTooOld()) {
+                                EntityDataResponse(parseData(maybeCachedRecord).bind(), syncOperation(maybeEntity.id).bind())
+                            } else {
+                                EntityDataResponse(parseData(maybeCachedRecord).bind(), null)
                             }
-                        } else parseData(maybeCachedRecord).map {
-                            EntityDataResponse(it, null)
                         }
                     }
                 }

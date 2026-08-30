@@ -2,7 +2,7 @@ package com.kos.auth.repository
 
 import arrow.core.Either
 import com.kos.auth.Authorization
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -53,7 +53,7 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
         userName: String,
         token: String,
         isAccess: Boolean
-    ): Either<InsertError, Authorization?> =
+    ): Either<RepositoryError, Authorization?> =
         newSuspendedTransaction(Dispatchers.IO, db) {
             try {
                 val insertStatement = Authorizations.insert {
@@ -68,7 +68,7 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
 
                 Either.Right(insertStatement.resultedValues?.singleOrNull()?.let { resultRowToAuthorization(it) })
             } catch (e: SQLException) {
-                Either.Left(InsertError(e.message ?: e.stackTraceToString()))
+                Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
             }
         }
 

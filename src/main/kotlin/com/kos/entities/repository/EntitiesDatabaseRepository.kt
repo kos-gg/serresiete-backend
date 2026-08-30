@@ -1,7 +1,7 @@
 package com.kos.entities.repository
 
 import arrow.core.Either
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.*
 import com.kos.views.Game
@@ -124,7 +124,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     override suspend fun insert(
         entities: List<InsertEntityRequest>,
         game: Game
-    ): Either<InsertError, List<Entity>> {
+    ): Either<RepositoryError, List<Entity>> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val charsToInsert: List<Entity> = entities.map {
                 val nextId = selectNextId()
@@ -200,10 +200,10 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                     Either.Right(insertedEntities)
                 } catch (e: SQLException) {
                     rollback() //TODO: I don't understand why rollback is not provided by dbQuery.
-                    Either.Left(InsertError(e.message ?: e.stackTraceToString()))
+                    Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
                 } catch (e: IllegalArgumentException) {
                     rollback() //TODO: I don't understand why rollback is not provided by dbQuery.
-                    Either.Left(InsertError(e.message ?: e.stackTraceToString()))
+                    Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
                 }
             }
         }
@@ -213,7 +213,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         id: Long,
         entity: InsertEntityRequest,
         game: Game
-    ): Either<InsertError, Int> {
+    ): Either<RepositoryError, Int> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             when (game) {
                 Game.LOL -> {
@@ -228,7 +228,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                             })
                         }
 
-                        else -> Either.Left(InsertError("problem updating $id: $entity for $game"))
+                        else -> Either.Left(RepositoryError("problem updating $id: $entity for $game"))
                     }
                 }
 
@@ -241,7 +241,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                         })
                     }
 
-                    else -> Either.Left(InsertError("problem updating $id: $entity for $game"))
+                    else -> Either.Left(RepositoryError("problem updating $id: $entity for $game"))
                 }
 
                 Game.WOW_HC -> when (entity) {
@@ -253,7 +253,7 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
                         })
                     }
 
-                    else -> Either.Left(InsertError("problem updating $id: $entity for $game"))
+                    else -> Either.Left(RepositoryError("problem updating $id: $entity for $game"))
                 }
             }
         }

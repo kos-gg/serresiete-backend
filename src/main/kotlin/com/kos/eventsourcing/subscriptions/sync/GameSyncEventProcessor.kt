@@ -91,6 +91,8 @@ class GameSyncEventProcessor(
         val errors = synchronizer.synchronize(resolved)
         if (errors.isNotEmpty()) raise(SyncProcessingError(game.name, errors.joinToString("; ") { it.error() }))
         eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+            .mapLeft { SyncProcessingError(game.name, it.message) }
+            .bind()
         EventProcessOutcome.Processed
     }
 }
