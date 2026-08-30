@@ -11,6 +11,8 @@ import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
+import com.kos.entities.domain.ResolvedEntities
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository
@@ -92,13 +94,9 @@ class ViewsService(
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Either<ServiceError, Operation> {
+        //TODO: i think we can do either.catch and unify all to one viewcreate error
         return either {
-            val resolved =
-                entitiesService.resolveEntities(
-                    viewToBeCreatedEvent.entities,
-                    viewToBeCreatedEvent.game,
-                    viewToBeCreatedEvent.extraArguments
-                ).bind()
+            val resolved = resolveEntitiesForCreate(viewToBeCreatedEvent).bind()
 
             if (resolved.unchecked.isNotEmpty()) {
                 logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
@@ -138,6 +136,42 @@ class ViewsService(
             Either.catch { eventStore.save(event) }
                 .mapLeft { ViewCreateError(viewToBeCreatedEvent, it.message ?: it.javaClass.simpleName) }
                 .bind()
+        }
+    }
+
+    private suspend fun resolveEntitiesForCreate(
+        event: ViewToBeCreatedEvent
+    ): Either<ServiceError, ResolvedEntities> = either {
+        val guildReq = (event.extraArguments as? WowExtraArguments)
+            ?.takeIf { it.isGuild && event.game == Game.WOW }
+            ?.let { event.entities.first() as WowEntityRequest }
+
+        val trackedGuild = guildReq?.let { req ->
+            entitiesService.findTrackedGuild(
+                req.name.lowercase(),
+                req.realm.lowercase(),
+                req.region.lowercase(),
+                Game.WOW
+            )
+        }
+
+        when (trackedGuild) {
+            null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments).bind()
+            else -> {
+                val (guildPayload, sourceViewId) = trackedGuild
+                val sourceView = viewsRepository.get(sourceViewId)!!
+                val existing = sourceView.entitiesIds.mapNotNull { id ->
+                    entitiesService.get(id, Game.WOW)?.let { entity ->
+                        entity to viewsRepository.getViewEntity(sourceViewId, id)?.alias
+                    }
+                }
+                ResolvedEntities(
+                    entities = emptyList(),
+                    existing = existing,
+                    unchecked = emptyList(),
+                    guild = guildPayload
+                )
+            }
         }
     }
 

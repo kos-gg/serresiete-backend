@@ -171,6 +171,34 @@ class WowEntityResolverTest {
     }
 
     @Test
+    fun `resolving a guild lowercases the guild payload's name, realm and region`() {
+        runBlocking {
+            val mixedCaseRequest = WowEntityRequest("Method", "EU", "Twisting-Nether")
+            val member = WowEntityRequest("kakarona", mixedCaseRequest.region, mixedCaseRequest.realm)
+
+            `when`(blizzardClient.getRetailGuildRoster(mixedCaseRequest.region, mixedCaseRequest.realm, mixedCaseRequest.name))
+                .thenReturn(
+                    Either.Right(
+                        GetWowRosterResponse(
+                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90))),
+                            WowGuildResponse(999)
+                        )
+                    )
+                )
+            `when`(raiderIoClient.getScore(member)).thenReturn(Either.Right(1500.0))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = WowEntityResolver(repo, raiderIoClient, blizzardClient)
+
+            resolver.resolve(listOf(mixedCaseRequest), guildExtraArguments)
+                .onLeft { fail() }
+                .onRight { res ->
+                    assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                }
+        }
+    }
+
+    @Test
     fun `filters out guild members below max level before checking their score`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))

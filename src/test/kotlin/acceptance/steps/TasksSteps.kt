@@ -41,6 +41,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
     private val db = SharedInfrastructure.db
 
     private val wowGuildViewId = "test-view-id"
+    private val wowGuildViewId2 = "test-view-id-2"
     private val wowGuildName = "Method"
     private val wowGuildRealm = "Twisting-Nether"
     private val wowGuildRegion = "eu"
@@ -184,6 +185,42 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         }
     }
 
+    @And("two WOW guild views exist in the repository tracking the same guild")
+    fun twoWowGuildViewsExistTrackingTheSameGuild() {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val existingEntity = runBlocking {
+            entitiesRepo.insert(
+                listOf(
+                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm),
+                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
+                ), Game.WOW
+            )
+        }.getOrNull()!!.first()
+
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val guildsRepo = WowGuildsDatabaseRepository(db)
+        runBlocking {
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(
+                        SimpleView(
+                            wowGuildViewId, "Test View A", "sanxei", false, listOf(existingEntity.id), Game.WOW, false
+                        ),
+                        SimpleView(
+                            wowGuildViewId2, "Test View B", "sanxei", false, listOf(existingEntity.id), Game.WOW, false
+                        )
+                    ),
+                    viewEntities = listOf(
+                        ViewEntity(existingEntity.id, wowGuildViewId, null),
+                        ViewEntity(existingEntity.id, wowGuildViewId2, null)
+                    )
+                )
+            )
+            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId2, Game.WOW)
+        }
+    }
+
     @And("the current roster is retrieved from the Blizzard API")
     fun theCurrentRosterIsRetrievedFromBlizzard() {
         MockConfig.wowGuildRosterMembers = listOf(
@@ -216,6 +253,25 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     .map { it.name }
                     .toSet()
                 assertEquals(expectedNames, entityNames)
+            }
+        }
+    }
+
+    @Then("both associated views are updated with the current roster")
+    fun bothAssociatedViewsAreUpdatedWithCurrentRoster() {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val expectedNames = setOf(wowGuildExistingMemberName.lowercase(), wowGuildNewMemberName.lowercase())
+        runBlocking {
+            assertUntil(5, 1000) {
+                listOf(wowGuildViewId, wowGuildViewId2).forEach { viewId ->
+                    val view = viewsRepo.get(viewId)!!
+                    val entityNames = entitiesRepo.get(Game.WOW)
+                        .filter { it.id in view.entitiesIds }
+                        .map { it.name }
+                        .toSet()
+                    assertEquals(expectedNames, entityNames)
+                }
             }
         }
     }

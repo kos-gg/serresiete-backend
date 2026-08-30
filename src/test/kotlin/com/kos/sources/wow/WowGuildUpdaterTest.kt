@@ -17,6 +17,8 @@ import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -77,6 +79,53 @@ class WowGuildUpdaterTest {
 
             assertEquals(setOf(stayingId, joiningEntity.id), finalEntitiesIds)
             assertTrue(leavingId !in finalEntitiesIds)
+        }
+    }
+
+    @Test
+    fun `update resolves a guild tracked by two views once and fans out associate-disassociate to both`() {
+        runBlocking {
+            val viewIdA = createGuildView("guild-view-a")
+            val viewIdB = createGuildView("guild-view-b")
+
+            val stayingId = alreadyTracked("staying", viewIdA)
+            viewsRepository.associateEntitiesIdsToView(listOf(stayingId to null), viewIdB)
+            val leavingId = alreadyTracked("leaving", viewIdA)
+            viewsRepository.associateEntitiesIdsToView(listOf(leavingId to null), viewIdB)
+            val joining = WowEntityRequest("joining", region, realm)
+
+            `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
+                Either.Right(
+                    GetWowRosterResponse(
+                        listOf(
+                            WowMemberResponse(WowCharacterResponse("staying", 90)),
+                            WowMemberResponse(WowCharacterResponse(joining.name, 90))
+                        ),
+                        WowGuildResponse(blizzardId)
+                    )
+                )
+            )
+            `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
+
+            val errors = updater.update(
+                listOf(
+                    GuildPayload(guildName, realm, region, blizzardId) to viewIdA,
+                    GuildPayload(guildName, realm, region, blizzardId) to viewIdB
+                )
+            )
+
+            assertEquals(emptyList(), errors)
+            verify(blizzardClient, times(1)).getRetailGuildRoster(region, realm, guildName)
+            verify(raiderIoClient, times(1)).getScore(joining)
+
+            val joiningEntity = entitiesRepository.get(joining as EntityRequest, Game.WOW)!!
+            val finalA = viewsRepository.get(viewIdA)!!.entitiesIds.toSet()
+            val finalB = viewsRepository.get(viewIdB)!!.entitiesIds.toSet()
+
+            assertEquals(setOf(stayingId, joiningEntity.id), finalA)
+            assertEquals(setOf(stayingId, joiningEntity.id), finalB)
+            assertTrue(leavingId !in finalA)
+            assertTrue(leavingId !in finalB)
         }
     }
 

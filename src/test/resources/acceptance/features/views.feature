@@ -19,6 +19,14 @@ Feature: Views
       | WOW    |
       | WOW_HC |
 
+  Scenario: Creating a second view for an already-tracked guild reuses its members
+    Given a WOW guild roster is available from the Blizzard API
+    When they create a WOW guild view for "Method"
+    And the views subscription processes pending events
+    And they create a second WOW guild view for "Method"
+    And the views subscription processes pending events
+    Then both WOW guild views have the same entities
+
   Scenario: User can get their view by id
     When they create a "LOL" view
     And the views subscription processes pending events

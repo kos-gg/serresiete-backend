@@ -59,6 +59,13 @@ Feature: Tasks
     Then the associated view is updated with the current roster
     And the task completes with status "SUCCESSFUL"
 
+  Scenario: UPDATE_WOW_GUILDS task refreshes every view tracking the same guild
+    And two WOW guild views exist in the repository tracking the same guild
+    And the current roster is retrieved from the Blizzard API
+    When the WOW guild updater is processed
+    Then both associated views are updated with the current roster
+    And the task completes with status "SUCCESSFUL"
+
   Scenario: UPDATE_MYTHIC_PLUS_SEASON task updates mythic plus dungeons from current expansion
     And a current WOW season exists in the database
     When they run the "updateMythicPlusSeason" task

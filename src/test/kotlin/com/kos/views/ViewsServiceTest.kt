@@ -31,11 +31,13 @@ import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
+import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
+import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
@@ -453,6 +455,50 @@ class ViewsServiceTest {
                     eventStore,
                     ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL, false, null)
                 )
+            }
+        }
+
+        @Test
+        fun `creating a guild view for an already-tracked guild reuses its entities without calling blizzard or raiderio`() {
+            runBlocking {
+                val existingViewId = "existing-guild-view"
+                val guildExtraArguments = WowExtraArguments(isGuild = true, season = 0)
+                val guildRequest = WowEntityRequest("method", "eu", "twisting-nether")
+
+                val existingView = SimpleView(
+                    existingViewId, "Method roster", owner, false,
+                    listOf(basicWowEntity.id), Game.WOW, false, guildExtraArguments
+                )
+
+                val (eventStore, viewsService) = createService(
+                    ViewsState(
+                        listOf(existingView),
+                        listOf(ViewEntity(basicWowEntity.id, existingViewId, "alias"))
+                    ),
+                    EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
+                    listOf(),
+                    defaultCredentialsState,
+                    wowGuildsState = listOf(
+                        Triple(GuildPayload("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
+                    )
+                )
+
+                createViewFromEventAndAssert(
+                    viewsService,
+                    ViewToBeCreatedEvent(
+                        id, "Method roster copy", published, listOf(guildRequest), Game.WOW, owner, false, guildExtraArguments
+                    )
+                )
+
+                assertEventStoredCorrectly(
+                    eventStore,
+                    ViewCreatedEvent(
+                        id, "Method roster copy", owner, listOf(basicWowEntity.id), published, Game.WOW, false, guildExtraArguments
+                    )
+                )
+
+                verifyNoInteractions(blizzardClient)
+                verifyNoInteractions(raiderIoClient)
             }
         }
 
@@ -970,6 +1016,7 @@ class ViewsServiceTest {
         entitiesState: EntitiesState,
         dataCacheState: List<DataCache>,
         credentialState: CredentialsRepositoryState,
+        wowGuildsState: List<Triple<GuildPayload, String, Game>> = listOf(),
     ): Pair<EventStore, ViewsService> {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)
@@ -984,6 +1031,7 @@ class ViewsServiceTest {
         val credentialsService = CredentialsService(credentialsRepository)
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
+            .withState(WowGuildsState(wowGuildsState))
 
         val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)

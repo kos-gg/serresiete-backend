@@ -17,6 +17,8 @@ interface WowGuildsRepository : WithState<WowGuildsState, WowGuildsRepository> {
     ): Either<InsertError, Unit>
 
     suspend fun getGuilds(game: Game): List<Pair<GuildPayload, String>>
+
+    suspend fun findTrackedGuild(name: String, realm: String, region: String, game: Game): Pair<GuildPayload, String>?
 }
 
 data class WowGuildsState(

@@ -87,6 +87,9 @@ data class EntitiesService(
             payload.blizzardId, payload.name, payload.realm, payload.region, viewId, game
         )
 
+    suspend fun findTrackedGuild(name: String, realm: String, region: String, game: Game): Pair<GuildPayload, String>? =
+        wowGuildsRepository.findTrackedGuild(name, realm, region, game)
+
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =
         entitiesRepository.getViewsFromEntity(id, game)
 

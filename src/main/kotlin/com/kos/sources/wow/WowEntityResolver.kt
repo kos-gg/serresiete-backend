@@ -48,9 +48,9 @@ class WowEntityResolver(
             Pair(
                 roster,
                 GuildPayload(
-                    name = guildReq.name,
-                    realm = guildReq.realm,
-                    region = guildReq.region,
+                    name = guildReq.name.lowercase(),
+                    realm = guildReq.realm.lowercase(),
+                    region = guildReq.region.lowercase(),
                     blizzardId = guildResponse.guild.id
                 )
             )

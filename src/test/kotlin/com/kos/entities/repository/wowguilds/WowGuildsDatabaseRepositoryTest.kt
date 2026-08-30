@@ -13,7 +13,7 @@ import org.junit.jupiter.api.TestInstance
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WowGuildsDatabaseRepositoryTest {
@@ -62,7 +62,7 @@ class WowGuildsDatabaseRepositoryTest {
     }
 
     @Test
-    fun `inserting a guild already tracked by a different view still fails`() {
+    fun `inserting the same guild for a second view succeeds and both views are tracked`() {
         runBlocking {
             val viewA = createView("sanxei", Game.WOW)
             val viewB = createView("sanxei", Game.WOW)
@@ -71,7 +71,44 @@ class WowGuildsDatabaseRepositoryTest {
             assertEquals(Either.Right(Unit), first)
 
             val second = repository.insertGuild(1L, "guild", "realm", "region", viewB, Game.WOW)
-            assertIs<Either.Left<*>>(second)
+            assertEquals(Either.Right(Unit), second)
+
+            val trackedViewIds = repository.getGuilds(Game.WOW).map { it.second }.toSet()
+            assertEquals(setOf(viewA, viewB), trackedViewIds)
+        }
+    }
+
+    @Test
+    fun `deleting a view that tracks a guild cascades and removes the tracking row, but leaves other views' rows intact`() {
+        runBlocking {
+            val viewA = createView("sanxei", Game.WOW)
+            val viewB = createView("sanxei", Game.WOW)
+            repository.insertGuild(1L, "guild", "realm", "region", viewA, Game.WOW)
+            repository.insertGuild(1L, "guild", "realm", "region", viewB, Game.WOW)
+
+            viewsRepository.delete(viewA)
+
+            val trackedViewIds = repository.getGuilds(Game.WOW).map { it.second }.toSet()
+            assertEquals(setOf(viewB), trackedViewIds)
+        }
+    }
+
+    @Test
+    fun `findTrackedGuild returns null when no guild matches`() {
+        runBlocking {
+            assertNull(repository.findTrackedGuild("guild", "realm", "region", Game.WOW))
+        }
+    }
+
+    @Test
+    fun `findTrackedGuild finds an already-tracked guild case-insensitively`() {
+        runBlocking {
+            val viewId = createView("sanxei", Game.WOW)
+            repository.insertGuild(1L, "Method", "Twisting-Nether", "EU", viewId, Game.WOW)
+
+            val found = repository.findTrackedGuild("method", "twisting-nether", "eu", Game.WOW)
+
+            assertEquals("method" to viewId, found?.let { it.first.name to it.second })
         }
     }
 

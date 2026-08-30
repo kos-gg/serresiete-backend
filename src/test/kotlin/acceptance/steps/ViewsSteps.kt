@@ -1,5 +1,6 @@
 package acceptance.steps
 
+import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
 import acceptance.entityRequestJson
@@ -9,6 +10,7 @@ import acceptance.toGame
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest
+import com.kos.views.repository.ViewsDatabaseRepository
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -25,6 +27,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
 
@@ -85,6 +89,85 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
             val json = Json.parseToJsonElement(body).jsonObject
             scenarioVariables.operationId = json["id"]!!.jsonPrimitive.content
             scenarioVariables.viewId = json["resourceId"]!!.jsonPrimitive.content
+        }
+    }
+
+    private var firstGuildViewId: String? = null
+
+    @Given("a WOW guild roster is available from the Blizzard API")
+    fun wowGuildRosterIsAvailable() {
+        MockConfig.wowGuildRosterMembers = listOf("Kakarona" to 90, "Threndil" to 90)
+    }
+
+    @When("they create a WOW guild view for {string}")
+    fun createWowGuildView(guildName: String) {
+        postCreateWowGuildView(guildName)
+    }
+
+    @When("they create a second WOW guild view for {string}")
+    fun createSecondWowGuildView(guildName: String) {
+        firstGuildViewId = scenarioVariables.viewId
+        postCreateWowGuildView(guildName)
+    }
+
+    private fun postCreateWowGuildView(guildName: String) {
+        scenarioVariables.game = Game.WOW
+        val requestBody = buildJsonObject {
+            put("name", "$guildName roster")
+            put("published", false)
+            put(
+                "entities",
+                JsonArray(
+                    listOf(
+                        buildJsonObject {
+                            put("type", "com.kos.entities.domain.WowEntityRequest")
+                            put("name", guildName)
+                            put("region", "eu")
+                            put("realm", "twisting-nether")
+                        }
+                    )
+                )
+            )
+            put("game", Game.WOW.name)
+            put("featured", false)
+            put(
+                "extraArguments",
+                buildJsonObject {
+                    put("type", "com.kos.views.WowExtraArguments")
+                    put("isGuild", true)
+                    put("season", 0)
+                }
+            )
+        }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/views") {
+                contentType(ContentType.Application.Json)
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(requestBody.toString())
+            }
+        }
+        if (scenarioVariables.response.status == HttpStatusCode.OK) {
+            val body = runBlocking { scenarioVariables.response.bodyAsText() }
+            val json = Json.parseToJsonElement(body).jsonObject
+            scenarioVariables.operationId = json["id"]!!.jsonPrimitive.content
+            scenarioVariables.viewId = json["resourceId"]!!.jsonPrimitive.content
+        }
+    }
+
+    @Then("both WOW guild views have the same entities")
+    fun bothWowGuildViewsHaveSameEntities() {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val firstId = firstGuildViewId!!
+        val secondId = scenarioVariables.viewId!!
+        runBlocking {
+            assertUntil(5, 1000) {
+                val first = viewsRepo.get(firstId)
+                val second = viewsRepo.get(secondId)
+                assertNotNull(first, "Expected first guild view to exist")
+                assertNotNull(second, "Expected second guild view to exist")
+                assertTrue(first!!.entitiesIds.isNotEmpty(), "Expected first guild view to have members")
+                assertEquals(first.entitiesIds.toSet(), second!!.entitiesIds.toSet())
+            }
         }
     }
 

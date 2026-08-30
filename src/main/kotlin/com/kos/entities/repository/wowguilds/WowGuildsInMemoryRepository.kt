@@ -23,11 +23,10 @@ class WowGuildsInMemoryRepository() :
         viewId: String,
         game: Game
     ): Either<InsertError, Unit> {
-        val guildPayload = GuildPayload(name, realm, region, blizzardId)
-        val existingViewId = guilds.firstOrNull { it.first == guildPayload && it.third == game }?.second
+        val guildPayload = GuildPayload(name.lowercase(), realm.lowercase(), region.lowercase(), blizzardId)
+        val alreadyTracked = guilds.any { it.first.blizzardId == blizzardId && it.third == game && it.second == viewId }
         return when {
-            existingViewId == viewId -> Either.Right(Unit)
-            existingViewId != null -> Either.Left(InsertError("Duplicated guild $name $realm $region"))
+            alreadyTracked -> Either.Right(Unit)
             else -> {
                 guilds.add(Triple(guildPayload, viewId, game))
                 Either.Right(Unit)
@@ -37,6 +36,20 @@ class WowGuildsInMemoryRepository() :
 
     override suspend fun getGuilds(game: Game): List<Pair<GuildPayload, String>> {
         return guilds.filter { it.third == game }.map { it.first to it.second }
+    }
+
+    override suspend fun findTrackedGuild(
+        name: String,
+        realm: String,
+        region: String,
+        game: Game
+    ): Pair<GuildPayload, String>? {
+        return guilds.firstOrNull {
+            it.third == game &&
+                it.first.name == name.lowercase() &&
+                it.first.realm == realm.lowercase() &&
+                it.first.region == region.lowercase()
+        }?.let { it.first to it.second }
     }
 
     override suspend fun state(): WowGuildsState {
