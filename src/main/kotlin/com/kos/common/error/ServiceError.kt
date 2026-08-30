@@ -22,6 +22,12 @@ data class SyncProcessingError(
     override fun error(): String = "$type: $message"
 }
 
+data class EventPersistenceError(
+    val message: String
+) : ServiceError() {
+    override fun error(): String = "Couldn't persist event: $message"
+}
+
 data class NonHardcoreCharacter(
     val wowEntity: WowEntityRequest
 ) : ServiceError() {
@@ -59,12 +65,11 @@ data class SynchronizerNotFound(
 }
 
 class ViewEventError(
-    val operation: String,
     val payload: EventData,
     val message: String
 ) : ServiceError() {
     override fun error(): String =
-        "Couldn't $operation view with payload [$payload] with error $message"
+        "Couldn't process view event with payload [$payload] with error $message"
 }
 
 class UnableToAddNewMythicPlusSeason(

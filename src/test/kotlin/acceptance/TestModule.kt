@@ -65,6 +65,7 @@ import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.tasks.runners.*
 import com.kos.views.Game
 import com.kos.views.ViewsController
+import com.kos.views.ViewsEventService
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.ktor.server.application.*
@@ -147,6 +148,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
     val viewsService = ViewsService(viewsRepository, entitiesService, dataCacheService, credentialsService, eventStore)
+    val viewsEventService = ViewsEventService(viewsRepository, entitiesService, eventStore)
     val viewsController = ViewsController(viewsService)
 
     val sourcesService = SourcesService(wowSeasonService)
@@ -227,7 +229,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
 
     return TestSubscriptions(
         views = EventSubscription("views", eventStore, subscriptionsRepository) {
-            ViewsEventProcessor(it, viewsService).process()
+            ViewsEventProcessor(it, viewsEventService).process()
         },
         syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process()

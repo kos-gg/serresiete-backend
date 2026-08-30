@@ -128,24 +128,13 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         MockConfig.raiderIoProfileStatusOverride = HttpStatusCode.InternalServerError
     }
 
-    @Then("a failure event is saved for the operation")
-    fun failureEventIsSaved() {
-        val operationId = requireNotNull(scenarioVariables.operationId) { "No operationId in scenario" }
-        runBlocking {
-            val events = eventStore.getEventsByOperationId(operationId)
-            assertTrue(
-                events.any { it.event.eventData.eventType == EventType.OPERATION_FAILED },
-                "Expected OPERATION_FAILED event for operation $operationId but found: ${events.map { it.event.eventData.eventType }}"
-            )
-        }
-    }
-
     @Then("a completed event is saved for the operation")
     fun completedEventIsSaved() {
         val operationId = requireNotNull(scenarioVariables.operationId) { "No operationId in scenario" }
         runBlocking {
             val events = eventStore.getEventsByOperationId(operationId)
-            val completionEventTypes = setOf(EventType.VIEW_SYNC_COMPLETED, EventType.VIEW_DELETED)
+            val completionEventTypes =
+                setOf(EventType.VIEW_SYNC_COMPLETED, EventType.VIEW_DELETED, EventType.ENTITY_SYNC_COMPLETED)
             assertTrue(
                 events.any { it.event.eventData.eventType in completionEventTypes },
                 "Expected completion event for operation $operationId but found: ${events.map { it.event.eventData.eventType }}"

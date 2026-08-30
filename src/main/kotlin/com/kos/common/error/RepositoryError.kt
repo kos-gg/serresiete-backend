@@ -9,3 +9,6 @@ fun RepositoryError.toEntityResolverError(game: Game, message: String): ServiceE
 
 fun RepositoryError.toAuthTokenError(message: String): ServiceError =
     AuthTokenError(message)
+
+fun RepositoryError.toEventPersistenceError(): ServiceError =
+    EventPersistenceError(message)

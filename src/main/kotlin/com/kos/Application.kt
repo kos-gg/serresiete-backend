@@ -67,6 +67,7 @@ import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.tasks.runners.*
 import com.kos.views.Game
 import com.kos.views.ViewsController
+import com.kos.views.ViewsEventService
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.ktor.client.*
@@ -207,6 +208,7 @@ fun Application.module() {
             credentialsService,
             eventStore
         )
+    val viewsEventService = ViewsEventService(viewsRepository, entitiesService, eventStore)
     val viewsController = ViewsController(viewsService)
 
     val operationsService = OperationsService(eventStore)
@@ -285,7 +287,7 @@ fun Application.module() {
         "views",
         eventStore,
         subscriptionsRepository
-    ) { ViewsEventProcessor(it, viewsService).process() }
+    ) { ViewsEventProcessor(it, viewsEventService).process() }
 
     val syncLolEventSubscription = EventSubscription(
         "sync-lol",

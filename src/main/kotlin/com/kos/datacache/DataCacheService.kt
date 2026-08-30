@@ -9,7 +9,7 @@ import com.kos.clients.domain.RiotData
 import com.kos.common.WithLogger
 import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
+import com.kos.common.error.toEventPersistenceError
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
@@ -69,7 +69,7 @@ data class DataCacheService(
         suspend fun syncOperation(entityId: Long): Either<ServiceError, Operation> {
             val eventData = RequestToBeSynced(request.first, request.second)
             return eventStore.save(Event("/entity/$entityId", UUID.randomUUID().toString(), eventData))
-                .mapLeft { SyncProcessingError(request.second.name, it.message) }
+                .mapLeft { it.toEventPersistenceError() }
         }
 
         return either {

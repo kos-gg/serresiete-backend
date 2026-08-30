@@ -2,8 +2,7 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.raise.either
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
+import com.kos.common.error.toEventPersistenceError
 import com.kos.common.orFail
 import com.kos.entities.EntitiesService
 import com.kos.entities.sync.EntitySynchronizer
@@ -25,24 +24,8 @@ class GameSyncEventProcessor(
         val aggregateRoot = eventWithVersion.event.aggregateRoot
 
         return when (eventWithVersion.event.eventData.eventType) {
-            EventType.VIEW_CREATED -> {
-                val payload = eventWithVersion.event.eventData as ViewCreatedEvent
-                when (payload.game) {
-                    game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> EventProcessOutcome.Skipped
-                }
-            }
-
-            EventType.VIEW_EDITED -> {
-                val payload = eventWithVersion.event.eventData as ViewEditedEvent
-                when (payload.game) {
-                    game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
-                    else -> EventProcessOutcome.Skipped
-                }
-            }
-
-            EventType.VIEW_PATCHED -> {
-                val payload = eventWithVersion.event.eventData as ViewPatchedEvent
+            EventType.VIEW_CREATED, EventType.VIEW_EDITED, EventType.VIEW_PATCHED -> {
+                val payload = eventWithVersion.event.eventData as ViewSyncTriggerEvent
                 when (payload.game) {
                     game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
                     else -> EventProcessOutcome.Skipped
@@ -58,15 +41,23 @@ class GameSyncEventProcessor(
                         if (resolved.unchecked.isNotEmpty()) {
                             logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
                         }
-                        val inserted = entitiesService
-                            .insert(resolved.entities.map { it.first }, payload.game)
-                            .mapLeft { SyncProcessingError(payload.game.name, it.message) }
+                        val inserted = entitiesService.insert(resolved.entities.map { it.first }, payload.game)
+                            .mapLeft { it.toEventPersistenceError() }
                             .bind()
                         val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
                         val errors = synchronizer.synchronize(entities.map { it.first })
-                        if (errors.isNotEmpty()) raise(
-                            SyncProcessingError(game.name, errors.joinToString("; ") { it.error() })
+                        if (errors.isNotEmpty()) {
+                            logger.warn("sync completed with non-fatal errors: ${errors.joinToString("; ") { it.error() }}")
+                        }
+                        eventStore.save(
+                            Event(
+                                aggregateRoot,
+                                operationId,
+                                EntitySyncCompletedEvent(payload.request, payload.game)
+                            )
                         )
+                            .mapLeft { it.toEventPersistenceError() }
+                            .bind()
                         EventProcessOutcome.Processed
                     }.orFail()
 
@@ -83,15 +74,19 @@ class GameSyncEventProcessor(
         entities: List<Long>?,
         operationId: String,
         aggregateRoot: String
-    ): EventProcessOutcome = either<ServiceError, EventProcessOutcome> {
-        logger.debug("processing event v${eventWithVersion.version}")
-        //TODO: what if no entities?
-        val resolved = entities?.mapNotNull { entitiesService.get(it, game) } ?: emptyList()
-        val errors = synchronizer.synchronize(resolved)
-        if (errors.isNotEmpty()) raise(SyncProcessingError(game.name, errors.joinToString("; ") { it.error() }))
-        eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-            .mapLeft { SyncProcessingError(game.name, it.message) }
-            .bind()
-        EventProcessOutcome.Processed
-    }.orFail()
+    ): EventProcessOutcome =
+        either {
+            logger.debug("processing event v${eventWithVersion.version}")
+            if (entities != null) {
+                val resolved = entities.mapNotNull { entitiesService.get(it, game) }
+                val errors = synchronizer.synchronize(resolved)
+                if (errors.isNotEmpty()) {
+                    logger.warn("sync completed with non-fatal errors: ${errors.joinToString("; ") { it.error() }}")
+                }
+            }
+            eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+                .mapLeft { it.toEventPersistenceError() }
+                .bind()
+            EventProcessOutcome.Processed
+        }.orFail()
 }

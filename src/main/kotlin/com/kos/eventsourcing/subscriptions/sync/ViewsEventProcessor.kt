@@ -4,11 +4,11 @@ import com.kos.common.WithLogger
 import com.kos.common.orFail
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.subscriptions.EventProcessOutcome
-import com.kos.views.ViewsService
+import com.kos.views.ViewsEventService
 
 class ViewsEventProcessor(
     private val eventWithVersion: EventWithVersion,
-    private val viewsService: ViewsService
+    private val viewsEventService: ViewsEventService
 ) : EventProcessor, WithLogger("eventSubscription.viewsProcessor") {
 
     override suspend fun process(): EventProcessOutcome {
@@ -18,7 +18,7 @@ class ViewsEventProcessor(
 
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_TO_BE_CREATED -> {
-                viewsService.createView(
+                viewsEventService.createView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeCreatedEvent
@@ -27,7 +27,7 @@ class ViewsEventProcessor(
             }
 
             EventType.VIEW_TO_BE_EDITED -> {
-                viewsService.editView(
+                viewsEventService.editView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeEditedEvent
@@ -36,7 +36,7 @@ class ViewsEventProcessor(
             }
 
             EventType.VIEW_TO_BE_PATCHED -> {
-                viewsService.patchView(
+                viewsEventService.patchView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBePatchedEvent
@@ -45,7 +45,7 @@ class ViewsEventProcessor(
             }
 
             EventType.VIEW_TO_BE_DELETED -> {
-                viewsService.deleteView(
+                viewsEventService.deleteView(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeDeletedEvent

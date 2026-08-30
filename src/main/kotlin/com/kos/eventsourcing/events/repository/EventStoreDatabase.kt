@@ -25,14 +25,15 @@ class EventStoreDatabase(private val db: Database) : EventStore {
                 subclass(ViewToBeCreatedEvent::class, ViewToBeCreatedEvent.serializer())
                 subclass(ViewToBePatchedEvent::class, ViewToBePatchedEvent.serializer())
                 subclass(ViewToBeEditedEvent::class, ViewToBeEditedEvent.serializer())
-                subclass(ViewCreatedEvent::class, ViewCreatedEvent.serializer())
-                subclass(ViewEditedEvent::class, ViewEditedEvent.serializer())
-                subclass(ViewPatchedEvent::class, ViewPatchedEvent.serializer())
+                subclass(ViewCreatedEventEvent::class, ViewCreatedEventEvent.serializer())
+                subclass(ViewEditedEventEvent::class, ViewEditedEventEvent.serializer())
+                subclass(ViewPatchedEventEvent::class, ViewPatchedEventEvent.serializer())
                 subclass(ViewToBeDeletedEvent::class, ViewToBeDeletedEvent.serializer())
                 subclass(ViewDeletedEvent::class, ViewDeletedEvent.serializer())
                 subclass(RequestToBeSynced::class, RequestToBeSynced.serializer())
                 subclass(OperationFailedEvent::class, OperationFailedEvent.serializer())
                 subclass(ViewSyncCompletedEvent::class, ViewSyncCompletedEvent.serializer())
+                subclass(EntitySyncCompletedEvent::class, EntitySyncCompletedEvent.serializer())
             }
 
             //TODO: This is repeated code. We could do it better

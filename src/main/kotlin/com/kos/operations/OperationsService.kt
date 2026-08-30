@@ -6,7 +6,8 @@ import com.kos.eventsourcing.events.repository.EventStore
 
 private val completionEventTypes = setOf(
     EventType.VIEW_SYNC_COMPLETED,
-    EventType.VIEW_DELETED
+    EventType.VIEW_DELETED,
+    EventType.ENTITY_SYNC_COMPLETED
 )
 
 class OperationsService(private val eventStore: EventStore) {
