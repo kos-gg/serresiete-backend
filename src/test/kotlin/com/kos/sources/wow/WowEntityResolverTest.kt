@@ -226,7 +226,7 @@ class WowEntityResolverTest {
     }
 
     @Test
-    fun `reports a new guild member with no score as unchecked instead of resolving it`() {
+    fun `skips a new guild member with no score instead of resolving it`() {
         runBlocking {
             val member = WowEntityRequest("notcompeting", guildRequest.region, guildRequest.realm)
 
@@ -248,8 +248,7 @@ class WowEntityResolverTest {
                 .onLeft { fail() }
                 .onRight { res ->
                     assertEquals(listOf(), res.entities)
-                    assertEquals(1, res.unchecked.size)
-                    assertEquals(member, res.unchecked.single().first)
+                    assertEquals(listOf(), res.unchecked)
                 }
         }
     }
@@ -283,7 +282,7 @@ class WowEntityResolverTest {
     }
 
     @Test
-    fun `reports a raiderio failure while checking a guild member's score as unchecked`() {
+    fun `skips a guild member on a raiderio failure while checking their score`() {
         runBlocking {
             val member = WowEntityRequest("flaky", guildRequest.region, guildRequest.realm)
             val timeoutError = TimeoutError("Request timeout has expired")
@@ -306,8 +305,7 @@ class WowEntityResolverTest {
                 .onLeft { fail() }
                 .onRight { res ->
                     assertEquals(listOf(), res.entities)
-                    assertEquals(1, res.unchecked.size)
-                    assertEquals(member, res.unchecked.single().first)
+                    assertEquals(listOf(), res.unchecked)
                 }
         }
     }

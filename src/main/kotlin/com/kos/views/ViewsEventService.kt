@@ -2,6 +2,7 @@ package com.kos.views
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.ViewEventError
@@ -84,7 +85,9 @@ class ViewsEventService(
             null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments).bind()
             else -> {
                 val (guildPayload, sourceViewId) = trackedGuild
-                val sourceView = viewsRepository.get(sourceViewId)!!
+                val sourceView = ensureNotNull(viewsRepository.get(sourceViewId)) {
+                    ViewEventError(event, "tracked guild's source view $sourceViewId no longer exists")
+                }
                 val existing = sourceView.entitiesIds.mapNotNull { id ->
                     entitiesService.get(id, Game.WOW)?.let { entity ->
                         entity to viewsRepository.getViewEntity(sourceViewId, id)?.alias

@@ -25,11 +25,13 @@ import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
+import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
+import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
@@ -705,6 +707,7 @@ class ViewsServiceTest {
         entitiesState: EntitiesState,
         dataCacheState: List<DataCache>,
         credentialState: CredentialsRepositoryState,
+        wowGuildsState: List<Triple<GuildPayload, String, Game>> = listOf(),
     ): Pair<EventStore, ViewsService> {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)
@@ -719,6 +722,7 @@ class ViewsServiceTest {
         val credentialsService = CredentialsService(credentialsRepository)
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
+            .withState(WowGuildsState(wowGuildsState))
 
         val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)

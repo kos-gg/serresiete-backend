@@ -14,24 +14,24 @@ class WowGuildUpdater(
     private val resolver: WowEntityResolver,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
-) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("wowGuildUpdater") {
+) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("WowGuildUpdater") {
 
     override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<ServiceError> {
 
-        val groups = entities.groupBy { it.first.blizzardId }
+        val guilds = entities.groupBy { it.first.blizzardId }
 
-        val (initialErrors, resolvedGroups) = groups.values.map { rows ->
+        val (initialErrors, resolvedGuilds) = guilds.values.map { rows ->
             val guild = rows.first().first
             val viewIds = rows.map { it.second }
             resolver.resolveRoster(guild.region, guild.realm, guild.name)
                 .map { (_, roster) -> Triple(guild, viewIds, roster) }
         }.split()
 
-        val downstreamErrors = resolvedGroups.flatMap { (guild, viewIds, roster) ->
+        val downstreamErrors = resolvedGuilds.flatMap { (guild, viewIds, roster) ->
             logger.info("Updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region} (${viewIds.size} view(s))")
 
             val (current, new) = resolver.getCurrentAndNewEntities(entitiesRepository, roster, Game.WOW)
-            val (newMembers, unchecked) = resolver.resolveGuildMembers(new)
+            val newMembers = resolver.resolveGuildMembers(new)
 
             val memberErrors = entitiesRepository.insert(newMembers.map { it.first }, Game.WOW).fold(
                 ifLeft = { insertError ->
@@ -47,13 +47,13 @@ class WowGuildUpdater(
 
                     val currentRoster = viewsRepository.get(viewIds.first())?.entitiesIds?.toSet()
 
-                    val departures =
+                    val notInRoster =
                         currentRoster?.minus((insertedWithAlias.map { it.first } + current.map { it.value.id }).toSet())
-                    departures?.let {
-                        if (departures.isNotEmpty()) {
+                    notInRoster?.let {
+                        if (notInRoster.isNotEmpty()) {
                             viewIds.forEach { viewId ->
-                                logger.info("Disassociating ${departures.size} entities from viewId $viewId and guild ${guild.name}")
-                                viewsRepository.disassociateEntitiesFromView(departures, viewId)
+                                logger.info("Disassociating ${notInRoster.size} entities from viewId $viewId and guild ${guild.name}")
+                                viewsRepository.disassociateEntitiesFromView(notInRoster, viewId)
                             }
                         }
                     }
@@ -70,7 +70,7 @@ class WowGuildUpdater(
                 }
             )
 
-            memberErrors + unchecked.map { it.second }
+            memberErrors
         }
 
         return initialErrors + downstreamErrors
