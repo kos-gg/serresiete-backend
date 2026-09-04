@@ -15,6 +15,7 @@ import com.kos.eventsourcing.events.ViewDeletedEvent
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
@@ -64,13 +65,14 @@ class EntitiesSyncProcessorTest {
 
             val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-            val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient)
+            val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
             val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
             val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
             val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
             val wowHardcoreGuildUpdater =
                 WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+            val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
 
             val entitiesResolver = EntityResolverProvider(
                 listOf(
@@ -86,7 +88,8 @@ class EntitiesSyncProcessorTest {
                 wowGuildsRepository,
                 entitiesResolver,
                 lolUpdater,
-                wowHardcoreGuildUpdater
+                wowHardcoreGuildUpdater,
+                wowGuildUpdater
             )
 
             val eventData =

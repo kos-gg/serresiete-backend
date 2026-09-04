@@ -301,6 +301,35 @@ class BlizzardHttpClient(
         }
     }
 
+    override suspend fun getRetailGuildRoster(
+        region: String,
+        realm: String,
+        guild: String
+    ): Either<ClientError, GetWowRosterResponse> {
+        return throttleRequest {
+            either {
+                val tokenResponse = getAndUpdateToken().bind()
+                val namespace = "profile-$region"
+                val partialURI = URI("/data/wow/guild/$realm/$guild/roster?namespace=$namespace&locale=en_US")
+
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getRetailGuildRoster",
+                ) {
+                    fetchFromApi<GetWowRosterResponse> {
+                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                            headers {
+                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                                append(HttpHeaders.Accept, "*/*")
+                                append(BATTLENET_NAMESPACE, namespace)
+                            }
+                        }
+                    }
+                }.bind()
+            }
+        }
+    }
+
     private suspend fun getAndUpdateToken(): Either<ClientError, TokenState> {
         val newTokenState = when (token) {
             null -> {

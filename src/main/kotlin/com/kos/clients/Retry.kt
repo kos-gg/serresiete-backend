@@ -31,7 +31,7 @@ object Retry : WithLogger("retry") {
 
             is Either.Left -> {
                 if (shouldNotRetry(result.value)) {
-                    logger.info("Retry aborted for $functionName due to non-retryable error")
+                    logger.info("Retry aborted for $functionName due to non-retryable error ${result.value}")
                     return result
                 }
 

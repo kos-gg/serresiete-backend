@@ -50,6 +50,7 @@ import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
@@ -112,7 +113,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val staticDataRepository = WowExpansionDatabaseRepository(db)
     val viewsRepository = ViewsDatabaseRepository(db)
 
-    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient)
+    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
     val entityResolverProvider = EntityResolverProvider(listOf(lolResolver, wowResolver, wowHardcoreResolver))
@@ -134,12 +135,14 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)
 
     val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
+    val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
         entityResolverProvider,
         lolUpdater,
-        wowHardcoreGuildUpdater
+        wowHardcoreGuildUpdater,
+        wowGuildUpdater
     )
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
@@ -164,6 +167,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             UpdateLolEntitiesTaskRunner(tasksRepository, entitiesService),
             CacheClearTaskRunner(tasksRepository, dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
+            UpdateWowGuildsTaskRunner(tasksRepository, entitiesService),
             UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,

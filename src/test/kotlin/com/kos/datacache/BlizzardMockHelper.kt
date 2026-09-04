@@ -111,6 +111,12 @@ object BlizzardMockHelper {
             WowGuildResponse(1)
         )
 
+    val getWowRetailGuildRosterResponse =
+        GetWowRosterResponse(
+            listOf(WowMemberResponse(WowCharacterResponse("retailchar", 80))),
+            WowGuildResponse(2)
+        )
+
     val getWowCharacterMediaResponse =
         GetWowMediaResponse(listOf(AssetKeyValue("avatar", "1")))
 

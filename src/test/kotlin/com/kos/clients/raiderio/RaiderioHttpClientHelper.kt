@@ -64,6 +64,9 @@ object RaiderIoHttpClientHelper {
                             else -> {
                                 val response = when (request.url.parameters["fields"]) {
                                     "talents" -> ResourceLoader.readResource("unit/wow/raiderio-classic-talents-response.json")
+                                    "mythic_plus_scores_by_season:current" ->
+                                        """{"mythic_plus_scores_by_season":[{"season":"season-tww-3","scores":{"all":1234.5,"spec_0":1234.5,"spec_1":0.0,"spec_2":0.0,"spec_3":0.0}}]}"""
+
                                     else -> ResourceLoader.readResource("unit/wow/raiderio-profile-response.json")
                                 }
                                 respond(
