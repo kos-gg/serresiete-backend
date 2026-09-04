@@ -3,6 +3,7 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import com.kos.clients.domain.Data
 import com.kos.common.WithLogger
 import com.kos.common.error.*
@@ -148,9 +149,9 @@ class ViewsService(
 
         val trackedGuild = guildReq?.let { req ->
             entitiesService.findTrackedGuild(
-                req.name.lowercase(),
-                req.realm.lowercase(),
-                req.region.lowercase(),
+                req.name,
+                req.realm,
+                req.region,
                 Game.WOW
             )
         }
@@ -159,7 +160,9 @@ class ViewsService(
             null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments).bind()
             else -> {
                 val (guildPayload, sourceViewId) = trackedGuild
-                val sourceView = viewsRepository.get(sourceViewId)!!
+                val sourceView = ensureNotNull(viewsRepository.get(sourceViewId)) {
+                    ViewCreateError(event, "tracked guild's source view $sourceViewId no longer exists")
+                }
                 val existing = sourceView.entitiesIds.mapNotNull { id ->
                     entitiesService.get(id, Game.WOW)?.let { entity ->
                         entity to viewsRepository.getViewEntity(sourceViewId, id)?.alias

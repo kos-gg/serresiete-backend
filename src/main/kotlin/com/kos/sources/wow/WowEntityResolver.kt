@@ -8,6 +8,7 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
+import com.kos.common.WithLogger
 import com.kos.common.collect
 import com.kos.common.error.NotCompetitiveCharacter
 import com.kos.common.error.ServiceError
@@ -28,7 +29,7 @@ class WowEntityResolver(
     private val repo: EntitiesRepository,
     private val raiderioClient: RaiderIoClient,
     private val blizzardClient: BlizzardClient
-) : EntityResolver {
+) : EntityResolver, WithLogger("WowEntityResolver") {
     override val game: Game = Game.WOW
 
     companion object {
@@ -61,9 +62,9 @@ class WowEntityResolver(
         val (existing, newRequests) = getCurrentAndNewEntities(repo, effectiveRequests, Game.WOW)
 
         val (entities, unchecked) = if (args?.isGuild == true) {
-            resolveGuildMembers(newRequests)
+            resolveGuildMembers(newRequests) to emptyList()
         } else {
-            resolveIndividualCharacters(newRequests)
+            resolveCharacters(newRequests)
         }
 
         ResolvedEntities(
@@ -94,7 +95,7 @@ class WowEntityResolver(
 
     suspend fun resolveGuildMembers(
         newRequests: List<EntityRequest>
-    ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ServiceError>>> {
+    ): List<Pair<InsertEntityRequest, String?>> {
         val (errors, oks) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
@@ -111,19 +112,25 @@ class WowEntityResolver(
             .toList()
             .split()
 
-        return oks to errors
+        errors.forEach { (req, error) ->
+            logger.warn("Skipping guild member ${req.name}-${req.realm}: ${error.error()}")
+        }
+
+        return oks
     }
 
-    private suspend fun resolveIndividualCharacters(
+    private suspend fun resolveCharacters(
         newRequests: List<EntityRequest>
     ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ServiceError>>> {
         val (unchecked, checked) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
-                raiderioClient.exists(req).fold(
-                    ifLeft = { error -> Either.Left(req to error.toSyncProcessingError("raiderIoExists")) },
-                    ifRight = { exists -> Either.Right(req to exists) }
-                )
+                either {
+                    val exists = raiderioClient.exists(req)
+                        .mapLeft { it.toSyncProcessingError("raiderIoExist") }
+                        .bind()
+                    req to exists
+                }.mapLeft { req to it }
             }
             .toList()
             .split()
