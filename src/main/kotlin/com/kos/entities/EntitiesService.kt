@@ -3,9 +3,7 @@ package com.kos.entities
 import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.common.error.RepositoryError
-import com.kos.common.error.ResolverNotFound
 import com.kos.common.error.ServiceError
-import com.kos.common.fold
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
@@ -48,14 +46,8 @@ data class EntitiesService(
         requestedEntities: List<EntityRequest>,
         game: Game,
         extraArguments: ViewExtraArguments? = null
-    ): Either<ServiceError, ResolvedEntities> {
-        return entitiesResolverProvider
-            .resolverFor(game)
-            .fold(
-                left = { Either.Left(ResolverNotFound(game)) },
-                right = { it.resolve(requestedEntities, extraArguments) }
-            )
-    }
+    ): Either<ServiceError, ResolvedEntities> =
+        entitiesResolverProvider.resolverFor(game).resolve(requestedEntities, extraArguments)
 
     suspend fun updateEntities(
         game: Game

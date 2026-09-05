@@ -138,11 +138,9 @@ fun Application.module() {
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
     val entityResolverProvider = EntityResolverProvider(
-        listOf(
-            lolResolver,
-            wowResolver,
-            wowHardcoreResolver
-        )
+        wowResolver = wowResolver,
+        wowHardcoreResolver = wowHardcoreResolver,
+        lolResolver = lolResolver
     )
 
     val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
@@ -172,11 +170,9 @@ fun Application.module() {
 
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
-            listOf(
-                lolEntitySynchronizer,
-                wowHardcoreEntitySynchronizer,
-                wowEntitySynchronizer
-            )
+            wowSynchronizer = wowEntitySynchronizer,
+            wowHardcoreSynchronizer = wowHardcoreEntitySynchronizer,
+            lolSynchronizer = lolEntitySynchronizer
         )
 
     val dataCacheService =

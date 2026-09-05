@@ -117,7 +117,11 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
-    val entityResolverProvider = EntityResolverProvider(listOf(lolResolver, wowResolver, wowHardcoreResolver))
+    val entityResolverProvider = EntityResolverProvider(
+        wowResolver = wowResolver,
+        wowHardcoreResolver = wowHardcoreResolver,
+        lolResolver = lolResolver
+    )
 
     val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
     val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient)
@@ -130,7 +134,11 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     )
     val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, seasonRepository)
     val entitySynchronizerProvider =
-        EntitySynchronizerProvider(listOf(lolEntitySynchronizer, wowHardcoreEntitySynchronizer, wowEntitySynchronizer))
+        EntitySynchronizerProvider(
+            wowSynchronizer = wowEntitySynchronizer,
+            wowHardcoreSynchronizer = wowHardcoreEntitySynchronizer,
+            lolSynchronizer = lolEntitySynchronizer
+        )
 
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)

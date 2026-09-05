@@ -729,11 +729,9 @@ class ViewsServiceTest {
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
-            listOf(
-                wowResolver,
-                wowHardcoreResolver,
-                lolResolver
-            )
+            wowResolver = wowResolver,
+            wowHardcoreResolver = wowHardcoreResolver,
+            lolResolver = lolResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)

@@ -38,7 +38,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
-        EntityResolverProvider(listOf(wowHardcoreResolver)),
+        EntityResolverProvider(wowResolver = mock(), wowHardcoreResolver = wowHardcoreResolver, lolResolver = mock()),
         mock(),
         WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository),
         mock()

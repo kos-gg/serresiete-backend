@@ -68,7 +68,9 @@ class WowHardcoreEntityDatabaseRepository(private val db: Database) :
                     }.map { resultRowToEntity(it) }
                     Either.Right(inserted)
                 } catch (e: SQLException) {
-                    rollback() //TODO: I don't understand why rollback is not provided by dbQuery.
+                    // Exposed only auto-rolls-back on an uncaught exception; catching it here to return
+                    // an Either means we have to undo the partial insert ourselves.
+                    rollback()
                     Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
                 }
             }

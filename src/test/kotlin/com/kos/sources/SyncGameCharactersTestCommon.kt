@@ -61,11 +61,9 @@ abstract class SyncGameCharactersTestCommon {
         val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
 
         val entitiesResolver = EntityResolverProvider(
-            listOf(
-                wowResolver,
-                wowHardcoreResolver,
-                lolResolver
-            )
+            wowResolver = wowResolver,
+            wowHardcoreResolver = wowHardcoreResolver,
+            lolResolver = lolResolver
         )
 
 
