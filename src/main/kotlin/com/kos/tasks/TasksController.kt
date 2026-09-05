@@ -43,7 +43,7 @@ class TasksController(private val tasksService: TasksService) {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                return when (val maybeTask = tasksService.getTask(id)) {
+                when (val maybeTask = tasksService.getTask(id)) {
                     null -> Either.Left(NotFound(id))
                     else -> {
                         if (activities.contains(Activities.getTask)) Either.Right(maybeTask)

@@ -5,16 +5,10 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.common.WithState
 import com.kos.common.error.RepositoryError
-import com.kos.entities.domain.Entity
-import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.InsertEntityRequest
-import com.kos.entities.domain.LolEnrichedEntityRequest
-import com.kos.entities.domain.LolEntity
-import com.kos.entities.domain.LolEntityRequest
+import com.kos.entities.domain.*
 import com.kos.views.Game
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.SQLException

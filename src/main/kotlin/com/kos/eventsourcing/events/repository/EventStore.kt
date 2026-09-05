@@ -13,6 +13,10 @@ interface EventStore : WithState<List<EventWithVersion>, EventStore> {
     suspend fun getEvents(version: Long?): Sequence<EventWithVersion>
     suspend fun getEventsByOperationId(operationId: String): List<EventWithVersion>
 
-    suspend fun saveFailedEvent(operationId: String, aggregateRoot: String, reason: String): Either<RepositoryError, Operation> =
+    suspend fun saveFailedEvent(
+        operationId: String,
+        aggregateRoot: String,
+        reason: String
+    ): Either<RepositoryError, Operation> =
         save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
 }

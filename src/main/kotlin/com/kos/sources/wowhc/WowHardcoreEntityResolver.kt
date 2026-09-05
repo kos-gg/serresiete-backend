@@ -97,8 +97,8 @@ class WowHardcoreEntityResolver(
     ): Either<ServiceError, Pair<GetWowRosterResponse, List<WowEntityRequest>>> {
         return either {
             val roster = blizzardClient
-                .getGuildRoster(region, realm, name)
-                .mapLeft { it.toSyncProcessingError("GetGuildRoster") }
+                .getHardcoreGuildRoster(region, realm, name)
+                .mapLeft { it.toSyncProcessingError("GetHardcoreGuildRoster") }
                 .bind()
 
             val memberReqs = roster.members

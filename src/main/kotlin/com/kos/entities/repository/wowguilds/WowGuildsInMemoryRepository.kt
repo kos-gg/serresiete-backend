@@ -46,9 +46,9 @@ class WowGuildsInMemoryRepository() :
     ): Pair<GuildPayload, String>? {
         return guilds.firstOrNull {
             it.third == game &&
-                it.first.name == name.lowercase() &&
-                it.first.realm == realm.lowercase() &&
-                it.first.region == region.lowercase()
+                    it.first.name == name.lowercase() &&
+                    it.first.realm == realm.lowercase() &&
+                    it.first.region == region.lowercase()
         }?.let { it.first to it.second }
     }
 

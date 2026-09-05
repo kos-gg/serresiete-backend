@@ -2,7 +2,9 @@ package com.kos.entities.repository
 
 import com.kos.common.InMemoryRepository
 import com.kos.datacache.repository.DataCacheInMemoryRepository
-import com.kos.entities.domain.*
+import com.kos.entities.domain.Entity
+import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.InsertEntityRequest
 import com.kos.views.Game
 import com.kos.views.GetViewsQuery
 import com.kos.views.repository.ViewsInMemoryRepository

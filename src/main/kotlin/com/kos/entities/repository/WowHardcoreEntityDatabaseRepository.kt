@@ -4,16 +4,10 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.common.WithState
 import com.kos.common.error.RepositoryError
-import com.kos.entities.domain.Entity
-import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.InsertEntityRequest
-import com.kos.entities.domain.WowEnrichedEntityRequest
-import com.kos.entities.domain.WowEntity
-import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.*
 import com.kos.views.Game
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.SQLException
@@ -44,7 +38,13 @@ class WowHardcoreEntityDatabaseRepository(private val db: Database) :
         val charsToInsert = entities.map { request ->
             when (request) {
                 is WowEnrichedEntityRequest ->
-                    WowEntity(selectNextId(db), request.name.lowercase(), request.region, request.realm, request.blizzardId)
+                    WowEntity(
+                        selectNextId(db),
+                        request.name.lowercase(),
+                        request.region,
+                        request.realm,
+                        request.blizzardId
+                    )
 
                 is WowEntityRequest ->
                     WowEntity(selectNextId(db), request.name.lowercase(), request.region, request.realm, 0)
@@ -120,7 +120,13 @@ class WowHardcoreEntityDatabaseRepository(private val db: Database) :
 
     override suspend fun getOlderThan(olderThanMinutes: Long, maxEntities: Int): List<Entity> =
         newSuspendedTransaction(Dispatchers.IO, db) {
-            entitiesOlderThanQuery(WowHardcoreEntities.id, Game.WOW_HC, olderThanMinutes, ::resultRowToEntity, maxEntities)
+            entitiesOlderThanQuery(
+                WowHardcoreEntities.id,
+                Game.WOW_HC,
+                olderThanMinutes,
+                ::resultRowToEntity,
+                maxEntities
+            )
         }
 
     override suspend fun state(): List<WowEntity> = newSuspendedTransaction(Dispatchers.IO, db) {

@@ -126,7 +126,7 @@ class BlizzardHTTPClientTest {
         givenAValidToken()
 
         val result =
-            blizzardClient.getGuildRoster("region", "realm", "guild")
+            blizzardClient.getHardcoreGuildRoster("region", "realm", "guild")
 
         assertEquals(
             Either.Right(BlizzardMockHelper.getWowGuildRosterResponse),

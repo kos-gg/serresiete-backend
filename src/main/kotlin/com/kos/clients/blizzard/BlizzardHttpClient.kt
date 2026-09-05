@@ -273,7 +273,7 @@ class BlizzardHttpClient(
         }
     }
 
-    override suspend fun getGuildRoster(
+    override suspend fun getHardcoreGuildRoster(
         region: String,
         realm: String,
         guild: String

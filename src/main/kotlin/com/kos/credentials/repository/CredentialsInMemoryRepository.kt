@@ -19,7 +19,8 @@ class CredentialsInMemoryRepository : CredentialsRepository, InMemoryRepository 
     }
 
     override suspend fun insertCredentials(userName: String, password: String): Either<RepositoryError, Unit> {
-        return if (users.map { it.userName }.contains(userName)) Either.Left(RepositoryError("Duplicated user $userName"))
+        return if (users.map { it.userName }
+                .contains(userName)) Either.Left(RepositoryError("Duplicated user $userName"))
         else {
             users.add(Credentials(userName, password))
             Either.Right(Unit)

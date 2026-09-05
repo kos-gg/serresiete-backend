@@ -11,8 +11,8 @@ import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError
 import com.kos.common.error.toEventPersistenceError
 import com.kos.datacache.repository.DataCacheRepository
-import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.Operation
@@ -82,7 +82,10 @@ data class DataCacheService(
 
                         else -> {
                             if (maybeCachedRecord.isTooOld()) {
-                                EntityDataResponse(parseData(maybeCachedRecord).bind(), syncOperation(maybeEntity.id).bind())
+                                EntityDataResponse(
+                                    parseData(maybeCachedRecord).bind(),
+                                    syncOperation(maybeEntity.id).bind()
+                                )
                             } else {
                                 EntityDataResponse(parseData(maybeCachedRecord).bind(), null)
                             }

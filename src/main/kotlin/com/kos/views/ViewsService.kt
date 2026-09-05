@@ -11,8 +11,6 @@ import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
-import com.kos.entities.domain.ResolvedEntities
-import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository

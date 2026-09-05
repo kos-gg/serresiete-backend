@@ -34,7 +34,12 @@ data class TasksService(
                 taskRunner.run(taskId, arguments)
             } catch (e: Exception) {
                 tasksRepository.updateTask(
-                    Task(taskId, taskType, TaskStatus(Status.ERROR, e.message ?: e.stackTraceToString()), OffsetDateTime.now())
+                    Task(
+                        taskId,
+                        taskType,
+                        TaskStatus(Status.ERROR, e.message ?: e.stackTraceToString()),
+                        OffsetDateTime.now()
+                    )
                 )
             }
         }
