@@ -7,7 +7,6 @@ import com.kos.tasks.TasksService
 import com.kos.views.Game
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.*
 
 data class CacheGameDataRunnable(
     val tasksService: TasksService,
@@ -20,7 +19,7 @@ data class CacheGameDataRunnable(
     override fun run() {
         coroutineScope.launch {
             logger.info("Running filling cache data task")
-            tasksService.runTask(task, UUID.randomUUID().toString(), null)
+            tasksService.runTask(task, null)
             val deletedRecords = dataCacheService.clearExpired(game, false)
             val deletionMessage = "Deleted $deletedRecords cached records"
             logger.info(deletionMessage)

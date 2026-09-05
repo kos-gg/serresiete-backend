@@ -7,15 +7,9 @@ import com.kos.common.error.ControllerError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.common.error.NotFound
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import java.util.*
 
 class TasksController(private val tasksService: TasksService) {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     suspend fun runTask(
         client: String?,
         taskRequest: TaskRequest,
@@ -25,11 +19,7 @@ class TasksController(private val tasksService: TasksService) {
             null -> Either.Left(NotAuthorized)
             else -> {
                 if (activities.contains(Activities.runTask)) {
-                    val taskId = UUID.randomUUID().toString()
-                    scope.launch {
-                        tasksService.runTask(taskRequest.type, taskId, taskRequest.arguments)
-                    }
-                    Either.Right(taskId)
+                    Either.Right(tasksService.runTask(taskRequest.type, taskRequest.arguments))
                 } else Either.Left(NotEnoughPermissions(client))
             }
         }
