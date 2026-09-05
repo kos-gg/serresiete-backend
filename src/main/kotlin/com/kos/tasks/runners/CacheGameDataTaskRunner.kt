@@ -1,8 +1,6 @@
 package com.kos.tasks.runners
 
 import com.kos.common.WithLogger
-import com.kos.common.error.SynchronizerNotFound
-import com.kos.common.fold
 import com.kos.entities.sync.EntitySynchronizerProvider
 import com.kos.entities.sync.SyncEntitySelector
 import com.kos.tasks.Status
@@ -25,11 +23,7 @@ class CacheGameDataTaskRunner(
         logger.info("Running $type")
         val entities = syncEntitySelector.select(game)
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
-        val errors = entitySynchronizerProvider.synchronizerFor(game)
-            .fold(
-                left = { listOf(SynchronizerNotFound(game)) },
-                right = { it.synchronize(entities) }
-            )
+        val errors = entitySynchronizerProvider.synchronizerFor(game).synchronize(entities)
 
         val taskStatus = if (errors.isEmpty())
             TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString(",")}")

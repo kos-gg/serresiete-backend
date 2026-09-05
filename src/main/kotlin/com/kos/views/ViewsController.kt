@@ -181,7 +181,7 @@ class ViewsController(
                 null -> Either.Left(NotFound(id))
                 else -> {
                     if (canDeleteView(maybeView, client, activities)) {
-                        Either.Right(viewsService.delete(client, maybeView))
+                        viewsService.delete(client, maybeView)
                     } else
                         Either.Left(NotEnoughPermissions(client))
                 }

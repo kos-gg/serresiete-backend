@@ -1,10 +1,7 @@
 package com.kos.common.error
 
 import com.kos.entities.domain.WowEntityRequest
-import com.kos.eventsourcing.events.ViewToBeCreatedEvent
-import com.kos.eventsourcing.events.ViewToBeDeletedEvent
-import com.kos.eventsourcing.events.ViewToBeEditedEvent
-import com.kos.eventsourcing.events.ViewToBePatchedEvent
+import com.kos.eventsourcing.events.EventData
 import com.kos.views.Game
 
 sealed class ServiceError {
@@ -23,6 +20,12 @@ data class SyncProcessingError(
     val message: String
 ) : ServiceError() {
     override fun error(): String = "$type: $message"
+}
+
+data class EventPersistenceError(
+    val message: String
+) : ServiceError() {
+    override fun error(): String = "Couldn't persist event: $message"
 }
 
 data class NonHardcoreCharacter(
@@ -61,36 +64,12 @@ data class SynchronizerNotFound(
         "No synchronizer found for game [$game]"
 }
 
-class ViewCreateError(
-    val view: ViewToBeCreatedEvent,
+class ViewEventError(
+    val payload: EventData,
     val message: String
 ) : ServiceError() {
     override fun error(): String =
-        "Couldn't create view with payload [$view] for game [${view.game}] with error $message"
-}
-
-class ViewEditError(
-    val view: ViewToBeEditedEvent,
-    val message: String
-) : ServiceError() {
-    override fun error(): String =
-        "Couldn't edit view with payload [$view] for game [${view.game}] with error $message"
-}
-
-class ViewPatchError(
-    val view: ViewToBePatchedEvent,
-    val message: String
-) : ServiceError() {
-    override fun error(): String =
-        "Couldn't patch view with payload [$view] for game [${view.game}] with error $message"
-}
-
-class ViewDeleteError(
-    val view: ViewToBeDeletedEvent,
-    val message: String
-) : ServiceError() {
-    override fun error(): String =
-        "Couldn't delete view with payload [$view] with error $message"
+        "Couldn't process view event with payload [$payload] with error $message"
 }
 
 class UnableToAddNewMythicPlusSeason(

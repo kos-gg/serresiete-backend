@@ -65,6 +65,7 @@ import com.kos.tasks.repository.TasksDatabaseRepository
 import com.kos.tasks.runners.*
 import com.kos.views.Game
 import com.kos.views.ViewsController
+import com.kos.views.ViewsEventService
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.ktor.server.application.*
@@ -116,7 +117,11 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
-    val entityResolverProvider = EntityResolverProvider(listOf(lolResolver, wowResolver, wowHardcoreResolver))
+    val entityResolverProvider = EntityResolverProvider(
+        wowResolver = wowResolver,
+        wowHardcoreResolver = wowHardcoreResolver,
+        lolResolver = lolResolver
+    )
 
     val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
     val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient)
@@ -129,7 +134,11 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     )
     val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, seasonRepository)
     val entitySynchronizerProvider =
-        EntitySynchronizerProvider(listOf(lolEntitySynchronizer, wowHardcoreEntitySynchronizer, wowEntitySynchronizer))
+        EntitySynchronizerProvider(
+            wowSynchronizer = wowEntitySynchronizer,
+            wowHardcoreSynchronizer = wowHardcoreEntitySynchronizer,
+            lolSynchronizer = lolEntitySynchronizer
+        )
 
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)
@@ -147,6 +156,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
     val viewsService = ViewsService(viewsRepository, entitiesService, dataCacheService, credentialsService, eventStore)
+    val viewsEventService = ViewsEventService(viewsRepository, entitiesService, eventStore)
     val viewsController = ViewsController(viewsService)
 
     val sourcesService = SourcesService(wowSeasonService)
@@ -227,7 +237,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
 
     return TestSubscriptions(
         views = EventSubscription("views", eventStore, subscriptionsRepository) {
-            ViewsEventProcessor(it, viewsService).process()
+            ViewsEventProcessor(it, viewsEventService).process()
         },
         syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process()

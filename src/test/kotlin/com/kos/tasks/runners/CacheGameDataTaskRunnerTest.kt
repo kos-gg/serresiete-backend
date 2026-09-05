@@ -52,7 +52,11 @@ class CacheGameDataTaskRunnerTest {
             TaskType.CACHE_LOL_DATA_TASK,
             tasksRepo,
             syncEntitySelector(entitiesRepository),
-            EntitySynchronizerProvider(listOf(LolEntitySynchronizer(dataCacheRepo, riotClient)))
+            EntitySynchronizerProvider(
+                wowSynchronizer = mock(),
+                wowHardcoreSynchronizer = mock(),
+                lolSynchronizer = LolEntitySynchronizer(dataCacheRepo, riotClient)
+            )
         )
 
         `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
@@ -83,31 +87,10 @@ class CacheGameDataTaskRunnerTest {
     }
 
     @Test
-    fun `task is recorded as error when no synchronizer exists for the game`() = runBlocking {
-        val runner = CacheGameDataTaskRunner(
-            Game.LOL,
-            TaskType.CACHE_LOL_DATA_TASK,
-            tasksRepo,
-            syncEntitySelector(entitiesRepository),
-            EntitySynchronizerProvider(listOf())
-        )
-
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
-
-        runner.run(id, null)
-
-        val task = tasksRepo.state().first()
-        assertEquals(Status.ERROR, task.taskStatus.status)
-        assertEquals("SynchronizerNotFound(game=lol)", task.taskStatus.message)
-    }
-
-    @Test
     fun `task is recorded as error and the synchronizer's errors are stored when synchronization fails`() =
         runBlocking {
             entitiesRepository.withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
             val failingSynchronizer = mock(EntitySynchronizer::class.java)
-            `when`(failingSynchronizer.game).thenReturn(Game.LOL)
             `when`(failingSynchronizer.synchronize(listOf(basicLolEntity)))
                 .thenReturn(listOf(SyncProcessingError("LOL", "boom")))
             val runner = CacheGameDataTaskRunner(
@@ -115,7 +98,11 @@ class CacheGameDataTaskRunnerTest {
                 TaskType.CACHE_LOL_DATA_TASK,
                 tasksRepo,
                 syncEntitySelector(entitiesRepository),
-                EntitySynchronizerProvider(listOf(failingSynchronizer))
+                EntitySynchronizerProvider(
+                    wowSynchronizer = mock(),
+                    wowHardcoreSynchronizer = mock(),
+                    lolSynchronizer = failingSynchronizer
+                )
             )
 
             val id = UUID.randomUUID().toString()

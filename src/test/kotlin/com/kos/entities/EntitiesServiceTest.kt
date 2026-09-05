@@ -551,11 +551,9 @@ class EntitiesServiceTest {
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolverProvider = EntityResolverProvider(
-            listOf(
-                wowResolver,
-                wowHardcoreResolver,
-                lolResolver
-            )
+            wowResolver = wowResolver,
+            wowHardcoreResolver = wowHardcoreResolver,
+            lolResolver = lolResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)

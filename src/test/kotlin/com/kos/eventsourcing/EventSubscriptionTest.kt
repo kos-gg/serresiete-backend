@@ -1,8 +1,6 @@
 package com.kos.eventsourcing
 
-import arrow.core.Either
 import com.kos.assertTrue
-import com.kos.common.error.ViewCreateError
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.OperationFailedEvent
@@ -33,7 +31,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Right(EventProcessOutcome.Processed) }
+                process = { EventProcessOutcome.Processed }
             )
 
             assertThrows<Exception> {
@@ -68,7 +66,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Right(EventProcessOutcome.Processed) }
+                process = { EventProcessOutcome.Processed }
             )
 
             subscription.processPendingEvents()
@@ -107,7 +105,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
+                process = { error("Simulated error") }
             )
 
             subscription.processPendingEvents()
@@ -148,7 +146,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
+                process = { error("Simulated error") }
             )
 
             subscription.processPendingEvents()
@@ -190,8 +188,8 @@ class EventSubscriptionTest {
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
                 process = {
-                    if (it.version == 5L) Either.Left(ViewCreateError(eventData, "Simulated error"))
-                    else Either.Right(EventProcessOutcome.Processed)
+                    if (it.version == 5L) error("Simulated error")
+                    else EventProcessOutcome.Processed
                 }
             )
 
@@ -233,7 +231,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Right(EventProcessOutcome.Processed) }
+                process = { EventProcessOutcome.Processed }
             )
 
             subscription.processPendingEvents()
@@ -265,7 +263,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { Either.Left(ViewCreateError(eventData, "Simulated error")) }
+                process = { error("Simulated error") }
             )
 
             subscription.processPendingEvents()

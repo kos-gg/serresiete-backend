@@ -2,9 +2,9 @@ package com.kos.sources.lol
 
 import arrow.core.Either
 import com.kos.entities.EntitiesTestHelper
-import com.kos.eventsourcing.events.ViewCreatedEvent
-import com.kos.eventsourcing.events.ViewEditedEvent
-import com.kos.eventsourcing.events.ViewPatchedEvent
+import com.kos.eventsourcing.events.ViewCreatedEventEvent
+import com.kos.eventsourcing.events.ViewEditedEventEvent
+import com.kos.eventsourcing.events.ViewPatchedEventEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.sources.SyncGameCharactersTestCommon
 import com.kos.views.Game
@@ -25,7 +25,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewCreatedEvent(
+            ViewCreatedEventEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 ViewsTestHelper.owner,
@@ -58,7 +58,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
         runBlocking {
             val (charactersService, dataCacheRepository) = createService()
             val eventWithVersion = createEventWithVersion(
-                ViewCreatedEvent(
+                ViewCreatedEventEvent(
                     ViewsTestHelper.id,
                     ViewsTestHelper.name,
                     ViewsTestHelper.owner,
@@ -92,7 +92,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewEditedEvent(
+            ViewEditedEventEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 listOf(EntitiesTestHelper.basicLolEntity.id),
@@ -123,7 +123,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
             val (charactersService, dataCacheRepository) = createService()
 
             val eventWithVersion = createEventWithVersion(
-                ViewEditedEvent(
+                ViewEditedEventEvent(
                     ViewsTestHelper.id,
                     ViewsTestHelper.name,
                     listOf(EntitiesTestHelper.basicLolEntity.id),
@@ -155,7 +155,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewPatchedEvent(
+            ViewPatchedEventEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 listOf(EntitiesTestHelper.basicLolEntity.id),
@@ -187,7 +187,7 @@ class LolSyncProcessorTest : SyncGameCharactersTestCommon() {
             val (charactersService, dataCacheRepository) = createService()
 
             val eventWithVersion = createEventWithVersion(
-                ViewPatchedEvent(
+                ViewPatchedEventEvent(
                     ViewsTestHelper.id,
                     ViewsTestHelper.name,
                     listOf(EntitiesTestHelper.basicLolEntity.id),

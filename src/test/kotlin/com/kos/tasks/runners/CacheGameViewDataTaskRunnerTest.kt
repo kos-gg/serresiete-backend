@@ -51,22 +51,25 @@ class CacheGameViewDataTaskRunnerTest {
     private val entitiesService = EntitiesService(
         entitiesRepo,
         WowGuildsInMemoryRepository(),
-        EntityResolverProvider(listOf(LolEntityResolver(entitiesRepo, riotClient))),
+        EntityResolverProvider(
+            wowResolver = mock(),
+            wowHardcoreResolver = mock(),
+            lolResolver = LolEntityResolver(entitiesRepo, riotClient)
+        ),
         mock(),
         mock(),
         mock()
     )
     private val entitySynchronizerProvider = EntitySynchronizerProvider(
-        listOf(
-            LolEntitySynchronizer(dataCacheRepo, riotClient),
-            WowHardcoreEntitySynchronizer(
-                dataCacheRepo,
-                entitiesRepo,
-                raiderIoClient,
-                blizzardClient,
-                wowItemsDatabaseRepository
-            )
-        )
+        wowSynchronizer = mock(),
+        wowHardcoreSynchronizer = WowHardcoreEntitySynchronizer(
+            dataCacheRepo,
+            entitiesRepo,
+            raiderIoClient,
+            blizzardClient,
+            wowItemsDatabaseRepository
+        ),
+        lolSynchronizer = LolEntitySynchronizer(dataCacheRepo, riotClient)
     )
     private val viewsService = ViewsService(
         viewsRepo,

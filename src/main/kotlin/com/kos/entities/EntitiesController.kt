@@ -9,8 +9,8 @@ import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.datacache.DataCacheService
 import com.kos.entities.domain.EntitiesExistResponse
-import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityDataResponse
+import com.kos.entities.domain.EntityRequest
 import com.kos.views.Game
 
 class EntitiesController(

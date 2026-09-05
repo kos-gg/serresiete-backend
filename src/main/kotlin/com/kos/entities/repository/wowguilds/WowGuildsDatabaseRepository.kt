@@ -1,7 +1,7 @@
 package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import com.kos.common.getOrThrow
 import com.kos.entities.domain.GuildPayload
 import com.kos.views.Game
@@ -40,7 +40,7 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         region: String,
         viewId: String,
         game: Game
-    ): Either<InsertError, Unit> {
+    ): Either<RepositoryError, Unit> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             val alreadyTracked = WowGuilds.selectAll()
                 .where {
@@ -62,8 +62,8 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
                     }
                     Either.Right(Unit)
                 } catch (e: SQLException) {
-                    if (e.sqlState == "23505") Either.Left(InsertError("Duplicated guild $name $realm $region"))
-                    else Either.Left(InsertError(e.message ?: e.stackTraceToString()))
+                    if (e.sqlState == "23505") Either.Left(RepositoryError("Duplicated guild $name $realm $region"))
+                    else Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
                 }
             }
         }

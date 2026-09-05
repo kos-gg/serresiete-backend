@@ -1,9 +1,6 @@
 package com.kos.views
 
-import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.TooMuchEntities
@@ -11,7 +8,6 @@ import com.kos.common.error.TooMuchViews
 import com.kos.common.error.UserWithoutRoles
 import com.kos.credentials.Credentials
 import com.kos.credentials.CredentialsService
-import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRolesInitialState
 import com.kos.credentials.CredentialsTestHelper.emptyCredentialsInitialState
 import com.kos.credentials.CredentialsTestHelper.password
 import com.kos.credentials.repository.CredentialsInMemoryRepository
@@ -25,8 +21,6 @@ import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
-import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
@@ -229,7 +223,7 @@ class ViewsServiceTest {
     }
 
     @Nested
-    inner class BehaviorOfCreateView {
+    inner class BehaviorOfCreate {
 
         @Test
         fun `create a wow view stores a create view event`() {
@@ -435,91 +429,10 @@ class ViewsServiceTest {
                 assertNoEventsStored(eventStore)
             }
         }
-
-        @Test
-        fun `create view processing view to be created event stores an event`() {
-            runBlocking {
-                val (eventStore, viewsService) = createService(
-                    ViewsState(listOf(), listOf()),
-                    emptyEntitiesState,
-                    listOf(),
-                    defaultCredentialsState
-                )
-
-                createViewFromEventAndAssert(
-                    viewsService,
-                    ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false, null)
-                )
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL, false, null)
-                )
-            }
-        }
-
-        @Test
-        fun `creating a guild view for an already-tracked guild reuses its entities without calling blizzard or raiderio`() {
-            runBlocking {
-                val existingViewId = "existing-guild-view"
-                val guildExtraArguments = WowExtraArguments(isGuild = true, season = 0)
-                val guildRequest = WowEntityRequest("method", "eu", "twisting-nether")
-
-                val existingView = SimpleView(
-                    existingViewId, "Method roster", owner, false,
-                    listOf(basicWowEntity.id), Game.WOW, false, guildExtraArguments
-                )
-
-                val (eventStore, viewsService) = createService(
-                    ViewsState(
-                        listOf(existingView),
-                        listOf(ViewEntity(basicWowEntity.id, existingViewId, "alias"))
-                    ),
-                    EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
-                    listOf(),
-                    defaultCredentialsState,
-                    wowGuildsState = listOf(
-                        Triple(GuildPayload("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
-                    )
-                )
-
-                createViewFromEventAndAssert(
-                    viewsService,
-                    ViewToBeCreatedEvent(
-                        id, "Method roster copy", published, listOf(guildRequest), Game.WOW, owner, false, guildExtraArguments
-                    )
-                )
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewCreatedEvent(
-                        id, "Method roster copy", owner, listOf(basicWowEntity.id), published, Game.WOW, false, guildExtraArguments
-                    )
-                )
-
-                verifyNoInteractions(blizzardClient)
-                verifyNoInteractions(raiderIoClient)
-            }
-        }
-
-        private suspend fun createViewFromEventAndAssert(
-            viewsService: ViewsService,
-            viewToBeCreatedEvent: ViewToBeCreatedEvent
-        ) {
-            viewsService.createView(
-                id,
-                aggregateRoot,
-                viewToBeCreatedEvent
-            ).onRight {
-                assertOperation(it, EventType.VIEW_CREATED)
-            }.onLeft {
-                fail()
-            }
-        }
     }
 
     @Nested
-    inner class BehaviorOfEditView {
+    inner class BehaviorOfEdit {
 
         @Test
         fun `editing a lol view stores an event`() {
@@ -613,143 +526,10 @@ class ViewsServiceTest {
 
             }
         }
-
-        @Test
-        fun `editing a lol view processing view to be edited stores an event`() {
-            runBlocking {
-                val (eventStore, viewsService) = createService(
-                    ViewsState(
-                        listOf(basicSimpleLolView),
-                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
-                    emptyEntitiesState,
-                    listOf(),
-                    defaultCredentialsState
-                )
-
-                val newName = "new-name"
-                viewsService.editView(
-                    id,
-                    aggregateRoot,
-                    ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false)
-                ).onRight {
-                    assertOperation(it, EventType.VIEW_EDITED)
-                }.onLeft {
-                    fail(it.toStr())
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewEditedEvent(id, newName, listOf(), published, Game.LOL, false)
-                )
-            }
-        }
-
-        @Test
-        fun `editing a view processing view to be edited, an event is stored with the actual characters of the view`() {
-            runBlocking {
-                val request1 = WowEntityRequest("a", "r", "r")
-                val request2 = WowEntityRequest("b", "r", "r")
-                val request3 = WowEntityRequest("c", "r", "r")
-                val request4 = WowEntityRequest("d", "r", "r")
-
-                `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
-                `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
-                `when`(raiderIoClient.exists(request3)).thenReturn(Either.Right(true))
-                `when`(raiderIoClient.exists(request4)).thenReturn(Either.Right(true))
-
-                val (eventStore, viewsService) = createService(
-                    ViewsState(
-                        listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
-                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
-                    EntitiesState(
-                        listOf(basicWowEntity, basicWowEntity2),
-                        listOf(),
-                        listOf()
-                    ),
-                    listOf(),
-                    basicCredentialsWithRolesInitialState
-                )
-
-                viewsService.editView(
-                    id,
-                    aggregateRoot,
-                    ViewToBeEditedEvent(
-                        id,
-                        name,
-                        published,
-                        listOf(request1, request2, request3, request4),
-                        Game.WOW,
-                        false
-                    )
-                ).onRight {
-                    assertOperation(it, EventType.VIEW_EDITED)
-                }.onLeft {
-                    fail(it.toStr())
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW, false)
-                )
-            }
-        }
-
-        @Test
-        fun `editing a lol view processing view to be edited, an event is stored with the actual characters of the view`() {
-            runBlocking {
-                val charactersRequest = (3..6).map { LolEntityRequest(it.toString(), it.toString()) }
-
-                val (eventStore, viewsService) = createService(
-                    ViewsState(
-                        listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
-                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
-                    EntitiesState(
-                        listOf(),
-                        listOf(),
-                        listOf(basicLolEntity, basicLolEntity2)
-                    ),
-                    listOf(),
-                    basicCredentialsWithRolesInitialState
-                )
-
-                `when`(riotClient.getPUUIDByRiotId(anyString(), anyString())).thenAnswer { invocation ->
-                    val name = invocation.getArgument<String>(0)
-                    val tag = invocation.getArgument<String>(1)
-                    Either.Right(GetPUUIDResponse(UUID.randomUUID().toString(), name, tag))
-                }
-
-                `when`(riotClient.getSummonerByPuuid(anyString())).thenAnswer { invocation ->
-                    val puuid = invocation.getArgument<String>(0)
-                    Either.Right(
-                        GetSummonerResponse(
-                            puuid,
-                            10,
-                            10L,
-                            200
-                        )
-                    )
-                }
-
-                viewsService.editView(
-                    id,
-                    aggregateRoot,
-                    ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL, false)
-                ).onRight {
-                    assertOperation(it, EventType.VIEW_EDITED)
-                }.onLeft {
-                    fail(it.toStr())
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL, false)
-                )
-            }
-        }
     }
 
     @Nested
-    inner class BehaviorOfDeleteView {
+    inner class BehaviorOfDelete {
         @Test
         fun `i can delete a view`() {
             runBlocking {
@@ -763,8 +543,11 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                val result = viewsService.delete(owner, basicSimpleWowView)
-                assertOperation(result, EventType.VIEW_TO_BE_DELETED)
+                viewsService.delete(owner, basicSimpleWowView).onRight {
+                    assertOperation(it, EventType.VIEW_TO_BE_DELETED)
+                }.onLeft {
+                    fail(it.toStr())
+                }
                 assertEventStoredCorrectly(
                     eventStore,
                     ViewToBeDeletedEvent(
@@ -782,7 +565,7 @@ class ViewsServiceTest {
     }
 
     @Nested
-    inner class BehaviorOfPatchView {
+    inner class BehaviorOfPatch {
         @Test
         fun `patch a view stores an event`() {
             runBlocking {
@@ -882,98 +665,6 @@ class ViewsServiceTest {
 
             }
         }
-
-        @Test
-        fun `patching a lol view processing event stores an event`() {
-            runBlocking {
-                val charactersRequest = (3..6).map { LolEntityRequest(it.toString(), it.toString()) }
-
-                val (eventStore, viewsService) = createService(
-                    ViewsState(
-                        listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
-                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
-                    emptyEntitiesState,
-                    listOf(),
-                    CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
-                )
-
-                `when`(riotClient.getPUUIDByRiotId(anyString(), anyString())).thenAnswer { invocation ->
-                    val name = invocation.getArgument<String>(0)
-                    val tag = invocation.getArgument<String>(1)
-                    Either.Right(GetPUUIDResponse(UUID.randomUUID().toString(), name, tag))
-                }
-
-                `when`(riotClient.getSummonerByPuuid(anyString())).thenAnswer { invocation ->
-                    val puuid = invocation.getArgument<String>(0)
-                    Either.Right(
-                        GetSummonerResponse(
-                            puuid,
-                            10,
-                            10L,
-                            200
-                        )
-                    )
-                }
-
-                viewsService.patchView(
-                    id,
-                    aggregateRoot,
-                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL, false)
-                ).onRight {
-                    assertOperation(it, EventType.VIEW_PATCHED)
-                }.onLeft {
-                    fail(it.toStr())
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL, false)
-                )
-            }
-        }
-
-        @Test
-        fun `patching a wow view processing event stores an event`() {
-            runBlocking {
-
-                val request1 = WowEntityRequest("a", "r", "r")
-                val request2 = WowEntityRequest("b", "r", "r")
-                val request3 = WowEntityRequest("c", "r", "r")
-                val request4 = WowEntityRequest("d", "r", "r")
-
-                `when`(raiderIoClient.exists(request1)).thenReturn(Either.Right(true))
-                `when`(raiderIoClient.exists(request2)).thenReturn(Either.Right(true))
-                `when`(raiderIoClient.exists(request3)).thenReturn(Either.Right(true))
-                `when`(raiderIoClient.exists(request4)).thenReturn(Either.Right(true))
-
-
-                val (eventStore, viewsService) = createService(
-                    ViewsState(
-                        listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
-                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
-                    emptyEntitiesState,
-                    listOf(),
-                    CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
-                )
-
-                val charactersRequest = listOf(request1, request2, request3, request4)
-
-                viewsService.patchView(
-                    id,
-                    aggregateRoot,
-                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW, false)
-                ).onRight {
-                    assertOperation(it, EventType.VIEW_PATCHED)
-                }.onLeft {
-                    fail(it.toStr())
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW, false)
-                )
-            }
-        }
     }
 
     @Nested
@@ -1038,11 +729,9 @@ class ViewsServiceTest {
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
-            listOf(
-                wowResolver,
-                wowHardcoreResolver,
-                lolResolver
-            )
+            wowResolver = wowResolver,
+            wowHardcoreResolver = wowHardcoreResolver,
+            lolResolver = lolResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)

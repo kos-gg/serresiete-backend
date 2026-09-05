@@ -4,7 +4,6 @@ import com.kos.activities.Activities
 import com.kos.tasks.TasksTestHelper.task
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -52,11 +51,15 @@ class TasksControllerTest {
     @Test
     fun `i can run a task`() {
         runBlocking {
-            tasksController.runTask("owner", TaskRequest(TaskType.CACHE_GAME_VIEW_DATA_TASK), setOf(Activities.runTask))
+            whenever(taskService.runTask(eq(TaskType.CACHE_GAME_VIEW_DATA_TASK), eq(null)))
+                .thenReturn("task-id")
 
+            val result =
+                tasksController.runTask("owner", TaskRequest(TaskType.CACHE_GAME_VIEW_DATA_TASK), setOf(Activities.runTask))
+
+            assertEquals("task-id", result.getOrNull())
             verify(taskService).runTask(
                 eq(TaskType.CACHE_GAME_VIEW_DATA_TASK),
-                any(),
                 eq(null)
             )
         }

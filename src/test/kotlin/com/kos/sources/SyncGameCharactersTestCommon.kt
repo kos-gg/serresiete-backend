@@ -32,7 +32,6 @@ import com.kos.views.repository.ViewsInMemoryRepository
 import io.mockk.coVerify
 import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
 abstract class SyncGameCharactersTestCommon {
     protected val raiderIoClient: RaiderIoClient = mock(RaiderIoClient::class.java)
@@ -62,11 +61,9 @@ abstract class SyncGameCharactersTestCommon {
         val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
 
         val entitiesResolver = EntityResolverProvider(
-            listOf(
-                wowResolver,
-                wowHardcoreResolver,
-                lolResolver
-            )
+            wowResolver = wowResolver,
+            wowHardcoreResolver = wowHardcoreResolver,
+            lolResolver = lolResolver
         )
 
 
@@ -86,9 +83,9 @@ abstract class SyncGameCharactersTestCommon {
 
     protected fun createEventWithVersion(eventType: EventData, game: Game): EventWithVersion {
         val payload = when (eventType) {
-            is ViewCreatedEvent -> eventType.copy(game = game)
-            is ViewEditedEvent -> eventType.copy(game = game)
-            is ViewPatchedEvent -> eventType.copy(game = game)
+            is ViewCreatedEventEvent -> eventType.copy(game = game)
+            is ViewEditedEventEvent -> eventType.copy(game = game)
+            is ViewPatchedEventEvent -> eventType.copy(game = game)
             else -> eventType
         }
         return EventWithVersion(1L, Event("/credentials/owner", ViewsTestHelper.id, payload))
@@ -103,25 +100,20 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = GameSyncEventProcessor(
+        GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
             lolEntitySynchronizer,
             EventStoreInMemory()
         ).process()
 
-        result.fold(
-            { fail("Expected success") },
-            {
-                if (shouldCache) {
-                    coVerify {
-                        lolEntitySynchronizer.synchronize(eq(listOf(entityToVerify)))
-                    }
-                } else {
-                    coVerify(exactly = 0) { lolEntitySynchronizer.synchronize(any()) }
-                }
+        if (shouldCache) {
+            coVerify {
+                lolEntitySynchronizer.synchronize(eq(listOf(entityToVerify)))
             }
-        )
+        } else {
+            coVerify(exactly = 0) { lolEntitySynchronizer.synchronize(any()) }
+        }
 
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
     }
@@ -136,25 +128,20 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = GameSyncEventProcessor(
+        GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
             wowEntityCacheService,
             EventStoreInMemory()
         ).process()
 
-        result.fold(
-            { fail("Expected success") },
-            {
-                if (shouldCache) {
-                    coVerify {
-                        wowEntityCacheService.synchronize(eq(listOf(entityToVerify)))
-                    }
-                } else {
-                    coVerify(exactly = 0) { wowEntityCacheService.synchronize(any()) }
-                }
+        if (shouldCache) {
+            coVerify {
+                wowEntityCacheService.synchronize(eq(listOf(entityToVerify)))
             }
-        )
+        } else {
+            coVerify(exactly = 0) { wowEntityCacheService.synchronize(any()) }
+        }
 
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
     }
@@ -168,25 +155,20 @@ abstract class SyncGameCharactersTestCommon {
         shouldCache: Boolean,
         expectedCacheSize: Int
     ) {
-        val result = GameSyncEventProcessor(
+        GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
             wowHardcoreEntityCacheService,
             EventStoreInMemory()
         ).process()
 
-        result.fold(
-            { fail("Expected success") },
-            {
-                if (shouldCache) {
-                    coVerify {
-                        wowHardcoreEntityCacheService.synchronize(eq(listOf(entityToVerify)))
-                    }
-                } else {
-                    coVerify(exactly = 0) { wowHardcoreEntityCacheService.synchronize(any()) }
-                }
+        if (shouldCache) {
+            coVerify {
+                wowHardcoreEntityCacheService.synchronize(eq(listOf(entityToVerify)))
             }
-        )
+        } else {
+            coVerify(exactly = 0) { wowHardcoreEntityCacheService.synchronize(any()) }
+        }
 
         assertEquals(expectedCacheSize, dataCacheRepository.state().size)
     }

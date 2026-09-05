@@ -38,7 +38,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
-        EntityResolverProvider(listOf(wowHardcoreResolver)),
+        EntityResolverProvider(wowResolver = mock(), wowHardcoreResolver = wowHardcoreResolver, lolResolver = mock()),
         mock(),
         WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository),
         mock()
@@ -57,7 +57,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
         wowGuildsRepository.withState(
             WowGuildsState(listOf(Triple(GuildPayload(guild, realm, region, blizzardId), "1", Game.WOW_HC)))
         )
-        `when`(blizzardClient.getGuildRoster(region, realm, guild))
+        `when`(blizzardClient.getHardcoreGuildRoster(region, realm, guild))
             .thenReturn(
                 Either.Right(
                     GetWowRosterResponse(

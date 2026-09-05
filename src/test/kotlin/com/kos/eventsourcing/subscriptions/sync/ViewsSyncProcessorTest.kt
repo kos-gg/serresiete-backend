@@ -4,13 +4,6 @@ import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
-import com.kos.credentials.CredentialsService
-import com.kos.credentials.CredentialsTestHelper
-import com.kos.credentials.repository.CredentialsInMemoryRepository
-import com.kos.credentials.repository.CredentialsRepositoryState
-import com.kos.datacache.DataCache
-import com.kos.datacache.DataCacheService
-import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntityResolverProvider
@@ -28,7 +21,7 @@ import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
 import com.kos.views.ViewEntity
-import com.kos.views.ViewsService
+import com.kos.views.ViewsEventService
 import com.kos.views.ViewsTestHelper
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsRepository
@@ -50,14 +43,12 @@ class ViewsSyncProcessorTest {
     @Test
     fun `viewsProcessor calls createView on VIEW_TO_BE_CREATED event, creates a view and stores an event`() {
         runBlocking {
-            val (eventStore, viewsService, viewsRepository) = createService(
+            val (eventStore, viewsEventService, viewsRepository) = createService(
                 ViewsState(listOf(), listOf()),
-                EntitiesTestHelper.emptyEntitiesState,
-                listOf(),
-                CredentialsTestHelper.emptyCredentialsInitialState
+                EntitiesTestHelper.emptyEntitiesState
             )
 
-            val spiedService = spyk(viewsService)
+            val spiedService = spyk(viewsEventService)
 
             val eventData =
                 ViewToBeCreatedEvent(ViewsTestHelper.id, "name", true, listOf(), Game.LOL, "owner", false, null)
@@ -67,21 +58,18 @@ class ViewsSyncProcessorTest {
             )
 
             ViewsEventProcessor(eventWithVersion, spiedService).process()
-                .onLeft { kotlin.test.fail("Expected success") }
-                .onRight {
-                    coVerify {
-                        spiedService.createView(
-                            eq(ViewsTestHelper.id),
-                            eq(aggregateRoot),
-                            eq(eventData)
-                        )
-                    }
-                }
+            coVerify {
+                spiedService.createView(
+                    eq(ViewsTestHelper.id),
+                    eq(aggregateRoot),
+                    eq(eventData)
+                )
+            }
 
 
             assertEventStoredCorrectly(
                 eventStore,
-                ViewCreatedEvent(
+                ViewCreatedEventEvent(
                     ViewsTestHelper.id,
                     ViewsTestHelper.name,
                     ViewsTestHelper.owner, listOf(), true, Game.LOL, false, null
@@ -95,7 +83,7 @@ class ViewsSyncProcessorTest {
     @Test
     fun `viewsProcessor calls edit view on VIEW_TO_BE_EDITED event, edits a view and stores an event`() {
         runBlocking {
-            val (eventStore, viewsService, viewsRepository) = createService(
+            val (eventStore, viewsEventService, viewsRepository) = createService(
                 ViewsState(
                     listOf(ViewsTestHelper.basicSimpleLolView),
                     ViewsTestHelper.basicSimpleLolView.entitiesIds.map {
@@ -105,12 +93,10 @@ class ViewsSyncProcessorTest {
                             "alias"
                         )
                     }),
-                EntitiesTestHelper.emptyEntitiesState,
-                listOf(),
-                CredentialsTestHelper.emptyCredentialsInitialState
+                EntitiesTestHelper.emptyEntitiesState
             )
 
-            val spiedService = spyk(viewsService)
+            val spiedService = spyk(viewsEventService)
 
             val newName = "new-name"
             val eventData = ViewToBeEditedEvent(ViewsTestHelper.id, newName, true, listOf(), Game.LOL, false)
@@ -120,20 +106,17 @@ class ViewsSyncProcessorTest {
             )
 
             ViewsEventProcessor(eventWithVersion, spiedService).process()
-                .onLeft { kotlin.test.fail("Expected success") }
-                .onRight {
-                    coVerify {
-                        spiedService.editView(
-                            eq(ViewsTestHelper.id),
-                            eq(aggregateRoot),
-                            eq(eventData)
-                        )
-                    }
-                }
+            coVerify {
+                spiedService.editView(
+                    eq(ViewsTestHelper.id),
+                    eq(aggregateRoot),
+                    eq(eventData)
+                )
+            }
 
             assertEventStoredCorrectly(
                 eventStore,
-                ViewEditedEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
+                ViewEditedEventEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
             )
 
             assertView(viewsRepository, newName)
@@ -143,7 +126,7 @@ class ViewsSyncProcessorTest {
     @Test
     fun `viewsProcessor calls patch view on VIEW_TO_BE_PATCHED event, patches a view and stores an event`() {
         runBlocking {
-            val (eventStore, viewsService, viewsRepository) = createService(
+            val (eventStore, viewsEventService, viewsRepository) = createService(
                 ViewsState(
                     listOf(ViewsTestHelper.basicSimpleLolView),
                     ViewsTestHelper.basicSimpleLolView.entitiesIds.map {
@@ -153,12 +136,10 @@ class ViewsSyncProcessorTest {
                             "alias"
                         )
                     }),
-                EntitiesTestHelper.emptyEntitiesState,
-                listOf(),
-                CredentialsTestHelper.emptyCredentialsInitialState,
+                EntitiesTestHelper.emptyEntitiesState
             )
 
-            val spiedService = spyk(viewsService)
+            val spiedService = spyk(viewsEventService)
             val newName = "newName"
             val eventData = ViewToBePatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
             val eventWithVersion = EventWithVersion(
@@ -167,21 +148,18 @@ class ViewsSyncProcessorTest {
             )
 
             ViewsEventProcessor(eventWithVersion, spiedService).process()
-                .onLeft { kotlin.test.fail("Expected success") }
-                .onRight {
-                    coVerify {
-                        spiedService.patchView(
-                            eq(ViewsTestHelper.id),
-                            eq(aggregateRoot),
-                            eq(eventData)
-                        )
-                    }
-                }
+            coVerify {
+                spiedService.patchView(
+                    eq(ViewsTestHelper.id),
+                    eq(aggregateRoot),
+                    eq(eventData)
+                )
+            }
 
 
             assertEventStoredCorrectly(
                 eventStore,
-                ViewPatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
+                ViewPatchedEventEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
             )
 
             assertView(viewsRepository, newName)
@@ -191,17 +169,11 @@ class ViewsSyncProcessorTest {
     private suspend fun createService(
         viewsState: ViewsState,
         entitiesState: EntitiesState,
-        dataCacheState: List<DataCache>,
-        credentialState: CredentialsRepositoryState,
-    ): Triple<EventStore, ViewsService, ViewsRepository> {
+    ): Triple<EventStore, ViewsEventService, ViewsRepository> {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)
         val entitiesRepository = EntitiesInMemoryRepository()
             .withState(entitiesState)
-        val dataCacheRepository = DataCacheInMemoryRepository()
-            .withState(dataCacheState)
-        val credentialsRepository = CredentialsInMemoryRepository()
-            .withState(credentialState)
         val eventStore = EventStoreInMemory()
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
@@ -215,14 +187,11 @@ class ViewsSyncProcessorTest {
         val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
 
         val entitiesResolver = EntityResolverProvider(
-            listOf(
-                wowResolver,
-                wowHardcoreResolver,
-                lolResolver
-            )
+            wowResolver = wowResolver,
+            wowHardcoreResolver = wowHardcoreResolver,
+            lolResolver = lolResolver
         )
 
-        val credentialsService = CredentialsService(credentialsRepository)
         val entitiesService = EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
@@ -231,20 +200,7 @@ class ViewsSyncProcessorTest {
             wowHardcoreGuildUpdater,
             wowGuildUpdater
         )
-        val dataCacheService =
-            DataCacheService(
-                dataCacheRepository,
-                entitiesRepository,
-                eventStore
-            )
-        val service =
-            ViewsService(
-                viewsRepository,
-                entitiesService,
-                dataCacheService,
-                credentialsService,
-                eventStore
-            )
+        val service = ViewsEventService(viewsRepository, entitiesService, eventStore)
 
         return Triple(eventStore, service, viewsRepository)
     }

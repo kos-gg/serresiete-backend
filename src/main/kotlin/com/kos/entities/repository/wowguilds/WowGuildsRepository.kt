@@ -2,7 +2,7 @@ package com.kos.entities.repository.wowguilds
 
 import arrow.core.Either
 import com.kos.common.WithState
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import com.kos.entities.domain.GuildPayload
 import com.kos.views.Game
 
@@ -14,7 +14,7 @@ interface WowGuildsRepository : WithState<WowGuildsState, WowGuildsRepository> {
         region: String,
         viewId: String,
         game: Game
-    ): Either<InsertError, Unit>
+    ): Either<RepositoryError, Unit>
 
     suspend fun getGuilds(game: Game): List<Pair<GuildPayload, String>>
 

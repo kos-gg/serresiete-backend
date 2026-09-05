@@ -36,10 +36,10 @@ Feature: Sync
     When the LOL sync subscription processes pending events
     Then the LOL data cache contains an entry for "GTP ZeroMVPs" "EUW"
 
-  Scenario: WOW sync records an operation failure when the raiderIo profile endpoint fails
+  Scenario: WOW sync tolerates a raiderIo profile failure and still completes the operation
     Given a "WOW" entity "Sanxei" on realm "Silvermoon" region "eu" exists in the database
     And a "WOW" sync event is posted for "Sanxei" "Silvermoon" "eu"
     And a current WOW season exists in the database
     And the raiderIo profile API returns an error
     When the WOW sync subscription processes pending events
-    Then a failure event is saved for the operation
+    Then a completed event is saved for the operation

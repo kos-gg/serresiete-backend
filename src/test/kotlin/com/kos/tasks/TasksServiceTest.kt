@@ -4,13 +4,13 @@ import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.tasks.runners.TaskRunner
 import com.kos.tasks.runners.TaskRunnerProvider
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -38,25 +38,25 @@ class TasksServiceTest {
     }
 
     @Test
-    fun `runTask inserts a pending task and delegates to the runner`() = runBlocking {
+    fun `runTask inserts a pending task and returns its id`() = runBlocking {
         val runner = mockk<TaskRunner>(relaxed = true)
         val service = TasksService(tasksRepo, TaskRunnerProvider(listOf(runner)))
         every { runner.type } returns TaskType.CACHE_WOW_DATA_TASK
 
-        service.runTask(TaskType.CACHE_WOW_DATA_TASK, "task-id", null)
+        val taskId = service.runTask(TaskType.CACHE_WOW_DATA_TASK, null)
 
-        val inserted = tasksRepo.getTask("task-id")
-        assertEquals("task-id", inserted?.id)
+        val inserted = tasksRepo.getTask(taskId)
+        assertEquals(taskId, inserted?.id)
         assertEquals(TaskType.CACHE_WOW_DATA_TASK, inserted?.type)
         assertEquals(Status.PENDING, inserted?.taskStatus?.status)
         assertNull(inserted?.taskStatus?.message)
-        coVerify(exactly = 1) { runner.run("task-id", null) }
     }
 
     @Test
-    fun `runTask does nothing when no runner is found for the task type`() = runBlocking {
-        tasksService.runTask(TaskType.CACHE_WOW_DATA_TASK, "task-id", null)
-
+    fun `runTask throws and inserts nothing when no runner is registered for the task type`() = runBlocking {
+        assertFailsWith<IllegalStateException> {
+            tasksService.runTask(TaskType.CACHE_WOW_DATA_TASK, null)
+        }
         assertTrue(tasksRepo.getTasks(null).isEmpty())
     }
 }

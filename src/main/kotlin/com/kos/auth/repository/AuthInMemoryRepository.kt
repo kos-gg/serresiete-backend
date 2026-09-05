@@ -3,7 +3,7 @@ package com.kos.auth.repository
 import arrow.core.Either
 import com.kos.auth.Authorization
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.InsertError
+import com.kos.common.error.RepositoryError
 import java.time.OffsetDateTime
 
 class AuthInMemoryRepository : AuthRepository, InMemoryRepository {
@@ -16,9 +16,9 @@ class AuthInMemoryRepository : AuthRepository, InMemoryRepository {
         userName: String,
         token: String,
         isAccess: Boolean
-    ): Either<InsertError, Authorization?> {
+    ): Either<RepositoryError, Authorization?> {
         return if (authorizations.map { it.token }
-                .contains(token)) Either.Left(InsertError("Error inserting token $token"))
+                .contains(token)) Either.Left(RepositoryError("Error inserting token $token"))
         else {
             val authorization = Authorization(
                 userName, token, OffsetDateTime.now(), OffsetDateTime.now().plusDays(

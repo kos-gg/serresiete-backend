@@ -2,7 +2,6 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.Either
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
 import com.kos.entities.EntitiesService
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.EventWithVersion
@@ -14,7 +13,7 @@ class EntitiesEventProcessor(
     private val entitiesService: EntitiesService,
 ) : EventProcessor, WithLogger("eventSubscription.entitiesProcessor") {
 
-    override suspend fun process(): Either<ServiceError, EventProcessOutcome> {
+    override suspend fun process(): EventProcessOutcome {
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_DELETED -> {
                 val payload = eventWithVersion.event.eventData as ViewDeletedEvent
@@ -31,10 +30,10 @@ class EntitiesEventProcessor(
                         )
                     }
                 }.onLeft { e -> logger.error("failed cleaning up entities for deleted view: ${e.message}") }
-                Either.Right(EventProcessOutcome.Processed)
+                EventProcessOutcome.Processed
             }
 
-            else -> Either.Right(EventProcessOutcome.Skipped)
+            else -> EventProcessOutcome.Skipped
         }
     }
 }
