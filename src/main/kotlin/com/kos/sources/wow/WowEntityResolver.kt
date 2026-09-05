@@ -127,7 +127,7 @@ class WowEntityResolver(
                 req as WowEntityRequest
                 either {
                     val exists = raiderioClient.exists(req)
-                        .mapLeft { it.toSyncProcessingError("raiderIoExist") }
+                        .mapLeft { it.toSyncProcessingError("raiderIoExists") }
                         .bind()
                     req to exists
                 }.mapLeft { req to it }

@@ -3,7 +3,9 @@ package com.kos.entities.repository
 import arrow.core.Either
 import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
-import com.kos.entities.domain.*
+import com.kos.entities.domain.Entity
+import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.InsertEntityRequest
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
@@ -11,51 +13,24 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.SQLException
 import java.time.OffsetDateTime
 
 class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository {
 
-    override suspend fun withState(initialState: EntitiesState): EntitiesDatabaseRepository {
-        newSuspendedTransaction(Dispatchers.IO, db) {
-            Entities.batchInsert(initialState.lolEntities) {
-                this[Entities.id] = it.id
-            }
-            Entities.batchInsert(initialState.wowEntities) {
-                this[Entities.id] = it.id
-            }
-            Entities.batchInsert(initialState.wowHardcoreEntities) {
-                this[Entities.id] = it.id
-            }
+    private val wowRepository = WowEntityDatabaseRepository(db)
+    private val wowHardcoreRepository = WowHardcoreEntityDatabaseRepository(db)
+    private val lolRepository = LolEntityDatabaseRepository(db)
 
-            WowEntities.batchInsert(initialState.wowEntities) {
-                this[WowEntities.id] = it.id
-                this[WowEntities.name] = it.name.lowercase()
-                this[WowEntities.region] = it.region
-                this[WowEntities.realm] = it.realm
-            }
-            WowHardcoreEntities.batchInsert(initialState.wowHardcoreEntities) {
-                this[WowHardcoreEntities.id] = it.id
-                this[WowHardcoreEntities.name] = it.name.lowercase()
-                this[WowHardcoreEntities.region] = it.region
-                this[WowHardcoreEntities.realm] = it.realm
-                //TODO: at some point this should stop being nullable
-                this[WowHardcoreEntities.blizzardId] = it.blizzardId ?: -1
-            }
-            LolEntities.batchInsert(initialState.lolEntities) {
-                this[LolEntities.id] = it.id
-                this[LolEntities.name] = it.name
-                this[LolEntities.tag] = it.tag
-                this[LolEntities.puuid] = it.puuid
-                this[LolEntities.summonerIcon] = it.summonerIcon
-                this[LolEntities.summonerLevel] = it.summonerLevel
-            }
-        }
-        //This needs to be done to consume serial ids. Could be done in a different way but I don't dislike it.
-        initialState.lolEntities.forEach { _ -> selectNextId() }
-        initialState.wowEntities.forEach { _ -> selectNextId() }
-        initialState.wowHardcoreEntities.forEach { _ -> selectNextId() }
+    private fun repositoryFor(game: Game): GameEntityRepository = when (game) {
+        Game.WOW -> wowRepository
+        Game.WOW_HC -> wowHardcoreRepository
+        Game.LOL -> lolRepository
+    }
+
+    override suspend fun withState(initialState: EntitiesState): EntitiesDatabaseRepository {
+        wowRepository.withState(initialState.wowEntities)
+        wowHardcoreRepository.withState(initialState.wowHardcoreEntities)
+        lolRepository.withState(initialState.lolEntities)
         return this
     }
 
@@ -65,345 +40,27 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         override val primaryKey = PrimaryKey(id)
     }
 
-    object WowEntities : Table("wow_entities") {
-        val id = long("id").references(Entities.id, onDelete = ReferenceOption.CASCADE)
-        val name = text("name")
-        val realm = text("realm")
-        val region = text("region")
-
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    private fun resultRowToWowEntity(row: ResultRow) = WowEntity(
-        row[WowEntities.id],
-        row[WowEntities.name],
-        row[WowEntities.region],
-        row[WowEntities.realm],
-        //TODO: at some point this should stop being nullable
-        null
-    )
-
-    object WowHardcoreEntities : Table("wow_hardcore_entities") {
-        val id = long("id").references(Entities.id, onDelete = ReferenceOption.CASCADE)
-        val name = text("name")
-        val realm = text("realm")
-        val region = text("region")
-        val blizzardId = long("blizzard_id")
-
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    private fun resultRowToWowHardcoreEntity(row: ResultRow) = WowEntity(
-        row[WowHardcoreEntities.id],
-        row[WowHardcoreEntities.name],
-        row[WowHardcoreEntities.region],
-        row[WowHardcoreEntities.realm],
-        row[WowHardcoreEntities.blizzardId]
-    )
-
-    object LolEntities : Table("lol_entities") {
-        val id = long("id").references(Entities.id, onDelete = ReferenceOption.CASCADE)
-        val name = text("name")
-        val tag = text("tag")
-        val puuid = text("puuid")
-        val summonerIcon = integer("summoner_icon")
-        val summonerLevel = integer("summoner_level")
-
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    private fun resultRowToLolEntity(row: ResultRow) = LolEntity(
-        row[LolEntities.id],
-        row[LolEntities.name],
-        row[LolEntities.tag],
-        row[LolEntities.puuid],
-        row[LolEntities.summonerIcon],
-        row[LolEntities.summonerLevel]
-    )
-
     override suspend fun insert(
         entities: List<InsertEntityRequest>,
         game: Game
-    ): Either<RepositoryError, List<Entity>> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            val charsToInsert: List<Entity> = entities.map {
-                val nextId = selectNextId()
-                when (it) {
-                    is WowEntityRequest -> WowEntity(nextId, it.name.lowercase(), it.region, it.realm, 0)
-                    is WowEnrichedEntityRequest -> WowEntity(
-                        nextId,
-                        it.name.lowercase(),
-                        it.region,
-                        it.realm,
-                        it.blizzardId
-                    )
-
-                    is LolEnrichedEntityRequest -> LolEntity(
-                        nextId,
-                        it.name,
-                        it.tag,
-                        it.puuid,
-                        it.summonerIconId,
-                        it.summonerLevel
-                    )
-                }
-            }
-            transaction {
-                try {
-                    Entities.batchInsert(charsToInsert) {
-                        this[Entities.id] = it.id
-                    }
-
-                    val insertedEntities = when (game) {
-                        Game.WOW -> WowEntities.batchInsert(charsToInsert) {
-                            when (it) {
-                                is WowEntity -> {
-                                    this[WowEntities.id] = it.id
-                                    this[WowEntities.name] = it.name
-                                    this[WowEntities.region] = it.region
-                                    this[WowEntities.realm] = it.realm
-                                }
-
-                                else -> throw IllegalArgumentException()
-                            }
-                        }.map { resultRowToWowEntity(it) }
-
-                        Game.LOL -> LolEntities.batchInsert(charsToInsert) {
-                            when (it) {
-                                is WowEntity -> throw IllegalArgumentException()
-                                is LolEntity -> {
-                                    this[LolEntities.id] = it.id
-                                    this[LolEntities.name] = it.name
-                                    this[LolEntities.tag] = it.tag
-                                    this[LolEntities.puuid] = it.puuid
-                                    this[LolEntities.summonerIcon] = it.summonerIcon
-                                    this[LolEntities.summonerLevel] = it.summonerLevel
-                                }
-                            }
-                        }.map { resultRowToLolEntity(it) }
-
-                        Game.WOW_HC -> WowHardcoreEntities.batchInsert(charsToInsert) {
-                            when (it) {
-                                is WowEntity -> {
-                                    this[WowHardcoreEntities.id] = it.id
-                                    this[WowHardcoreEntities.name] = it.name
-                                    this[WowHardcoreEntities.region] = it.region
-                                    this[WowHardcoreEntities.realm] = it.realm
-                                    //TODO: at some point this should stop being nullable
-                                    this[WowHardcoreEntities.blizzardId] = it.blizzardId ?: -1
-                                }
-
-                                else -> throw IllegalArgumentException()
-                            }
-                        }.map { resultRowToWowHardcoreEntity(it) }
-                    }
-                    Either.Right(insertedEntities)
-                } catch (e: SQLException) {
-                    rollback() //TODO: I don't understand why rollback is not provided by dbQuery.
-                    Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
-                } catch (e: IllegalArgumentException) {
-                    rollback() //TODO: I don't understand why rollback is not provided by dbQuery.
-                    Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
-                }
-            }
-        }
-    }
+    ): Either<RepositoryError, List<Entity>> = repositoryFor(game).insert(entities)
 
     override suspend fun update(
         id: Long,
         entity: InsertEntityRequest,
         game: Game
-    ): Either<RepositoryError, Int> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.LOL -> {
-                    when (entity) {
-                        is LolEnrichedEntityRequest -> {
-                            Either.Right(LolEntities.update({ LolEntities.id eq id }) {
-                                it[name] = entity.name
-                                it[tag] = entity.tag
-                                it[puuid] = entity.puuid
-                                it[summonerIcon] = entity.summonerIconId
-                                it[summonerLevel] = entity.summonerLevel
-                            })
-                        }
+    ): Either<RepositoryError, Int> = repositoryFor(game).update(id, entity)
 
-                        else -> Either.Left(RepositoryError("problem updating $id: $entity for $game"))
-                    }
-                }
+    override suspend fun get(id: Long, game: Game): Entity? = repositoryFor(game).get(id)
 
-                Game.WOW -> when (entity) {
-                    is WowEntityRequest -> {
-                        Either.Right(WowEntities.update({ WowEntities.id eq id }) {
-                            it[name] = entity.name.lowercase()
-                            it[region] = entity.region
-                            it[realm] = entity.realm
-                        })
-                    }
+    override suspend fun get(request: EntityRequest, game: Game): Entity? = repositoryFor(game).get(request)
 
-                    else -> Either.Left(RepositoryError("problem updating $id: $entity for $game"))
-                }
+    override suspend fun get(entity: InsertEntityRequest, game: Game): Entity? = repositoryFor(game).get(entity)
 
-                Game.WOW_HC -> when (entity) {
-                    is WowEntityRequest -> {
-                        Either.Right(WowHardcoreEntities.update({ WowHardcoreEntities.id eq id }) {
-                            it[name] = entity.name.lowercase()
-                            it[region] = entity.region
-                            it[realm] = entity.realm
-                        })
-                    }
-
-                    else -> Either.Left(RepositoryError("problem updating $id: $entity for $game"))
-                }
-            }
-        }
-    }
-
-    override suspend fun get(id: Long, game: Game): Entity? {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.WOW -> WowEntities.selectAll().where { WowEntities.id.eq(id) }.singleOrNull()?.let {
-                    resultRowToWowEntity(it)
-                }
-
-                Game.LOL -> LolEntities.selectAll().where { LolEntities.id.eq(id) }.singleOrNull()?.let {
-                    resultRowToLolEntity(it)
-                }
-
-                Game.WOW_HC -> WowHardcoreEntities.selectAll().where { WowHardcoreEntities.id.eq(id) }
-                    .singleOrNull()?.let {
-                        resultRowToWowHardcoreEntity(it)
-                    }
-            }
-        }
-    }
-
-    override suspend fun get(request: EntityRequest, game: Game): Entity? {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.WOW -> {
-                    request as WowEntityRequest
-                    WowEntities.selectAll().where {
-                        WowEntities.name.eq(request.name.lowercase())
-                            .and(WowEntities.realm.eq(request.realm))
-                            .and(WowEntities.region.eq(request.region))
-                    }.map { resultRowToWowEntity(it) }
-                }
-
-                Game.LOL -> {
-                    request as LolEntityRequest
-                    LolEntities.selectAll().where {
-                        LolEntities.tag.eq(request.tag)
-                            .and(LolEntities.name.eq(request.name))
-                    }.map { resultRowToLolEntity(it) }
-                }
-
-                Game.WOW_HC -> {
-                    request as WowEntityRequest
-                    WowHardcoreEntities.selectAll().where {
-                        WowHardcoreEntities.name.eq(request.name.lowercase())
-                            .and(WowHardcoreEntities.realm.eq(request.realm))
-                            .and(WowHardcoreEntities.region.eq(request.region))
-                    }.map { resultRowToWowHardcoreEntity(it) }
-                }
-            }.singleOrNull()
-        }
-    }
-
-    override suspend fun get(entity: InsertEntityRequest, game: Game): Entity? {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.WOW -> {
-                    entity as WowEntityRequest
-                    WowEntities.selectAll().where {
-                        WowEntities.name.eq(entity.name.lowercase())
-                            .and(WowEntities.realm.eq(entity.realm))
-                            .and(WowEntities.region.eq(entity.region))
-                    }.map { resultRowToWowEntity(it) }
-                }
-
-                Game.LOL -> {
-                    entity as LolEnrichedEntityRequest
-                    LolEntities.selectAll().where {
-                        LolEntities.puuid.eq(entity.puuid)
-                    }.map { resultRowToLolEntity(it) }
-                }
-
-                Game.WOW_HC -> {
-                    entity as WowEntityRequest
-                    WowHardcoreEntities.selectAll().where {
-                        WowHardcoreEntities.name.eq(entity.name.lowercase())
-                            .and(WowHardcoreEntities.realm.eq(entity.realm))
-                            .and(WowHardcoreEntities.region.eq(entity.region))
-                    }.map { resultRowToWowHardcoreEntity(it) }
-                }
-            }
-        }.singleOrNull()
-    }
-
-    override suspend fun get(game: Game): List<Entity> =
-        newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.WOW -> WowEntities.selectAll().map { resultRowToWowEntity(it) }
-                Game.LOL -> LolEntities.selectAll().map { resultRowToLolEntity(it) }
-                Game.WOW_HC -> WowHardcoreEntities.selectAll().map { resultRowToWowHardcoreEntity(it) }
-            }
-        }
+    override suspend fun get(game: Game): List<Entity> = repositoryFor(game).getAll()
 
     override suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity> =
-        newSuspendedTransaction(Dispatchers.IO, db) {
-            when (game) {
-                Game.WOW -> entitiesOlderThan(
-                    WowEntities.id,
-                    game,
-                    olderThanMinutes,
-                    ::resultRowToWowEntity,
-                    maxEntities
-                )
-
-                Game.LOL -> entitiesOlderThan(
-                    LolEntities.id,
-                    game,
-                    olderThanMinutes,
-                    ::resultRowToLolEntity,
-                    maxEntities
-                )
-
-                Game.WOW_HC -> entitiesOlderThan(
-                    WowHardcoreEntities.id,
-                    game,
-                    olderThanMinutes,
-                    ::resultRowToWowHardcoreEntity,
-                    maxEntities
-                )
-            }
-        }
-
-    private fun entitiesOlderThan(
-        entityIdColumn: Column<Long>,
-        game: Game,
-        olderThanMinutes: Long,
-        mapper: (ResultRow) -> Entity,
-        limit: Int
-    ): List<Entity> {
-        val caches = DataCacheDatabaseRepository.DataCaches
-        val subQuery = caches
-            .select(caches.entityId, caches.inserted.max().alias("inserted"))
-            .where { caches.game eq game.toString() }
-            .groupBy(caches.entityId)
-        val subQueryAliased = subQuery.alias("dc")
-        val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes).toString()
-
-        return entityIdColumn.table
-            .leftJoin(subQueryAliased, { entityIdColumn }, { subQueryAliased[caches.entityId] })
-            .selectAll().where {
-                subQueryAliased[caches.inserted].isNull() or
-                        (subQueryAliased[caches.inserted] lessEq threshold)
-            }
-            .orderBy(subQueryAliased[caches.inserted], SortOrder.ASC_NULLS_FIRST)
-            .limit(limit)
-            .map(mapper)
-    }
+        repositoryFor(game).getOlderThan(olderThanMinutes, maxEntities)
 
     override suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
@@ -421,21 +78,43 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
         }
     }
 
-    override suspend fun state(): EntitiesState {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            EntitiesState(
-                WowEntities.selectAll().map { resultRowToWowEntity(it) },
-                WowHardcoreEntities.selectAll().map { resultRowToWowHardcoreEntity(it) },
-                LolEntities.selectAll().map { resultRowToLolEntity(it) }
-            )
-        }
-    }
+    override suspend fun state(): EntitiesState = EntitiesState(
+        wowRepository.state(),
+        wowHardcoreRepository.state(),
+        lolRepository.state()
+    )
+}
 
-    private suspend fun selectNextId(): Long =
-        newSuspendedTransaction(Dispatchers.IO, db) {
-            TransactionManager.current().exec("""select nextval('entities_ids') as id""") { rs ->
-                if (rs.next()) rs.getLong("id")
-                else -1
-            }
-        } ?: -1
+internal suspend fun selectNextId(db: Database): Long =
+    newSuspendedTransaction(Dispatchers.IO, db) {
+        TransactionManager.current().exec("""select nextval('entities_ids') as id""") { rs ->
+            if (rs.next()) rs.getLong("id")
+            else -1
+        }
+    } ?: -1
+
+internal fun entitiesOlderThanQuery(
+    entityIdColumn: Column<Long>,
+    game: Game,
+    olderThanMinutes: Long,
+    mapper: (ResultRow) -> Entity,
+    limit: Int
+): List<Entity> {
+    val caches = DataCacheDatabaseRepository.DataCaches
+    val subQuery = caches
+        .select(caches.entityId, caches.inserted.max().alias("inserted"))
+        .where { caches.game eq game.toString() }
+        .groupBy(caches.entityId)
+    val subQueryAliased = subQuery.alias("dc")
+    val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes).toString()
+
+    return entityIdColumn.table
+        .leftJoin(subQueryAliased, { entityIdColumn }, { subQueryAliased[caches.entityId] })
+        .selectAll().where {
+            subQueryAliased[caches.inserted].isNull() or
+                    (subQueryAliased[caches.inserted] lessEq threshold)
+        }
+        .orderBy(subQueryAliased[caches.inserted], SortOrder.ASC_NULLS_FIRST)
+        .limit(limit)
+        .map(mapper)
 }

@@ -1,0 +1,123 @@
+package com.kos.entities.repository
+
+import arrow.core.Either
+import com.kos.common.InMemoryRepository
+import com.kos.common.WithState
+import com.kos.common.error.RepositoryError
+import com.kos.datacache.repository.DataCacheInMemoryRepository
+import com.kos.entities.domain.Entity
+import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.InsertEntityRequest
+import com.kos.entities.domain.WowEnrichedEntityRequest
+import com.kos.entities.domain.WowEntity
+import com.kos.entities.domain.WowEntityRequest
+import java.time.OffsetDateTime
+
+class WowHardcoreEntityInMemoryRepository(
+    private val dataCacheRepository: DataCacheInMemoryRepository,
+    private val nextId: suspend () -> Long
+) :
+    GameEntityRepository,
+    WithState<List<WowEntity>, WowHardcoreEntityInMemoryRepository>,
+    InMemoryRepository {
+
+    private val entities: MutableList<WowEntity> = mutableListOf()
+
+    override suspend fun insert(entities: List<InsertEntityRequest>): Either<RepositoryError, List<Entity>> {
+        val initial = this.entities.toList()
+        val inserted = entities.fold(listOf<Entity>()) { acc, it ->
+            when (it) {
+                is WowEnrichedEntityRequest -> {
+                    val normalized = it.copy(name = it.name.lowercase())
+                    if (this.entities.any { entity -> normalized.same(entity) }) {
+                        this.entities.clear()
+                        this.entities.addAll(initial)
+                        return Either.Left(RepositoryError("Error inserting entity $it"))
+                    }
+                    val entity = normalized.toEntity(nextId())
+                    this.entities.add(entity)
+                    acc + entity
+                }
+
+                is WowEntityRequest -> {
+                    val normalized = it.copy(name = it.name.lowercase())
+                    if (this.entities.any { entity -> normalized.same(entity) }) {
+                        this.entities.clear()
+                        this.entities.addAll(initial)
+                        return Either.Left(RepositoryError("Error inserting entity $it"))
+                    }
+                    val entity = WowEntity(nextId(), normalized.name, normalized.region, normalized.realm, 0)
+                    this.entities.add(entity)
+                    acc + entity
+                }
+
+                else -> {
+                    this.entities.clear()
+                    this.entities.addAll(initial)
+                    return Either.Left(RepositoryError("Error inserting entity $it"))
+                }
+            }
+        }
+        return Either.Right(inserted)
+    }
+
+    override suspend fun update(id: Long, entity: InsertEntityRequest): Either<RepositoryError, Int> =
+        //TODO: use enriched, no need to actualInsertedCharacter
+        when (entity) {
+            is WowEntityRequest -> {
+                val index = entities.indexOfFirst { it.id == id }
+                val actualInsertedCharacter = entities[index]
+                entities.removeAt(index)
+                entities.add(
+                    index,
+                    WowEntity(id, entity.name.lowercase(), entity.region, entity.realm, actualInsertedCharacter.blizzardId)
+                )
+                Either.Right(1)
+            }
+
+            else -> Either.Left(RepositoryError("error updating $id $entity for WOW_HC"))
+        }
+
+    override suspend fun get(id: Long): Entity? = entities.find { it.id == id }
+
+    override suspend fun get(request: EntityRequest): Entity? {
+        request as WowEntityRequest
+        return entities.find {
+            it.name == request.name.lowercase() &&
+                    it.realm == request.realm &&
+                    it.region == request.region
+        }
+    }
+
+    override suspend fun get(entity: InsertEntityRequest): Entity? {
+        val normalized = when (entity) {
+            is WowEntityRequest -> entity.copy(name = entity.name.lowercase())
+            is WowEnrichedEntityRequest -> entity.copy(name = entity.name.lowercase())
+            else -> entity
+        }
+        return entities.find { normalized.same(it) }
+    }
+
+    override suspend fun getAll(): List<Entity> = entities
+
+    override suspend fun getOlderThan(olderThanMinutes: Long, maxEntities: Int): List<Entity> {
+        val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes)
+        return entitiesOlderThan(entities, dataCacheRepository, threshold, maxEntities)
+    }
+
+    fun deleteIfPresent(id: Long): Boolean {
+        val index = entities.indexOfFirst { it.id == id }
+        if (index == -1) return false
+        entities.removeAt(index)
+        return true
+    }
+
+    override fun clear() = entities.clear()
+
+    override suspend fun state(): List<WowEntity> = entities.toList()
+
+    override suspend fun withState(initialState: List<WowEntity>): WowHardcoreEntityInMemoryRepository {
+        entities.addAll(initialState.map { it.copy(name = it.name.lowercase()) })
+        return this
+    }
+}

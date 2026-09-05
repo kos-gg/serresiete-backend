@@ -1,8 +1,6 @@
 package com.kos.entities.repository
 
-import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.domain.*
 import com.kos.views.Game
@@ -16,12 +14,21 @@ class EntitiesInMemoryRepository(
 ) :
     EntitiesRepository,
     InMemoryRepository {
-    private val wowEntities: MutableList<WowEntity> = mutableListOf()
-    private val wowHardcoreEntities: MutableList<WowEntity> = mutableListOf()
-    private val lolEntities: MutableList<LolEntity> = mutableListOf()
 
-    private fun nextId(): Long {
-        val allIds = wowEntities.map { it.id } + lolEntities.map { it.id } + wowHardcoreEntities.map { it.id }
+    private val wowRepository = WowEntityInMemoryRepository(dataCacheRepository, ::nextId)
+    private val wowHardcoreRepository = WowHardcoreEntityInMemoryRepository(dataCacheRepository, ::nextId)
+    private val lolRepository = LolEntityInMemoryRepository(dataCacheRepository, ::nextId)
+
+    private fun repositoryFor(game: Game): GameEntityRepository = when (game) {
+        Game.WOW -> wowRepository
+        Game.WOW_HC -> wowHardcoreRepository
+        Game.LOL -> lolRepository
+    }
+
+    private suspend fun nextId(): Long {
+        val allIds = wowRepository.state().map { it.id } +
+                lolRepository.state().map { it.id } +
+                wowHardcoreRepository.state().map { it.id }
         return if (allIds.isEmpty()) 1
         else allIds.maxBy { it } + 1
     }
@@ -29,224 +36,24 @@ class EntitiesInMemoryRepository(
     override suspend fun insert(
         entities: List<InsertEntityRequest>,
         game: Game
-    ): Either<RepositoryError, List<Entity>> {
-        val wowInitialEntities = this.wowEntities.toList()
-        val wowHardcoreInitialEntities = this.wowHardcoreEntities.toList()
-        val lolInitialEntities = this.lolEntities.toList()
-        return when (game) {
-            Game.WOW -> {
-                val inserted = entities.fold(listOf<Entity>()) { acc, it ->
-                    when (it) {
-                        is WowEntityRequest -> {
-                            val normalized = it.copy(name = it.name.lowercase())
-                            if (this.wowEntities.any { entity -> normalized.same(entity) }) {
-                                this.wowEntities.clear()
-                                this.wowEntities.addAll(wowInitialEntities)
-                                return Either.Left(RepositoryError("Error inserting entity $it"))
-                            }
-                            val entity = normalized.toEntity(nextId())
-                            this.wowEntities.add(entity)
-                            acc + entity
-                        }
-
-                        is LolEnrichedEntityRequest, is WowEnrichedEntityRequest -> {
-                            this.wowEntities.clear()
-                            this.wowEntities.addAll(wowInitialEntities)
-                            return Either.Left(RepositoryError("Error inserting entity $it"))
-                        }
-                    }
-                }
-                Either.Right(inserted)
-            }
-
-            Game.LOL -> {
-                val inserted = entities.fold(listOf<Entity>()) { acc, it ->
-                    when (it) {
-                        is WowEntityRequest, is WowEnrichedEntityRequest -> {
-                            this.lolEntities.clear()
-                            this.lolEntities.addAll(lolInitialEntities)
-                            return Either.Left(RepositoryError("Error inserting chracter $it"))
-                        }
-
-                        is LolEnrichedEntityRequest -> {
-                            if (this.lolEntities.any { entity -> it.same(entity) }) {
-                                this.lolEntities.clear()
-                                this.lolEntities.addAll(lolInitialEntities)
-                                return Either.Left(RepositoryError("Error inserting chracter $it"))
-                            }
-                            val entity = it.toEntity(nextId())
-                            this.lolEntities.add(entity)
-                            acc + entity
-                        }
-                    }
-                }
-                Either.Right(inserted)
-            }
-
-            Game.WOW_HC -> {
-                val inserted = entities.fold(listOf<Entity>()) { acc, it ->
-                    when (it) {
-                        is WowEnrichedEntityRequest -> {
-                            val normalized = it.copy(name = it.name.lowercase())
-                            if (this.wowHardcoreEntities.any { entity -> normalized.same(entity) }) {
-                                this.wowHardcoreEntities.clear()
-                                this.wowHardcoreEntities.addAll(wowHardcoreInitialEntities)
-                                return Either.Left(RepositoryError("Error inserting entity $it"))
-                            }
-                            val entity = normalized.toEntity(nextId())
-                            this.wowHardcoreEntities.add(entity)
-                            acc + entity
-                        }
-
-                        is LolEnrichedEntityRequest, is WowEntityRequest -> {
-                            this.wowHardcoreEntities.clear()
-                            this.wowHardcoreEntities.addAll(wowInitialEntities)
-                            return Either.Left(RepositoryError("Error inserting entity $it"))
-                        }
-                    }
-                }
-                Either.Right(inserted)
-            }
-        }
-    }
+    ) = repositoryFor(game).insert(entities)
 
     override suspend fun update(
         id: Long,
         entity: InsertEntityRequest,
         game: Game
-    ): Either<RepositoryError, Int> {
-        return when (game) {
-            Game.LOL -> when (entity) {
-                is LolEnrichedEntityRequest -> {
-                    val index = lolEntities.indexOfFirst { it.id == id }
-                    lolEntities.removeAt(index)
-                    val c = LolEntity(
-                        id,
-                        entity.name,
-                        entity.tag,
-                        entity.puuid,
-                        entity.summonerIconId,
-                        entity.summonerLevel
-                    )
-                    lolEntities.add(index, c)
-                    Either.Right(1)
-                }
+    ) = repositoryFor(game).update(id, entity)
 
-                else -> Either.Left(RepositoryError("error updating $id $entity for $game"))
-            }
+    override suspend fun get(request: EntityRequest, game: Game): Entity? = repositoryFor(game).get(request)
 
-            Game.WOW -> when (entity) {
-                is WowEntityRequest -> {
-                    val index = wowEntities.indexOfFirst { it.id == id }
-                    wowEntities.removeAt(index)
-                    val c = WowEntity(
-                        id,
-                        entity.name.lowercase(),
-                        entity.region,
-                        entity.realm,
-                        null
-                    )
-                    wowEntities.add(index, c)
-                    Either.Right(1)
-                }
+    override suspend fun get(id: Long, game: Game): Entity? = repositoryFor(game).get(id)
 
-                else -> Either.Left(RepositoryError("error updating $id $entity for $game"))
-            }
+    override suspend fun get(game: Game): List<Entity> = repositoryFor(game).getAll()
 
-            Game.WOW_HC -> when (entity) {
-                //TODO: use enriched, no need to actualInsertedCharacter
-                is WowEntityRequest -> {
-                    val index = wowHardcoreEntities.indexOfFirst { it.id == id }
-                    val actualInsertedCharacter = wowHardcoreEntities[index]
-                    wowHardcoreEntities.removeAt(index)
-                    val c = WowEntity(
-                        id,
-                        entity.name.lowercase(),
-                        entity.region,
-                        entity.realm,
-                        actualInsertedCharacter.blizzardId
-                    )
-                    wowHardcoreEntities.add(index, c)
-                    Either.Right(1)
-                }
+    override suspend fun get(entity: InsertEntityRequest, game: Game): Entity? = repositoryFor(game).get(entity)
 
-                else -> Either.Left(RepositoryError("error updating $id $entity for $game"))
-            }
-        }
-    }
-
-    override suspend fun get(request: EntityRequest, game: Game): Entity? =
-        when (game) {
-            Game.WOW -> wowEntities.find {
-                request as WowEntityRequest
-                it.name == request.name.lowercase() &&
-                        it.realm == request.realm &&
-                        it.region == request.region
-            }
-
-            Game.LOL -> lolEntities.find {
-                request as LolEntityRequest
-                it.name == request.name &&
-                        it.tag == request.tag
-            }
-
-            Game.WOW_HC -> wowHardcoreEntities.find {
-                request as WowEntityRequest
-                it.name == request.name.lowercase() &&
-                        it.realm == request.realm &&
-                        it.region == request.region
-            }
-        }
-
-    override suspend fun get(id: Long, game: Game): Entity? =
-        when (game) {
-            Game.WOW -> wowEntities.find { it.id == id }
-            Game.LOL -> lolEntities.find { it.id == id }
-            Game.WOW_HC -> wowHardcoreEntities.find { it.id == id }
-        }
-
-    override suspend fun get(game: Game): List<Entity> =
-        when (game) {
-            Game.WOW -> wowEntities
-            Game.LOL -> lolEntities
-            Game.WOW_HC -> wowHardcoreEntities
-        }
-
-    override suspend fun get(entity: InsertEntityRequest, game: Game): Entity? {
-        val normalized = when (entity) {
-            is WowEntityRequest -> entity.copy(name = entity.name.lowercase())
-            is WowEnrichedEntityRequest -> entity.copy(name = entity.name.lowercase())
-            is LolEnrichedEntityRequest -> entity
-        }
-        return when (game) {
-            Game.WOW -> wowEntities.find { normalized.same(it) }
-            Game.LOL -> lolEntities.find { normalized.same(it) }
-            Game.WOW_HC -> wowHardcoreEntities.find { normalized.same(it) }
-        }
-    }
-
-    override suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity> {
-        val threshold = OffsetDateTime.now().minusMinutes(olderThanMinutes)
-
-        return when (game) {
-            Game.WOW -> entitiesOlderThan(wowEntities, threshold, maxEntities)
-            Game.WOW_HC -> entitiesOlderThan(wowHardcoreEntities, threshold, maxEntities)
-            Game.LOL -> entitiesOlderThan(lolEntities, threshold, maxEntities)
-        }
-    }
-
-    private suspend fun <T : Entity> entitiesOlderThan(
-        entities: List<T>,
-        threshold: OffsetDateTime,
-        maxEntities: Int
-    ): List<T> =
-        entities
-            .map { entity -> entity to dataCacheRepository.get(entity.id).maxByOrNull { it.inserted }?.inserted }
-            .filter { (_, newestInserted) -> newestInserted == null || newestInserted.isBefore(threshold) }
-            .sortedWith(compareBy(nullsFirst()) { (_, newestInserted) -> newestInserted })
-            .take(maxEntities)
-            .map { (entity, _) -> entity }
-
+    override suspend fun getEntitiesOlderThan(game: Game, olderThanMinutes: Long, maxEntities: Int): List<Entity> =
+        repositoryFor(game).getOlderThan(olderThanMinutes, maxEntities)
 
     override suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> {
         return viewsRepository.getViews(GetViewsQuery(game, false, null, null, includeMetadata = false))
@@ -256,38 +63,39 @@ class EntitiesInMemoryRepository(
     }
 
     override suspend fun delete(id: Long) {
-        val wowIndex = wowEntities.indexOfFirst { it.id == id }
-        if (wowIndex != -1) {
-            wowEntities.removeAt(wowIndex)
-        }
-
-        val lolIndex = lolEntities.indexOfFirst { it.id == id }
-        if (lolIndex != -1) {
-            lolEntities.removeAt(lolIndex)
-        }
-
-        val wowHardcoreIndex = wowHardcoreEntities.indexOfFirst { it.id == id }
-        if (wowHardcoreIndex != -1) {
-            wowHardcoreEntities.removeAt(wowHardcoreIndex)
-        }
+        wowRepository.deleteIfPresent(id)
+        lolRepository.deleteIfPresent(id)
+        wowHardcoreRepository.deleteIfPresent(id)
     }
 
-
     override suspend fun state(): EntitiesState {
-        return EntitiesState(wowEntities, wowHardcoreEntities, lolEntities)
+        return EntitiesState(wowRepository.state(), wowHardcoreRepository.state(), lolRepository.state())
     }
 
     override suspend fun withState(initialState: EntitiesState): EntitiesInMemoryRepository {
-        wowEntities.addAll(initialState.wowEntities.map { it.copy(name = it.name.lowercase()) })
-        wowHardcoreEntities.addAll(initialState.wowHardcoreEntities.map { it.copy(name = it.name.lowercase()) })
-        lolEntities.addAll(initialState.lolEntities)
+        wowRepository.withState(initialState.wowEntities)
+        wowHardcoreRepository.withState(initialState.wowHardcoreEntities)
+        lolRepository.withState(initialState.lolEntities)
         return this
     }
 
     override fun clear() {
-        wowEntities.clear()
-        wowHardcoreEntities.clear()
-        lolEntities.clear()
+        wowRepository.clear()
+        wowHardcoreRepository.clear()
+        lolRepository.clear()
         dataCacheRepository.clear()
     }
 }
+
+internal suspend fun <T : Entity> entitiesOlderThan(
+    entities: List<T>,
+    dataCacheRepository: DataCacheInMemoryRepository,
+    threshold: OffsetDateTime,
+    maxEntities: Int
+): List<T> =
+    entities
+        .map { entity -> entity to dataCacheRepository.get(entity.id).maxByOrNull { it.inserted }?.inserted }
+        .filter { (_, newestInserted) -> newestInserted == null || newestInserted.isBefore(threshold) }
+        .sortedWith(compareBy(nullsFirst()) { (_, newestInserted) -> newestInserted })
+        .take(maxEntities)
+        .map { (entity, _) -> entity }
