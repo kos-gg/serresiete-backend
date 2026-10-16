@@ -4,6 +4,8 @@ import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.toGuildRoster
+import com.kos.clients.blizzard.toWowRealm
 import com.kos.clients.domain.GetPUUIDResponse
 import com.kos.clients.domain.GetSummonerResponse
 import com.kos.clients.domain.GetWowRosterResponse
@@ -92,8 +94,8 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getClassicProfile(request2.region, request2.realm, request2.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request2)
             )
-            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
-            `when`(blizzardClient.getRealm(request2.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
+            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
+            `when`(blizzardClient.getRealm(request2.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -120,7 +122,7 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getClassicProfile(request1.region, request1.realm, request1.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request1)
             )
-            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm))
+            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm.toWowRealm()))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -185,7 +187,7 @@ class EntitiesServiceTest {
                 .thenReturn(
                     BlizzardMockHelper.getCharacterProfile(request)
                         .map { it.copy(id = basicWowHardcoreEntity.blizzardId ?: 12345) })
-            `when`(blizzardClient.getRealm(request.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
+            `when`(blizzardClient.getRealm(request.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             val initialState = EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf())
 
@@ -563,7 +565,7 @@ class EntitiesServiceTest {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster("eu", "twisting-nether", "Method")).thenReturn(
                 Either.Right(
-                    GetWowRosterResponse(listOf(), WowGuildResponse(999))
+                    GetWowRosterResponse(listOf(), WowGuildResponse(999)).toGuildRoster()
                 )
             )
 

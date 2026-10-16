@@ -4,8 +4,9 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetWowCharacterResponse
+import com.kos.clients.blizzard.toWowCharacter
 import com.kos.datacache.domain.HardcoreData
+import com.kos.datacache.domain.WowCharacter
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
@@ -190,7 +191,7 @@ class WowHardcoreEntitySynchronizerTest {
                     basicWowHardcoreEntity.realm,
                     basicWowHardcoreEntity.name
                 )
-            ).thenReturn(Either.Right(getWowCharacterResponse))
+            ).thenReturn(Either.Right(getWowCharacterResponse.toWowCharacter()))
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(
                 listOf(
@@ -222,7 +223,7 @@ class WowHardcoreEntitySynchronizerTest {
     @Test
     fun `the wow hardcore cache service inserts a new cache entry when there is no recent data and character is found in blizzard api`() {
         runBlocking {
-            stubSuccessfulBlizzardSync(basicWowHardcoreEntity, Either.Right(getWowCharacterResponse.copy(id = 12345)))
+            stubSuccessfulBlizzardSync(basicWowHardcoreEntity, Either.Right(getWowCharacterResponse.copy(id = 12345).toWowCharacter()))
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(
                 listOf()
@@ -251,7 +252,7 @@ class WowHardcoreEntitySynchronizerTest {
 
     private suspend fun stubSuccessfulBlizzardSync(
         entity: WowEntity,
-        characterProfile: Either<ClientError, GetWowCharacterResponse> = getCharacterProfile(entity)
+        characterProfile: Either<ClientError, WowCharacter> = getCharacterProfile(entity)
     ) {
         `when`(blizzardClient.getClassicProfile(entity.region, entity.realm, entity.name))
             .thenReturn(characterProfile)

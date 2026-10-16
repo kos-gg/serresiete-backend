@@ -49,8 +49,7 @@ class WowItemsDatabaseRepositoryTest {
             .fold(
                 { fail("Expected media but got error") },
                 {
-                    assertEquals("icon", it.assets[0].key)
-                    assertEquals("1.jpg", it.assets[0].value)
+                    assertEquals("1.jpg", it)
                 }
             )
     }

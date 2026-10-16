@@ -2,6 +2,7 @@ package com.kos.tasks.runners
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.toGuildRoster
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
@@ -71,7 +72,7 @@ class UpdateWowGuildsTaskRunnerTest {
                     GetWowRosterResponse(
                         listOf(WowMemberResponse(WowCharacterResponse(character, 90))),
                         WowGuildResponse(blizzardId)
-                    )
+                    ).toGuildRoster()
                 )
             )
         `when`(raiderIoClient.getScore(WowEntityRequest(character, region, realm)))

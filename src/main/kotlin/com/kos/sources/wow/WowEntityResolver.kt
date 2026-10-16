@@ -6,7 +6,6 @@ import arrow.core.raise.ensure
 import arrow.fx.coroutines.parMap
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
@@ -90,13 +89,13 @@ class WowEntityResolver(
             ifRight = { roster -> Either.Right(getGuildPayload(roster, guildReq)) }
         )
 
-    private fun getGuildPayload(guildRosterResponse: GetWowRosterResponse, entityRequest: EntityRequest): GuildPayload {
+    private fun getGuildPayload(guildRoster: GuildRoster, entityRequest: EntityRequest): GuildPayload {
         val guildReq = entityRequest as WowEntityRequest
         return GuildPayload(
             guildReq.name.lowercase(),
             guildReq.realm.lowercase(),
             guildReq.region.lowercase(),
-            guildRosterResponse.guild.id
+            guildRoster.guildId
         )
     }
 
@@ -104,20 +103,20 @@ class WowEntityResolver(
         region: String,
         realm: String,
         name: String
-    ): Either<ServiceError, Pair<GetWowRosterResponse, List<WowEntityRequest>>> = either {
+    ): Either<ServiceError, Pair<GuildRoster, List<WowEntityRequest>>> = either {
         val roster = blizzardClient.getRetailGuildRoster(region, realm, name)
             .mapLeft { it.toSyncProcessingError("GetRetailGuildRoster") }
             .bind()
 
         val members = roster.members
             .asSequence()
-            .filter { it.character.level >= MAX_CHARACTER_LEVEL }
+            .filter { it.level >= MAX_CHARACTER_LEVEL }
             .map {
                 WowEntityRequest(
-                    it.character.name,
+                    it.name,
                     region,
-                    it.character.realm?.slug ?: realm,
-                    it.character.id
+                    it.realmSlug ?: realm,
+                    it.id
                 )
             }
             .toList()

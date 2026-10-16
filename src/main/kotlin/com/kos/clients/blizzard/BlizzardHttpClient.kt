@@ -12,6 +12,13 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.datacache.domain.WowCharacter
+import com.kos.datacache.domain.WowEquippedItemRef
+import com.kos.datacache.domain.WowItemDetails
+import com.kos.datacache.domain.WowSpecialization
+import com.kos.datacache.domain.WowStats
+import com.kos.entities.domain.GuildRoster
+import com.kos.entities.domain.WowRealm
 import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
@@ -48,7 +55,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, GetWowCharacterResponse> {
+    ): Either<ClientError, WowCharacter> {
         return throttleRequest {
             either {
                 logger.debug("getClassicProfile for $region $realm $character")
@@ -69,7 +76,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toWowCharacter()
             }
         }
     }
@@ -78,7 +85,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, GetWowCharacterResponse> {
+    ): Either<ClientError, WowCharacter> {
         return throttleRequest {
             either {
                 logger.debug("getRetailProfile for $region $realm $character")
@@ -99,7 +106,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toWowCharacter()
             }
         }
     }
@@ -108,7 +115,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, GetWowMediaResponse> {
+    ): Either<ClientError, String?> {
         return throttleRequest {
             either {
                 logger.debug("getCharacterMedia for $region $realm $character")
@@ -129,7 +136,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().asset("avatar")
             }
         }
     }
@@ -138,7 +145,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, GetWowEquipmentResponse> {
+    ): Either<ClientError, List<WowEquippedItemRef>> {
         return throttleRequest {
             either {
                 logger.debug("getCharacterEquipment for $region $realm $character")
@@ -158,7 +165,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toEquippedItemRefs()
             }
         }
     }
@@ -167,7 +174,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, GetWowSpecializationsResponse> {
+    ): Either<ClientError, List<WowSpecialization>> {
         return throttleRequest {
             either {
                 logger.debug("getCharacterSpecialitzation for $region $realm $character")
@@ -188,7 +195,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toActiveSpecializations()
             }
         }
     }
@@ -197,7 +204,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, GetWowCharacterStatsResponse> {
+    ): Either<ClientError, WowStats> {
         return throttleRequest {
             either {
                 logger.debug("getCharacterStats for $region $realm $character")
@@ -218,7 +225,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toWowStats()
             }
         }
     }
@@ -226,7 +233,7 @@ class BlizzardHttpClient(
     override suspend fun getItemMedia(
         region: String,
         id: Long
-    ): Either<ClientError, GetWowMediaResponse> {
+    ): Either<ClientError, String?> {
         return throttleRequest {
             either {
                 logger.debug("getItemMedia for $id")
@@ -246,12 +253,12 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().asset("icon")
             }
         }
     }
 
-    override suspend fun getItem(region: String, id: Long): Either<ClientError, GetWowItemResponse> {
+    override suspend fun getItem(region: String, id: Long): Either<ClientError, WowItemDetails> {
         return throttleRequest {
             either {
                 logger.debug("getItem for $id")
@@ -271,7 +278,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toWowItemDetails()
             }
         }
     }
@@ -279,7 +286,7 @@ class BlizzardHttpClient(
     override suspend fun getRealm(
         region: String,
         id: Long
-    ): Either<ClientError, GetWowRealmResponse> {
+    ): Either<ClientError, WowRealm> {
         return throttleRequest {
             either {
                 val tokenResponse = getAndUpdateToken().bind()
@@ -298,7 +305,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toWowRealm()
             }
         }
     }
@@ -307,7 +314,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         guild: String
-    ): Either<ClientError, GetWowRosterResponse> {
+    ): Either<ClientError, GuildRoster> {
         return throttleRequest {
             either {
                 val tokenResponse = getAndUpdateToken().bind()
@@ -327,7 +334,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toGuildRoster()
             }
         }
     }
@@ -336,7 +343,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         guild: String
-    ): Either<ClientError, GetWowRosterResponse> {
+    ): Either<ClientError, GuildRoster> {
         return throttleRequest {
             either {
                 val tokenResponse = getAndUpdateToken().bind()
@@ -356,7 +363,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toGuildRoster()
             }
         }
     }

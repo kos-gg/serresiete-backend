@@ -2,6 +2,7 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.toWowRealm
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
@@ -24,7 +25,7 @@ class WowHardcoreEntityResolverTest {
             `when`(
                 blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
-            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
+            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
@@ -44,7 +45,7 @@ class WowHardcoreEntityResolverTest {
             `when`(
                 blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
-            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(notHardcoreRealm))
+            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(notHardcoreRealm.toWowRealm()))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)

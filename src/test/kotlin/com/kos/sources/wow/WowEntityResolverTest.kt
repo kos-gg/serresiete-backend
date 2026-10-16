@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.toGuildRoster
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
@@ -217,7 +218,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, 555))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
             `when`(raiderIoClient.getScore(member.copy(blizzardId = 555))).thenReturn(Either.Right(1500.0))
@@ -261,7 +262,7 @@ class WowEntityResolverTest {
                                 )
                             ),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
             `when`(raiderIoClient.getScore(member.copy(blizzardId = 105161061))).thenReturn(Either.Right(1500.0))
@@ -292,7 +293,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, 555))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
             `when`(raiderIoClient.getScore(member.copy(blizzardId = 555))).thenReturn(Either.Right(1500.0))
@@ -317,7 +318,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse("lowlevel", 79, 111))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
 
@@ -346,7 +347,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, 222))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
             `when`(raiderIoClient.getScore(member.copy(blizzardId = 222))).thenReturn(Either.Right(0.0))
@@ -374,7 +375,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, 777))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
             `when`(raiderIoClient.getScore(member.copy(blizzardId = 777))).thenReturn(Either.Right(1000.0))
@@ -406,7 +407,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, 333))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
             `when`(raiderIoClient.getScore(member.copy(blizzardId = 333))).thenReturn(Either.Left(timeoutError))
@@ -435,7 +436,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, 444))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
 
@@ -465,7 +466,7 @@ class WowEntityResolverTest {
                         GetWowRosterResponse(
                             listOf(WowMemberResponse(WowCharacterResponse("kakarona", 90, 555))),
                             WowGuildResponse(999)
-                        )
+                        ).toGuildRoster()
                     )
                 )
 

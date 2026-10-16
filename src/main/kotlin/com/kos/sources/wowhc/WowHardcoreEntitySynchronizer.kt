@@ -6,10 +6,12 @@ import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.*
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.HardcoreData
+import com.kos.datacache.domain.WowCharacter
+import com.kos.datacache.domain.WowEquippedItemRef
 import com.kos.datacache.domain.WowItem
+import com.kos.datacache.domain.WowTalents
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
@@ -150,11 +152,11 @@ class WowHardcoreEntitySynchronizer(
                             Either.Left(error.toSyncProcessingError("getClassicProfile"))
                     }.bind()
                 },
-                ifRight = { response ->
-                    if (deadCharacterHasBeenCreatedAgain(newestDataCacheEntry, entity, response)) {
+                ifRight = { character ->
+                    if (deadCharacterHasBeenCreatedAgain(newestDataCacheEntry, entity, character)) {
                         markWowHardcoreCharacterAsDead(newestDataCacheEntry!!)
                     } else {
-                        val mediaResponse = execute("getCharacterMedia") {
+                        val avatar = execute("getCharacterMedia") {
                             blizzardClient.getCharacterMedia(
                                 entity.region,
                                 entity.realm,
@@ -162,7 +164,7 @@ class WowHardcoreEntitySynchronizer(
                             )
                         }.bind()
 
-                        val equipmentResponse = execute("getCharacterEquipment") {
+                        val equippedItems = execute("getCharacterEquipment") {
                             blizzardClient.getCharacterEquipment(
                                 entity.region,
                                 entity.realm,
@@ -191,7 +193,7 @@ class WowHardcoreEntitySynchronizer(
                         }.getOrNull()
 
                         val existentItemsAndItemsToRequest =
-                            getExistentItemsAndItemsToRequest(newestDataCacheEntry, equipmentResponse)
+                            getExistentItemsAndItemsToRequest(newestDataCacheEntry, equippedItems)
 
                         //TODO: BRING BACK RETRY WHEN IT PERFORMS BETTER.
                         val newItemsWithIcons =
@@ -199,13 +201,11 @@ class WowHardcoreEntitySynchronizer(
 
                         HardcoreData.apply(
                             entity.region,
-                            response,
-                            mediaResponse,
-                            existentItemsAndItemsToRequest.first,
-                            newItemsWithIcons,
+                            character,
+                            avatar,
+                            existentItemsAndItemsToRequest.first + newItemsWithIcons,
                             stats,
-                            specializations,
-                            wowHeadEmbeddedTalents
+                            WowTalents(wowHeadEmbeddedTalents, specializations)
                         )
                     }
                 })
@@ -216,47 +216,47 @@ class WowHardcoreEntitySynchronizer(
     private fun deadCharacterHasBeenCreatedAgain(
         newestDataCacheEntry: HardcoreData?,
         entity: WowEntity,
-        response: GetWowCharacterResponse
-    ): Boolean = newestDataCacheEntry != null && entity.blizzardId != response.id
+        character: WowCharacter
+    ): Boolean = newestDataCacheEntry != null && entity.blizzardId != character.id
 
     private suspend fun getNewItemsWithIcons(
-        existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemResponse>>,
+        existentItemsAndItemsToRequest: Pair<List<WowItem>, List<WowEquippedItemRef>>,
         wowEntity: WowEntity
-    ): List<Either<ServiceError, Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>>> =
+    ): List<Either<ServiceError, WowItem>> =
         existentItemsAndItemsToRequest.second.map { equippedItem ->
             either {
-                val item = blizzardClient.getItem(wowEntity.region, equippedItem.item.id).fold(
+                val item = blizzardClient.getItem(wowEntity.region, equippedItem.itemId).fold(
                     ifLeft = {
                         execute("getItem") {
-                            wowItemsDatabaseRepository.getItem(equippedItem.item.id)
+                            wowItemsDatabaseRepository.getItem(equippedItem.itemId)
                         }
                     },
                     ifRight = { Either.Right(it) }
                 ).bind()
 
-                val itemMedia = blizzardClient.getItemMedia(
+                val icon = blizzardClient.getItemMedia(
                     wowEntity.region,
-                    equippedItem.item.id,
+                    equippedItem.itemId,
                 ).fold(ifLeft = {
                     execute("getItemMedia") {
-                        wowItemsDatabaseRepository.getItemMedia(equippedItem.item.id)
+                        wowItemsDatabaseRepository.getItemMedia(equippedItem.itemId)
                     }
                 }, ifRight = { Either.Right(it) }).getOrNull()
 
-                Triple(equippedItem, item, itemMedia)
+                item.toWowItem(equippedItem, icon)
             }
         }
 
     private fun getExistentItemsAndItemsToRequest(
         newestDataCacheEntry: HardcoreData?,
-        equipmentResponse: GetWowEquipmentResponse
+        equippedItems: List<WowEquippedItemRef>
     ) = newestDataCacheEntry._fold(
-        left = { equipmentResponse.equippedItems.map { Either.Right(it) } },
+        left = { equippedItems.map { Either.Right(it) } },
         right = { record ->
-            equipmentResponse.equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemResponse>>()) { acc, itemResponse ->
+            equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemRef>>()) { acc, equippedItem ->
                 when (val maybeItem =
-                    record.items.find { itemResponse.item.id == it.id }) {
-                    null -> acc + Either.Right(itemResponse)
+                    record.items.find { equippedItem.itemId == it.id }) {
+                    null -> acc + Either.Right(equippedItem)
                     else -> acc + Either.Left(maybeItem)
                 }
 
