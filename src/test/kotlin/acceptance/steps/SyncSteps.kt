@@ -4,7 +4,7 @@ import acceptance.MockConfig
 import acceptance.SharedInfrastructure
 import acceptance.toGame
 import acceptance.wowEntityRequest
-import com.kos.clients.domain.HardcoreData
+import com.kos.datacache.domain.HardcoreData
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest

@@ -3,7 +3,7 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import com.kos.clients.domain.Data
+import com.kos.datacache.domain.Data
 import com.kos.common.WithLogger
 import com.kos.common.error.*
 import com.kos.credentials.CredentialsService

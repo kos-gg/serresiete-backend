@@ -1,4 +1,4 @@
-package com.kos.clients.domain
+package com.kos.datacache.domain
 
 import kotlinx.serialization.Serializable
 

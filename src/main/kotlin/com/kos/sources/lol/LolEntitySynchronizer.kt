@@ -4,6 +4,9 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.domain.*
+import com.kos.datacache.domain.Data
+import com.kos.datacache.domain.LeagueMatchData
+import com.kos.datacache.domain.RiotData
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache

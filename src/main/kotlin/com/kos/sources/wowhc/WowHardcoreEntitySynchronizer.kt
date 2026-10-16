@@ -7,6 +7,9 @@ import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.*
+import com.kos.datacache.domain.Data
+import com.kos.datacache.domain.HardcoreData
+import com.kos.datacache.domain.WowItem
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger

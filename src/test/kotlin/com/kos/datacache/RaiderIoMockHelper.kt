@@ -3,6 +3,8 @@ package com.kos.datacache
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.domain.*
+import com.kos.datacache.domain.MythicPlusRanksWithSpecs
+import com.kos.datacache.domain.RaiderIoData
 import com.kos.entities.domain.WowEntity
 
 object RaiderIoMockHelper {

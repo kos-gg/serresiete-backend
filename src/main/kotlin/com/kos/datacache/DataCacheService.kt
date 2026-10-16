@@ -2,10 +2,10 @@ package com.kos.datacache
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.domain.Data
-import com.kos.clients.domain.HardcoreData
-import com.kos.clients.domain.RaiderIoData
-import com.kos.clients.domain.RiotData
+import com.kos.datacache.domain.Data
+import com.kos.datacache.domain.HardcoreData
+import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.RiotData
 import com.kos.common.WithLogger
 import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError

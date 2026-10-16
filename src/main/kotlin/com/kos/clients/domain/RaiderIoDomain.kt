@@ -17,6 +17,9 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import java.time.OffsetDateTime
+import com.kos.datacache.domain.EnrichedMythicPlusRun
+import com.kos.datacache.domain.MythicPlusRanksWithSpecs
+import com.kos.datacache.domain.RaiderIoData
 
 @Serializable
 data class RaiderIoCutoff(val totalPopulation: Int)
@@ -45,7 +48,6 @@ object RaiderIoProtocol {
 
         return RaiderIoCutoff(totalPopulation)
     }
-
 
     fun getMythicPlusRanks(
         profile: RaiderIoProfile,
@@ -202,14 +204,6 @@ object MythicPlusRanksSerializer : KSerializer<MythicPlusRanks> {
     }
 }
 
-
-@Serializable
-data class MythicPlusRanksWithSpecs(
-    val overall: MythicPlusRank,
-    val `class`: MythicPlusRank,
-    val specs: List<MythicPlusRankWithSpecName>
-)
-
 @Serializable
 data class Affix(
     @SerialName("name")
@@ -354,7 +348,6 @@ data class RunDetails(
 ) {
 }
 
-
 object CodeExtractorSerializer : KSerializer<String> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CodeExtractor", PrimitiveKind.STRING)
 
@@ -375,30 +368,7 @@ data class TalentLoadout(
     val wowheadCalculator: String
 )
 
-
 @Serializable
 data class RaiderioWowHeadEmbeddedResponse(
     val talentLoadout: TalentLoadout
 )
-
-@Serializable
-data class EnrichedMythicPlusRun(
-    val run: MythicPlusRun,
-    val details: RunDetails? = null
-)
-
-@Serializable
-data class RaiderIoData(
-    val id: Long,
-    val name: String,
-    val realm: String,
-    val region: String,
-    val score: Double,
-    val `class`: String,
-    val spec: String,
-    val quantile: Double?,
-    val mythicPlusRanks: MythicPlusRanksWithSpecs,
-    val mythicPlusBestRuns: List<EnrichedMythicPlusRun>,
-    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
-) : Data
-

@@ -5,6 +5,9 @@ import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.domain.*
+import com.kos.datacache.domain.Data
+import com.kos.datacache.domain.EnrichedMythicPlusRun
+import com.kos.datacache.domain.RaiderIoData
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache

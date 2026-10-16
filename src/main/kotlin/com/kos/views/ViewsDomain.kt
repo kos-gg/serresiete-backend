@@ -1,7 +1,7 @@
 package com.kos.views
 
 import arrow.core.Either
-import com.kos.clients.domain.Data
+import com.kos.datacache.domain.Data
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.error.InvalidGameType
 import com.kos.entities.domain.EntityRequest

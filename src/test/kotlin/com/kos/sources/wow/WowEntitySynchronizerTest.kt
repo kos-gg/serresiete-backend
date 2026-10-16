@@ -3,6 +3,8 @@ package com.kos.sources.wow
 import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.domain.*
+import com.kos.datacache.domain.EnrichedMythicPlusRun
+import com.kos.datacache.domain.RaiderIoData
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.datacache.RaiderIoMockHelper

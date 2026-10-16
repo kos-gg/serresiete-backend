@@ -16,8 +16,16 @@ class ThirdPartyDecouplingTest {
     private val compositionRoot = "com.kos.ApplicationKt"
 
     private val pendingToDecouple: Set<String> = setOf(
-        "com.kos.datacache.DataCacheService",
-        "com.kos.entities.domain.EntityDataResponse",
+        "com.kos.datacache.domain.EnrichedMythicPlusRun",
+        "com.kos.datacache.domain.HardcoreData",
+        "com.kos.datacache.domain.LeagueMatchData",
+        "com.kos.datacache.domain.MythicPlusRanksWithSpecs",
+        "com.kos.datacache.domain.RaiderIoData",
+        "com.kos.datacache.domain.RiotData",
+        "com.kos.datacache.domain.WowPrice",
+        "com.kos.datacache.domain.WowSpecialization",
+        "com.kos.datacache.domain.WowStats",
+        "com.kos.datacache.domain.WowWeaponDisplayableStats",
         "com.kos.scripts.BlizzardStaticItemsConverterKt",
         "com.kos.scripts.StaticWowItem",
         "com.kos.sources.SourcesController",
@@ -34,9 +42,7 @@ class ThirdPartyDecouplingTest {
         "com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository",
         "com.kos.sources.wowhc.staticdata.wowitems.WowItemsRepository",
         "com.kos.sources.wowhc.staticdata.wowitems.scripts.BlizzardStaticItemsConverterKt",
-        "com.kos.sources.wowhc.staticdata.wowitems.scripts.StaticWowItem",
-        "com.kos.views.ViewData",
-        "com.kos.views.ViewsService"
+        "com.kos.sources.wowhc.staticdata.wowitems.scripts.StaticWowItem"
     )
 
     private val allowedToKnowThirdPartyModels = DescribedPredicate.describe<JavaClass>(

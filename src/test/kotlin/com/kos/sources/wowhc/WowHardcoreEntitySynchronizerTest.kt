@@ -5,7 +5,7 @@ import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowCharacterResponse
-import com.kos.clients.domain.HardcoreData
+import com.kos.datacache.domain.HardcoreData
 import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient

@@ -1,7 +1,7 @@
 package com.kos.datacache
 
-import com.kos.clients.domain.RaiderIoData
-import com.kos.clients.domain.RiotData
+import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.RiotData
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
