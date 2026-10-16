@@ -145,4 +145,5 @@ dependencies {
     testImplementation("io.ktor:ktor-client-mock:$ktor_version")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
     testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("com.tngtech.archunit:archunit:1.3.0")
 }
