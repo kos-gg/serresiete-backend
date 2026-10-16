@@ -6,8 +6,7 @@ import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
 import com.kos.clients.blizzard.toWowRealm
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
+import com.kos.entities.domain.LolSummoner
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.raiderio.RaiderIoClient
@@ -15,9 +14,9 @@ import com.kos.clients.riot.RiotClient
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
-import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
-import com.kos.entities.EntitiesTestHelper.basicGetPuuidResponse
-import com.kos.entities.EntitiesTestHelper.basicGetSummonerResponse
+import com.kos.entities.EntitiesTestHelper.basicRiotAccount
+import com.kos.entities.EntitiesTestHelper.basicPuuid
+import com.kos.entities.EntitiesTestHelper.basicLolSummoner
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
@@ -212,17 +211,12 @@ class EntitiesServiceTest {
             `when`(riotClient.getPUUIDByRiotId(anyString(), anyString())).thenAnswer { invocation ->
                 val name = invocation.getArgument<String>(0)
                 val tag = invocation.getArgument<String>(1)
-                Either.Right(GetPUUIDResponse(UUID.randomUUID().toString(), name, tag))
+                Either.Right(UUID.randomUUID().toString())
             }
             `when`(riotClient.getSummonerByPuuid(anyString())).thenAnswer { invocation ->
                 val puuid = invocation.getArgument<String>(0)
                 Either.Right(
-                    GetSummonerResponse(
-                        puuid,
-                        10,
-                        10L,
-                        200
-                    )
+                    LolSummoner(puuid, 10, 200)
                 )
             }
 
@@ -354,8 +348,8 @@ class EntitiesServiceTest {
             val state = EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
             val request = LolEntityRequest("R7 Disney Girl", "EUW")
 
-            `when`(riotClient.getPUUIDByRiotId("R7 Disney Girl", "EUW")).thenReturn(Either.Right(basicGetPuuidResponse))
-            `when`(riotClient.getSummonerByPuuid("1")).thenReturn(Either.Right(basicGetSummonerResponse))
+            `when`(riotClient.getPUUIDByRiotId("R7 Disney Girl", "EUW")).thenReturn(Either.Right(basicPuuid))
+            `when`(riotClient.getSummonerByPuuid("1")).thenReturn(Either.Right(basicLolSummoner))
 
             val entitiesService = createService(state)
             val expected = ResolvedEntities(
@@ -429,12 +423,12 @@ class EntitiesServiceTest {
             val entitiesService = createService(initialState)
             `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid)).thenReturn(
                 Either.Right(
-                    basicGetSummonerResponse
+                    basicLolSummoner
                 )
             )
             `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid)).thenReturn(
                 Either.Right(
-                    basicGetAccountResponse
+                    basicRiotAccount
                 )
             )
 
@@ -460,18 +454,13 @@ class EntitiesServiceTest {
 
             `when`(riotClient.getPUUIDByRiotId(basicLolEntity2.name, basicLolEntity2.tag)).thenReturn(
                 Either.Right(
-                    GetPUUIDResponse(basicLolEntity2.puuid, basicLolEntity2.name, basicLolEntity2.tag)
+                    basicLolEntity2.puuid
                 )
             )
 
             `when`(riotClient.getSummonerByPuuid(basicLolEntity2.puuid)).thenReturn(
                 Either.Right(
-                    GetSummonerResponse(
-                        basicLolEntity2.puuid,
-                        basicLolEntity2.summonerIcon,
-                        1L,
-                        basicLolEntity2.summonerLevel
-                    )
+                    LolSummoner(basicLolEntity2.puuid, basicLolEntity2.summonerIcon, basicLolEntity2.summonerLevel)
                 )
             )
 

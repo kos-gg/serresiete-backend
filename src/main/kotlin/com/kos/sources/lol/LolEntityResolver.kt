@@ -44,7 +44,7 @@ class LolEntityResolver(
                         .onLeft { logger.error(it.toString()) }
                         .bind()
 
-                    val summoner = riotClient.getSummonerByPuuid(puuid.puuid)
+                    val summoner = riotClient.getSummonerByPuuid(puuid)
                         .onLeft { logger.error(it.toString()) }
                         .bind()
 

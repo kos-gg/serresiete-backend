@@ -2,8 +2,7 @@ package com.kos.sources.lol
 
 import arrow.core.Either
 import com.kos.clients.HttpError
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
+import com.kos.entities.domain.LolSummoner
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.lolEntityRequest
@@ -23,9 +22,9 @@ class LolEntityResolverTest {
     fun `resolves a new character found in riot`() {
         runBlocking {
             `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
-                .thenReturn(Either.Right(GetPUUIDResponse("1", lolEntityRequest.name, lolEntityRequest.tag)))
+                .thenReturn(Either.Right("1"))
             `when`(riotClient.getSummonerByPuuid("1"))
-                .thenReturn(Either.Right(GetSummonerResponse("1", 5, 10L, 100)))
+                .thenReturn(Either.Right(LolSummoner("1", 5, 100)))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = LolEntityResolver(repo, riotClient)

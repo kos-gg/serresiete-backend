@@ -46,9 +46,9 @@ class UpdateLolEntitiesTaskRunnerTest {
     @Test
     fun `lol entities are updated and task is recorded as successful`() = runBlocking {
         `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid))
-            .thenReturn(arrow.core.Either.Right(EntitiesTestHelper.basicGetSummonerResponse))
+            .thenReturn(arrow.core.Either.Right(EntitiesTestHelper.basicLolSummoner))
         `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid))
-            .thenReturn(arrow.core.Either.Right(EntitiesTestHelper.basicGetAccountResponse))
+            .thenReturn(arrow.core.Either.Right(EntitiesTestHelper.basicRiotAccount))
 
         val id = UUID.randomUUID().toString()
         tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))

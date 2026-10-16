@@ -16,13 +16,8 @@ class ThirdPartyDecouplingTest {
     private val compositionRoot = "com.kos.ApplicationKt"
 
     private val pendingToDecouple: Set<String> = setOf(
-        "com.kos.datacache.domain.LeagueMatchData",
-        "com.kos.datacache.domain.RiotData",
         "com.kos.scripts.BlizzardStaticItemsConverterKt",
         "com.kos.scripts.StaticWowItem",
-        "com.kos.sources.lol.LolEntityResolver",
-        "com.kos.sources.lol.LolEntitySynchronizer",
-        "com.kos.sources.lol.LolEntityUpdater",
         "com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository",
         "com.kos.sources.wowhc.staticdata.wowitems.scripts.BlizzardStaticItemsConverterKt",
         "com.kos.sources.wowhc.staticdata.wowitems.scripts.StaticWowItem"

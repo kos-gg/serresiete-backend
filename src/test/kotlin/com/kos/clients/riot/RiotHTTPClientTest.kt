@@ -2,7 +2,7 @@ package com.kos.clients.riot
 
 import com.kos.assertTrue
 import com.kos.clients.RetryConfig
-import com.kos.clients.domain.QueueType
+import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotHTTPClientHelper.client
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -33,7 +33,7 @@ class RiotHTTPClientTest {
         runBlocking {
             val res = riotHTTPClient.getMatchesByPuuid(
                 "vJre0esG5sIx3rvCAe-YVsDfqCIMV5b2P-61wrYZ4w-hs9u_Ek8dVlo-KLo-GNA4NumLV1YTNxeCmA",
-                QueueType.SOLO_Q.toInt()
+                QueueType.SOLO_Q
             )
             assertTrue(res.isRight())
 

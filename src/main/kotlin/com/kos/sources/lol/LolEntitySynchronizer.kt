@@ -3,9 +3,10 @@ package com.kos.sources.lol
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
 import com.kos.datacache.domain.Data
+import com.kos.datacache.domain.LeagueEntry
 import com.kos.datacache.domain.LeagueMatchData
+import com.kos.datacache.domain.LolMatch
 import com.kos.datacache.domain.RiotData
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
@@ -59,7 +60,7 @@ class LolEntitySynchronizer(
             val dataChannel = Channel<DataCache>()
             val errorsChannel = Channel<ServiceError>()
             val errorsList = mutableListOf<ServiceError>()
-            val matchCache = DynamicCache<Either<ServiceError, GetMatchResponse>>()
+            val matchCache = DynamicCache<Either<ServiceError, LolMatch>>()
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -115,7 +116,7 @@ class LolEntitySynchronizer(
 
     private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
-        matchCache: DynamicCache<Either<ServiceError, GetMatchResponse>>
+        matchCache: DynamicCache<Either<ServiceError, LolMatch>>
     ): Either<ServiceError, Pair<Long, RiotData>> =
         either {
 
@@ -132,7 +133,7 @@ class LolEntitySynchronizer(
                     }
                 }
 
-            val leagues: List<LeagueEntryResponse> =
+            val leagues: List<LeagueEntry> =
                 execute("getLeagueEntriesByPUUID") {
                     riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
                 }.bind()
@@ -143,7 +144,7 @@ class LolEntitySynchronizer(
                         async {
                             val lastMatchesForLeague: List<String> =
                                 execute("getMatchesByPuuid") {
-                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
+                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType)
                                 }.bind()
 
                             val matchesToRequest = newestDataCacheEntry._fold(
@@ -157,7 +158,7 @@ class LolEntitySynchronizer(
                                 }
                             )
 
-                            val matchResponses: List<GetMatchResponse> = matchesToRequest.map { matchId ->
+                            val matches: List<LolMatch> = matchesToRequest.map { matchId ->
                                 matchCache.get(matchId) {
                                     execute("getMatchById") {
                                         riotClient.getMatchById(matchId)
@@ -167,7 +168,7 @@ class LolEntitySynchronizer(
 
                             LeagueMatchData(
                                 leagueEntry,
-                                matchResponses,
+                                matches,
                                 newestDataCacheEntry?.leagues?.get(leagueEntry.queueType)?.matches.orEmpty()
                                     .filter { lastMatchesForLeague.contains(it.id) }
                             )

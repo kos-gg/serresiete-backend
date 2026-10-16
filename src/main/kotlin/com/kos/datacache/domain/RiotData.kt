@@ -1,15 +1,79 @@
 package com.kos.datacache.domain
 
-import com.kos.clients.domain.GetMatchResponse
-import com.kos.clients.domain.LeagueEntryResponse
-import com.kos.clients.domain.QueueType
 import com.kos.entities.domain.LolEntity
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+@Serializable(with = QueueTypeSerializer::class)
+enum class QueueType {
+    SOLO_Q {
+        override fun toString(): String = "RANKED_SOLO_5x5"
+    },
+    FLEX_Q {
+        override fun toString(): String = "RANKED_FLEX_SR"
+    }
+}
+
+object QueueTypeSerializer : KSerializer<QueueType> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("QueueType", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: QueueType) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): QueueType {
+        return when (val queueType = decoder.decodeString()) {
+            "RANKED_SOLO_5x5" -> QueueType.SOLO_Q
+            "RANKED_FLEX_SR" -> QueueType.FLEX_Q
+            else -> throw IllegalArgumentException("Unknown queue type: $queueType")
+        }
+    }
+}
+
+data class LeagueEntry(
+    val queueType: QueueType,
+    val tier: String,
+    val rank: String,
+    val leaguePoints: Int,
+    val wins: Int,
+    val losses: Int
+)
+
+data class LolMatchParticipant(
+    val puuid: String,
+    val championId: Int,
+    val championName: String,
+    val role: String,
+    val individualPosition: String,
+    val teamPosition: String,
+    val lane: String,
+    val kills: Int,
+    val deaths: Int,
+    val assists: Int,
+    val assistMePings: Int,
+    val visionWardsBoughtInGame: Int,
+    val enemyMissingPings: Int,
+    val wardsPlaced: Int,
+    val totalTimeSpentDead: Int,
+    val win: Boolean
+)
+
+data class LolMatch(
+    val id: String,
+    val finishedCorrectly: Boolean,
+    val duration: Int,
+    val participants: List<LolMatchParticipant>
+)
 
 data class LeagueMatchData(
-    val leagueEntry: LeagueEntryResponse,
-    val matchResponses: List<GetMatchResponse>,
+    val leagueEntry: LeagueEntry,
+    val matches: List<LolMatch>,
     val matchProfiles: List<MatchProfile>
 )
 
@@ -78,16 +142,16 @@ data class RiotData(
                 lolEntity.name,
                 lolEntity.tag,
                 leagues.associate { leagueMatchData ->
-                    val leagueEntryResponse = leagueMatchData.leagueEntry
-                    val retrievedMatches = leagueMatchData.matchResponses
+                    val leagueEntry = leagueMatchData.leagueEntry
+                    val retrievedMatches = leagueMatchData.matches
                     val alreadyCachedMatches = leagueMatchData.matchProfiles
-                    val gamesPlayed = leagueEntryResponse.wins + leagueEntryResponse.losses
+                    val gamesPlayed = leagueEntry.wins + leagueEntry.losses
                     val playerMatches: List<MatchProfile> =
-                        retrievedMatches.flatMap { getMatchResponse ->
-                            getMatchResponse.info.participants.filter { it.puuid == lolEntity.puuid }
+                        retrievedMatches.flatMap { match ->
+                            match.participants.filter { it.puuid == lolEntity.puuid }
                                 .map { participant ->
                                     val matchUp =
-                                        getMatchResponse.info.participants.find { it.teamPosition == participant.teamPosition && it.puuid != participant.puuid }
+                                        match.participants.find { it.teamPosition == participant.teamPosition && it.puuid != participant.puuid }
                                             ?.let {
                                                 MatchUpProfile(
                                                     it.championId,
@@ -100,7 +164,7 @@ data class RiotData(
                                             }
 
                                     MatchProfile(
-                                        getMatchResponse.metadata.matchId,
+                                        match.id,
                                         participant.championId,
                                         participant.championName,
                                         participant.role,
@@ -114,21 +178,21 @@ data class RiotData(
                                         participant.visionWardsBoughtInGame,
                                         participant.enemyMissingPings,
                                         participant.wardsPlaced,
-                                        getMatchResponse.info.endOfGameResult == "GameComplete",
-                                        getMatchResponse.info.gameDuration,
+                                        match.finishedCorrectly,
+                                        match.duration,
                                         participant.totalTimeSpentDead,
                                         participant.win,
                                         matchUp
                                     )
                                 }
                         } + alreadyCachedMatches
-                    leagueEntryResponse.queueType to LeagueProfile(
+                    leagueEntry.queueType to LeagueProfile(
                         playerMatches.groupBy { it.teamPosition }.mapValues { it.value.size }.maxBy { it.value }.key,
-                        leagueEntryResponse.tier,
-                        leagueEntryResponse.rank,
-                        leagueEntryResponse.leaguePoints,
+                        leagueEntry.tier,
+                        leagueEntry.rank,
+                        leagueEntry.leaguePoints,
                         gamesPlayed,
-                        leagueEntryResponse.wins.toDouble() / gamesPlayed,
+                        leagueEntry.wins.toDouble() / gamesPlayed,
                         playerMatches
                     )
                 }

@@ -1,8 +1,5 @@
 package com.kos.entities
 
-import com.kos.clients.domain.GetAccountResponse
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesState
 
@@ -23,21 +20,12 @@ object EntitiesTestHelper {
     val basicWowEntity = basicWowRequest.toEntity(1)
     val basicWowHardcoreEntity = basicWowEntity.copy(blizzardId = 12345)
     val basicWowEntity2 = basicWowRequest2.toEntity(2)
-    val basicGetSummonerResponse = GetSummonerResponse(
-        "1",
-        2,
-        25,
-        29
-    )
-    val basicGetAccountResponse = GetAccountResponse(
+    val basicLolSummoner = LolSummoner("1", 2, 29)
+    val basicRiotAccount = RiotAccount(
         "Marcnute",
         "EUW"
     )
-    val basicGetPuuidResponse = GetPUUIDResponse(
-        "1",
-        "R7 Disney Girl",
-        "EUW"
-    )
+    val basicPuuid = "1"
     val gigaLolCharacterRequestList = List(14) { index ->
         LolEntityRequest("sanxei$index", "euw$index")
     }
