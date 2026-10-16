@@ -4,10 +4,13 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.EnrichedMythicPlusRun
+import com.kos.datacache.domain.MythicPlusRun
 import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.RunDetails
+import com.kos.datacache.domain.SeasonCutoff
+import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
@@ -128,21 +131,21 @@ class WowEntitySynchronizer(
     private suspend fun synchronizeWowEntity(
         entity: WowEntity,
         season: String?,
-        cutoff: RaiderIoCutoff?,
+        cutoff: SeasonCutoff?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
     ): Either<ServiceError, DataCache> =
         either {
 
             val newestDataCacheEntry: RaiderIoData? = getNewestDataCacheEntry(entity.id)
 
-            val raiderIoResponse = executeClientCall("raiderIoGet") {
+            val profile = executeClientCall("raiderIoGet") {
                 raiderIoClient.get(entity)
             }.bind()
 
-            val quantile = getQuantile(cutoff, raiderIoResponse)
+            val quantile = getQuantile(cutoff, profile)
 
             val enrichedRuns = fetchRunDetails(
-                raiderIoResponse.profile.mythicPlusBestRuns,
+                profile.bestRuns,
                 season,
                 runDetailsCache,
                 newestDataCacheEntry
@@ -151,10 +154,9 @@ class WowEntitySynchronizer(
             DataCache(
                 entity.id,
                 json.encodeToString<Data>(
-                    raiderIoResponse.profile.toRaiderIoData(
+                    profile.toRaiderIoData(
                         entity.id,
                         quantile,
-                        raiderIoResponse.specs,
                         enrichedRuns
                     )
                 ),
@@ -179,10 +181,10 @@ class WowEntitySynchronizer(
             }
 
     private fun getQuantile(
-        cutoff: RaiderIoCutoff?,
-        raiderIoResponse: RaiderIoResponse
+        cutoff: SeasonCutoff?,
+        profile: WowCharacterProfile
     ): Double? = cutoff?.let {
-        BigDecimal(raiderIoResponse.profile.mythicPlusRanks.overall.region.toDouble() / it.totalPopulation * 100)
+        BigDecimal(profile.overallRank.region.toDouble() / it.totalPopulation * 100)
             .setScale(2, RoundingMode.HALF_EVEN)
             .toDouble()
     }

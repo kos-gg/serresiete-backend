@@ -2,8 +2,6 @@ package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
 import com.kos.clients.HttpError
-import com.kos.clients.domain.ExpansionSeasons
-import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
@@ -27,7 +25,7 @@ class WowSeasonServiceTest {
     @Test
     fun `i can add a new mythic plus dungeon season given there is no season data for the current expansion`() {
         runBlocking {
-            val expectedExpansionSeasons = ExpansionSeasons(listOf(Season(true, "TWW3", "tww-3", 15, listOf())))
+            val expectedExpansionSeasons = listOf(Season(true, "TWW3", "tww-3", 15, listOf()))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
@@ -37,8 +35,8 @@ class WowSeasonServiceTest {
             seasonService.addNewMythicPlusSeason()
                 .onLeft { fail() }
                 .onRight {
-                    assertEquals(expectedExpansionSeasons.seasons[0].blizzardSeasonId, it.id)
-                    assertEquals(expectedExpansionSeasons.seasons[0].name, it.name)
+                    assertEquals(expectedExpansionSeasons[0].blizzardSeasonId, it.id)
+                    assertEquals(expectedExpansionSeasons[0].name, it.name)
                 }
         }
     }
@@ -47,7 +45,7 @@ class WowSeasonServiceTest {
     fun `i can not add a new mythic plus dungeon season given in repository it already exists the same current season`() {
         runBlocking {
             val expectedExpansionSeasons =
-                ExpansionSeasons(listOf(Season(true, "TWW Season 3", "tww-season-3", 15, listOf())))
+                listOf(Season(true, "TWW Season 3", "tww-season-3", 15, listOf()))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 
@@ -83,7 +81,7 @@ class WowSeasonServiceTest {
     fun `i can not add a new mythic plus dungeon season because there is not current season for the current expansion`() {
         runBlocking {
             val expectedExpansionSeasons =
-                ExpansionSeasons(listOf(Season(false, "TWW Season 3", "tww-season-3", 15, listOf())))
+                listOf(Season(false, "TWW Season 3", "tww-season-3", 15, listOf()))
             `when`(raiderIoClient.getExpansionSeasons(10))
                 .thenReturn(Either.Right(expectedExpansionSeasons))
 

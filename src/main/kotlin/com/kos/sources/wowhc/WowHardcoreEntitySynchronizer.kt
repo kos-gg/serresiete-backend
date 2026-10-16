@@ -186,7 +186,7 @@ class WowHardcoreEntitySynchronizer(
                             )
                         }.bind()
 
-                        val wowHeadEmbeddedResponse = execute("wowheadEmbeddedCalculator") {
+                        val wowHeadEmbeddedTalents = execute("wowheadEmbeddedCalculator") {
                             raiderIoClient.wowheadEmbeddedCalculator(entity.region, entity.realm, entity.name)
                         }.getOrNull()
 
@@ -205,7 +205,7 @@ class WowHardcoreEntitySynchronizer(
                             newItemsWithIcons,
                             stats,
                             specializations,
-                            wowHeadEmbeddedResponse
+                            wowHeadEmbeddedTalents
                         )
                     }
                 })

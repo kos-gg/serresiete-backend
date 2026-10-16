@@ -6,8 +6,6 @@ import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.domain.GetWowCharacterResponse
 import com.kos.datacache.domain.HardcoreData
-import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.clients.domain.TalentLoadout
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
@@ -270,6 +268,6 @@ class WowHardcoreEntitySynchronizerTest {
         `when`(blizzardClient.getItem(entity.region, 18421))
             .thenReturn(getWowItemResponse())
         `when`(raiderIoClient.wowheadEmbeddedCalculator(entity.region, entity.realm, entity.name))
-            .thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+            .thenReturn(Either.Right("030030303-02020202-"))
     }
 }

@@ -1,8 +1,6 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
-import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.clients.domain.TalentLoadout
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.repository.EntitiesInMemoryRepository
@@ -197,6 +195,6 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
         `when`(blizzardClient.getItem(entity.region, 18421))
             .thenReturn(BlizzardMockHelper.getWowItemResponse())
         `when`(raiderIoClient.wowheadEmbeddedCalculator(entity.region, entity.realm, entity.name))
-            .thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+            .thenReturn(Either.Right("030030303-02020202-"))
     }
 }

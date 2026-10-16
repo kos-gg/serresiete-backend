@@ -2,9 +2,11 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import com.kos.clients.HttpError
-import com.kos.clients.domain.*
 import com.kos.datacache.domain.EnrichedMythicPlusRun
+import com.kos.datacache.domain.MythicPlusRank
+import com.kos.datacache.domain.MythicPlusRun
 import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.datacache.RaiderIoMockHelper
@@ -33,14 +35,10 @@ class WowEntitySynchronizerTest {
         WowSeasonInMemoryRepository().withState(WowSeasonsState(listOf(season)))
 
     private fun responseWithRun(run: MythicPlusRun) = Either.Right(
-        RaiderIoResponse(
-            RaiderIoProfile(
-                basicWowEntity.name, basicWowEntity.realm, basicWowEntity.region, "class", "spec",
-                listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
-                MythicPlusRanks(MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), mapOf()),
-                listOf(run),
-                listOf()
-            ),
+        WowCharacterProfile(
+            basicWowEntity.name, basicWowEntity.realm, basicWowEntity.region, "class", "spec", 0.0,
+            MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), listOf(),
+            listOf(run),
             listOf()
         )
     )
@@ -49,15 +47,11 @@ class WowEntitySynchronizerTest {
         entity: WowEntity,
         bestRuns: List<MythicPlusRun> = listOf(),
         recentRuns: List<MythicPlusRun> = listOf()
-    ) = RaiderIoResponse(
-        RaiderIoProfile(
-            entity.name, entity.realm, entity.region, "class", "spec",
-            listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
-            MythicPlusRanks(MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), mapOf()),
-            bestRuns,
-            recentRuns
-        ),
-        listOf()
+    ) = WowCharacterProfile(
+        entity.name, entity.realm, entity.region, "class", "spec", 0.0,
+        MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), listOf(),
+        bestRuns,
+        recentRuns
     )
 
     private suspend fun getCachedData(dataCacheRepository: DataCacheRepository, entityId: Long): RaiderIoData =

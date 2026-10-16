@@ -2,7 +2,6 @@ package com.kos.sources.wow.staticdata.wowseason
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.domain.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
@@ -42,7 +41,7 @@ data class WowSeasonService(
                         it.toSyncProcessingError("GetWowExpansions")
                     }.bind()
 
-            val currentSeason = expansionSeasons.seasons
+            val currentSeason = expansionSeasons
                 .firstOrNull { it.isCurrentSeason }
                 ?: raise(
                     UnableToAddNewMythicPlusSeason(

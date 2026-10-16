@@ -7,6 +7,9 @@ import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.datacache.domain.RunDetails
+import com.kos.datacache.domain.SeasonCutoff
+import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
@@ -16,6 +19,7 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.M
 import com.kos.common.WithLogger
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.sources.wow.staticdata.wowseason.Season
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -41,7 +45,7 @@ data class RaiderIoHTTPClient(
         const val MYTHIC_PLUS_RUN_DETAILS_PATH = "/mythic-plus/run-details"
     }
 
-    override suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, ExpansionSeasons> {
+    override suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, List<Season>> {
         return retryEitherWithFixedDelay(
             retryConfig = retryConfig,
             functionName = "getExpansionSeasons",
@@ -55,7 +59,7 @@ data class RaiderIoHTTPClient(
                         parameters.append("expansion_id", expansionId.toString())
                     }
                 }
-            }
+            }.map { expansionSeasons -> expansionSeasons.seasons.map { it.toSeason() } }
         }
     }
 
@@ -64,7 +68,7 @@ data class RaiderIoHTTPClient(
             retryConfig = retryConfig,
             functionName = "getRunDetails",
         ) {
-            fetchFromApi<RunDetails> {
+            fetchFromApi<RunDetailsResponse> {
                 apiGet(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
                     headers {
                         append(HttpHeaders.Accept, "*/*")
@@ -74,11 +78,11 @@ data class RaiderIoHTTPClient(
                         parameters.append("id", runId)
                     }
                 }
-            }
+            }.map { it.toRunDetails() }
         }
     }
 
-    override suspend fun get(wowEntity: WowEntity): Either<ClientError, RaiderIoResponse> {
+    override suspend fun get(wowEntity: WowEntity): Either<ClientError, WowCharacterProfile> {
         return retryEitherWithFixedDelay(
             retryConfig = retryConfig,
             functionName = "getRaiderIoResponse",
@@ -105,7 +109,7 @@ data class RaiderIoHTTPClient(
                         it,
                         wowEntity.specsWithName(it.`class`),
                     ).fold({ jsonError -> Either.Left(jsonError) }) { specsWithName ->
-                        Either.Right(RaiderIoResponse(it, specsWithName))
+                        Either.Right(it.toWowCharacterProfile(specsWithName))
                     }
                 })
         }
@@ -131,7 +135,7 @@ data class RaiderIoHTTPClient(
             }.map { it.seasonScores.firstOrNull()?.scores?.all ?: 0.0 }.orCharacterNotFound(0.0)
         }
 
-    override suspend fun cutoff(seasonSlug: String): Either<ClientError, RaiderIoCutoff> {
+    override suspend fun cutoff(seasonSlug: String): Either<ClientError, SeasonCutoff> {
         return fetchFromApi(
             request = {
                 apiGet(BASE_URI.toString() + MYTHIC_PLUS_CUTOFFS_PATH) {
@@ -154,7 +158,7 @@ data class RaiderIoHTTPClient(
         region: String,
         realm: String,
         name: String
-    ): Either<ClientError, RaiderioWowHeadEmbeddedResponse> {
+    ): Either<ClientError, String> {
         logger.debug("Getting Wowhead talents for {}/{}/{}", region, realm, name)
         return retryEitherWithFixedDelay(
             retryConfig = retryConfig,
@@ -172,7 +176,7 @@ data class RaiderIoHTTPClient(
                         parameters.append("fields", "talents")
                     }
                 }
-            }
+            }.map { it.talentLoadout.wowheadCalculator }
         }
     }
 

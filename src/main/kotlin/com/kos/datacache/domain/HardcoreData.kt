@@ -5,7 +5,6 @@ import com.kos.clients.domain.GetWowCharacterStatsResponse
 import com.kos.clients.domain.GetWowItemResponse
 import com.kos.clients.domain.GetWowMediaResponse
 import com.kos.clients.domain.GetWowSpecializationsResponse
-import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.domain.Specialization
 import com.kos.clients.domain.WowEquippedItemResponse
 import com.kos.clients.domain.WowPriceResponse
@@ -225,7 +224,7 @@ data class HardcoreData(
             equipmentResponse: List<Triple<WowEquippedItemResponse, GetWowItemResponse, GetWowMediaResponse?>>,
             statsResponse: GetWowCharacterStatsResponse,
             specializationsResponse: GetWowSpecializationsResponse,
-            wowHeadEmbeddedResponse: RaiderioWowHeadEmbeddedResponse?
+            wowHeadEmbeddedTalents: String?
         ) = HardcoreData(
             characterResponse.id,
             characterResponse.name,
@@ -265,7 +264,7 @@ data class HardcoreData(
             mediaResponse.assets.find { it.key == "avatar" }?.value,
             WowStats.apply(statsResponse),
             WowTalents(
-                wowHeadEmbeddedTalents = wowHeadEmbeddedResponse?.talentLoadout?.wowheadCalculator,
+                wowHeadEmbeddedTalents = wowHeadEmbeddedTalents,
                 specializations = specializationsResponse.specializationGroups.firstOrNull { it.isActive }?.specializations?.map { specialization ->
                     WowSpecialization.apply(specialization)
                 }.orEmpty()
