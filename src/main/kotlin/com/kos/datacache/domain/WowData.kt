@@ -144,11 +144,11 @@ data class WowCharacterProfile(
     val bestRuns: List<MythicPlusRun>,
     val recentRuns: List<MythicPlusRun>
 ) {
-    fun toRaiderIoData(
+    fun toWowData(
         characterId: Long,
         quantile: Double?,
         bestRuns: List<EnrichedMythicPlusRun>,
-    ) = RaiderIoData(
+    ) = WowData(
         characterId,
         name,
         realm,
@@ -165,7 +165,7 @@ data class WowCharacterProfile(
 
 @Serializable
 @SerialName("com.kos.clients.domain.RaiderIoData")
-data class RaiderIoData(
+data class WowData(
     val id: Long,
     val name: String,
     val realm: String,

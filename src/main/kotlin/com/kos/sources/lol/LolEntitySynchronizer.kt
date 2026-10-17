@@ -7,7 +7,7 @@ import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.LeagueEntry
 import com.kos.datacache.domain.LeagueMatchData
 import com.kos.datacache.domain.LolMatch
-import com.kos.datacache.domain.RiotData
+import com.kos.datacache.domain.LolData
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
@@ -46,7 +46,7 @@ class LolEntitySynchronizer(
     override val json: Json = Json {
         serializersModule = SerializersModule {
             polymorphic(Data::class) {
-                subclass(RiotData::class, RiotData.serializer())
+                subclass(LolData::class, LolData.serializer())
             }
         }
         ignoreUnknownKeys = true
@@ -117,13 +117,13 @@ class LolEntitySynchronizer(
     private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
         matchCache: DynamicCache<Either<ServiceError, LolMatch>>
-    ): Either<ServiceError, Pair<Long, RiotData>> =
+    ): Either<ServiceError, Pair<Long, LolData>> =
         either {
 
-            val newestDataCacheEntry: RiotData? =
+            val newestDataCacheEntry: LolData? =
                 dataCacheRepository.get(lolEntity.id).maxByOrNull { it.inserted }?.let {
                     try {
-                        json.decodeFromString<RiotData>(it.data)
+                        json.decodeFromString<LolData>(it.data)
                     } catch (e: Throwable) {
                         logger.debug(
                             "Couldn't deserialize entity ${lolEntity.id} " +
@@ -176,7 +176,7 @@ class LolEntitySynchronizer(
                     }.awaitAll()
                 }
 
-            Pair(lolEntity.id, RiotData.Companion.apply(lolEntity, leagueWithMatches))
+            Pair(lolEntity.id, LolData.Companion.apply(lolEntity, leagueWithMatches))
         }
 
     private suspend fun <A> execute(

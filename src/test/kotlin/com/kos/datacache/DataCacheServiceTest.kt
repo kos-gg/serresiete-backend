@@ -1,7 +1,7 @@
 package com.kos.datacache
 
-import com.kos.datacache.domain.RaiderIoData
-import com.kos.datacache.domain.RiotData
+import com.kos.datacache.domain.WowData
+import com.kos.datacache.domain.LolData
 import com.kos.datacache.TestHelper.lolDataCache
 import com.kos.datacache.TestHelper.wowDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
@@ -37,7 +37,7 @@ class DataCacheServiceTest {
             val data = createService(repo).getData(listOf(1, 3), oldFirst = true)
             assertTrue(data.isRight { it.size == 2 })
             assertEquals(listOf<Long>(1, 3), data.map { list ->
-                list as List<RaiderIoData>
+                list as List<WowData>
                 list.map { (it).id }
             }.getOrNull())
         }
@@ -53,7 +53,7 @@ class DataCacheServiceTest {
 
             assertTrue(data.isRight { it.size == 1 })
             assertEquals(listOf(basicLolEntity.name), data.map { list ->
-                list as List<RiotData>
+                list as List<LolData>
                 list.map { (it).summonerName }
             }.getOrNull())
         }
@@ -71,7 +71,7 @@ class DataCacheServiceTest {
             val data = createService(repo).getData(listOf(1), oldFirst = true)
             assertTrue(data.isRight { it.size == 1 })
             assertEquals(listOf(0.0), data.map { list ->
-                list as List<RaiderIoData>
+                list as List<WowData>
                 list.map { (it).score }
             }.getOrNull())
         }

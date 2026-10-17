@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.datacache.domain.MythicPlusRank
 import com.kos.datacache.domain.MythicPlusRanksWithSpecs
-import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.WowData
 import com.kos.datacache.domain.SeasonCutoff
 import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.entities.domain.WowEntity
@@ -33,7 +33,7 @@ object RaiderIoMockHelper {
     }
 
     val raiderIoData = listOf(
-        RaiderIoData(
+        WowData(
             id = 1,
             name = "kakarona",
             realm = "sanguino",
@@ -84,7 +84,7 @@ object RaiderIoMockHelper {
         }
     """.trimIndent()
 
-    val raiderioCachedData: RaiderIoData = RaiderIoData(
+    val raiderioCachedData: WowData = WowData(
         id = 1,
         name = "Proassassin",
         realm = "Sanguino",

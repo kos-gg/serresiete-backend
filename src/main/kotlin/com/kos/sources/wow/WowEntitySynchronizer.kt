@@ -7,7 +7,7 @@ import com.kos.clients.ClientError
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.EnrichedMythicPlusRun
 import com.kos.datacache.domain.MythicPlusRun
-import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.WowData
 import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.SeasonCutoff
 import com.kos.datacache.domain.WowCharacterProfile
@@ -54,7 +54,7 @@ class WowEntitySynchronizer(
     override val json: Json = Json {
         serializersModule = SerializersModule {
             polymorphic(Data::class) {
-                subclass(RaiderIoData::class, RaiderIoData.serializer())
+                subclass(WowData::class, WowData.serializer())
             }
         }
         ignoreUnknownKeys = true
@@ -136,7 +136,7 @@ class WowEntitySynchronizer(
     ): Either<ServiceError, DataCache> =
         either {
 
-            val newestDataCacheEntry: RaiderIoData? = getNewestDataCacheEntry(entity.id)
+            val newestDataCacheEntry: WowData? = getNewestDataCacheEntry(entity.id)
 
             val profile = executeClientCall("raiderIoGet") {
                 raiderIoClient.get(entity)
@@ -154,7 +154,7 @@ class WowEntitySynchronizer(
             DataCache(
                 entity.id,
                 json.encodeToString<Data>(
-                    profile.toRaiderIoData(
+                    profile.toWowData(
                         entity.id,
                         quantile,
                         enrichedRuns
@@ -165,12 +165,12 @@ class WowEntitySynchronizer(
             )
         }
 
-    private suspend fun getNewestDataCacheEntry(entityId: Long): RaiderIoData? =
+    private suspend fun getNewestDataCacheEntry(entityId: Long): WowData? =
         dataCacheRepository.get(entityId)
             .maxByOrNull { it.inserted }
             ?.let {
                 try {
-                    json.decodeFromString<RaiderIoData>(it.data)
+                    json.decodeFromString<WowData>(it.data)
                 } catch (e: SerializationException) {
                     logger.debug(
                         "Couldn't deserialize entity $entityId " +
@@ -193,7 +193,7 @@ class WowEntitySynchronizer(
         responseRuns: List<MythicPlusRun>,
         currentSeasonSlug: String?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>,
-        newestDataCacheEntry: RaiderIoData?
+        newestDataCacheEntry: WowData?
     ): List<EnrichedMythicPlusRun> {
         if (currentSeasonSlug == null) {
             return responseRuns.map { EnrichedMythicPlusRun(it, null) }

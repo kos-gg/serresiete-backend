@@ -9,7 +9,7 @@ import com.kos.datacache.domain.LolMatchParticipant
 import com.kos.datacache.domain.MatchProfile
 import com.kos.datacache.domain.MatchUpProfile
 import com.kos.datacache.domain.QueueType
-import com.kos.datacache.domain.RiotData
+import com.kos.datacache.domain.LolData
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 
 object RiotMockHelper {
@@ -64,8 +64,8 @@ object RiotMockHelper {
             )
         )
 
-    val riotData: RiotData =
-        RiotData(
+    val riotData: LolData =
+        LolData(
             summonerIcon = 1389,
             summonerLevel = 499,
             summonerName = "GTP ZeroMVPs",
@@ -223,7 +223,7 @@ object RiotMockHelper {
             )
         )
 
-    val anotherRiotData: RiotData = RiotData(
+    val anotherRiotData: LolData = LolData(
         summonerIcon = 3582,
         summonerLevel = 367,
         summonerName = "sanxei",

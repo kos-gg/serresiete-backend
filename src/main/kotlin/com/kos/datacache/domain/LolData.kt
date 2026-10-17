@@ -123,7 +123,7 @@ data class LeagueProfile(
 
 @Serializable
 @SerialName("com.kos.clients.domain.RiotData")
-data class RiotData(
+data class LolData(
     val summonerIcon: Int,
     val summonerLevel: Int,
     val summonerName: String,
@@ -135,8 +135,8 @@ data class RiotData(
         fun apply(
             lolEntity: LolEntity,
             leagues: List<LeagueMatchData>
-        ): RiotData =
-            RiotData(
+        ): LolData =
+            LolData(
                 lolEntity.summonerIcon,
                 lolEntity.summonerLevel,
                 lolEntity.name,

@@ -5,7 +5,7 @@ import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowCharacter
-import com.kos.datacache.domain.HardcoreData
+import com.kos.datacache.domain.WowHardcoreData
 import com.kos.datacache.domain.WowCharacter
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.error.SyncProcessingError
@@ -75,7 +75,7 @@ class WowHardcoreEntitySynchronizerTest {
             )
 
             dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(1, dataCacheRepository.state().size)
@@ -174,7 +174,7 @@ class WowHardcoreEntitySynchronizerTest {
                 )
             )
             dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(2, dataCacheRepository.state().size)
@@ -213,7 +213,7 @@ class WowHardcoreEntitySynchronizerTest {
             )
 
             dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(2, dataCacheRepository.state().size)
@@ -243,7 +243,7 @@ class WowHardcoreEntitySynchronizerTest {
             )
 
             dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertFalse(expectedHardcoreData.isDead)
             }
             assertEquals(1, dataCacheRepository.state().size)

@@ -5,7 +5,7 @@ import com.kos.clients.HttpError
 import com.kos.datacache.domain.EnrichedMythicPlusRun
 import com.kos.datacache.domain.MythicPlusRank
 import com.kos.datacache.domain.MythicPlusRun
-import com.kos.datacache.domain.RaiderIoData
+import com.kos.datacache.domain.WowData
 import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
@@ -54,7 +54,7 @@ class WowEntitySynchronizerTest {
         recentRuns
     )
 
-    private suspend fun getCachedData(dataCacheRepository: DataCacheRepository, entityId: Long): RaiderIoData =
+    private suspend fun getCachedData(dataCacheRepository: DataCacheRepository, entityId: Long): WowData =
         decodeJson.decodeFromString(
             dataCacheRepository.get(entityId).maxBy { it.inserted }.data
         )
@@ -92,7 +92,7 @@ class WowEntitySynchronizerTest {
             WowEntitySynchronizer(repo, raiderIoClient, seasonRepository())
                 .synchronize(listOf(basicWowEntity))
 
-            val cached: RaiderIoData =
+            val cached: WowData =
                 decodeJson.decodeFromString(repo.get(basicWowEntity.id).first().data)
             assertEquals(EnrichedMythicPlusRun(run, runDetails), cached.mythicPlusBestRuns.first())
         }
@@ -113,7 +113,7 @@ class WowEntitySynchronizerTest {
                 .synchronize(listOf(basicWowEntity))
 
             assertTrue(errors.isEmpty())
-            val cached: RaiderIoData =
+            val cached: WowData =
                 decodeJson.decodeFromString(repo.get(basicWowEntity.id).first().data)
             assertNull(cached.mythicPlusBestRuns.first().details)
         }

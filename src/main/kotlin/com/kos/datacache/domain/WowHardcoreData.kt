@@ -163,7 +163,7 @@ data class WowCharacter(
 
 @Serializable
 @SerialName("com.kos.clients.domain.HardcoreData")
-data class HardcoreData(
+data class WowHardcoreData(
     val id: Long,
     val name: String,
     val level: Int,
@@ -194,7 +194,7 @@ data class HardcoreData(
             items: List<WowItem>,
             stats: WowStats,
             talents: WowTalents
-        ) = HardcoreData(
+        ) = WowHardcoreData(
             character.id,
             character.name,
             character.level,

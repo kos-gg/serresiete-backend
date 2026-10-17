@@ -4,7 +4,7 @@ import acceptance.MockConfig
 import acceptance.SharedInfrastructure
 import acceptance.toGame
 import acceptance.wowEntityRequest
-import com.kos.datacache.domain.HardcoreData
+import com.kos.datacache.domain.WowHardcoreData
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
@@ -102,7 +102,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
             assertNotNull(entity, "Entity $name not found in database")
             val cached = dataCacheRepo.get(entity.id).maxByOrNull { it.inserted }
             assertNotNull(cached, "No data cache entry found for entity $name")
-            val data = Json { ignoreUnknownKeys = true }.decodeFromString<HardcoreData>(cached.data)
+            val data = Json { ignoreUnknownKeys = true }.decodeFromString<WowHardcoreData>(cached.data)
             assertTrue(data.isDead, "Expected character $name to be marked as dead in data cache")
         }
     }
