@@ -32,8 +32,7 @@ data class MythicPlusRanksWithSpecs(
 
 @Serializable
 data class Affix(
-    @SerialName("name")
-    val affix: String
+    val name: String
 )
 
 @Serializable
@@ -45,21 +44,14 @@ data class ClassSpec(
 
 @Serializable
 data class MythicPlusRun(
-    @SerialName("keystone_run_id")
     val runId: Long,
     val dungeon: String,
-    @SerialName("short_name")
     val shortName: String,
-    @SerialName("mythic_level")
     val keyLevel: Int,
-    @SerialName("num_keystone_upgrades")
     val upgrades: Int,
-    @SerialName("completed_at")
     @Serializable(with = OffsetDateTimeSerializer::class)
     val dateCompleted: OffsetDateTime,
-    @SerialName("clear_time_ms")
     val clearTimeMs: Long,
-    @SerialName("par_time_ms")
     val dungeonTimeMs: Long,
     val score: Float,
     val url: String,
@@ -83,7 +75,6 @@ data class RunDetailsCharacterRealm(
 @Serializable
 data class RunDetailsCharacterRegion(
     val name: String,
-    @SerialName("short_name")
     val shortName: String,
     val slug: String
 )
@@ -111,7 +102,6 @@ data class RunDetailsRosterEntry(
 
 @Serializable
 data class RunDetailsDeath(
-    @SerialName("approximate_died_at")
     val approximateDiedAt: Int
 )
 
@@ -121,7 +111,6 @@ data class LoggedDetails(val deaths: List<RunDetailsDeath> = emptyList())
 @Serializable
 data class RunDetails(
     val roster: List<RunDetailsRosterEntry>,
-    @SerialName("logged_details")
     val loggedDetails: LoggedDetails? = null
 )
 
@@ -164,7 +153,7 @@ data class WowCharacterProfile(
 }
 
 @Serializable
-@SerialName("com.kos.clients.domain.RaiderIoData")
+@SerialName("wow")
 data class WowData(
     val id: Long,
     val name: String,

@@ -54,7 +54,7 @@ object RaiderIoMockHelper {
 
     val raiderIoDataString = """
         {
-          "type": "com.kos.clients.domain.RaiderIoData",
+          "type": "wow",
           "id": 1,
           "name": "kakarona",
           "realm": "sanguino",

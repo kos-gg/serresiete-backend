@@ -162,7 +162,7 @@ data class WowCharacter(
 )
 
 @Serializable
-@SerialName("com.kos.clients.domain.HardcoreData")
+@SerialName("wow_hc")
 data class WowHardcoreData(
     val id: Long,
     val name: String,

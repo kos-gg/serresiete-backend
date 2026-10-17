@@ -29,11 +29,11 @@ object TestHelper {
      },                           
      "mythicPlusBestRuns": [],
      "mythicPlusRecentRuns": [],
-     "type": "com.kos.clients.domain.RaiderIoData"
+     "type": "wow"
    }"""
 
     val lolData = """{
-        "type": "com.kos.clients.domain.RiotData",
+        "type": "lol",
         "summonerIcon": 1389,
         "summonerLevel": 499,
         "summonerName": "GTP ZeroMVPs",
@@ -193,7 +193,7 @@ object TestHelper {
     }"""
 
     val anotherLolData = """{
-          "type": "com.kos.clients.domain.RiotData",
+          "type": "lol",
           "leagues": {},
           "summonerIcon": 3582,
           "summonerName": "sanxei",
@@ -203,7 +203,7 @@ object TestHelper {
     """
 
     val smartSyncDataCache = """{
-            "type": "com.kos.clients.domain.RiotData",
+            "type": "lol",
             "summonerIcon": 1,
             "summonerLevel": 30,
             "summonerName": "TestSummoner",
@@ -308,7 +308,7 @@ object TestHelper {
 
     val wowHardcoreData = """
         {
-        		"type": "com.kos.clients.domain.HardcoreData",
+        		"type": "wow_hc",
         		"id": 50885014,
         		"name": "Kakoshi",
         		"level": 60,

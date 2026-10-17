@@ -122,7 +122,7 @@ data class LeagueProfile(
 )
 
 @Serializable
-@SerialName("com.kos.clients.domain.RiotData")
+@SerialName("lol")
 data class LolData(
     val summonerIcon: Int,
     val summonerLevel: Int,
