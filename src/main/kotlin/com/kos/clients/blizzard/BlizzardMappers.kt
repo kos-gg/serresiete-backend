@@ -87,7 +87,9 @@ fun GetWowItemResponse.toWowItemDetails() = WowItemDetails(
     previewItem.weapon?.let { WowWeaponDisplayableStats(it.damage, it.dps, it.attackSpeed) }
 )
 
-fun GetWowRealmResponse.toWowRealm() = WowRealm(category)
+private val hardcoreRealmCategories = setOf("Hardcore", "Anniversary")
+
+fun GetWowRealmResponse.toWowRealm() = WowRealm(category in hardcoreRealmCategories)
 
 fun GetWowRosterResponse.toGuildRoster() = GuildRoster(
     guild.id,

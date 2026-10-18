@@ -63,9 +63,7 @@ class WowHardcoreEntityResolver(
 
                     val realm = blizzardClient.getRealm(req.region, profile.realmId).bind()
 
-                    ensure(
-                        realm.category == "Hardcore" || realm.category == "Anniversary"
-                    ) { NonHardcoreCharacter(req) }
+                    ensure(realm.isHardcore) { NonHardcoreCharacter(req) }
 
                     WowEntityRequest(
                         req.name,

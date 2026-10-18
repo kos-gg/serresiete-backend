@@ -346,4 +346,4 @@ data class WowCharacter(
     val lastLogin: OffsetDateTime
 )
 
-data class WowRealm(val category: String)
+data class WowRealm(val isHardcore: Boolean)

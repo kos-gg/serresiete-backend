@@ -36,6 +36,10 @@ class ThirdPartyDecouplingTest {
         noClasses()
             .that(DescribedPredicate.not(allowedToKnowThirdPartyModels))
             .should().dependOnClassesThat().resideInAPackage("com.kos.clients.domain..")
+            .because(
+                "provider models are an implementation detail of com.kos.clients: " +
+                    "clients must return our own types, translated in clients/<provider>/<Provider>Mappers.kt"
+            )
             .check(productionClasses)
     }
 }
