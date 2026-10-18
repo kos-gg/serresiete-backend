@@ -39,7 +39,7 @@ object TestHelper {
         "summonerName": "GTP ZeroMVPs",
         "summonerTag": "KAKO",
         "leagues": {
-            "RANKED_SOLO_5x5": {
+            "SOLO_Q": {
                 "teamPosition": "UTILITY",
                 "tier": "GOLD",
                 "rank": "I",
@@ -209,7 +209,7 @@ object TestHelper {
             "summonerName": "TestSummoner",
             "summonerTag": "TAG",
             "leagues": {
-                "RANKED_FLEX_SR": {
+                "FLEX_Q": {
                     "teamPosition": "TOP",
                     "tier": "Gold",
                     "rank": "I",

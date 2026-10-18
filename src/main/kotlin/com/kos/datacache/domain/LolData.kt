@@ -1,38 +1,12 @@
 package com.kos.datacache.domain
 
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 
-@Serializable(with = QueueTypeSerializer::class)
+@Serializable
 enum class QueueType {
-    SOLO_Q {
-        override fun toString(): String = "RANKED_SOLO_5x5"
-    },
-    FLEX_Q {
-        override fun toString(): String = "RANKED_FLEX_SR"
-    }
-}
-
-object QueueTypeSerializer : KSerializer<QueueType> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("QueueType", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: QueueType) {
-        encoder.encodeString(value.toString())
-    }
-
-    override fun deserialize(decoder: Decoder): QueueType {
-        return when (val queueType = decoder.decodeString()) {
-            "RANKED_SOLO_5x5" -> QueueType.SOLO_Q
-            "RANKED_FLEX_SR" -> QueueType.FLEX_Q
-            else -> throw IllegalArgumentException("Unknown queue type: $queueType")
-        }
-    }
+    SOLO_Q,
+    FLEX_Q
 }
 
 @Serializable
