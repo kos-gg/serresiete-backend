@@ -1,7 +1,7 @@
 package com.kos.tasks.runners
 
 import arrow.core.Either
-import com.kos.clients.domain.QueueType
+import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.RiotMockHelper
@@ -63,13 +63,13 @@ class CacheGameDataTaskRunnerTest {
         `when`(
             riotClient.getMatchesByPuuid(
                 basicLolEntity.puuid,
-                QueueType.SOLO_Q.toInt()
+                QueueType.SOLO_Q
             )
         ).thenReturn(RiotMockHelper.matches)
         `when`(
             riotClient.getMatchesByPuuid(
                 basicLolEntity.puuid,
-                QueueType.FLEX_Q.toInt()
+                QueueType.FLEX_Q
             )
         ).thenReturn(RiotMockHelper.matches)
         `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))

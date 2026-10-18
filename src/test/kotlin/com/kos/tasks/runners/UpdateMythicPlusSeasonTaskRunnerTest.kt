@@ -1,8 +1,7 @@
 package com.kos.tasks.runners
 
 import arrow.core.Either
-import com.kos.clients.domain.ExpansionSeasons
-import com.kos.clients.domain.Season
+import com.kos.sources.wow.staticdata.wowseason.Season
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
@@ -35,7 +34,7 @@ class UpdateMythicPlusSeasonTaskRunnerTest {
     fun `new mythic plus season is added and task is recorded as successful`() = runBlocking {
         wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
         `when`(raiderIoClient.getExpansionSeasons(10))
-            .thenReturn(Either.Right(ExpansionSeasons(listOf(Season(true, "TWW3", "tww-3", 15, listOf())))))
+            .thenReturn(Either.Right(listOf(Season(true, "TWW3", "tww-3", 15, listOf()))))
 
         val id = UUID.randomUUID().toString()
         tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))

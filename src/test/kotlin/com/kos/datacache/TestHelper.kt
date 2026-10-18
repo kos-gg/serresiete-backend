@@ -29,17 +29,17 @@ object TestHelper {
      },                           
      "mythicPlusBestRuns": [],
      "mythicPlusRecentRuns": [],
-     "type": "com.kos.clients.domain.RaiderIoData"
+     "type": "wow"
    }"""
 
     val lolData = """{
-        "type": "com.kos.clients.domain.RiotData",
+        "type": "lol",
         "summonerIcon": 1389,
         "summonerLevel": 499,
         "summonerName": "GTP ZeroMVPs",
         "summonerTag": "KAKO",
         "leagues": {
-            "RANKED_SOLO_5x5": {
+            "SOLO_Q": {
                 "teamPosition": "UTILITY",
                 "tier": "GOLD",
                 "rank": "I",
@@ -193,7 +193,7 @@ object TestHelper {
     }"""
 
     val anotherLolData = """{
-          "type": "com.kos.clients.domain.RiotData",
+          "type": "lol",
           "leagues": {},
           "summonerIcon": 3582,
           "summonerName": "sanxei",
@@ -203,13 +203,13 @@ object TestHelper {
     """
 
     val smartSyncDataCache = """{
-            "type": "com.kos.clients.domain.RiotData",
+            "type": "lol",
             "summonerIcon": 1,
             "summonerLevel": 30,
             "summonerName": "TestSummoner",
             "summonerTag": "TAG",
             "leagues": {
-                "RANKED_FLEX_SR": {
+                "FLEX_Q": {
                     "teamPosition": "TOP",
                     "tier": "Gold",
                     "rank": "I",
@@ -308,7 +308,7 @@ object TestHelper {
 
     val wowHardcoreData = """
         {
-        		"type": "com.kos.clients.domain.HardcoreData",
+        		"type": "wow_hc",
         		"id": 50885014,
         		"name": "Kakoshi",
         		"level": 60,

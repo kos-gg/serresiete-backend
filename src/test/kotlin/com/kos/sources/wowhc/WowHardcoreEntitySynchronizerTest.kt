@@ -4,10 +4,8 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetWowCharacterResponse
-import com.kos.clients.domain.HardcoreData
-import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
-import com.kos.clients.domain.TalentLoadout
+import com.kos.clients.blizzard.toWowCharacter
+import com.kos.datacache.domain.WowHardcoreData
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
@@ -36,6 +34,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.*
 import kotlin.test.Test
+import com.kos.entities.domain.WowCharacter
 
 class WowHardcoreEntitySynchronizerTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
@@ -76,7 +75,7 @@ class WowHardcoreEntitySynchronizerTest {
             )
 
             dataCacheRepository.get(basicWowEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(1, dataCacheRepository.state().size)
@@ -175,7 +174,7 @@ class WowHardcoreEntitySynchronizerTest {
                 )
             )
             dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(2, dataCacheRepository.state().size)
@@ -192,7 +191,7 @@ class WowHardcoreEntitySynchronizerTest {
                     basicWowHardcoreEntity.realm,
                     basicWowHardcoreEntity.name
                 )
-            ).thenReturn(Either.Right(getWowCharacterResponse))
+            ).thenReturn(Either.Right(getWowCharacterResponse.toWowCharacter()))
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(
                 listOf(
@@ -214,7 +213,7 @@ class WowHardcoreEntitySynchronizerTest {
             )
 
             dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertTrue(expectedHardcoreData.isDead)
             }
             assertEquals(2, dataCacheRepository.state().size)
@@ -224,7 +223,7 @@ class WowHardcoreEntitySynchronizerTest {
     @Test
     fun `the wow hardcore cache service inserts a new cache entry when there is no recent data and character is found in blizzard api`() {
         runBlocking {
-            stubSuccessfulBlizzardSync(basicWowHardcoreEntity, Either.Right(getWowCharacterResponse.copy(id = 12345)))
+            stubSuccessfulBlizzardSync(basicWowHardcoreEntity, Either.Right(getWowCharacterResponse.copy(id = 12345).toWowCharacter()))
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(
                 listOf()
@@ -244,7 +243,7 @@ class WowHardcoreEntitySynchronizerTest {
             )
 
             dataCacheRepository.get(basicWowHardcoreEntity.id).maxByOrNull { it.inserted }?.let {
-                val expectedHardcoreData = json.decodeFromString<HardcoreData>(it.data)
+                val expectedHardcoreData = json.decodeFromString<WowHardcoreData>(it.data)
                 assertFalse(expectedHardcoreData.isDead)
             }
             assertEquals(1, dataCacheRepository.state().size)
@@ -253,7 +252,7 @@ class WowHardcoreEntitySynchronizerTest {
 
     private suspend fun stubSuccessfulBlizzardSync(
         entity: WowEntity,
-        characterProfile: Either<ClientError, GetWowCharacterResponse> = getCharacterProfile(entity)
+        characterProfile: Either<ClientError, WowCharacter> = getCharacterProfile(entity)
     ) {
         `when`(blizzardClient.getClassicProfile(entity.region, entity.realm, entity.name))
             .thenReturn(characterProfile)
@@ -270,6 +269,6 @@ class WowHardcoreEntitySynchronizerTest {
         `when`(blizzardClient.getItem(entity.region, 18421))
             .thenReturn(getWowItemResponse())
         `when`(raiderIoClient.wowheadEmbeddedCalculator(entity.region, entity.realm, entity.name))
-            .thenReturn(Either.Right(RaiderioWowHeadEmbeddedResponse(TalentLoadout("030030303-02020202-"))))
+            .thenReturn(Either.Right("030030303-02020202-"))
     }
 }

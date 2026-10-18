@@ -3,8 +3,7 @@ package com.kos.views
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
+import com.kos.entities.domain.LolSummoner
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesService
@@ -238,18 +237,13 @@ class ViewsEventServiceTest {
                 `when`(riotClient.getPUUIDByRiotId(anyString(), anyString())).thenAnswer { invocation ->
                     val name = invocation.getArgument<String>(0)
                     val tag = invocation.getArgument<String>(1)
-                    Either.Right(GetPUUIDResponse(UUID.randomUUID().toString(), name, tag))
+                    Either.Right(UUID.randomUUID().toString())
                 }
 
                 `when`(riotClient.getSummonerByPuuid(anyString())).thenAnswer { invocation ->
                     val puuid = invocation.getArgument<String>(0)
                     Either.Right(
-                        GetSummonerResponse(
-                            puuid,
-                            10,
-                            10L,
-                            200
-                        )
+                        LolSummoner(puuid, 10, 200)
                     )
                 }
 
@@ -288,18 +282,13 @@ class ViewsEventServiceTest {
                 `when`(riotClient.getPUUIDByRiotId(anyString(), anyString())).thenAnswer { invocation ->
                     val name = invocation.getArgument<String>(0)
                     val tag = invocation.getArgument<String>(1)
-                    Either.Right(GetPUUIDResponse(UUID.randomUUID().toString(), name, tag))
+                    Either.Right(UUID.randomUUID().toString())
                 }
 
                 `when`(riotClient.getSummonerByPuuid(anyString())).thenAnswer { invocation ->
                     val puuid = invocation.getArgument<String>(0)
                     Either.Right(
-                        GetSummonerResponse(
-                            puuid,
-                            10,
-                            10L,
-                            200
-                        )
+                        LolSummoner(puuid, 10, 200)
                     )
                 }
 

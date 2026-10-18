@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
@@ -12,6 +11,7 @@ import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
+import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntity
@@ -48,7 +48,7 @@ class WowEntitySynchronizer(
     override val json: Json = Json {
         serializersModule = SerializersModule {
             polymorphic(Data::class) {
-                subclass(RaiderIoData::class, RaiderIoData.serializer())
+                subclass(WowData::class, WowData.serializer())
             }
         }
         ignoreUnknownKeys = true
@@ -125,21 +125,21 @@ class WowEntitySynchronizer(
     private suspend fun synchronizeWowEntity(
         entity: WowEntity,
         season: String?,
-        cutoff: RaiderIoCutoff?,
+        cutoff: SeasonCutoff?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
     ): Either<ServiceError, DataCache> =
         either {
 
-            val newestDataCacheEntry: RaiderIoData? = getNewestDataCacheEntry(entity.id)
+            val newestDataCacheEntry: WowData? = getNewestDataCacheEntry(entity.id)
 
-            val raiderIoResponse = executeClientCall("raiderIoGet") {
+            val profile = executeClientCall("raiderIoGet") {
                 raiderIoClient.get(entity)
             }.bind()
 
-            val quantile = getQuantile(cutoff, raiderIoResponse)
+            val quantile = getQuantile(cutoff, profile)
 
             val enrichedRuns = fetchRunDetails(
-                raiderIoResponse.profile.mythicPlusBestRuns,
+                profile.bestRuns,
                 season,
                 runDetailsCache,
                 newestDataCacheEntry
@@ -148,10 +148,9 @@ class WowEntitySynchronizer(
             DataCache(
                 entity.id,
                 json.encodeToString<Data>(
-                    raiderIoResponse.profile.toRaiderIoData(
+                    profile.toWowData(
                         entity.id,
                         quantile,
-                        raiderIoResponse.specs,
                         enrichedRuns
                     )
                 ),
@@ -160,12 +159,12 @@ class WowEntitySynchronizer(
             )
         }
 
-    private suspend fun getNewestDataCacheEntry(entityId: Long): RaiderIoData? =
+    private suspend fun getNewestDataCacheEntry(entityId: Long): WowData? =
         dataCacheRepository.get(entityId)
             .maxByOrNull { it.inserted }
             ?.let {
                 try {
-                    json.decodeFromString<RaiderIoData>(it.data)
+                    json.decodeFromString<WowData>(it.data)
                 } catch (e: SerializationException) {
                     logger.debug(
                         "Couldn't deserialize entity $entityId " +
@@ -176,10 +175,10 @@ class WowEntitySynchronizer(
             }
 
     private fun getQuantile(
-        cutoff: RaiderIoCutoff?,
-        raiderIoResponse: RaiderIoResponse
+        cutoff: SeasonCutoff?,
+        profile: WowCharacterProfile
     ): Double? = cutoff?.let {
-        BigDecimal(raiderIoResponse.profile.mythicPlusRanks.overall.region.toDouble() / it.totalPopulation * 100)
+        BigDecimal(profile.overallRank.region.toDouble() / it.totalPopulation * 100)
             .setScale(2, RoundingMode.HALF_EVEN)
             .toDouble()
     }
@@ -188,7 +187,7 @@ class WowEntitySynchronizer(
         responseRuns: List<MythicPlusRun>,
         currentSeasonSlug: String?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>,
-        newestDataCacheEntry: RaiderIoData?
+        newestDataCacheEntry: WowData?
     ): List<EnrichedMythicPlusRun> {
         if (currentSeasonSlug == null) {
             return responseRuns.map { EnrichedMythicPlusRun(it, null) }

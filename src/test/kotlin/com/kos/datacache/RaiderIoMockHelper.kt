@@ -2,39 +2,38 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.datacache.domain.MythicPlusRank
+import com.kos.datacache.domain.MythicPlusRanksWithSpecs
+import com.kos.datacache.domain.WowData
 import com.kos.entities.domain.WowEntity
+import com.kos.sources.wow.SeasonCutoff
+import com.kos.sources.wow.WowCharacterProfile
 
 object RaiderIoMockHelper {
-    fun get(wowCharacter: WowEntity): Either<ClientError, RaiderIoResponse> {
+    fun get(wowCharacter: WowEntity): Either<ClientError, WowCharacterProfile> {
         return Either.Right(
-            RaiderIoResponse(
-                RaiderIoProfile(
-                    wowCharacter.name,
-                    wowCharacter.realm,
-                    wowCharacter.region,
-                    "class",
-                    "spec",
-                    listOf(MythicPlusSeasonScore("df-3", SeasonScores(0.0, 0.0, 0.0, 0.0, 0.0))),
-                    MythicPlusRanks(
-                        MythicPlusRank(1, 1, 1),
-                        MythicPlusRank(1, 1, 1),
-                        mapOf()
-                    ),
-                    listOf(),
-                    listOf()
-                ),
+            WowCharacterProfile(
+                wowCharacter.name,
+                wowCharacter.realm,
+                wowCharacter.region,
+                "class",
+                "spec",
+                0.0,
+                MythicPlusRank(1, 1, 1),
+                MythicPlusRank(1, 1, 1),
+                listOf(),
+                listOf(),
                 listOf()
             )
         )
     }
 
-    fun cutoff(): Either<ClientError, RaiderIoCutoff> {
-        return Either.Right(RaiderIoCutoff(100))
+    fun cutoff(): Either<ClientError, SeasonCutoff> {
+        return Either.Right(SeasonCutoff(100))
     }
 
     val raiderIoData = listOf(
-        RaiderIoData(
+        WowData(
             id = 1,
             name = "kakarona",
             realm = "sanguino",
@@ -55,7 +54,7 @@ object RaiderIoMockHelper {
 
     val raiderIoDataString = """
         {
-          "type": "com.kos.clients.domain.RaiderIoData",
+          "type": "wow",
           "id": 1,
           "name": "kakarona",
           "realm": "sanguino",
@@ -85,7 +84,7 @@ object RaiderIoMockHelper {
         }
     """.trimIndent()
 
-    val raiderioCachedData: RaiderIoData = RaiderIoData(
+    val raiderioCachedData: WowData = WowData(
         id = 1,
         name = "Proassassin",
         realm = "Sanguino",

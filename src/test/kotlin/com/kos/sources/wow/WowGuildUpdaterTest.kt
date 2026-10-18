@@ -3,6 +3,7 @@ package com.kos.sources.wow
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.toGuildRoster
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
@@ -80,7 +81,7 @@ class WowGuildUpdaterTest {
                             WowMemberResponse(WowCharacterResponse(joining.name, 90))
                         ),
                         WowGuildResponse(blizzardId)
-                    )
+                    ).toGuildRoster()
                 )
             )
             `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
@@ -117,7 +118,7 @@ class WowGuildUpdaterTest {
                             WowMemberResponse(WowCharacterResponse(joining.name, 90))
                         ),
                         WowGuildResponse(blizzardId)
-                    )
+                    ).toGuildRoster()
                 )
             )
             `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
@@ -160,7 +161,7 @@ class WowGuildUpdaterTest {
                             )
                         ),
                         WowGuildResponse(blizzardId)
-                    )
+                    ).toGuildRoster()
                 )
             )
 
@@ -193,7 +194,7 @@ class WowGuildUpdaterTest {
                     GetWowRosterResponse(
                         listOf(WowMemberResponse(WowCharacterResponse(memberA.name, 90, 111))),
                         WowGuildResponse(1L)
-                    )
+                    ).toGuildRoster()
                 )
             )
             `when`(blizzardClient.getRetailGuildRoster(region, realm, "GuildB")).thenReturn(
@@ -201,7 +202,7 @@ class WowGuildUpdaterTest {
                     GetWowRosterResponse(
                         listOf(WowMemberResponse(WowCharacterResponse(memberB.name, 90, 222))),
                         WowGuildResponse(2L)
-                    )
+                    ).toGuildRoster()
                 )
             )
             `when`(raiderIoClient.getScore(memberA.copy(blizzardId = 111))).thenReturn(Either.Right(1500.0))
@@ -239,7 +240,7 @@ class WowGuildUpdaterTest {
                     GetWowRosterResponse(
                         listOf(WowMemberResponse(WowCharacterResponse(healthyMember.name, 90))),
                         WowGuildResponse(2L)
-                    )
+                    ).toGuildRoster()
                 )
             )
             `when`(raiderIoClient.getScore(healthyMember)).thenReturn(Either.Right(1500.0))

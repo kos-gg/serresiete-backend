@@ -2,14 +2,14 @@ package com.kos.datacache
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.kos.clients.domain.Data
-import com.kos.clients.domain.HardcoreData
-import com.kos.clients.domain.RaiderIoData
-import com.kos.clients.domain.RiotData
 import com.kos.common.WithLogger
 import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError
 import com.kos.common.error.toEventPersistenceError
+import com.kos.datacache.domain.Data
+import com.kos.datacache.domain.LolData
+import com.kos.datacache.domain.WowData
+import com.kos.datacache.domain.WowHardcoreData
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.EntityDataResponse
 import com.kos.entities.domain.EntityRequest
@@ -35,9 +35,9 @@ data class DataCacheService(
     private val json = Json {
         serializersModule = SerializersModule {
             polymorphic(Data::class) {
-                subclass(RaiderIoData::class, RaiderIoData.serializer())
-                subclass(RiotData::class, RiotData.serializer())
-                subclass(HardcoreData::class, HardcoreData.serializer())
+                subclass(WowData::class, WowData.serializer())
+                subclass(LolData::class, LolData.serializer())
+                subclass(WowHardcoreData::class, WowHardcoreData.serializer())
             }
         }
         ignoreUnknownKeys = true

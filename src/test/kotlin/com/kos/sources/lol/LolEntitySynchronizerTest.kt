@@ -1,12 +1,12 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
-import com.kos.clients.domain.QueueType
+import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.RiotMockHelper
-import com.kos.datacache.RiotMockHelper.flexQEntryResponse
+import com.kos.datacache.RiotMockHelper.flexQEntry
 import com.kos.datacache.TestHelper.smartSyncDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
@@ -28,10 +28,10 @@ class LolEntitySynchronizerTest {
     fun `i can cache lol data`() {
         runBlocking {
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid)).thenReturn(RiotMockHelper.leagueEntries)
-            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())).thenReturn(
+            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q)).thenReturn(
                 RiotMockHelper.matches
             )
-            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q.toInt())).thenReturn(
+            `when`(riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.SOLO_Q)).thenReturn(
                 RiotMockHelper.matches
             )
             `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))
@@ -49,9 +49,9 @@ class LolEntitySynchronizerTest {
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
-                .thenReturn(Either.Right(listOf(flexQEntryResponse)))
+                .thenReturn(Either.Right(listOf(flexQEntry)))
             `when`(
-                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
+                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q)
             ).thenReturn(Either.Right(newMatchIds))
 
             `when`(riotClient.getMatchById(anyString())).thenReturn(Either.Right(RiotMockHelper.match))
@@ -97,45 +97,29 @@ class LolEntitySynchronizerTest {
             val dataCache = DataCache(1, smartSyncDataCache, OffsetDateTime.now().minusHours(5), Game.LOL)
 
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
-                .thenReturn(Either.Right(listOf(flexQEntryResponse)))
+                .thenReturn(Either.Right(listOf(flexQEntry)))
             `when`(
-                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
+                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q)
             ).thenReturn(Either.Right(requestedMatchIds))
 
             `when`(riotClient.getMatchById("match4")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match4"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match4")
                 )
             )
             `when`(riotClient.getMatchById("match5")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match5"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match5")
                 )
             )
             `when`(riotClient.getMatchById("match6")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match6"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match6")
                 )
             )
             `when`(riotClient.getMatchById("match7")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match7"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match7")
                 )
             )
 
@@ -173,55 +157,35 @@ class LolEntitySynchronizerTest {
             val requestedMatchIds = listOf("match3", "match4", "match5", "match6", "match7")
 
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
-                .thenReturn(Either.Right(listOf(flexQEntryResponse)))
+                .thenReturn(Either.Right(listOf(flexQEntry)))
             `when`(
-                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q.toInt())
+                riotClient.getMatchesByPuuid(basicLolEntity.puuid, QueueType.FLEX_Q)
             ).thenReturn(Either.Right(requestedMatchIds))
 
             `when`(riotClient.getMatchById("match3")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match4"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match4")
                 )
             )
 
             `when`(riotClient.getMatchById("match4")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match4"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match4")
                 )
             )
             `when`(riotClient.getMatchById("match5")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match5"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match5")
                 )
             )
             `when`(riotClient.getMatchById("match6")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match6"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match6")
                 )
             )
             `when`(riotClient.getMatchById("match7")).thenReturn(
                 Either.Right(
-                    RiotMockHelper.match.copy(
-                        metadata = com.kos.clients.domain.Metadata(
-                            "match7"
-                        )
-                    )
+                    RiotMockHelper.match.copy(id = "match7")
                 )
             )
 

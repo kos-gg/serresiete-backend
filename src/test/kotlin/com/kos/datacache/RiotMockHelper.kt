@@ -2,71 +2,70 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.datacache.domain.LeagueProfile
+import com.kos.datacache.domain.MatchProfile
+import com.kos.datacache.domain.MatchUpProfile
+import com.kos.datacache.domain.QueueType
+import com.kos.datacache.domain.LolData
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.sources.lol.LeagueEntry
+import com.kos.sources.lol.LolMatchParticipant
+import com.kos.sources.lol.LolMatch
 
 object RiotMockHelper {
-    val flexQEntryResponse = LeagueEntryResponse(
+    val flexQEntry = LeagueEntry(
         QueueType.FLEX_Q,
         "GOLD",
         "I",
         1,
         13,
-        14,
-        false
+        14
     )
-    val leagueEntries: Either<ClientError, List<LeagueEntryResponse>> =
+    val leagueEntries: Either<ClientError, List<LeagueEntry>> =
         Either.Right(
             listOf(
-                flexQEntryResponse,
-                LeagueEntryResponse(
+                flexQEntry,
+                LeagueEntry(
                     QueueType.SOLO_Q,
                     "GOLD",
                     "I",
                     1,
                     13,
-                    14,
-                    false
+                    14
                 )
             )
         )
     val matchId = "EUW1_232424252"
     val matches = Either.Right(listOf(matchId))
-    val match: GetMatchResponse =
-        GetMatchResponse(
-            metadata = Metadata(matchId),
-            info = MatchInfo(
-                "GameComplete",
-                1,
-                1,
-                listOf(
-                    MatchParticipant(
-                        1,
-                        basicLolEntity.puuid,
-                        1,
-                        1,
-                        1,
-                        "SUPPORT",
-                        "SUPPORT",
-                        "BOTTOM",
-                        "BOT",
-                        1,
-                        1,
-                        1,
-                        18,
-                        "Tristana",
-                        1,
-                        25,
-                        250,
-                        10000,
-                        true
-                    )
+    val match: LolMatch =
+        LolMatch(
+            id = matchId,
+            finishedCorrectly = true,
+            duration = 1,
+            participants = listOf(
+                LolMatchParticipant(
+                    puuid = basicLolEntity.puuid,
+                    championId = 18,
+                    championName = "Tristana",
+                    role = "SUPPORT",
+                    individualPosition = "SUPPORT",
+                    teamPosition = "BOTTOM",
+                    lane = "BOT",
+                    kills = 1,
+                    deaths = 1,
+                    assists = 1,
+                    assistMePings = 1,
+                    visionWardsBoughtInGame = 1,
+                    enemyMissingPings = 1,
+                    wardsPlaced = 1,
+                    totalTimeSpentDead = 25,
+                    win = true
                 )
             )
         )
 
-    val riotData: RiotData =
-        RiotData(
+    val riotData: LolData =
+        LolData(
             summonerIcon = 1389,
             summonerLevel = 499,
             summonerName = "GTP ZeroMVPs",
@@ -224,7 +223,7 @@ object RiotMockHelper {
             )
         )
 
-    val anotherRiotData: RiotData = RiotData(
+    val anotherRiotData: LolData = LolData(
         summonerIcon = 3582,
         summonerLevel = 367,
         summonerName = "sanxei",

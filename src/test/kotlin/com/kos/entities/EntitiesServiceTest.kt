@@ -4,8 +4,9 @@ import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetPUUIDResponse
-import com.kos.clients.domain.GetSummonerResponse
+import com.kos.clients.blizzard.toGuildRoster
+import com.kos.clients.blizzard.toWowRealm
+import com.kos.entities.domain.LolSummoner
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.raiderio.RaiderIoClient
@@ -13,9 +14,9 @@ import com.kos.clients.riot.RiotClient
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
-import com.kos.entities.EntitiesTestHelper.basicGetAccountResponse
-import com.kos.entities.EntitiesTestHelper.basicGetPuuidResponse
-import com.kos.entities.EntitiesTestHelper.basicGetSummonerResponse
+import com.kos.entities.EntitiesTestHelper.basicRiotAccount
+import com.kos.entities.EntitiesTestHelper.basicPuuid
+import com.kos.entities.EntitiesTestHelper.basicLolSummoner
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
@@ -92,8 +93,8 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getClassicProfile(request2.region, request2.realm, request2.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request2)
             )
-            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
-            `when`(blizzardClient.getRealm(request2.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
+            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
+            `when`(blizzardClient.getRealm(request2.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -120,7 +121,7 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getClassicProfile(request1.region, request1.realm, request1.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request1)
             )
-            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm))
+            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm.toWowRealm()))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -185,7 +186,7 @@ class EntitiesServiceTest {
                 .thenReturn(
                     BlizzardMockHelper.getCharacterProfile(request)
                         .map { it.copy(id = basicWowHardcoreEntity.blizzardId ?: 12345) })
-            `when`(blizzardClient.getRealm(request.region, 5220)).thenReturn(Either.Right(hardcoreRealm))
+            `when`(blizzardClient.getRealm(request.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             val initialState = EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf())
 
@@ -210,17 +211,12 @@ class EntitiesServiceTest {
             `when`(riotClient.getPUUIDByRiotId(anyString(), anyString())).thenAnswer { invocation ->
                 val name = invocation.getArgument<String>(0)
                 val tag = invocation.getArgument<String>(1)
-                Either.Right(GetPUUIDResponse(UUID.randomUUID().toString(), name, tag))
+                Either.Right(UUID.randomUUID().toString())
             }
             `when`(riotClient.getSummonerByPuuid(anyString())).thenAnswer { invocation ->
                 val puuid = invocation.getArgument<String>(0)
                 Either.Right(
-                    GetSummonerResponse(
-                        puuid,
-                        10,
-                        10L,
-                        200
-                    )
+                    LolSummoner(puuid, 10, 200)
                 )
             }
 
@@ -352,8 +348,8 @@ class EntitiesServiceTest {
             val state = EntitiesState(listOf(), listOf(), listOf(basicLolEntity))
             val request = LolEntityRequest("R7 Disney Girl", "EUW")
 
-            `when`(riotClient.getPUUIDByRiotId("R7 Disney Girl", "EUW")).thenReturn(Either.Right(basicGetPuuidResponse))
-            `when`(riotClient.getSummonerByPuuid("1")).thenReturn(Either.Right(basicGetSummonerResponse))
+            `when`(riotClient.getPUUIDByRiotId("R7 Disney Girl", "EUW")).thenReturn(Either.Right(basicPuuid))
+            `when`(riotClient.getSummonerByPuuid("1")).thenReturn(Either.Right(basicLolSummoner))
 
             val entitiesService = createService(state)
             val expected = ResolvedEntities(
@@ -427,12 +423,12 @@ class EntitiesServiceTest {
             val entitiesService = createService(initialState)
             `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid)).thenReturn(
                 Either.Right(
-                    basicGetSummonerResponse
+                    basicLolSummoner
                 )
             )
             `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid)).thenReturn(
                 Either.Right(
-                    basicGetAccountResponse
+                    basicRiotAccount
                 )
             )
 
@@ -458,18 +454,13 @@ class EntitiesServiceTest {
 
             `when`(riotClient.getPUUIDByRiotId(basicLolEntity2.name, basicLolEntity2.tag)).thenReturn(
                 Either.Right(
-                    GetPUUIDResponse(basicLolEntity2.puuid, basicLolEntity2.name, basicLolEntity2.tag)
+                    basicLolEntity2.puuid
                 )
             )
 
             `when`(riotClient.getSummonerByPuuid(basicLolEntity2.puuid)).thenReturn(
                 Either.Right(
-                    GetSummonerResponse(
-                        basicLolEntity2.puuid,
-                        basicLolEntity2.summonerIcon,
-                        1L,
-                        basicLolEntity2.summonerLevel
-                    )
+                    LolSummoner(basicLolEntity2.puuid, basicLolEntity2.summonerIcon, basicLolEntity2.summonerLevel)
                 )
             )
 
@@ -563,7 +554,7 @@ class EntitiesServiceTest {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster("eu", "twisting-nether", "Method")).thenReturn(
                 Either.Right(
-                    GetWowRosterResponse(listOf(), WowGuildResponse(999))
+                    GetWowRosterResponse(listOf(), WowGuildResponse(999)).toGuildRoster()
                 )
             )
 

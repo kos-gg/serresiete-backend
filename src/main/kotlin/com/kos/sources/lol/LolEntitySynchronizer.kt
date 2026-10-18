@@ -3,7 +3,6 @@ package com.kos.sources.lol
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
@@ -12,6 +11,7 @@ import com.kos.common._fold
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
+import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.LolEntity
@@ -42,7 +42,7 @@ class LolEntitySynchronizer(
     override val json: Json = Json {
         serializersModule = SerializersModule {
             polymorphic(Data::class) {
-                subclass(RiotData::class, RiotData.serializer())
+                subclass(LolData::class, LolData.serializer())
             }
         }
         ignoreUnknownKeys = true
@@ -56,7 +56,7 @@ class LolEntitySynchronizer(
             val dataChannel = Channel<DataCache>()
             val errorsChannel = Channel<ServiceError>()
             val errorsList = mutableListOf<ServiceError>()
-            val matchCache = DynamicCache<Either<ServiceError, GetMatchResponse>>()
+            val matchCache = DynamicCache<Either<ServiceError, LolMatch>>()
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -112,14 +112,14 @@ class LolEntitySynchronizer(
 
     private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
-        matchCache: DynamicCache<Either<ServiceError, GetMatchResponse>>
-    ): Either<ServiceError, Pair<Long, RiotData>> =
+        matchCache: DynamicCache<Either<ServiceError, LolMatch>>
+    ): Either<ServiceError, Pair<Long, LolData>> =
         either {
 
-            val newestDataCacheEntry: RiotData? =
+            val newestDataCacheEntry: LolData? =
                 dataCacheRepository.get(lolEntity.id).maxByOrNull { it.inserted }?.let {
                     try {
-                        json.decodeFromString<RiotData>(it.data)
+                        json.decodeFromString<LolData>(it.data)
                     } catch (e: Throwable) {
                         logger.debug(
                             "Couldn't deserialize entity ${lolEntity.id} " +
@@ -129,7 +129,7 @@ class LolEntitySynchronizer(
                     }
                 }
 
-            val leagues: List<LeagueEntryResponse> =
+            val leagues: List<LeagueEntry> =
                 execute("getLeagueEntriesByPUUID") {
                     riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
                 }.bind()
@@ -140,7 +140,7 @@ class LolEntitySynchronizer(
                         async {
                             val lastMatchesForLeague: List<String> =
                                 execute("getMatchesByPuuid") {
-                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType.toInt())
+                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType)
                                 }.bind()
 
                             val matchesToRequest = newestDataCacheEntry._fold(
@@ -154,7 +154,7 @@ class LolEntitySynchronizer(
                                 }
                             )
 
-                            val matchResponses: List<GetMatchResponse> = matchesToRequest.map { matchId ->
+                            val matches: List<LolMatch> = matchesToRequest.map { matchId ->
                                 matchCache.get(matchId) {
                                     execute("getMatchById") {
                                         riotClient.getMatchById(matchId)
@@ -164,7 +164,7 @@ class LolEntitySynchronizer(
 
                             LeagueMatchData(
                                 leagueEntry,
-                                matchResponses,
+                                matches,
                                 newestDataCacheEntry?.leagues?.get(leagueEntry.queueType)?.matches.orEmpty()
                                     .filter { lastMatchesForLeague.contains(it.id) }
                             )
@@ -172,7 +172,7 @@ class LolEntitySynchronizer(
                     }.awaitAll()
                 }
 
-            Pair(lolEntity.id, RiotData.Companion.apply(lolEntity, leagueWithMatches))
+            Pair(lolEntity.id, leagueWithMatches.toLolData(lolEntity))
         }
 
     private suspend fun <A> execute(

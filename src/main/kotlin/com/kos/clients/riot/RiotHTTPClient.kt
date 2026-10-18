@@ -9,6 +9,9 @@ import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
 import com.kos.common.WithLogger
+import com.kos.datacache.domain.QueueType
+import com.kos.entities.domain.LolSummoner
+import com.kos.entities.domain.RiotAccount
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -19,6 +22,8 @@ import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import com.kos.sources.lol.LeagueEntry
+import com.kos.sources.lol.LolMatch
 
 
 data class RiotHTTPClient(
@@ -33,7 +38,7 @@ data class RiotHTTPClient(
 
     private val baseURI: (String) -> URI = { region -> URI("https://$region.api.riotgames.com") }
 
-    override suspend fun getPUUIDByRiotId(riotName: String, riotTag: String): Either<ClientError, GetPUUIDResponse> {
+    override suspend fun getPUUIDByRiotId(riotName: String, riotTag: String): Either<ClientError, String> {
         return throttleRequest {
             either {
                 val encodedRiotName = URLEncoder.encode(riotName, StandardCharsets.UTF_8.toString())
@@ -51,13 +56,13 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().puuid
 
             }
         }
     }
 
-    override suspend fun getSummonerByPuuid(puuid: String): Either<ClientError, GetSummonerResponse> {
+    override suspend fun getSummonerByPuuid(puuid: String): Either<ClientError, LolSummoner> {
         return throttleRequest {
             either {
                 val partialURI = URI("/lol/summoner/v4/summoners/by-puuid/$puuid")
@@ -74,12 +79,12 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toLolSummoner()
             }
         }
     }
 
-    override suspend fun getMatchesByPuuid(puuid: String, queue: Int): Either<ClientError, List<String>> {
+    override suspend fun getMatchesByPuuid(puuid: String, queue: QueueType): Either<ClientError, List<String>> {
         return throttleRequest {
 
             either {
@@ -97,7 +102,7 @@ data class RiotHTTPClient(
                                 append(X_RIOT_TOKEN, apiKey)
                             }
                             url {
-                                parameters.append("queue", queue.toString())
+                                parameters.append("queue", queue.toRiotQueueId().toString())
                                 parameters.append("count", "10")
                             }
                         }
@@ -107,7 +112,7 @@ data class RiotHTTPClient(
         }
     }
 
-    override suspend fun getMatchById(matchId: String): Either<ClientError, GetMatchResponse> {
+    override suspend fun getMatchById(matchId: String): Either<ClientError, LolMatch> {
         return throttleRequest {
             either {
                 logger.debug("Getting match $matchId")
@@ -125,12 +130,12 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toLolMatch()
             }
         }
     }
 
-    override suspend fun getLeagueEntriesByPUUID(summonerId: String): Either<ClientError, List<LeagueEntryResponse>> {
+    override suspend fun getLeagueEntriesByPUUID(summonerId: String): Either<ClientError, List<LeagueEntry>> {
         return throttleRequest {
             either {
                 logger.debug("Getting league entries for $summonerId")
@@ -148,12 +153,12 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toLeagueEntries()
             }
         }
     }
 
-    override suspend fun getAccountByPUUID(puuid: String): Either<ClientError, GetAccountResponse> {
+    override suspend fun getAccountByPUUID(puuid: String): Either<ClientError, RiotAccount> {
         return throttleRequest {
 
             either {
@@ -172,7 +177,7 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind()
+                }.bind().toRiotAccount()
             }
         }
     }

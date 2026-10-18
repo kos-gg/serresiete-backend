@@ -5,7 +5,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.fx.coroutines.parMap
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
 import com.kos.common.error.NonHardcoreCharacter
@@ -45,7 +44,7 @@ class WowHardcoreEntityResolver(
                     name = guildReq.name,
                     realm = guildReq.realm,
                     region = guildReq.region,
-                    blizzardId = guildResponse.guild.id
+                    blizzardId = guildResponse.guildId
                 )
             )
         } else {
@@ -62,11 +61,9 @@ class WowHardcoreEntityResolver(
                         req.region, req.realm, req.name
                     ).bind()
 
-                    val realm = blizzardClient.getRealm(req.region, profile.realm.id).bind()
+                    val realm = blizzardClient.getRealm(req.region, profile.realmId).bind()
 
-                    ensure(
-                        realm.category == "Hardcore" || realm.category == "Anniversary"
-                    ) { NonHardcoreCharacter(req) }
+                    ensure(realm.isHardcore) { NonHardcoreCharacter(req) }
 
                     WowEntityRequest(
                         req.name,
@@ -94,7 +91,7 @@ class WowHardcoreEntityResolver(
         region: String,
         realm: String,
         name: String
-    ): Either<ServiceError, Pair<GetWowRosterResponse, List<WowEntityRequest>>> {
+    ): Either<ServiceError, Pair<GuildRoster, List<WowEntityRequest>>> {
         return either {
             val roster = blizzardClient
                 .getHardcoreGuildRoster(region, realm, name)
@@ -103,8 +100,8 @@ class WowHardcoreEntityResolver(
 
             val memberReqs = roster.members
                 .asSequence()
-                .filter { it.character.level >= 10 }
-                .map { WowEntityRequest(it.character.name.lowercase(), region, it.character.realm?.slug ?: realm) }
+                .filter { it.level >= 10 }
+                .map { WowEntityRequest(it.name.lowercase(), region, it.realmSlug ?: realm) }
                 .toList()
 
             Pair(roster, memberReqs)

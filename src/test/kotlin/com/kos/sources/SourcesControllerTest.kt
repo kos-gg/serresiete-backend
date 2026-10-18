@@ -1,7 +1,7 @@
 package com.kos.sources
 
 import com.kos.activities.Activities
-import com.kos.clients.domain.Season
+import com.kos.sources.wow.staticdata.wowseason.Season
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions

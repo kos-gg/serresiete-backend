@@ -1,9 +1,6 @@
 package com.kos.clients.domain
 
-import arrow.core.Either
-import arrow.core.raise.either
 import com.kos.common.OffsetDateTimeSerializer
-import com.kos.entities.domain.Spec
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,72 +16,7 @@ import kotlinx.serialization.json.*
 import java.time.OffsetDateTime
 
 @Serializable
-data class RaiderIoCutoff(val totalPopulation: Int)
-
-object RaiderIoProtocol {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
-
-    fun parseCutoffJson(jsonString: String): RaiderIoCutoff {
-        val totalPopulation =
-            json.parseToJsonElement(jsonString)
-                .jsonObject["cutoffs"]
-                ?.jsonObject
-                ?.get("p999")
-                ?.jsonObject
-                ?.get("all")
-                ?.jsonObject
-                ?.get("totalPopulationCount")
-                ?.jsonPrimitive
-                ?.int
-                ?: throw IllegalStateException(
-                    "cutoffs/p999/all/totalPopulationCount missing"
-                )
-
-        return RaiderIoCutoff(totalPopulation)
-    }
-
-
-    fun getMythicPlusRanks(
-        profile: RaiderIoProfile,
-        specs: List<Spec>
-    ): Either<com.kos.clients.JsonParseError, List<MythicPlusRankWithSpecName>> =
-        either {
-            val ranksByExternalSpec = profile.mythicPlusRanks.specs
-
-            specs.map { spec ->
-                val rank = ranksByExternalSpec["spec_${spec.externalSpec}"]
-                    ?: raise(
-                        com.kos.clients.JsonParseError(
-                            raw = "",
-                            error = "/mythic_plus_ranks/spec_${spec.externalSpec}"
-                        )
-                    )
-
-                val score = when (spec.internalSpec) {
-                    0 -> profile.seasonScores[0].scores.spec0
-                    1 -> profile.seasonScores[0].scores.spec1
-                    2 -> profile.seasonScores[0].scores.spec2
-                    3 -> profile.seasonScores[0].scores.spec3
-                    else -> 0.0
-                }
-
-                MythicPlusRankWithSpecName(
-                    name = spec.name,
-                    score = score,
-                    world = rank.world,
-                    region = rank.region,
-                    realm = rank.realm
-                )
-            }
-        }
-
-}
-
-@Serializable
-data class Season(
+data class SeasonResponse(
     @SerialName("is_main_season")
     val isCurrentSeason: Boolean,
     val name: String,
@@ -92,11 +24,11 @@ data class Season(
     val slug: String,
     @SerialName("blizzard_season_id")
     val blizzardSeasonId: Int,
-    val dungeons: List<Dungeon>
+    val dungeons: List<DungeonResponse>
 )
 
 @Serializable
-data class Dungeon(
+data class DungeonResponse(
     val name: String,
     @SerialName("short_name")
     val shortName: String,
@@ -109,7 +41,7 @@ data class Dungeon(
 @Serializable
 data class ExpansionSeasons(
     @Serializable
-    val seasons: List<Season>
+    val seasons: List<SeasonResponse>
 )
 
 @Serializable
@@ -132,16 +64,7 @@ data class MythicPlusSeasonScore(
 )
 
 @Serializable
-data class MythicPlusRank(
-    val world: Int,
-    val region: Int,
-    val realm: Int
-)
-
-@Serializable
-data class MythicPlusRankWithSpecName(
-    val name: String,
-    val score: Double,
+data class MythicPlusRankResponse(
     val world: Int,
     val region: Int,
     val realm: Int
@@ -149,18 +72,18 @@ data class MythicPlusRankWithSpecName(
 
 @Serializable(with = MythicPlusRanksSerializer::class)
 data class MythicPlusRanks(
-    val overall: MythicPlusRank,
-    val `class`: MythicPlusRank,
-    val specs: Map<String, MythicPlusRank>
+    val overall: MythicPlusRankResponse,
+    val `class`: MythicPlusRankResponse,
+    val specs: Map<String, MythicPlusRankResponse>
 )
 
 object MythicPlusRanksSerializer : KSerializer<MythicPlusRanks> {
 
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("MythicPlusRanks") {
-            element("overall", MythicPlusRank.serializer().descriptor)
-            element("class", MythicPlusRank.serializer().descriptor)
-            element("specs", MapSerializer(String.serializer(), MythicPlusRank.serializer()).descriptor)
+            element("overall", MythicPlusRankResponse.serializer().descriptor)
+            element("class", MythicPlusRankResponse.serializer().descriptor)
+            element("specs", MapSerializer(String.serializer(), MythicPlusRankResponse.serializer()).descriptor)
         }
 
     override fun deserialize(decoder: Decoder): MythicPlusRanks {
@@ -177,7 +100,7 @@ object MythicPlusRanksSerializer : KSerializer<MythicPlusRanks> {
         val specs = jsonObject
             .filterKeys { it.startsWith("spec_") }
             .mapValues { (_, value) ->
-                decoder.json.decodeFromJsonElement(MythicPlusRank.serializer(), value)
+                decoder.json.decodeFromJsonElement(MythicPlusRankResponse.serializer(), value)
             }
 
         return MythicPlusRanks(
@@ -202,29 +125,21 @@ object MythicPlusRanksSerializer : KSerializer<MythicPlusRanks> {
     }
 }
 
-
 @Serializable
-data class MythicPlusRanksWithSpecs(
-    val overall: MythicPlusRank,
-    val `class`: MythicPlusRank,
-    val specs: List<MythicPlusRankWithSpecName>
-)
-
-@Serializable
-data class Affix(
+data class AffixResponse(
     @SerialName("name")
     val affix: String
 )
 
 @Serializable
-data class ClassSpec(
+data class ClassSpecResponse(
     val id: Int,
     val name: String,
     val role: String,
 )
 
 @Serializable
-data class MythicPlusRun(
+data class MythicPlusRunResponse(
     @SerialName("keystone_run_id")
     val runId: Long,
     val dungeon: String,
@@ -243,8 +158,8 @@ data class MythicPlusRun(
     val dungeonTimeMs: Long,
     val score: Float,
     val url: String,
-    val affixes: List<Affix>,
-    val spec: ClassSpec? = null
+    val affixes: List<AffixResponse>,
+    val spec: ClassSpecResponse? = null
 )
 
 @Serializable
@@ -266,50 +181,26 @@ data class RaiderIoProfile(
     @SerialName("mythic_plus_ranks")
     val mythicPlusRanks: MythicPlusRanks,
     @SerialName("mythic_plus_best_runs")
-    val mythicPlusBestRuns: List<MythicPlusRun>,
+    val mythicPlusBestRuns: List<MythicPlusRunResponse>,
     @SerialName("mythic_plus_recent_runs")
-    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
-) {
-    fun toRaiderIoData(
-        characterId: Long,
-        quantile: Double?,
-        specRanks: List<MythicPlusRankWithSpecName>,
-        bestRuns: List<EnrichedMythicPlusRun>,
-    ) = RaiderIoData(
-        characterId,
-        name,
-        realm,
-        region,
-        seasonScores[0].scores.all,
-        `class`,
-        spec,
-        quantile,
-        MythicPlusRanksWithSpecs(mythicPlusRanks.overall, mythicPlusRanks.`class`, specRanks),
-        bestRuns,
-        mythicPlusRecentRuns
-    )
-}
-
-data class RaiderIoResponse(
-    val profile: RaiderIoProfile,
-    val specs: List<MythicPlusRankWithSpecName>
+    val mythicPlusRecentRuns: List<MythicPlusRunResponse> = emptyList()
 )
 
 @Serializable
-data class RunDetailsCharacterClass(val name: String)
+data class RunDetailsCharacterClassResponse(val name: String)
 
 @Serializable
-data class RunDetailsCharacterSpec(val name: String)
+data class RunDetailsCharacterSpecResponse(val name: String)
 
 @Serializable
-data class RunDetailsCharacterRealm(
+data class RunDetailsCharacterRealmResponse(
     val id: Int,
     val name: String,
     val slug: String
 )
 
 @Serializable
-data class RunDetailsCharacterRegion(
+data class RunDetailsCharacterRegionResponse(
     val name: String,
     @SerialName("short_name")
     val shortName: String,
@@ -317,43 +208,42 @@ data class RunDetailsCharacterRegion(
 )
 
 @Serializable
-data class RunDetailsRosterRanks(
+data class RunDetailsRosterRanksResponse(
     val score: Double
 )
 
 @Serializable
-data class RunDetailsCharacter(
+data class RunDetailsCharacterResponse(
     val name: String,
-    val `class`: RunDetailsCharacterClass,
-    val spec: RunDetailsCharacterSpec,
-    val realm: RunDetailsCharacterRealm,
-    val region: RunDetailsCharacterRegion
+    val `class`: RunDetailsCharacterClassResponse,
+    val spec: RunDetailsCharacterSpecResponse,
+    val realm: RunDetailsCharacterRealmResponse,
+    val region: RunDetailsCharacterRegionResponse
 )
 
 @Serializable
-data class RunDetailsRosterEntry(
-    val character: RunDetailsCharacter,
+data class RunDetailsRosterEntryResponse(
+    val character: RunDetailsCharacterResponse,
     val role: String,
-    val ranks: RunDetailsRosterRanks
+    val ranks: RunDetailsRosterRanksResponse
 )
 
 @Serializable
-data class RunDetailsDeath(
+data class RunDetailsDeathResponse(
     @SerialName("approximate_died_at")
     val approximateDiedAt: Int
 )
 
 @Serializable
-data class LoggedDetails(val deaths: List<RunDetailsDeath> = emptyList())
+data class LoggedDetailsResponse(val deaths: List<RunDetailsDeathResponse> = emptyList())
 
 @Serializable
-data class RunDetails(
-    val roster: List<RunDetailsRosterEntry>,
+data class RunDetailsResponse(
+    val roster: List<RunDetailsRosterEntryResponse>,
     @SerialName("logged_details")
-    val loggedDetails: LoggedDetails? = null
+    val loggedDetails: LoggedDetailsResponse? = null
 ) {
 }
-
 
 object CodeExtractorSerializer : KSerializer<String> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CodeExtractor", PrimitiveKind.STRING)
@@ -375,30 +265,7 @@ data class TalentLoadout(
     val wowheadCalculator: String
 )
 
-
 @Serializable
 data class RaiderioWowHeadEmbeddedResponse(
     val talentLoadout: TalentLoadout
 )
-
-@Serializable
-data class EnrichedMythicPlusRun(
-    val run: MythicPlusRun,
-    val details: RunDetails? = null
-)
-
-@Serializable
-data class RaiderIoData(
-    val id: Long,
-    val name: String,
-    val realm: String,
-    val region: String,
-    val score: Double,
-    val `class`: String,
-    val spec: String,
-    val quantile: Double?,
-    val mythicPlusRanks: MythicPlusRanksWithSpecs,
-    val mythicPlusBestRuns: List<EnrichedMythicPlusRun>,
-    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
-) : Data
-

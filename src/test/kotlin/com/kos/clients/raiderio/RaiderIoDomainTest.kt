@@ -1,6 +1,6 @@
 package com.kos.clients.raiderio
 
-import com.kos.clients.domain.MythicPlusRun
+import com.kos.clients.domain.MythicPlusRunResponse
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.mythicPlusRun
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.mythicPlusRunJson
 import kotlinx.serialization.json.Json
@@ -17,7 +17,7 @@ class RaiderIoDomainTest {
     fun `i can deserialize a mythic plus run`() {
         assertEquals(
             mythicPlusRun,
-            json.decodeFromString<MythicPlusRun>(mythicPlusRunJson)
+            json.decodeFromString<MythicPlusRunResponse>(mythicPlusRunJson).toMythicPlusRun()
         )
     }
 }

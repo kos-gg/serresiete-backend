@@ -217,7 +217,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val dataElement = Json.parseToJsonElement(body).jsonObject["data"]
         assertNotNull(dataElement?.takeIf { it.toString() != "null" }, "Expected response data to be present")
         val data = dataElement!!.jsonObject
-        assertEquals("com.kos.clients.domain.RaiderIoData", data["type"]!!.jsonPrimitive.content)
+        assertEquals("wow", data["type"]!!.jsonPrimitive.content)
         assertNotNull(data["name"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
         assertNotNull(data["score"])
         assertNotNull(data["mythicPlusRanks"])
@@ -229,7 +229,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val dataElement = Json.parseToJsonElement(body).jsonObject["data"]
         assertNotNull(dataElement?.takeIf { it.toString() != "null" }, "Expected response data to be present")
         val data = dataElement!!.jsonObject
-        assertEquals("com.kos.clients.domain.RiotData", data["type"]!!.jsonPrimitive.content)
+        assertEquals("lol", data["type"]!!.jsonPrimitive.content)
         assertNotNull(data["summonerName"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
         assertNotNull(data["summonerTag"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
         assertNotNull(data["leagues"])

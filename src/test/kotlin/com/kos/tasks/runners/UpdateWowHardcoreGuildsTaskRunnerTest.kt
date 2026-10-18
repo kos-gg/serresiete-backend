@@ -2,6 +2,9 @@ package com.kos.tasks.runners
 
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.blizzard.toGuildRoster
+import com.kos.clients.blizzard.toWowCharacter
+import com.kos.clients.blizzard.toWowRealm
 import com.kos.clients.domain.*
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesService
@@ -63,13 +66,13 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
                     GetWowRosterResponse(
                         listOf(WowMemberResponse(WowCharacterResponse(character, 60))),
                         WowGuildResponse(blizzardId)
-                    )
+                    ).toGuildRoster()
                 )
             )
         `when`(blizzardClient.getClassicProfile(region, realm, character.toLowerCasePreservingASCIIRules()))
-            .thenReturn(Either.Right(getWowCharacterResponse.copy(name = character, guild = guild)))
+            .thenReturn(Either.Right(getWowCharacterResponse.copy(name = character, guild = guild).toWowCharacter()))
         `when`(blizzardClient.getRealm(region, 5220))
-            .thenReturn(Either.Right(GetWowRealmResponse("Hardcore")))
+            .thenReturn(Either.Right(GetWowRealmResponse("Hardcore").toWowRealm()))
 
         val id = UUID.randomUUID().toString()
         tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))

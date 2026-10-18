@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
-import com.kos.clients.domain.GetWowCharacterResponse
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
@@ -13,6 +12,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import com.kos.entities.domain.WowCharacter
 
 class BlizzardHTTPClientTest {
 
@@ -23,10 +23,10 @@ class BlizzardHTTPClientTest {
     fun `getCharacterProfile returns successful response`() {
         runBlocking {
             givenAValidToken()
-            val result: Either<ClientError, GetWowCharacterResponse> = blizzardClient.getClassicProfile(
+            val result: Either<ClientError, WowCharacter> = blizzardClient.getClassicProfile(
                 "region", "realm", "name"
             )
-            assertEquals(Either.Right(getWowCharacterResponse), result)
+            assertEquals(Either.Right(getWowCharacterResponse.toWowCharacter()), result)
         }
     }
 
@@ -51,7 +51,7 @@ class BlizzardHTTPClientTest {
             blizzardClient.getCharacterEquipment("region", "realm", "name")
 
         assertEquals(
-            Either.Right(BlizzardMockHelper.getWowEquipmentResponse),
+            Either.Right(BlizzardMockHelper.getWowEquipmentResponse.toEquippedItemRefs()),
             result
         )
     }
@@ -64,7 +64,7 @@ class BlizzardHTTPClientTest {
             blizzardClient.getCharacterSpecializations("region", "realm", "name")
 
         assertEquals(
-            Either.Right(BlizzardMockHelper.getWowSpecializationsResponse),
+            Either.Right(BlizzardMockHelper.getWowSpecializationsResponse.toActiveSpecializations()),
             result
         )
     }
@@ -77,7 +77,7 @@ class BlizzardHTTPClientTest {
             blizzardClient.getCharacterStats("region", "realm", "name")
 
         assertEquals(
-            Either.Right(BlizzardMockHelper.getWowStatsResponse),
+            Either.Right(BlizzardMockHelper.getWowStatsResponse.toWowStats()),
             result
         )
     }
@@ -103,7 +103,7 @@ class BlizzardHTTPClientTest {
             blizzardClient.getItem("region", 18421)
 
         assertEquals(
-            Either.Right(BlizzardMockHelper.getWowItemResponse),
+            Either.Right(BlizzardMockHelper.getWowItemResponse.toWowItemDetails()),
             result
         )
     }
@@ -116,7 +116,7 @@ class BlizzardHTTPClientTest {
             blizzardClient.getRealm("region", 1L)
 
         assertEquals(
-            Either.Right(BlizzardMockHelper.notHardcoreRealm),
+            Either.Right(BlizzardMockHelper.notHardcoreRealm.toWowRealm()),
             result
         )
     }
@@ -129,7 +129,7 @@ class BlizzardHTTPClientTest {
             blizzardClient.getHardcoreGuildRoster("region", "realm", "guild")
 
         assertEquals(
-            Either.Right(BlizzardMockHelper.getWowGuildRosterResponse),
+            Either.Right(BlizzardMockHelper.getWowGuildRosterResponse.toGuildRoster()),
             result
         )
     }
@@ -142,7 +142,7 @@ class BlizzardHTTPClientTest {
         val result =
             blizzardClient.getRetailGuildRoster("us", "realm", "guild")
 
-        assertEquals(Either.Right(BlizzardMockHelper.getWowRetailGuildRosterResponse), result)
+        assertEquals(Either.Right(BlizzardMockHelper.getWowRetailGuildRosterResponse.toGuildRoster()), result)
     }
 
     private suspend fun givenAValidToken() {

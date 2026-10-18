@@ -15,3 +15,20 @@ data class WowSeason(
         this.id == other.id && this.expansionId == other.expansionId
 
 }
+
+@Serializable
+data class Season(
+    val isCurrentSeason: Boolean,
+    val name: String,
+    val slug: String,
+    val blizzardSeasonId: Int,
+    val dungeons: List<Dungeon>
+)
+
+@Serializable
+data class Dungeon(
+    val name: String,
+    val shortName: String,
+    val dungeonId: Int,
+    val icon: String,
+)

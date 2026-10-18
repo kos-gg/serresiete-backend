@@ -1,6 +1,6 @@
 package com.kos.sources
 
-import com.kos.clients.domain.Season
+import com.kos.sources.wow.staticdata.wowseason.Season
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import kotlinx.coroutines.runBlocking

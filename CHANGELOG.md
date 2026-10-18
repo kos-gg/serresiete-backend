@@ -1,5 +1,45 @@
 # Changelog
 
+## [6.0.0] - 18-10-2026
+
+### Changed (breaking — requires frontend update)
+
+- **Own API contract for cached entity data**: the JSON no longer mirrors RaiderIO/Riot naming.
+    - `Data` discriminator (`type`): `com.kos.clients.domain.RaiderIoData` → `wow`,
+      `com.kos.clients.domain.RiotData` → `lol`, `com.kos.clients.domain.HardcoreData` → `wow_hc`.
+    - Mythic+ runs: `keystone_run_id` → `runId`, `short_name` → `shortName`, `mythic_level` → `keyLevel`,
+      `num_keystone_upgrades` → `upgrades`, `completed_at` → `dateCompleted`, `clear_time_ms` → `clearTimeMs`,
+      `par_time_ms` → `dungeonTimeMs`.
+    - Run details: `logged_details` → `loggedDetails`, `approximate_died_at` → `approximateDiedAt`, region
+      `short_name` → `shortName`.
+    - LoL `leagues` keys: `RANKED_SOLO_5x5` → `SOLO_Q`, `RANKED_FLEX_SR` → `FLEX_Q`.
+    - `GET /api/sources/wow/static`: `is_main_season` → `isCurrentSeason`, `blizzard_season_id` → `blizzardSeasonId`,
+      dungeon `short_name` → `shortName`, `challenge_mode_id` → `dungeonId`, `icon_url` → `icon`.
+
+### Changed
+
+- **Third-party anti-corruption layer**: `RaiderIoClient`, `BlizzardClient` and `RiotClient` now return our own
+  types; provider DTOs (`*Response` in `clients/domain`) are translated inside each client by
+  `clients/<provider>/<Provider>Mappers.kt`. A provider field change only touches its DTO and mapper.
+    - `datacache.domain` holds only what is persisted and served by the API (`WowData`, `LolData`,
+      `WowHardcoreData` — renamed from `RaiderIoData`/`RiotData`/`HardcoreData`).
+    - Sync working models live next to their synchronizer in `sources/<game>/*SyncDomain.kt`; models used by
+      resolvers (`GuildRoster`, `WowCharacter`, `WowRealm`, `LolSummoner`, `RiotAccount`) live in `entities.domain`.
+    - Hardcore realm detection moved to the Blizzard mapper (`WowRealm.isHardcore`).
+    - Riot league entries with an unknown queue type are now skipped instead of failing the whole sync.
+
+### Added
+
+- **`ThirdPartyDecouplingTest`** (ArchUnit): nothing outside `com.kos.clients` may depend on
+  `com.kos.clients.domain`. Known exception: WOW_HC static items (`wow_classic_static_items` stores Blizzard-format
+  JSON) and its converter scripts.
+
+### Deploy notes
+
+- Wipe the impacted tables (`data_cache`, `wow_seasons`, …): stored JSON uses the old format and is not migrated.
+- Run the `updateMythicPlusSeason` task manually afterwards (it is not scheduled); until then
+  `GET /api/sources/wow/static` returns 404.
+
 ## [5.12.0] - 06-09-2026
 
 ### Added
