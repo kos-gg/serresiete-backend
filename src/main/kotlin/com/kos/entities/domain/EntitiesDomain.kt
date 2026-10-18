@@ -1,7 +1,7 @@
 package com.kos.entities.domain
 
-import com.kos.datacache.domain.Data
 import com.kos.common.error.ServiceError
+import com.kos.datacache.domain.Data
 import com.kos.eventsourcing.events.Operation
 import com.kos.views.Game
 import kotlinx.serialization.KSerializer
