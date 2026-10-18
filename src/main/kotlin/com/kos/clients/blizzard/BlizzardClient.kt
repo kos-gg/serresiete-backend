@@ -2,13 +2,12 @@ package com.kos.clients.blizzard
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.datacache.domain.WowCharacter
-import com.kos.datacache.domain.WowEquippedItemRef
-import com.kos.datacache.domain.WowItemDetails
-import com.kos.datacache.domain.WowSpecialization
-import com.kos.datacache.domain.WowStats
+import com.kos.datacache.domain.*
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.WowRealm
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
+import com.kos.entities.domain.WowCharacter
 
 interface BlizzardClient {
     suspend fun getClassicProfile(

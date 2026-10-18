@@ -7,6 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import java.time.OffsetDateTime
+import com.kos.sources.wow.WowCharacterProfile
 
 object RaiderIoHttpClientHelper {
 

@@ -3,7 +3,7 @@ package com.kos.sources.wowhc.staticdata.wowitems
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.common.WithState
-import com.kos.datacache.domain.WowItemDetails
+import com.kos.sources.wowhc.WowItemDetails
 
 data class WowItemsState(
     val wowItems: List<WowItemState>

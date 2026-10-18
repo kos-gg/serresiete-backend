@@ -3,11 +3,6 @@ package com.kos.sources.lol
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.datacache.domain.Data
-import com.kos.datacache.domain.LeagueEntry
-import com.kos.datacache.domain.LeagueMatchData
-import com.kos.datacache.domain.LolMatch
-import com.kos.datacache.domain.LolData
 import com.kos.clients.riot.RiotClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
@@ -16,6 +11,7 @@ import com.kos.common._fold
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
+import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.LolEntity
@@ -176,7 +172,7 @@ class LolEntitySynchronizer(
                     }.awaitAll()
                 }
 
-            Pair(lolEntity.id, LolData.Companion.apply(lolEntity, leagueWithMatches))
+            Pair(lolEntity.id, leagueWithMatches.toLolData(lolEntity))
         }
 
     private suspend fun <A> execute(

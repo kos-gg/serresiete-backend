@@ -9,8 +9,6 @@ import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
 import com.kos.common.WithLogger
-import com.kos.datacache.domain.LeagueEntry
-import com.kos.datacache.domain.LolMatch
 import com.kos.datacache.domain.QueueType
 import com.kos.entities.domain.LolSummoner
 import com.kos.entities.domain.RiotAccount
@@ -24,6 +22,8 @@ import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import com.kos.sources.lol.LeagueEntry
+import com.kos.sources.lol.LolMatch
 
 
 data class RiotHTTPClient(

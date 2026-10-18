@@ -3,11 +3,10 @@ package com.kos.sources.wowhc.staticdata.wowitems
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.JsonParseError
-import com.kos.clients.domain.GetWowItemResponse
-import com.kos.clients.domain.GetWowMediaResponse
 import com.kos.clients.blizzard.asset
 import com.kos.clients.blizzard.toWowItemDetails
-import com.kos.datacache.domain.WowItemDetails
+import com.kos.clients.domain.GetWowItemResponse
+import com.kos.clients.domain.GetWowMediaResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -16,6 +15,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import com.kos.sources.wowhc.WowItemDetails
 
 object WowClassicStaticItems : Table("wow_classic_static_items") {
     val id = long("id")

@@ -11,5 +11,3 @@ data class GuildRosterMember(
     val id: Long?,
     val realmSlug: String?
 )
-
-data class WowRealm(val category: String)

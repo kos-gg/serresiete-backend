@@ -6,7 +6,6 @@ import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowCharacter
 import com.kos.datacache.domain.WowHardcoreData
-import com.kos.datacache.domain.WowCharacter
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
@@ -35,6 +34,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.*
 import kotlin.test.Test
+import com.kos.entities.domain.WowCharacter
 
 class WowHardcoreEntitySynchronizerTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)

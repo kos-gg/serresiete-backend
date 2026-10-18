@@ -6,7 +6,6 @@ import com.kos.datacache.domain.EnrichedMythicPlusRun
 import com.kos.datacache.domain.MythicPlusRank
 import com.kos.datacache.domain.MythicPlusRun
 import com.kos.datacache.domain.WowData
-import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper
 import com.kos.datacache.RaiderIoMockHelper

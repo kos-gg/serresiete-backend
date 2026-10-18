@@ -8,6 +8,9 @@ import com.kos.entities.domain.WowRealm
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
+import com.kos.entities.domain.WowCharacter
 
 fun GetWowCharacterResponse.toWowCharacter() = WowCharacter(
     id = id,

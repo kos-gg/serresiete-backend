@@ -3,11 +3,11 @@ package com.kos.clients.raiderio
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.datacache.domain.RunDetails
-import com.kos.datacache.domain.SeasonCutoff
-import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.sources.wow.staticdata.wowseason.Season
+import com.kos.sources.wow.SeasonCutoff
+import com.kos.sources.wow.WowCharacterProfile
 
 
 interface RaiderIoClient {

@@ -9,14 +9,14 @@ import com.kos.clients.blizzard.toWowCharacter
 import com.kos.clients.blizzard.toWowItemDetails
 import com.kos.clients.blizzard.toWowStats
 import com.kos.clients.domain.*
-import com.kos.datacache.domain.WowCharacter
-import com.kos.datacache.domain.WowEquippedItemRef
-import com.kos.datacache.domain.WowItemDetails
 import com.kos.datacache.domain.WowSpecialization
 import com.kos.datacache.domain.WowStats
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import kotlin.random.Random
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
+import com.kos.entities.domain.WowCharacter
 
 object BlizzardMockHelper {
 

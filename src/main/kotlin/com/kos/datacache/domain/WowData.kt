@@ -5,8 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 
-data class SeasonCutoff(val totalPopulation: Int)
-
 @Serializable
 data class MythicPlusRank(
     val world: Int,
@@ -119,38 +117,6 @@ data class EnrichedMythicPlusRun(
     val run: MythicPlusRun,
     val details: RunDetails? = null
 )
-
-data class WowCharacterProfile(
-    val name: String,
-    val realm: String,
-    val region: String,
-    val `class`: String,
-    val spec: String,
-    val score: Double,
-    val overallRank: MythicPlusRank,
-    val classRank: MythicPlusRank,
-    val specRanks: List<MythicPlusRankWithSpecName>,
-    val bestRuns: List<MythicPlusRun>,
-    val recentRuns: List<MythicPlusRun>
-) {
-    fun toWowData(
-        characterId: Long,
-        quantile: Double?,
-        bestRuns: List<EnrichedMythicPlusRun>,
-    ) = WowData(
-        characterId,
-        name,
-        realm,
-        region,
-        score,
-        `class`,
-        spec,
-        quantile,
-        MythicPlusRanksWithSpecs(overallRank, classRank, specRanks),
-        bestRuns,
-        recentRuns
-    )
-}
 
 @Serializable
 @SerialName("wow")

@@ -1,6 +1,7 @@
 package com.kos.entities.domain
 
 import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
 
 data class Spec(val name: String, val externalSpec: Int, val internalSpec: Int)
 data class Class(val `class`: String, val specs: List<Spec>)
@@ -325,3 +326,24 @@ val classes: List<Class> = listOf(
         )
     )
 )
+
+data class WowCharacter(
+    val id: Long,
+    val name: String,
+    val level: Int,
+    val isDead: Boolean,
+    val isSelfFound: Boolean,
+    val averageItemLevel: Int,
+    val equippedItemLevel: Int,
+    val characterClass: String,
+    val faction: String,
+    val race: String,
+    val gender: String,
+    val realmId: Long,
+    val realm: String,
+    val guild: String?,
+    val experience: Int,
+    val lastLogin: OffsetDateTime
+)
+
+data class WowRealm(val category: String)

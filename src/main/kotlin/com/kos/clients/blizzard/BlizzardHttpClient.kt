@@ -12,14 +12,10 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
-import com.kos.datacache.domain.WowCharacter
-import com.kos.datacache.domain.WowEquippedItemRef
-import com.kos.datacache.domain.WowItemDetails
-import com.kos.datacache.domain.WowSpecialization
-import com.kos.datacache.domain.WowStats
+import com.kos.common.WithLogger
+import com.kos.datacache.domain.*
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.WowRealm
-import com.kos.common.WithLogger
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -31,6 +27,9 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.OffsetDateTime
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
+import com.kos.entities.domain.WowCharacter
 
 data class TokenState(val obtainedAt: OffsetDateTime, val tokenResponse: TokenResponse)
 
@@ -348,7 +347,8 @@ class BlizzardHttpClient(
             either {
                 val tokenResponse = getAndUpdateToken().bind()
                 val namespace = "profile-$region"
-                val partialURI = URI("/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US")
+                val partialURI =
+                    URI("/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US")
 
                 retryEitherWithFixedDelay(
                     retryConfig = retryConfig,

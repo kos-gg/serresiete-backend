@@ -4,13 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
-import com.kos.datacache.domain.Data
-import com.kos.datacache.domain.EnrichedMythicPlusRun
-import com.kos.datacache.domain.MythicPlusRun
-import com.kos.datacache.domain.WowData
-import com.kos.datacache.domain.RunDetails
-import com.kos.datacache.domain.SeasonCutoff
-import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
@@ -18,6 +11,7 @@ import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
+import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntity

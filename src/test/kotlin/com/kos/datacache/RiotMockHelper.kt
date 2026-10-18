@@ -2,15 +2,15 @@ package com.kos.datacache
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.datacache.domain.LeagueEntry
 import com.kos.datacache.domain.LeagueProfile
-import com.kos.datacache.domain.LolMatch
-import com.kos.datacache.domain.LolMatchParticipant
 import com.kos.datacache.domain.MatchProfile
 import com.kos.datacache.domain.MatchUpProfile
 import com.kos.datacache.domain.QueueType
 import com.kos.datacache.domain.LolData
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.sources.lol.LeagueEntry
+import com.kos.sources.lol.LolMatchParticipant
+import com.kos.sources.lol.LolMatch
 
 object RiotMockHelper {
     val flexQEntry = LeagueEntry(

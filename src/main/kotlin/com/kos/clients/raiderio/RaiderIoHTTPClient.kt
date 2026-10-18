@@ -7,9 +7,6 @@ import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
-import com.kos.datacache.domain.RunDetails
-import com.kos.datacache.domain.SeasonCutoff
-import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
@@ -17,6 +14,7 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.M
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_RUN_DETAILS_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.WithLogger
+import com.kos.datacache.domain.RunDetails
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.sources.wow.staticdata.wowseason.Season
@@ -29,6 +27,8 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.net.URI
 import java.time.Duration
+import com.kos.sources.wow.SeasonCutoff
+import com.kos.sources.wow.WowCharacterProfile
 
 data class RaiderIoHTTPClient(
     val client: HttpClient,

@@ -4,6 +4,7 @@ import com.kos.clients.domain.*
 import com.kos.datacache.domain.*
 import com.kos.sources.wow.staticdata.wowseason.Dungeon
 import com.kos.sources.wow.staticdata.wowseason.Season
+import com.kos.sources.wow.WowCharacterProfile
 
 fun RaiderIoProfile.toWowCharacterProfile(specRanks: List<MythicPlusRankWithSpecName>) = WowCharacterProfile(
     name = name,

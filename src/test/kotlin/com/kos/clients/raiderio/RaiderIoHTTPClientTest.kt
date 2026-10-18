@@ -5,8 +5,6 @@ import com.kos.assertTrue
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.RetryConfig
-import com.kos.datacache.domain.SeasonCutoff
-import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfile
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
@@ -18,6 +16,8 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import com.kos.sources.wow.SeasonCutoff
+import com.kos.sources.wow.WowCharacterProfile
 
 class RaiderIoHTTPClientTest {
 

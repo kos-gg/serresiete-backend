@@ -1,12 +1,15 @@
 package com.kos.clients.riot
 
-import com.kos.clients.domain.*
-import com.kos.datacache.domain.LeagueEntry
-import com.kos.datacache.domain.LolMatch
-import com.kos.datacache.domain.LolMatchParticipant
+import com.kos.clients.domain.GetAccountResponse
+import com.kos.clients.domain.GetMatchResponse
+import com.kos.clients.domain.GetSummonerResponse
+import com.kos.clients.domain.LeagueEntryResponse
 import com.kos.datacache.domain.QueueType
 import com.kos.entities.domain.LolSummoner
 import com.kos.entities.domain.RiotAccount
+import com.kos.sources.lol.LeagueEntry
+import com.kos.sources.lol.LolMatchParticipant
+import com.kos.sources.lol.LolMatch
 
 fun GetSummonerResponse.toLolSummoner() = LolSummoner(puuid, profileIconId, summonerLevel)
 

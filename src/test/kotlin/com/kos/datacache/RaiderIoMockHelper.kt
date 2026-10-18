@@ -5,9 +5,9 @@ import com.kos.clients.ClientError
 import com.kos.datacache.domain.MythicPlusRank
 import com.kos.datacache.domain.MythicPlusRanksWithSpecs
 import com.kos.datacache.domain.WowData
-import com.kos.datacache.domain.SeasonCutoff
-import com.kos.datacache.domain.WowCharacterProfile
 import com.kos.entities.domain.WowEntity
+import com.kos.sources.wow.SeasonCutoff
+import com.kos.sources.wow.WowCharacterProfile
 
 object RaiderIoMockHelper {
     fun get(wowCharacter: WowEntity): Either<ClientError, WowCharacterProfile> {

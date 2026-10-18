@@ -6,12 +6,6 @@ import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.datacache.domain.Data
-import com.kos.datacache.domain.WowHardcoreData
-import com.kos.datacache.domain.WowCharacter
-import com.kos.datacache.domain.WowEquippedItemRef
-import com.kos.datacache.domain.WowItem
-import com.kos.datacache.domain.WowTalents
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
@@ -21,6 +15,7 @@ import com.kos.common.error.SyncProcessingError
 import com.kos.common.fold
 import com.kos.common.split
 import com.kos.datacache.DataCache
+import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntity
@@ -43,6 +38,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import java.time.Duration
 import java.time.OffsetDateTime
+import com.kos.entities.domain.WowCharacter
 
 class WowHardcoreEntitySynchronizer(
     private val dataCacheRepository: DataCacheRepository,
@@ -199,9 +195,8 @@ class WowHardcoreEntitySynchronizer(
                         val newItemsWithIcons =
                             getNewItemsWithIcons(existentItemsAndItemsToRequest, entity).bindAll()
 
-                        WowHardcoreData.apply(
+                        character.toWowHardcoreData(
                             entity.region,
-                            character,
                             avatar,
                             existentItemsAndItemsToRequest.first + newItemsWithIcons,
                             stats,

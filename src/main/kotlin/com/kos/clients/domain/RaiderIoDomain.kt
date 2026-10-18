@@ -1,9 +1,6 @@
 package com.kos.clients.domain
 
-import arrow.core.Either
-import arrow.core.raise.either
 import com.kos.common.OffsetDateTimeSerializer
-import com.kos.entities.domain.Spec
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,69 +14,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import java.time.OffsetDateTime
-import com.kos.datacache.domain.MythicPlusRankWithSpecName
-import com.kos.datacache.domain.SeasonCutoff
-
-object RaiderIoProtocol {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
-
-    fun parseCutoffJson(jsonString: String): SeasonCutoff {
-        val totalPopulation =
-            json.parseToJsonElement(jsonString)
-                .jsonObject["cutoffs"]
-                ?.jsonObject
-                ?.get("p999")
-                ?.jsonObject
-                ?.get("all")
-                ?.jsonObject
-                ?.get("totalPopulationCount")
-                ?.jsonPrimitive
-                ?.int
-                ?: throw IllegalStateException(
-                    "cutoffs/p999/all/totalPopulationCount missing"
-                )
-
-        return SeasonCutoff(totalPopulation)
-    }
-
-    fun getMythicPlusRanks(
-        profile: RaiderIoProfile,
-        specs: List<Spec>
-    ): Either<com.kos.clients.JsonParseError, List<MythicPlusRankWithSpecName>> =
-        either {
-            val ranksByExternalSpec = profile.mythicPlusRanks.specs
-
-            specs.map { spec ->
-                val rank = ranksByExternalSpec["spec_${spec.externalSpec}"]
-                    ?: raise(
-                        com.kos.clients.JsonParseError(
-                            raw = "",
-                            error = "/mythic_plus_ranks/spec_${spec.externalSpec}"
-                        )
-                    )
-
-                val score = when (spec.internalSpec) {
-                    0 -> profile.seasonScores[0].scores.spec0
-                    1 -> profile.seasonScores[0].scores.spec1
-                    2 -> profile.seasonScores[0].scores.spec2
-                    3 -> profile.seasonScores[0].scores.spec3
-                    else -> 0.0
-                }
-
-                MythicPlusRankWithSpecName(
-                    name = spec.name,
-                    score = score,
-                    world = rank.world,
-                    region = rank.region,
-                    realm = rank.realm
-                )
-            }
-        }
-
-}
 
 @Serializable
 data class SeasonResponse(

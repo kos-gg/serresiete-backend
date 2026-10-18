@@ -4,10 +4,10 @@ import com.kos.clients.domain.GetMatchResponse
 import com.kos.clients.domain.LeagueEntryResponse
 import com.kos.clients.domain.MatchInfo
 import com.kos.clients.domain.Metadata
-import com.kos.datacache.domain.LeagueEntry
 import com.kos.datacache.domain.QueueType
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import com.kos.sources.lol.LeagueEntry
 
 class RiotMappersTest {
 
