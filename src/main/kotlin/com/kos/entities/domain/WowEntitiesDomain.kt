@@ -1,5 +1,6 @@
 package com.kos.entities.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 
@@ -7,6 +8,7 @@ data class Spec(val name: String, val externalSpec: Int, val internalSpec: Int)
 data class Class(val `class`: String, val specs: List<Spec>)
 
 @Serializable
+@SerialName("wow")
 data class WowEntityRequest(
     override val name: String,
     val region: String,
@@ -40,6 +42,7 @@ data class WowEntityResponse(
 ) : EntityResponse
 
 @Serializable
+@SerialName("wow")
 data class WowEntity(
     override val id: Long,
     override val name: String,

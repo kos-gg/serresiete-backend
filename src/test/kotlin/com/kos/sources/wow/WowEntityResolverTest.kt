@@ -205,7 +205,7 @@ class WowEntityResolverTest {
     }
 
     private val guildRequest = WowEntityRequest("method", "eu", "twisting-nether")
-    private val guildExtraArguments = WowExtraArguments(season = 0, guild = GuildArgs.RESOLVE)
+    private val guildExtraArguments = WowExtraArguments(guild = GuildArgs.RESOLVE)
 
     @Test
     fun `resolves a guild's roster, keeping max level members above the score threshold, and returns the guild payload`() {
@@ -455,7 +455,7 @@ class WowEntityResolverTest {
         }
     }
 
-    private val existenceOnlyArguments = WowExtraArguments(season = 0, guild = GuildArgs.EXISTENCE)
+    private val existenceOnlyArguments = WowExtraArguments(guild = GuildArgs.EXISTENCE)
 
     @Test
     fun `resolve with EXISTENCE_ONLY returns the guild payload without resolving members`() {

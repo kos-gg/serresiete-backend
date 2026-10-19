@@ -1,5 +1,29 @@
 # Changelog
 
+## [7.0.0] - 19-10-2026
+
+### Changed (breaking — requires frontend update)
+
+- **No backend class names in the API**: every polymorphic `type` is now a short game id.
+
+  | Type | Before | Now | Where |
+  | --- | --- | --- | --- |
+  | `EntityRequest` | `com.kos.entities.domain.WowEntityRequest` / `LolEntityRequest` | `wow` / `lol` | requests of `POST /api/views`, `PUT`/`PATCH /api/views/{id}`, `POST /api/entities/exists` |
+  | `ViewExtraArguments` | `com.kos.views.WowExtraArguments` / `WowHardcoreExtraArguments` | `wow` / `wow_hc` | view requests, and `records[]` of `GET /api/views` |
+  | `Entity` | `com.kos.entities.domain.WowEntity` / `LolEntity` | `wow` / `lol` | `entities[]` of `GET /api/views/{id}` |
+
+  `wow` entity requests and entities are shared by `WOW` and `WOW_HC` views; the view's `game` tells them apart.
+- **`WowExtraArguments.season` removed**: it was never read. The API rejects unknown fields, so the frontend must stop
+  sending `season`; a `wow` extra arguments object is now just `{"type": "wow", "guild": "RESOLVE" | "EXISTENCE"}`.
+
+### Deploy notes
+
+- Wipe `events` and `views` (`TRUNCATE events, views CASCADE`, which also empties the tables referencing views:
+  `view_entities`, `wow_guilds`): both store the old `type` and are not migrated. Existing user views are lost.
+- Do **not** reset the `event_versions` sequence nor the `subscriptions` rows — new events must keep versions above
+  what each subscription already processed.
+- Deploy when no view operation is in flight: events not yet processed by every subscription are lost with the wipe.
+
 ## [6.0.0] - 18-10-2026
 
 ### Changed (breaking — requires frontend update)

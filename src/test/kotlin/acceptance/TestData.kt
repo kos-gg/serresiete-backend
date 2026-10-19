@@ -37,14 +37,14 @@ fun Game.entityRequest(row: Map<String, String>): EntityRequest = when (this) {
 // serialize via setBody() - build the wire JSON by hand instead.
 fun Game.entityRequestJson(row: Map<String, String>): JsonObject = when (this) {
     Game.WOW, Game.WOW_HC -> buildJsonObject {
-        put("type", "com.kos.entities.domain.WowEntityRequest")
+        put("type", "wow")
         put("name", row["name"])
         put("region", row["region"])
         put("realm", row["realm"])
     }
 
     Game.LOL -> buildJsonObject {
-        put("type", "com.kos.entities.domain.LolEntityRequest")
+        put("type", "lol")
         put("name", row["name"])
         put("tag", row["tag"])
     }

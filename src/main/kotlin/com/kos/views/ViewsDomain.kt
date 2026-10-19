@@ -6,6 +6,7 @@ import com.kos.common.error.InvalidGameType
 import com.kos.datacache.domain.Data
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 
@@ -41,12 +42,13 @@ enum class GuildArgs {
 }
 
 @Serializable
+@SerialName("wow")
 data class WowExtraArguments(
-    val season: Int,
     val guild: GuildArgs? = null
 ) : ViewExtraArguments
 
 @Serializable
+@SerialName("wow_hc")
 data class WowHardcoreExtraArguments(
     val isGuild: Boolean
 ) : ViewExtraArguments

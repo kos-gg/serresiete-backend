@@ -46,7 +46,7 @@ data class EntitiesService(
 
     suspend fun guildExists(name: String, region: String, realm: String): Either<ServiceError, GuildExistsResponse> {
         val guildRequest = WowEntityRequest(name, region, realm)
-        val extraArguments = WowExtraArguments(season = 0, guild = GuildArgs.EXISTENCE)
+        val extraArguments = WowExtraArguments(guild = GuildArgs.EXISTENCE)
 
         return resolveEntities(listOf(guildRequest), Game.WOW, extraArguments)
             .map { resolved -> GuildExistsResponse(resolved.guild) }
