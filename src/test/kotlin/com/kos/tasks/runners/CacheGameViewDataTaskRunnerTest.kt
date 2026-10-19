@@ -58,6 +58,7 @@ class CacheGameViewDataTaskRunnerTest {
         ),
         mock(),
         mock(),
+        mock(),
         mock()
     )
     private val entitySynchronizerProvider = EntitySynchronizerProvider(

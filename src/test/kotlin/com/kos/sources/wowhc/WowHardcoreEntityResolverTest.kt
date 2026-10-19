@@ -28,7 +28,7 @@ class WowHardcoreEntityResolverTest {
             `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
+            val resolver = WowHardcoreEntityResolver(repo, blizzardClient, WowHardcoreGuildResolver(blizzardClient))
 
             resolver.resolve(listOf(basicWowRequest), null)
                 .onLeft { fail() }
@@ -48,7 +48,7 @@ class WowHardcoreEntityResolverTest {
             `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(notHardcoreRealm.toWowRealm()))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
+            val resolver = WowHardcoreEntityResolver(repo, blizzardClient, WowHardcoreGuildResolver(blizzardClient))
 
             resolver.resolve(listOf(basicWowRequest), null)
                 .onLeft { fail() }
@@ -61,7 +61,7 @@ class WowHardcoreEntityResolverTest {
         runBlocking {
             val repo = EntitiesInMemoryRepository()
                 .withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
-            val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
+            val resolver = WowHardcoreEntityResolver(repo, blizzardClient, WowHardcoreGuildResolver(blizzardClient))
 
             resolver.resolve(listOf(basicWowRequest), null)
                 .onLeft { fail() }

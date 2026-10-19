@@ -134,7 +134,7 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 "extraArguments",
                 buildJsonObject {
                     put("type", "wow")
-                    put("guild", "RESOLVE")
+                    put("isGuild", true)
                 }
             )
         }

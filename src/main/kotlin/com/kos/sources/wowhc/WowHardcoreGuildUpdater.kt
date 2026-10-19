@@ -10,6 +10,7 @@ import com.kos.views.Game
 import com.kos.views.repository.ViewsRepository
 
 class WowHardcoreGuildUpdater(
+    private val guildResolver: WowHardcoreGuildResolver,
     private val resolver: WowHardcoreEntityResolver,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
@@ -20,7 +21,7 @@ class WowHardcoreGuildUpdater(
 
         val initialResults = entities
             .map { (guild, viewId) ->
-                resolver
+                guildResolver
                     .resolveRoster(guild.region, guild.realm, guild.name)
                     .map { (_, roster) -> roster to viewId }
             }

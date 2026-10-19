@@ -32,6 +32,8 @@ import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 class ViewsSyncProcessorTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
@@ -177,14 +179,16 @@ class ViewsSyncProcessorTest {
         val eventStore = EventStoreInMemory()
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
-        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
-            WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+            WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
@@ -196,6 +200,7 @@ class ViewsSyncProcessorTest {
             entitiesRepository,
             wowGuildsRepository,
             entitiesResolver,
+            wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
             wowGuildUpdater

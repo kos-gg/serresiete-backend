@@ -58,6 +58,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.time.OffsetDateTime
 import kotlin.test.*
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 //TODO: Behaviour of get cached data
 
@@ -92,8 +94,10 @@ class ViewsControllerTest {
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
-        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
@@ -104,13 +108,14 @@ class ViewsControllerTest {
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
-            WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepositoryWithState)
+            WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepositoryWithState)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
             entitiesResolver,
+            wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
             wowGuildUpdater

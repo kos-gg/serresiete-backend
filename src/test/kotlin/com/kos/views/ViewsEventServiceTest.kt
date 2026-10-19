@@ -46,6 +46,8 @@ import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 class ViewsEventServiceTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
@@ -81,7 +83,7 @@ class ViewsEventServiceTest {
         fun `creating a guild view for an already-tracked guild reuses its entities without calling blizzard or raiderio`() {
             runBlocking {
                 val existingViewId = "existing-guild-view"
-                val guildExtraArguments = WowExtraArguments(guild = GuildArgs.RESOLVE)
+                val guildExtraArguments = WowExtraArguments(isGuild = true)
                 val guildRequest = WowEntityRequest("method", "eu", "twisting-nether")
 
                 val existingView = SimpleView(
@@ -368,8 +370,10 @@ class ViewsEventServiceTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
             .withState(WowGuildsState(wowGuildsState))
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
-        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
@@ -379,13 +383,14 @@ class ViewsEventServiceTest {
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
-        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
             entitiesResolver,
+            wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
             wowGuildUpdater

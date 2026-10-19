@@ -62,6 +62,8 @@ import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 //TODO: Add testing for:
 //TODO: getCachedData(simpleView: SimpleView)
@@ -724,8 +726,10 @@ class ViewsServiceTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
             .withState(WowGuildsState(wowGuildsState))
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
-        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
@@ -735,13 +739,14 @@ class ViewsServiceTest {
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
-        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
             entitiesResolver,
+            wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
             wowGuildUpdater

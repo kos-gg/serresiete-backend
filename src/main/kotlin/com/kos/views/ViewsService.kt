@@ -196,14 +196,9 @@ class ViewsService(
     ): Either<ControllerError, Unit> = either {
         request.extraArguments?.let { extra ->
             when (request.game) {
-                Game.WOW_HC -> {
-                    ensure(extra is WowHardcoreExtraArguments) { ExtraArgumentsWrongType }
-                    if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanTwoEntities }
-                }
-
-                Game.WOW -> {
+                Game.WOW, Game.WOW_HC -> {
                     ensure(extra is WowExtraArguments) { ExtraArgumentsWrongType }
-                    if (extra.guild != null) ensure(request.entities.size == 1) { GuildViewMoreThanTwoEntities }
+                    if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanTwoEntities }
                 }
 
                 Game.LOL -> Unit

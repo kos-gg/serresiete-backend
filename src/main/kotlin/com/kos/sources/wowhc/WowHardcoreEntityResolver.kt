@@ -5,7 +5,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.fx.coroutines.parMap
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
 import com.kos.common.error.NonHardcoreCharacter
 import com.kos.common.error.ServiceError
@@ -13,9 +12,10 @@ import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
-import com.kos.views.WowHardcoreExtraArguments
+import com.kos.views.WowExtraArguments
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
@@ -23,7 +23,8 @@ import kotlinx.coroutines.flow.toList
 
 class WowHardcoreEntityResolver(
     private val repo: EntitiesRepository,
-    private val blizzardClient: BlizzardClient
+    private val blizzardClient: BlizzardClient,
+    private val guildResolver: WowHardcoreGuildResolver
 ) : EntityResolver, WithLogger("WowHardcoreResolver") {
     override val game: Game = Game.WOW_HC
 
@@ -32,26 +33,18 @@ class WowHardcoreEntityResolver(
         requested: List<EntityRequest>,
         extra: ViewExtraArguments?
     ): Either<ServiceError, ResolvedEntities> = either {
-        val args = extra as? WowHardcoreExtraArguments
+        val args = extra as? WowExtraArguments
         val (effectiveRequests, guildPayload) = if (args?.isGuild == true) {
             val guildReq = requested.first() as WowEntityRequest
 
-            val (guildResponse, roster) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
+            val (guildRoster, members) = guildResolver.resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
 
-            Pair(
-                roster,
-                GuildPayload(
-                    name = guildReq.name,
-                    realm = guildReq.realm,
-                    region = guildReq.region,
-                    blizzardId = guildResponse.guildId
-                )
-            )
+            Pair(members, guildResolver.payload(guildRoster, guildReq))
         } else {
             Pair(requested, null)
         }
 
-        val (existing, newRequests) = getCurrentAndNewEntities(repo, effectiveRequests, Game.WOW_HC)
+        val (existing, newRequests) = repo.getCurrentAndNewEntities(effectiveRequests, Game.WOW_HC)
 
         val (errors, oks) = newRequests.asFlow()
             .parMap(10) { req ->
@@ -85,27 +78,5 @@ class WowHardcoreEntityResolver(
             existing = existing.map { it.value to it.alias },
             guild = guildPayload
         )
-    }
-
-    suspend fun resolveRoster(
-        region: String,
-        realm: String,
-        name: String
-    ): Either<ServiceError, Pair<GuildRoster, List<WowEntityRequest>>> {
-        return either {
-            val roster = blizzardClient
-                .getHardcoreGuildRoster(region, realm, name)
-                .mapLeft { it.toSyncProcessingError("GetHardcoreGuildRoster") }
-                .bind()
-
-            val memberReqs = roster.members
-                .asSequence()
-                .filter { it.level >= 10 }
-                .map { WowEntityRequest(it.name.lowercase(), region, it.realmSlug ?: realm) }
-                .toList()
-
-            Pair(roster, memberReqs)
-        }
-
     }
 }

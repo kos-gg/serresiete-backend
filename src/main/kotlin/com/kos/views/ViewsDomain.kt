@@ -36,20 +36,8 @@ enum class Game {
 sealed interface ViewExtraArguments
 
 @Serializable
-enum class GuildArgs {
-    EXISTENCE,
-    RESOLVE
-}
-
-@Serializable
 @SerialName("wow")
 data class WowExtraArguments(
-    val guild: GuildArgs? = null
-) : ViewExtraArguments
-
-@Serializable
-@SerialName("wow_hc")
-data class WowHardcoreExtraArguments(
     val isGuild: Boolean
 ) : ViewExtraArguments
 

@@ -30,6 +30,7 @@ import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 class UpdateWowHardcoreGuildsTaskRunnerTest {
 
@@ -37,13 +38,15 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val wowGuildsRepository = WowGuildsInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
-    private val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+    private val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
+    private val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
         EntityResolverProvider(wowResolver = mock(), wowHardcoreResolver = wowHardcoreResolver, lolResolver = mock()),
         mock(),
-        WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository),
+        mock(),
+        WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository),
         mock()
     )
     private val tasksRepo = TasksInMemoryRepository()

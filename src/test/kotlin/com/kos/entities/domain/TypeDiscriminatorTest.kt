@@ -1,9 +1,7 @@
 package com.kos.entities.domain
 
-import com.kos.views.GuildArgs
 import com.kos.views.ViewExtraArguments
 import com.kos.views.WowExtraArguments
-import com.kos.views.WowHardcoreExtraArguments
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -43,11 +41,7 @@ class TypeDiscriminatorTest {
     }
 
     @Test
-    fun `view extra arguments are discriminated by game`() {
-        assertEquals(
-            "wow",
-            typeOf(json.encodeToString<ViewExtraArguments>(WowExtraArguments(guild = GuildArgs.RESOLVE)))
-        )
-        assertEquals("wow_hc", typeOf(json.encodeToString<ViewExtraArguments>(WowHardcoreExtraArguments(true))))
+    fun `wow extra arguments are shared by wow and wow hardcore views`() {
+        assertEquals("wow", typeOf(json.encodeToString<ViewExtraArguments>(WowExtraArguments(isGuild = true))))
     }
 }

@@ -499,7 +499,7 @@ abstract class ViewsRepositoryTest {
                 listOf(),
                 Game.WOW_HC,
                 false,
-                WowHardcoreExtraArguments(true)
+                WowExtraArguments(true)
             )
 
             val insertResult =

@@ -51,12 +51,14 @@ import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.TaskType
@@ -134,8 +136,10 @@ fun Application.module() {
     val entitiesRepository = EntitiesDatabaseRepository(db)
     val wowGuildsDatabaseRepository = WowGuildsDatabaseRepository(db)
 
-    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
-    val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+    val wowGuildResolver = WowGuildResolver(raiderIoHTTPClient, blizzardClient)
+    val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
+    val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
+    val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
@@ -182,13 +186,14 @@ fun Application.module() {
             eventStore
         )
 
-    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-    val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+    val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
         entityResolverProvider,
+        wowGuildResolver,
         lolUpdater,
         wowHardcoreGuildUpdater,
         wowGuildUpdater

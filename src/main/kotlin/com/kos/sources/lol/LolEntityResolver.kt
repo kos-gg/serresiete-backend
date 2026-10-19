@@ -13,6 +13,7 @@ import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +34,7 @@ class LolEntityResolver(
         requested: List<EntityRequest>,
         extra: ViewExtraArguments?
     ): Either<ServiceError, ResolvedEntities> = either {
-        val (existing, newRequests) = getCurrentAndNewEntities(repo, requested, Game.LOL)
+        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.LOL)
 
         val validated = newRequests.asFlow()
             .parMap(10) { req ->
