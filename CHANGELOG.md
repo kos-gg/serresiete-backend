@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.2] - 20-10-2026
+
+### Added
+
+- **`extraArguments` in `GET /api/views/{id}`**: the view detail now returns the same `extraArguments` as
+  `records[]` of `GET /api/views`, so the frontend can tell guild views apart (`extraArguments.isGuild`).
+  Omitted when the view has none. Additive, no frontend change required.
+
 ## [6.0.1] - 19-10-2026
 
 ### Changed (breaking — requires frontend update)

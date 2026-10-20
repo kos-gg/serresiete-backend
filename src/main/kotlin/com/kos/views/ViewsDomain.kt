@@ -78,6 +78,7 @@ data class View(
     val entities: List<EntityWithAlias>,
     val game: Game,
     val featured: Boolean,
+    val extraArguments: ViewExtraArguments? = null,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val lastSyncedAt: OffsetDateTime? = null
 )

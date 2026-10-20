@@ -50,6 +50,7 @@ class ViewsService(
                     },
                     simpleView.game,
                     simpleView.featured,
+                    simpleView.extraArguments,
                     simpleView.lastSyncedAt
                 )
             }
