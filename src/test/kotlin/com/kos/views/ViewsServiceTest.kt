@@ -223,6 +223,21 @@ class ViewsServiceTest {
                 assertEquals(listOf(alias, null), view?.entities?.map { it.alias })
             }
         }
+
+        @Test
+        fun `i can get a guild view with its extra arguments`() {
+            runBlocking {
+                val guildView = basicSimpleWowView.copy(extraArguments = WowExtraArguments(isGuild = true))
+                val (_, viewsService) = createService(
+                    ViewsState(listOf(guildView), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState,
+                )
+
+                assertEquals(WowExtraArguments(isGuild = true), viewsService.get(guildView.id)?.extraArguments)
+            }
+        }
     }
 
     @Nested
