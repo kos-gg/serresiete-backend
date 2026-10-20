@@ -22,7 +22,6 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
     private val json = Json {
         serializersModule = SerializersModule {
             polymorphic(ViewExtraArguments::class) {
-                subclass(WowHardcoreExtraArguments::class, WowHardcoreExtraArguments.serializer())
                 subclass(WowExtraArguments::class, WowExtraArguments.serializer())
             }
         }

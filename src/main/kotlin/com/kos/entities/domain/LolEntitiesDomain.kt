@@ -1,8 +1,10 @@
 package com.kos.entities.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName("lol")
 data class LolEntity(
     override val id: Long,
     override val name: String,
@@ -15,6 +17,7 @@ data class LolEntity(
 }
 
 @Serializable
+@SerialName("lol")
 data class LolEntityRequest(
     override val name: String,
     val tag: String,

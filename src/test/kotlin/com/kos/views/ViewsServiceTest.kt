@@ -3,6 +3,7 @@ package com.kos.views
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.common.error.EntitiesDoNotMatchGame
 import com.kos.common.error.TooMuchEntities
 import com.kos.common.error.TooMuchViews
 import com.kos.common.error.UserWithoutRoles
@@ -62,6 +63,8 @@ import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 //TODO: Add testing for:
 //TODO: getCachedData(simpleView: SimpleView)
@@ -365,6 +368,52 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `creating a lol view with a wow entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(name, published, listOf(WowEntityRequest("kakarona", "eu", "zuljin")), Game.LOL, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `creating a wow hardcore view with a lol entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(name, published, listOf(LolEntityRequest("sanxei", "EUW")), Game.WOW_HC, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
         fun `admins can create a huge amount of views and an event gets stored`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
@@ -484,6 +533,31 @@ class ViewsServiceTest {
                     fail()
                 }.onLeft {
                     assertTrue(it is TooMuchEntities)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `editing a lol view with a wow entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(
+                        listOf(basicSimpleLolView),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
+                    emptyEntitiesState,
+                    listOf(),
+                    CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
+                )
+
+                viewsService.edit(
+                    owner, id,
+                    ViewRequest(name, published, listOf(WowEntityRequest("kakarona", "eu", "zuljin")), Game.LOL, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
                 }
 
                 assertNoEventsStored(eventStore)
@@ -628,6 +702,32 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `patching a wow view with a lol entity fails without storing an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
+                    emptyEntitiesState,
+                    listOf(),
+                    CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
+                )
+
+                viewsService.patch(
+                    owner,
+                    id,
+                    ViewPatchRequest(null, null, listOf(LolEntityRequest("sanxei", "EUW")), Game.WOW, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
         fun `patching a view patching more than one character stores an event`() {
             runBlocking {
 
@@ -724,24 +824,29 @@ class ViewsServiceTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
             .withState(WowGuildsState(wowGuildsState))
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
+            wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
+            wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
-        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
             entitiesResolver,
+            wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
             wowGuildUpdater

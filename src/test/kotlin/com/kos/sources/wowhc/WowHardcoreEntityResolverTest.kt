@@ -30,7 +30,7 @@ class WowHardcoreEntityResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
 
-            resolver.resolve(listOf(basicWowRequest), null)
+            resolver.resolve(listOf(basicWowRequest))
                 .onLeft { fail() }
                 .onRight { res ->
                     assertEquals(1, res.entities.size)
@@ -50,7 +50,7 @@ class WowHardcoreEntityResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
 
-            resolver.resolve(listOf(basicWowRequest), null)
+            resolver.resolve(listOf(basicWowRequest))
                 .onLeft { fail() }
                 .onRight { res -> assertEquals(listOf(), res.entities) }
         }
@@ -63,7 +63,7 @@ class WowHardcoreEntityResolverTest {
                 .withState(EntitiesState(listOf(), listOf(basicWowHardcoreEntity), listOf()))
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
 
-            resolver.resolve(listOf(basicWowRequest), null)
+            resolver.resolve(listOf(basicWowRequest))
                 .onLeft { fail() }
                 .onRight { res -> assertEquals(listOf(basicWowHardcoreEntity to null), res.existing) }
 

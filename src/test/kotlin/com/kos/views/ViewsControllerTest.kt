@@ -58,6 +58,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.time.OffsetDateTime
 import kotlin.test.*
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 //TODO: Behaviour of get cached data
 
@@ -92,25 +94,30 @@ class ViewsControllerTest {
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
+            wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
+            wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
-            WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepositoryWithState)
+            WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepositoryWithState)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
             wowGuildsRepository,
             entitiesResolver,
+            wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
             wowGuildUpdater

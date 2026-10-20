@@ -27,6 +27,8 @@ import com.kos.views.repository.ViewsState
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito
 import kotlin.test.Test
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 class EntitiesSyncProcessorTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
@@ -65,18 +67,22 @@ class EntitiesSyncProcessorTest {
 
             val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-            val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
+            val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+            val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
             val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+            val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
             val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
             val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
             val wowHardcoreGuildUpdater =
-                WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-            val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+                WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+            val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
             val entitiesResolver = EntityResolverProvider(
                 wowResolver = wowResolver,
+                wowGuildResolver = wowGuildResolver,
                 wowHardcoreResolver = wowHardcoreResolver,
+                wowHardcoreGuildResolver = wowHardcoreGuildResolver,
                 lolResolver = lolResolver
             )
 
@@ -85,6 +91,7 @@ class EntitiesSyncProcessorTest {
                 entitiesRepository,
                 wowGuildsRepository,
                 entitiesResolver,
+                wowGuildResolver,
                 lolUpdater,
                 wowHardcoreGuildUpdater,
                 wowGuildUpdater

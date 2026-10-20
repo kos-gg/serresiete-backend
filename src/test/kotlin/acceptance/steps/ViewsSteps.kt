@@ -120,7 +120,7 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 JsonArray(
                     listOf(
                         buildJsonObject {
-                            put("type", "com.kos.entities.domain.WowEntityRequest")
+                            put("type", "wow")
                             put("name", guildName)
                             put("region", "eu")
                             put("realm", "twisting-nether")
@@ -133,9 +133,8 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
             put(
                 "extraArguments",
                 buildJsonObject {
-                    put("type", "com.kos.views.WowExtraArguments")
-                    put("guild", "RESOLVE")
-                    put("season", 0)
+                    put("type", "wow")
+                    put("isGuild", true)
                 }
             )
         }

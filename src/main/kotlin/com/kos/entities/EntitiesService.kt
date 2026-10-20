@@ -8,17 +8,17 @@ import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
 import com.kos.sources.lol.LolEntityUpdater
+import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
-import com.kos.views.GuildArgs
 import com.kos.views.ViewExtraArguments
-import com.kos.views.WowExtraArguments
 
 data class EntitiesService(
     private val entitiesRepository: EntitiesRepository,
     private val wowGuildsRepository: WowGuildsRepository,
     private val entitiesResolverProvider: EntityResolverProvider,
+    private val wowGuildResolver: WowGuildResolver,
     private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
     private val wowGuildUpdater: WowGuildUpdater,
@@ -44,20 +44,17 @@ data class EntitiesService(
             }
     }
 
-    suspend fun guildExists(name: String, region: String, realm: String): Either<ServiceError, GuildExistsResponse> {
-        val guildRequest = WowEntityRequest(name, region, realm)
-        val extraArguments = WowExtraArguments(season = 0, guild = GuildArgs.EXISTENCE)
-
-        return resolveEntities(listOf(guildRequest), Game.WOW, extraArguments)
-            .map { resolved -> GuildExistsResponse(resolved.guild) }
-    }
+    suspend fun guildExists(name: String, region: String, realm: String): Either<ServiceError, GuildExistsResponse> =
+        findTrackedGuild(name, realm, region, Game.WOW)
+            ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
+            ?: wowGuildResolver.exists(WowEntityRequest(name, region, realm)).map { GuildExistsResponse(it) }
 
     suspend fun resolveEntities(
         requestedEntities: List<EntityRequest>,
         game: Game,
         extraArguments: ViewExtraArguments? = null
     ): Either<ServiceError, ResolvedEntities> =
-        entitiesResolverProvider.resolverFor(game).resolve(requestedEntities, extraArguments)
+        entitiesResolverProvider.resolverFor(game, extraArguments).resolve(requestedEntities)
 
     suspend fun updateEntities(
         game: Game

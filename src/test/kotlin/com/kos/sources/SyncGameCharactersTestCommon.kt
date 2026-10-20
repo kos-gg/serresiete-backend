@@ -32,6 +32,8 @@ import com.kos.views.repository.ViewsInMemoryRepository
 import io.mockk.coVerify
 import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 abstract class SyncGameCharactersTestCommon {
     protected val raiderIoClient: RaiderIoClient = mock(RaiderIoClient::class.java)
@@ -51,18 +53,22 @@ abstract class SyncGameCharactersTestCommon {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
         val viewsRepository = ViewsInMemoryRepository()
 
-        val wowResolver = WowEntityResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
-            WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+            WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
+            wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
+            wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver
         )
 
@@ -73,6 +79,7 @@ abstract class SyncGameCharactersTestCommon {
                 entitiesRepository,
                 wowGuildsRepository,
                 entitiesResolver,
+                wowGuildResolver,
                 lolUpdater,
                 wowHardcoreGuildUpdater,
                 wowGuildUpdater

@@ -2,6 +2,7 @@ package com.kos.entities
 
 import arrow.core.Either
 import com.kos.activities.Activities
+import com.kos.common.error.EntitiesDoNotMatchGame
 import com.kos.common.error.EntityError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
@@ -36,6 +37,21 @@ class EntitiesControllerTest {
         runBlocking {
             val result = controller.exists("client", setOf(), listOf(basicWowRequest), Game.WOW)
             assertEquals(Either.Left(NotEnoughPermissions("client")), result)
+        }
+    }
+
+    @Test
+    fun `exists rejects entities of another game without calling the service`() {
+        runBlocking {
+            val result = controller.exists(
+                "client",
+                setOf(Activities.checkEntitiesExist),
+                listOf(basicWowRequest),
+                Game.LOL
+            )
+
+            assertEquals(Either.Left(EntitiesDoNotMatchGame), result)
+            verifyNoInteractions(entitiesService)
         }
     }
 

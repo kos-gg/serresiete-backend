@@ -29,7 +29,7 @@ class LolEntityResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = LolEntityResolver(repo, riotClient)
 
-            resolver.resolve(listOf(lolEntityRequest), null)
+            resolver.resolve(listOf(lolEntityRequest))
                 .onLeft { fail() }
                 .onRight { res ->
                     assertEquals(1, res.entities.size)
@@ -47,7 +47,7 @@ class LolEntityResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = LolEntityResolver(repo, riotClient)
 
-            resolver.resolve(listOf(lolEntityRequest), null)
+            resolver.resolve(listOf(lolEntityRequest))
                 .onLeft { fail() }
                 .onRight { res -> assertEquals(listOf(), res.entities) }
         }
@@ -62,7 +62,7 @@ class LolEntityResolverTest {
 
             val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag)
 
-            resolver.resolve(listOf(request), null)
+            resolver.resolve(listOf(request))
                 .onLeft { fail() }
                 .onRight { res -> assertEquals(listOf(basicLolEntity to null), res.existing) }
 

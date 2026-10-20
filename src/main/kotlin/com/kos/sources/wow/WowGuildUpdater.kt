@@ -7,11 +7,12 @@ import com.kos.common.split
 import com.kos.entities.EntityUpdater
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
 import com.kos.views.repository.ViewsRepository
 
 class WowGuildUpdater(
-    private val resolver: WowEntityResolver,
+    private val guildResolver: WowGuildResolver,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
 ) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("WowGuildUpdater") {
@@ -36,7 +37,7 @@ class WowGuildUpdater(
             .map { rows ->
                 val guild = rows.first().first
                 val viewIds = rows.map { it.second }
-                resolver.resolveRoster(guild.region, guild.realm, guild.name)
+                guildResolver.resolveRoster(guild.region, guild.realm, guild.name)
                     .map { (_, roster) -> ResolvedGuild(guild, viewIds, roster) }
             }
             .split()
@@ -45,7 +46,7 @@ class WowGuildUpdater(
         val (guild, viewIds, roster) = resolvedGuild
         logger.info("Updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region} (${viewIds.size} view(s))")
 
-        val (current, newEntities) = resolver.getCurrentAndNewEntities(entitiesRepository, roster, Game.WOW)
+        val (current, newEntities) = entitiesRepository.getCurrentAndNewEntities(roster, Game.WOW)
         val (updateMemberErrors, renamedEntities, newMembers) = updateAlreadyTrackedMembers(newEntities)
 
         val entityIdsStillInGuild = current.map { it.value.id }.toSet() + renamedEntities
@@ -81,7 +82,7 @@ class WowGuildUpdater(
         newMembers: List<WowEntityRequest>,
         entityIdsStillInGuild: Set<Long>
     ): List<ServiceError> {
-        val newMembers = resolver.resolveGuildMembers(newMembers)
+        val newMembers = guildResolver.resolveMembers(newMembers)
 
         return entitiesRepository.insert(newMembers.map { it.first }, Game.WOW).fold(
             ifLeft = { insertError ->

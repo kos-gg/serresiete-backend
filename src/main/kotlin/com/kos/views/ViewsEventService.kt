@@ -69,16 +69,11 @@ class ViewsEventService(
         event: ViewToBeCreatedEvent
     ): Either<ServiceError, ResolvedEntities> = either {
         val guildReq = (event.extraArguments as? WowExtraArguments)
-            ?.takeIf { it.guild != null && event.game == Game.WOW }
+            ?.takeIf { it.isGuild && event.game == Game.WOW }
             ?.let { event.entities.first() as WowEntityRequest }
 
         val trackedGuild = guildReq?.let { req ->
-            entitiesService.findTrackedGuild(
-                req.name.lowercase(),
-                req.realm.lowercase(),
-                req.region.lowercase(),
-                Game.WOW
-            )
+            entitiesService.findTrackedGuild(req.name, req.realm, req.region, Game.WOW)
         }
 
         when (trackedGuild) {

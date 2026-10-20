@@ -13,8 +13,8 @@ import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
+import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
-import com.kos.views.ViewExtraArguments
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
@@ -26,14 +26,11 @@ class LolEntityResolver(
     private val repo: EntitiesRepository,
     private val riotClient: RiotClient
 ) : EntityResolver, WithLogger("LolResolver") {
-    override val game: Game = Game.LOL
-
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
-        requested: List<EntityRequest>,
-        extra: ViewExtraArguments?
+        requested: List<EntityRequest>
     ): Either<ServiceError, ResolvedEntities> = either {
-        val (existing, newRequests) = getCurrentAndNewEntities(repo, requested, Game.LOL)
+        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.LOL)
 
         val validated = newRequests.asFlow()
             .parMap(10) { req ->

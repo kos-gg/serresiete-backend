@@ -70,6 +70,8 @@ import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
+import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 data class TestSubscriptions(
     val views: EventSubscription,
@@ -114,12 +116,16 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val staticDataRepository = WowExpansionDatabaseRepository(db)
     val viewsRepository = ViewsDatabaseRepository(db)
 
-    val wowResolver = WowEntityResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
+    val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+    val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+    val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
+        wowGuildResolver = wowGuildResolver,
         wowHardcoreResolver = wowHardcoreResolver,
+        wowHardcoreGuildResolver = wowHardcoreGuildResolver,
         lolResolver = lolResolver
     )
 
@@ -143,12 +149,13 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)
 
-    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreResolver, entitiesRepository, viewsRepository)
-    val wowGuildUpdater = WowGuildUpdater(wowResolver, entitiesRepository, viewsRepository)
+    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+    val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
         entityResolverProvider,
+        wowGuildResolver,
         lolUpdater,
         wowHardcoreGuildUpdater,
         wowGuildUpdater

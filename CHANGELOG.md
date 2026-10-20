@@ -1,5 +1,50 @@
 # Changelog
 
+## [6.0.1] - 19-10-2026
+
+### Changed (breaking — requires frontend update)
+
+- **No backend class names in the API**: every polymorphic `type` is now a short game id.
+
+  | Type | Before | Now | Where |
+  | --- | --- | --- | --- |
+  | `EntityRequest` | `com.kos.entities.domain.WowEntityRequest` / `LolEntityRequest` | `wow` / `lol` | requests of `POST /api/views`, `PUT`/`PATCH /api/views/{id}`, `POST /api/entities/exists` |
+  | `ViewExtraArguments` | `com.kos.views.WowExtraArguments` / `WowHardcoreExtraArguments` | `wow` (both games) | view requests, and `records[]` of `GET /api/views` |
+  | `Entity` | `com.kos.entities.domain.WowEntity` / `LolEntity` | `wow` / `lol` | `entities[]` of `GET /api/views/{id}` |
+
+  `wow` entity requests and entities are shared by `WOW` and `WOW_HC` views; the view's `game` tells them apart.
+- **One WoW extra arguments shape for `WOW` and `WOW_HC`**: `{"type": "wow", "isGuild": true | false}`.
+  `WowHardcoreExtraArguments` (`wow_hc`), `season` (never read) and `guild` (`RESOLVE`/`EXISTENCE`) are gone:
+  `RESOLVE` is now `isGuild: true`, and `EXISTENCE` was an internal mode of `POST /api/entities/exists/guild`, now
+  `WowGuildResolver.exists` instead of fake extra arguments. The API rejects unknown fields, so sending `season` or
+  `guild` returns 400.
+
+### Changed
+
+- **Guild resolution split from entity resolution**: new `WowGuildResolver` and `WowHardcoreGuildResolver` are
+  `EntityResolver`s that own roster reading, member filtering and the guild payload. `EntityResolverProvider.resolverFor(game, extra)`
+  picks the guild resolver when `isGuild` is true, so `WowEntityResolver` / `WowHardcoreEntityResolver` only resolve
+  characters and `EntityResolver.resolve` no longer takes extra arguments. `EntityResolver.game` removed (unused).
+  `WowHardcoreGuildResolver` delegates member validation to `WowHardcoreEntityResolver`.
+- `getCurrentAndNewEntities` moved from the `EntityResolver` interface to an `EntitiesRepository` extension;
+  `WowGuildUpdater` no longer depends on `WowEntityResolver`.
+- `POST /api/entities/exists/guild` answers from `wow_guilds` when the guild is already tracked, and only asks Blizzard
+  otherwise. Same response shape.
+
+### Fixed
+
+- `POST /api/views`, `PUT` and `PATCH /api/views/{id}` reject entities of another game (e.g. a `wow` entity in a `LOL`
+  view) with a 400 instead of storing the event and failing later when it is processed. `POST /api/entities/exists`
+  does the same instead of failing while resolving.
+
+### Deploy notes
+
+- Wipe `events` and `views` (`TRUNCATE events, views CASCADE`, which also empties the tables referencing views:
+  `view_entities`, `wow_guilds`): both store the old `type` and are not migrated. Existing user views are lost.
+- Do **not** reset the `event_versions` sequence nor the `subscriptions` rows — new events must keep versions above
+  what each subscription already processed.
+- Deploy when no view operation is in flight: events not yet processed by every subscription are lost with the wipe.
+
 ## [6.0.0] - 18-10-2026
 
 ### Changed (breaking — requires frontend update)
