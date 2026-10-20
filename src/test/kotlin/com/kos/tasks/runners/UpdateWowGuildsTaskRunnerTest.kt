@@ -41,12 +41,12 @@ class UpdateWowGuildsTaskRunnerTest {
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val wowGuildsRepository = WowGuildsInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
-    private val wowGuildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
-    private val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
+    private val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+    private val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
-        EntityResolverProvider(wowResolver = wowResolver, wowHardcoreResolver = mock(), lolResolver = mock()),
+        EntityResolverProvider(wowResolver = wowResolver, wowGuildResolver = wowGuildResolver, wowHardcoreResolver = mock(), wowHardcoreGuildResolver = mock(), lolResolver = mock()),
         wowGuildResolver,
         mock(),
         mock(),

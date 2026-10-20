@@ -15,8 +15,6 @@ import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
-import com.kos.views.ViewExtraArguments
-import com.kos.views.WowExtraArguments
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
@@ -25,38 +23,21 @@ import kotlinx.coroutines.flow.toList
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class WowEntityResolver(
     private val repo: EntitiesRepository,
-    private val blizzardClient: BlizzardClient,
-    private val guildResolver: WowGuildResolver
+    private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowEntityResolver") {
     override val game: Game = Game.WOW
 
     override suspend fun resolve(
-        requested: List<EntityRequest>,
-        extra: ViewExtraArguments?
+        requested: List<EntityRequest>
     ): Either<ServiceError, ResolvedEntities> = either {
-        val isGuild = (extra as? WowExtraArguments)?.isGuild == true
-
-        if (!isGuild) {
-            val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW)
-            val (entities, unchecked) = resolveCharacters(newRequests)
-            ResolvedEntities(
-                entities = entities,
-                existing = existing.map { it.value to it.alias },
-                unchecked = unchecked,
-                guild = null
-            )
-        } else {
-            val guildReq = requested.first() as WowEntityRequest
-            val (guildRoster, members) = guildResolver.resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
-            val (existing, newRequests) = repo.getCurrentAndNewEntities(members, Game.WOW)
-
-            ResolvedEntities(
-                entities = guildResolver.resolveMembers(newRequests),
-                existing = existing.map { it.value to it.alias },
-                unchecked = emptyList(),
-                guild = guildResolver.payload(guildRoster, guildReq)
-            )
-        }
+        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW)
+        val (entities, unchecked) = resolveCharacters(newRequests)
+        ResolvedEntities(
+            entities = entities,
+            existing = existing.map { it.value to it.alias },
+            unchecked = unchecked,
+            guild = null
+        )
     }
 
     private suspend fun resolveCharacters(

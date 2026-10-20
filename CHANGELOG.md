@@ -21,9 +21,11 @@
 
 ### Changed
 
-- **Guild resolution split from entity resolution**: new `WowGuildResolver` and `WowHardcoreGuildResolver` own roster
-  reading, member filtering and the guild payload. `WowEntityResolver` / `WowHardcoreEntityResolver` resolve characters
-  and delegate guild views to them; the guild updaters and `EntitiesService.guildExists` use them directly.
+- **Guild resolution split from entity resolution**: new `WowGuildResolver` and `WowHardcoreGuildResolver` are
+  `EntityResolver`s that own roster reading, member filtering and the guild payload. `EntityResolverProvider.resolverFor(game, extra)`
+  picks the guild resolver when `isGuild` is true, so `WowEntityResolver` / `WowHardcoreEntityResolver` only resolve
+  characters and `EntityResolver.resolve` no longer takes extra arguments. `WowHardcoreGuildResolver` delegates member
+  validation to `WowHardcoreEntityResolver`.
 - `getCurrentAndNewEntities` moved from the `EntityResolver` interface to an `EntitiesRepository` extension;
   `WowGuildUpdater` no longer depends on `WowEntityResolver`.
 - `POST /api/entities/exists/guild` answers from `wow_guilds` when the guild is already tracked, and only asks Blizzard

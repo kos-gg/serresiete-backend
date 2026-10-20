@@ -15,7 +15,6 @@ import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
-import com.kos.views.ViewExtraArguments
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
@@ -31,8 +30,7 @@ class LolEntityResolver(
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
-        requested: List<EntityRequest>,
-        extra: ViewExtraArguments?
+        requested: List<EntityRequest>
     ): Either<ServiceError, ResolvedEntities> = either {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.LOL)
 

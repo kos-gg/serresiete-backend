@@ -30,7 +30,7 @@ class WowHardcoreGuildUpdater(
 
         val downstreamErrors = rostersWithViewIds.flatMap { (requests, viewId) ->
 
-            resolver.resolve(requests, null).fold(
+            resolver.resolve(requests).fold(
                 ifLeft = { listOf(it) },
 
                 ifRight = { resolved ->

@@ -5,19 +5,34 @@ import arrow.core.raise.either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.error.ServiceError
+import com.kos.entities.EntityResolver
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.GuildRoster
+import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.views.Game
 
 class WowHardcoreGuildResolver(
-    private val blizzardClient: BlizzardClient
-) {
+    private val blizzardClient: BlizzardClient,
+    private val characterResolver: WowHardcoreEntityResolver
+) : EntityResolver {
+    override val game: Game = Game.WOW_HC
 
     companion object {
         private const val MIN_MEMBER_LEVEL = 10
     }
 
-    fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
+    override suspend fun resolve(
+        requested: List<EntityRequest>
+    ): Either<ServiceError, ResolvedEntities> = either {
+        val guildReq = requested.first() as WowEntityRequest
+        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
+
+        characterResolver.resolve(members).bind().copy(guild = payload(guildRoster, guildReq))
+    }
+
+    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
         GuildPayload(
             name = guild.name,
             realm = guild.realm,

@@ -54,7 +54,7 @@ data class EntitiesService(
         game: Game,
         extraArguments: ViewExtraArguments? = null
     ): Either<ServiceError, ResolvedEntities> =
-        entitiesResolverProvider.resolverFor(game).resolve(requestedEntities, extraArguments)
+        entitiesResolverProvider.resolverFor(game, extraArguments).resolve(requestedEntities)
 
     suspend fun updateEntities(
         game: Game

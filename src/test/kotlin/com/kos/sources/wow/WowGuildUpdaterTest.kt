@@ -32,7 +32,7 @@ class WowGuildUpdaterTest {
     private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
-    private val guildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
+    private val guildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
     private val updater = WowGuildUpdater(guildResolver, entitiesRepository, viewsRepository)
 
     private val region = "eu"

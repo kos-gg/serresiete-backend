@@ -33,7 +33,9 @@ class UpdateLolEntitiesTaskRunnerTest {
         WowGuildsInMemoryRepository(),
         EntityResolverProvider(
             wowResolver = mock(),
+            wowGuildResolver = mock(),
             wowHardcoreResolver = mock(),
+            wowHardcoreGuildResolver = mock(),
             lolResolver = LolEntityResolver(entitiesRepository, riotClient)
         ),
         mock(),

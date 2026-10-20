@@ -14,8 +14,6 @@ import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
-import com.kos.views.ViewExtraArguments
-import com.kos.views.WowExtraArguments
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
@@ -23,28 +21,15 @@ import kotlinx.coroutines.flow.toList
 
 class WowHardcoreEntityResolver(
     private val repo: EntitiesRepository,
-    private val blizzardClient: BlizzardClient,
-    private val guildResolver: WowHardcoreGuildResolver
+    private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowHardcoreResolver") {
     override val game: Game = Game.WOW_HC
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
-        requested: List<EntityRequest>,
-        extra: ViewExtraArguments?
+        requested: List<EntityRequest>
     ): Either<ServiceError, ResolvedEntities> = either {
-        val args = extra as? WowExtraArguments
-        val (effectiveRequests, guildPayload) = if (args?.isGuild == true) {
-            val guildReq = requested.first() as WowEntityRequest
-
-            val (guildRoster, members) = guildResolver.resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
-
-            Pair(members, guildResolver.payload(guildRoster, guildReq))
-        } else {
-            Pair(requested, null)
-        }
-
-        val (existing, newRequests) = repo.getCurrentAndNewEntities(effectiveRequests, Game.WOW_HC)
+        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW_HC)
 
         val (errors, oks) = newRequests.asFlow()
             .parMap(10) { req ->
@@ -76,7 +61,7 @@ class WowHardcoreEntityResolver(
         ResolvedEntities(
             entities = validatedTuples,
             existing = existing.map { it.value to it.alias },
-            guild = guildPayload
+            guild = null
         )
     }
 }

@@ -73,12 +73,7 @@ class ViewsEventService(
             ?.let { event.entities.first() as WowEntityRequest }
 
         val trackedGuild = guildReq?.let { req ->
-            entitiesService.findTrackedGuild(
-                req.name.lowercase(),
-                req.realm.lowercase(),
-                req.region.lowercase(),
-                Game.WOW
-            )
+            entitiesService.findTrackedGuild(req.name, req.realm, req.region, Game.WOW)
         }
 
         when (trackedGuild) {

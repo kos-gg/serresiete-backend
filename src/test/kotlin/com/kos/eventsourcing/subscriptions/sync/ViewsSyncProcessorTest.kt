@@ -179,10 +179,10 @@ class ViewsSyncProcessorTest {
         val eventStore = EventStoreInMemory()
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
-        val wowGuildResolver = WowGuildResolver(raiderIoClient, blizzardClient)
-        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient, wowGuildResolver)
-        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient)
-        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient, wowHardcoreGuildResolver)
+        val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
@@ -192,7 +192,9 @@ class ViewsSyncProcessorTest {
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
+            wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
+            wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver
         )
 
