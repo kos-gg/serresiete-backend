@@ -24,12 +24,18 @@
 - **Guild resolution split from entity resolution**: new `WowGuildResolver` and `WowHardcoreGuildResolver` are
   `EntityResolver`s that own roster reading, member filtering and the guild payload. `EntityResolverProvider.resolverFor(game, extra)`
   picks the guild resolver when `isGuild` is true, so `WowEntityResolver` / `WowHardcoreEntityResolver` only resolve
-  characters and `EntityResolver.resolve` no longer takes extra arguments. `WowHardcoreGuildResolver` delegates member
-  validation to `WowHardcoreEntityResolver`.
+  characters and `EntityResolver.resolve` no longer takes extra arguments. `EntityResolver.game` removed (unused).
+  `WowHardcoreGuildResolver` delegates member validation to `WowHardcoreEntityResolver`.
 - `getCurrentAndNewEntities` moved from the `EntityResolver` interface to an `EntitiesRepository` extension;
   `WowGuildUpdater` no longer depends on `WowEntityResolver`.
 - `POST /api/entities/exists/guild` answers from `wow_guilds` when the guild is already tracked, and only asks Blizzard
   otherwise. Same response shape.
+
+### Fixed
+
+- `POST /api/views`, `PUT` and `PATCH /api/views/{id}` reject entities of another game (e.g. a `wow` entity in a `LOL`
+  view) with a 400 instead of storing the event and failing later when it is processed. `POST /api/entities/exists`
+  does the same instead of failing while resolving.
 
 ### Deploy notes
 

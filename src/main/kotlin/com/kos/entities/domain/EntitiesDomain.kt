@@ -36,6 +36,11 @@ sealed interface EntityRequest {
     fun toResponse(): EntityResponse
 }
 
+fun EntityRequest.belongsTo(game: Game): Boolean = when (game) {
+    Game.WOW, Game.WOW_HC -> this is WowEntityRequest
+    Game.LOL -> this is LolEntityRequest
+}
+
 @Serializable(with = EntityResponseSerializer::class)
 sealed interface EntityResponse {
     val name: String

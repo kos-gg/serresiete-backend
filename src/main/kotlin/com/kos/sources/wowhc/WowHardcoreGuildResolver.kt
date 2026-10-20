@@ -17,8 +17,6 @@ class WowHardcoreGuildResolver(
     private val blizzardClient: BlizzardClient,
     private val characterResolver: WowHardcoreEntityResolver
 ) : EntityResolver {
-    override val game: Game = Game.WOW_HC
-
     companion object {
         private const val MIN_MEMBER_LEVEL = 10
     }

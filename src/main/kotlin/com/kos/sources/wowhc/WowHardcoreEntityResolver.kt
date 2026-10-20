@@ -23,8 +23,6 @@ class WowHardcoreEntityResolver(
     private val repo: EntitiesRepository,
     private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowHardcoreResolver") {
-    override val game: Game = Game.WOW_HC
-
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
         requested: List<EntityRequest>

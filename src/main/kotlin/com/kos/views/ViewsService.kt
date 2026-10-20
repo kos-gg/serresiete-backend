@@ -11,6 +11,7 @@ import com.kos.datacache.domain.Data
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
+import com.kos.entities.domain.belongsTo
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository
@@ -64,6 +65,7 @@ class ViewsService(
         return either {
             ensureMaxNumberOfViews(owner).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
+            ensureEntitiesMatchGame(request.entities, request.game).bind()
             ensureRequest(request).bind()
 
             val operationId = UUID.randomUUID().toString()
@@ -90,6 +92,7 @@ class ViewsService(
     suspend fun edit(owner: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
+            ensureEntitiesMatchGame(request.entities, request.game).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -112,6 +115,7 @@ class ViewsService(
     suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
+            ensureEntitiesMatchGame(request.entities, request.game).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -189,6 +193,13 @@ class ViewsService(
                 ensure(entitiesToInsert.size <= ownerMaxNumberOfEntities) { TooMuchEntities }
             }
         }
+    }
+
+    private fun ensureEntitiesMatchGame(
+        entities: List<EntityRequest>?,
+        game: Game
+    ): Either<ControllerError, Unit> = either {
+        ensure(entities.orEmpty().all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
     }
 
     private fun ensureRequest(

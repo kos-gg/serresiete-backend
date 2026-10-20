@@ -25,8 +25,6 @@ class WowEntityResolver(
     private val repo: EntitiesRepository,
     private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowEntityResolver") {
-    override val game: Game = Game.WOW
-
     override suspend fun resolve(
         requested: List<EntityRequest>
     ): Either<ServiceError, ResolvedEntities> = either {

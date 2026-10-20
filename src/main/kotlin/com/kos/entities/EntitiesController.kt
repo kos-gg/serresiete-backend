@@ -1,9 +1,13 @@
 package com.kos.entities
 
 import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import com.kos.activities.Activities
 import com.kos.activities.Activity
 import com.kos.common.error.ControllerError
+import com.kos.common.error.EntitiesDoNotMatchGame
 import com.kos.common.error.EntityError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
@@ -12,6 +16,7 @@ import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.entities.domain.EntityDataResponse
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildExistsResponse
+import com.kos.entities.domain.belongsTo
 import com.kos.views.Game
 
 class EntitiesController(
@@ -39,15 +44,11 @@ class EntitiesController(
         activities: Set<Activity>,
         entities: List<EntityRequest>,
         game: Game,
-    ): Either<ControllerError, EntitiesExistResponse> {
-        return when (client) {
-            null -> Either.Left(NotAuthorized)
-            else -> {
-                if (activities.contains(Activities.checkEntitiesExist))
-                    entitiesService.exists(entities, game).mapLeft { EntityError(it.error()) }
-                else Either.Left(NotEnoughPermissions(client))
-            }
-        }
+    ): Either<ControllerError, EntitiesExistResponse> = either {
+        ensureNotNull(client) { NotAuthorized }
+        ensure(activities.contains(Activities.checkEntitiesExist)) { NotEnoughPermissions(client) }
+        ensure(entities.all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
+        entitiesService.exists(entities, game).mapLeft { EntityError(it.error()) }.bind()
     }
 
     suspend fun guildExists(

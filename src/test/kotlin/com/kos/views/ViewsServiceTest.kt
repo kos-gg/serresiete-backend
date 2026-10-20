@@ -3,6 +3,7 @@ package com.kos.views
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
+import com.kos.common.error.EntitiesDoNotMatchGame
 import com.kos.common.error.TooMuchEntities
 import com.kos.common.error.TooMuchViews
 import com.kos.common.error.UserWithoutRoles
@@ -367,6 +368,52 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `creating a lol view with a wow entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(name, published, listOf(WowEntityRequest("kakarona", "eu", "zuljin")), Game.LOL, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `creating a wow hardcore view with a lol entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(name, published, listOf(LolEntityRequest("sanxei", "EUW")), Game.WOW_HC, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
         fun `admins can create a huge amount of views and an event gets stored`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
@@ -486,6 +533,31 @@ class ViewsServiceTest {
                     fail()
                 }.onLeft {
                     assertTrue(it is TooMuchEntities)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `editing a lol view with a wow entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(
+                        listOf(basicSimpleLolView),
+                        basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
+                    emptyEntitiesState,
+                    listOf(),
+                    CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
+                )
+
+                viewsService.edit(
+                    owner, id,
+                    ViewRequest(name, published, listOf(WowEntityRequest("kakarona", "eu", "zuljin")), Game.LOL, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
                 }
 
                 assertNoEventsStored(eventStore)
@@ -623,6 +695,32 @@ class ViewsServiceTest {
                     fail()
                 }.onLeft {
                     assertTrue(it is TooMuchEntities)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `patching a wow view with a lol entity fails without storing an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(
+                        listOf(basicSimpleWowView),
+                        basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
+                    emptyEntitiesState,
+                    listOf(),
+                    CredentialsRepositoryState(listOf(Credentials(owner, password)), mapOf(owner to listOf(Role.USER)))
+                )
+
+                viewsService.patch(
+                    owner,
+                    id,
+                    ViewPatchRequest(null, null, listOf(LolEntityRequest("sanxei", "EUW")), Game.WOW, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is EntitiesDoNotMatchGame)
                 }
 
                 assertNoEventsStored(eventStore)

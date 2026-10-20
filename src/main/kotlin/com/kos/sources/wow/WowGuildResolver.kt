@@ -28,8 +28,6 @@ class WowGuildResolver(
     private val raiderioClient: RaiderIoClient,
     private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowGuildResolver") {
-    override val game: Game = Game.WOW
-
     companion object {
         private const val MAX_CHARACTER_LEVEL = 90
         private const val SCORE_CUTOFF = 1000

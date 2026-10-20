@@ -36,6 +36,7 @@ data object TooMuchEntities : ControllerError
 data object UserWithoutRoles : ControllerError
 data object ExtraArgumentsWrongType : ControllerError
 data object GuildViewMoreThanTwoEntities : ControllerError
+data object EntitiesDoNotMatchGame : ControllerError
 
 suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
     when (error) {
@@ -48,6 +49,7 @@ suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) {
         is TooMuchEntities -> respond(BadRequest, "too many entities in a view")
         is BadRequest -> respond(BadRequest, error.problem)
         is GuildViewMoreThanTwoEntities -> respond(BadRequest, "guild views must have only 1 entity")
+        is EntitiesDoNotMatchGame -> respond(BadRequest, "entities don't match the view's game")
         is InvalidQueryParameter -> respond(BadRequest, error.message)
         is AuthenticationError -> respond(Unauthorized, error.message)
         is CantDeleteYourself -> respond(BadRequest, "can't delete your credentials")

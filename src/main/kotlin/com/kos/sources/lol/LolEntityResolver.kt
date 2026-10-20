@@ -26,8 +26,6 @@ class LolEntityResolver(
     private val repo: EntitiesRepository,
     private val riotClient: RiotClient
 ) : EntityResolver, WithLogger("LolResolver") {
-    override val game: Game = Game.LOL
-
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override suspend fun resolve(
         requested: List<EntityRequest>
