@@ -7,7 +7,6 @@ import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
@@ -33,16 +32,20 @@ import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 
 class UpdateWowGuildsTaskRunnerTest {
 
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val season = WowSeason(16, "Midnight Season 1", "season-mn-1", 11, "{}", true)
+    private val seasonRepository = runBlocking { WowSeasonInMemoryRepository().withState(WowSeasonsState(listOf(season))) }
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val wowGuildsRepository = WowGuildsInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
     private val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-    private val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+    private val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
@@ -78,7 +81,7 @@ class UpdateWowGuildsTaskRunnerTest {
                     ).toGuildRoster()
                 )
             )
-        `when`(raiderIoClient.getScore(WowEntityRequest(character, region, realm)))
+        `when`(blizzardClient.getMythicRating(region, realm, character, season.id))
             .thenReturn(Either.Right(1500.0))
 
         val id = UUID.randomUUID().toString()

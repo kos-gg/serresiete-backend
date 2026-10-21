@@ -3,6 +3,7 @@ package com.kos.clients.blizzard
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
+import com.kos.clients.HttpError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.BATTLENET_NAMESPACE
@@ -367,6 +368,43 @@ class BlizzardHttpClient(
             }
         }
     }
+
+    override suspend fun getMythicRating(
+        region: String,
+        realm: String,
+        character: String,
+        seasonId: Int
+    ): Either<ClientError, Double> {
+        return throttleRequest {
+            either {
+                val tokenResponse = getAndUpdateToken().bind()
+                val namespace = "profile-$region"
+                val partialURI =
+                    URI("/profile/wow/character/$realm/${encodedName(character)}/mythic-keystone-profile/season/$seasonId?namespace=$namespace&locale=en_US")
+
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getMythicRating",
+                ) {
+                    fetchFromApi<GetWowMythicKeystoneSeasonResponse> {
+                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                            headers {
+                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                                append(HttpHeaders.Accept, "*/*")
+                                append(BATTLENET_NAMESPACE, namespace)
+                            }
+                        }
+                    }
+                }.map { it.mythicRating?.rating ?: 0.0 }.orNotFound(0.0).bind()
+            }
+        }
+    }
+
+    private fun <T> Either<ClientError, T>.orNotFound(fallback: T): Either<ClientError, T> =
+        fold(
+            ifLeft = { error -> if (error is HttpError && error.status == 404) Either.Right(fallback) else Either.Left(error) },
+            ifRight = { Either.Right(it) }
+        )
 
     private suspend fun getAndUpdateToken(): Either<ClientError, TokenState> {
         val newTokenState = when (token) {

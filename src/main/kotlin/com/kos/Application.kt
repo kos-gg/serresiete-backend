@@ -135,9 +135,10 @@ fun Application.module() {
 
     val entitiesRepository = EntitiesDatabaseRepository(db)
     val wowGuildsDatabaseRepository = WowGuildsDatabaseRepository(db)
+    val seasonRepository = WowSeasonDatabaseRepository(db)
 
     val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-    val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoHTTPClient, blizzardClient)
+    val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
@@ -154,7 +155,6 @@ fun Application.module() {
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
 
-    val seasonRepository = WowSeasonDatabaseRepository(db)
     val staticDataRepository = WowExpansionDatabaseRepository(db)
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
 

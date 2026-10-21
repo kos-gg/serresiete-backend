@@ -60,6 +60,7 @@ import java.time.OffsetDateTime
 import kotlin.test.*
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 //TODO: Behaviour of get cached data
 
@@ -95,7 +96,7 @@ class ViewsControllerTest {
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)

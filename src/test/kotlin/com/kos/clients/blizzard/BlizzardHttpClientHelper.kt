@@ -68,6 +68,18 @@ object BlizzardHttpClientHelper {
                                 respond(json.encodeToString(getWowGuildRosterResponse), HttpStatusCode.OK)
                         }
 
+                    "/profile/wow/character/realm/name/mythic-keystone-profile/season/16" ->
+                        respond(
+                            """{"mythic_rating":{"color":{"r":255,"g":128,"b":0,"a":1},"rating":3521.2056}}""",
+                            HttpStatusCode.OK
+                        )
+
+                    "/profile/wow/character/realm/unrated/mythic-keystone-profile/season/16" ->
+                        respond("""{"season":{"id":16}}""", HttpStatusCode.OK)
+
+                    "/profile/wow/character/realm/unknown/mythic-keystone-profile/season/16" ->
+                        respond("""{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}""", HttpStatusCode.NotFound)
+
                     else ->
                         error("Unhandled ${request.url.encodedPath}")
                 }

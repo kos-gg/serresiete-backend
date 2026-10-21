@@ -34,6 +34,7 @@ import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 abstract class SyncGameCharactersTestCommon {
     protected val raiderIoClient: RaiderIoClient = mock(RaiderIoClient::class.java)
@@ -54,7 +55,7 @@ abstract class SyncGameCharactersTestCommon {
         val viewsRepository = ViewsInMemoryRepository()
 
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)

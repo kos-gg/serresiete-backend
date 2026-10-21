@@ -3,12 +3,13 @@ package com.kos.sources.wow
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import arrow.fx.coroutines.parMap
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
+import com.kos.common.error.NoCurrentMythicPlusSeason
 import com.kos.common.error.NotCompetitiveCharacter
 import com.kos.common.error.ServiceError
 import com.kos.common.split
@@ -16,6 +17,7 @@ import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -25,8 +27,8 @@ import kotlinx.coroutines.flow.toList
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class WowGuildResolver(
     private val repo: EntitiesRepository,
-    private val raiderioClient: RaiderIoClient,
-    private val blizzardClient: BlizzardClient
+    private val blizzardClient: BlizzardClient,
+    private val wowSeasonRepository: WowSeasonRepository
 ) : EntityResolver, WithLogger("WowGuildResolver") {
     companion object {
         private const val MAX_CHARACTER_LEVEL = 90
@@ -41,7 +43,7 @@ class WowGuildResolver(
         val (existing, newRequests) = repo.getCurrentAndNewEntities(members, Game.WOW)
 
         ResolvedEntities(
-            entities = resolveMembers(newRequests),
+            entities = resolveMembers(newRequests).bind(),
             existing = existing.map { it.value to it.alias },
             unchecked = emptyList(),
             guild = payload(guildRoster, guildReq)
@@ -59,13 +61,15 @@ class WowGuildResolver(
 
     suspend fun resolveMembers(
         newRequests: List<EntityRequest>
-    ): List<Pair<InsertEntityRequest, String?>> {
+    ): Either<ServiceError, List<Pair<InsertEntityRequest, String?>>> = either {
+        val seasonId = ensureNotNull(wowSeasonRepository.getCurrentSeason()?.id) { NoCurrentMythicPlusSeason }
+
         val (errors, resolved) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
                 either {
-                    val score = raiderioClient.getScore(req)
-                        .mapLeft { it.toSyncProcessingError("raiderIoScore") }
+                    val score = blizzardClient.getMythicRating(req.region, req.realm, req.name, seasonId)
+                        .mapLeft { it.toSyncProcessingError("getMythicRating") }
                         .bind()
 
                     ensure(score >= SCORE_CUTOFF) { NotCompetitiveCharacter(req) }
@@ -80,7 +84,7 @@ class WowGuildResolver(
             logger.warn("Skipping guild member ${req.name}-${req.realm}: ${error.error()}")
         }
 
-        return resolved
+        resolved
     }
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =

@@ -72,6 +72,10 @@ class ViewEventError(
         "Couldn't process view event with payload [$payload] with error $message"
 }
 
+data object NoCurrentMythicPlusSeason : ServiceError() {
+    override fun error(): String = "There is no current mythic+ season"
+}
+
 class UnableToAddNewMythicPlusSeason(
     private val reason: String
 ) : ServiceError() {

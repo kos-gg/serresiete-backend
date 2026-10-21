@@ -46,34 +46,15 @@ object RaiderIoHttpClientHelper {
                     }
 
                     "/api/v1/characters/profile" -> {
-                        when (request.url.parameters["name"]) {
-                            "unknown-character" -> respond(
-                                content = """{"statusCode":400,"error":"Bad Request","message":"Could not find requested character"}""",
-                                status = HttpStatusCode.BadRequest,
-                                headers = headersOf(HttpHeaders.ContentType, "application/json")
-                            )
-
-                            "malformed-request-character" -> respond(
-                                content = """{"statusCode":400,"error":"Bad Request","message":"Invalid request query input"}""",
-                                status = HttpStatusCode.BadRequest,
-                                headers = headersOf(HttpHeaders.ContentType, "application/json")
-                            )
-
-                            else -> {
-                                val response = when (request.url.parameters["fields"]) {
-                                    "talents" -> ResourceLoader.readResource("unit/wow/raiderio-classic-talents-response.json")
-                                    "mythic_plus_scores_by_season:current" ->
-                                        """{"mythic_plus_scores_by_season":[{"season":"season-tww-3","scores":{"all":1234.5,"spec_0":1234.5,"spec_1":0.0,"spec_2":0.0,"spec_3":0.0}}]}"""
-
-                                    else -> ResourceLoader.readResource("unit/wow/raiderio-profile-response.json")
-                                }
-                                respond(
-                                    content = response,
-                                    status = HttpStatusCode.OK,
-                                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                                )
-                            }
+                        val response = when (request.url.parameters["fields"]) {
+                            "talents" -> ResourceLoader.readResource("unit/wow/raiderio-classic-talents-response.json")
+                            else -> ResourceLoader.readResource("unit/wow/raiderio-profile-response.json")
                         }
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
                     }
 
                     "/api/v1/mythic-plus/run-details" -> {

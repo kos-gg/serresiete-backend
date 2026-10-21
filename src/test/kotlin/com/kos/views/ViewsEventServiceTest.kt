@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.entities.domain.LolSummoner
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
@@ -48,9 +47,9 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 class ViewsEventServiceTest {
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
 
@@ -117,7 +116,6 @@ class ViewsEventServiceTest {
                 )
 
                 verifyNoInteractions(blizzardClient)
-                verifyNoInteractions(raiderIoClient)
             }
         }
 
@@ -371,7 +369,7 @@ class ViewsEventServiceTest {
             .withState(WowGuildsState(wowGuildsState))
 
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)

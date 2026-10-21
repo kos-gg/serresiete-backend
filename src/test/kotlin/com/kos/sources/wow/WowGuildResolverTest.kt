@@ -10,22 +10,27 @@ import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
-import com.kos.clients.raiderio.RaiderIoClient
+import com.kos.common.error.NoCurrentMythicPlusSeason
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
+import org.mockito.kotlin.any
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class WowGuildResolverTest {
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val guildResolver = WowGuildResolver(EntitiesInMemoryRepository(), raiderIoClient, blizzardClient)
+    private val season = WowSeason(16, "Midnight Season 1", "season-mn-1", 11, "{}", true)
+    private val seasonRepository = runBlocking { WowSeasonInMemoryRepository().withState(WowSeasonsState(listOf(season))) }
+    private val guildResolver = WowGuildResolver(EntitiesInMemoryRepository(), blizzardClient, seasonRepository)
     private val guildRequest = WowEntityRequest("method", "eu", "twisting-nether")
 
     @Test
@@ -47,7 +52,7 @@ class WowGuildResolverTest {
                     assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), guild)
                 }
 
-            verifyNoInteractions(raiderIoClient)
+            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
         }
     }
 
@@ -87,10 +92,10 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(raiderIoClient.getScore(member.copy(blizzardId = 555))).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -131,10 +136,10 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(raiderIoClient.getScore(member.copy(blizzardId = 105161061))).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -162,10 +167,10 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(raiderIoClient.getScore(member.copy(blizzardId = 555))).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(mixedCaseRequest))
                 .onLeft { fail() }
@@ -189,7 +194,7 @@ class WowGuildResolverTest {
                 )
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -198,7 +203,7 @@ class WowGuildResolverTest {
                     assertEquals(listOf(), res.unchecked)
                 }
 
-            verifyNoInteractions(raiderIoClient)
+            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
         }
     }
 
@@ -216,10 +221,10 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(raiderIoClient.getScore(member.copy(blizzardId = 222))).thenReturn(Either.Right(0.0))
+            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(0.0))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -244,10 +249,10 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(raiderIoClient.getScore(member.copy(blizzardId = 777))).thenReturn(Either.Right(1000.0))
+            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1000.0))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -262,7 +267,7 @@ class WowGuildResolverTest {
     }
 
     @Test
-    fun `skips a guild member on a raiderio failure while checking their score`() {
+    fun `skips a guild member on a blizzard failure while checking their rating`() {
         runBlocking {
             val member = WowEntityRequest("flaky", guildRequest.region, guildRequest.realm)
             val timeoutError = TimeoutError("Request timeout has expired")
@@ -276,10 +281,10 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(raiderIoClient.getScore(member.copy(blizzardId = 333))).thenReturn(Either.Left(timeoutError))
+            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Left(timeoutError))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -291,7 +296,7 @@ class WowGuildResolverTest {
     }
 
     @Test
-    fun `a guild member already tracked is returned as existing without calling raiderio`() {
+    fun `a guild member already tracked is returned as existing without checking their rating`() {
         runBlocking {
             val member = WowEntityRequest(basicWowEntity.name, guildRequest.region, guildRequest.realm)
             val trackedEntity = member.toEntity(1)
@@ -308,7 +313,7 @@ class WowGuildResolverTest {
 
             val repo =
                 EntitiesInMemoryRepository().withState(EntitiesState(listOf(trackedEntity), listOf(), listOf()))
-            val resolver = WowGuildResolver(repo, raiderIoClient, blizzardClient)
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
                 .onLeft { fail() }
@@ -317,7 +322,30 @@ class WowGuildResolverTest {
                     assertEquals(listOf(), res.entities)
                 }
 
-            verifyNoInteractions(raiderIoClient)
+            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `resolving a guild fails when there is no current mythic+ season`() {
+        runBlocking {
+            `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
+                .thenReturn(
+                    Either.Right(
+                        GetWowRosterResponse(
+                            listOf(WowMemberResponse(WowCharacterResponse("kakarona", 90, 555))),
+                            WowGuildResponse(999)
+                        ).toGuildRoster()
+                    )
+                )
+
+            val resolver = WowGuildResolver(EntitiesInMemoryRepository(), blizzardClient, WowSeasonInMemoryRepository())
+
+            resolver.resolve(listOf(guildRequest))
+                .onRight { fail() }
+                .onLeft { assertEquals(NoCurrentMythicPlusSeason, it) }
+
+            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
         }
     }
 }

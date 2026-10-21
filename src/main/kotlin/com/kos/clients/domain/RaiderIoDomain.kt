@@ -163,12 +163,6 @@ data class MythicPlusRunResponse(
 )
 
 @Serializable
-data class RaiderIoScoreResponse(
-    @SerialName("mythic_plus_scores_by_season")
-    val seasonScores: List<MythicPlusSeasonScore>
-)
-
-@Serializable
 data class RaiderIoProfile(
     val name: String,
     val realm: String,

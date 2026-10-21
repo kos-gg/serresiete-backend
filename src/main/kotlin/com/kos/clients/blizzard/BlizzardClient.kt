@@ -61,4 +61,11 @@ interface BlizzardClient {
         guild: String
     ): Either<ClientError, GuildRoster>
 
+    suspend fun getMythicRating(
+        region: String,
+        realm: String,
+        character: String,
+        seasonId: Int
+    ): Either<ClientError, Double>
+
 }

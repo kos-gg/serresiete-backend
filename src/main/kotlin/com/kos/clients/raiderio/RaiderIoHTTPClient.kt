@@ -2,7 +2,6 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.HttpError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
@@ -16,7 +15,6 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.M
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.RunDetails
 import com.kos.entities.domain.WowEntity
-import com.kos.entities.domain.WowEntityRequest
 import com.kos.sources.wow.staticdata.wowseason.Season
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
@@ -115,26 +113,6 @@ data class RaiderIoHTTPClient(
         }
     }
 
-    override suspend fun getScore(wowEntityRequest: WowEntityRequest): Either<ClientError, Double> =
-        retryEitherWithFixedDelay(
-            retryConfig = retryConfig,
-            functionName = "raiderIoScore",
-        ) {
-            fetchFromApi<RaiderIoScoreResponse> {
-                apiGet(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
-                    headers {
-                        append(HttpHeaders.Accept, "*/*")
-                    }
-                    url {
-                        parameters.append("region", wowEntityRequest.region)
-                        parameters.append("realm", wowEntityRequest.realm)
-                        parameters.append("name", wowEntityRequest.name)
-                        parameters.append("fields", "mythic_plus_scores_by_season:current")
-                    }
-                }
-            }.map { it.seasonScores.firstOrNull()?.scores?.all ?: 0.0 }.orCharacterNotFound(0.0)
-        }
-
     override suspend fun cutoff(seasonSlug: String): Either<ClientError, SeasonCutoff> {
         return fetchFromApi(
             request = {
@@ -197,15 +175,4 @@ data class RaiderIoHTTPClient(
                 url { parameters.append("access_key", apiKey) }
             }
         }
-
-    private fun <T> Either<ClientError, T>.orCharacterNotFound(fallback: T): Either<ClientError, T> =
-        fold(
-            ifLeft = { error ->
-                if (error is HttpError && error.status == 400 &&
-                    error.body?.contains("Could not find requested character") == true
-                ) Either.Right(fallback)
-                else Either.Left(error)
-            },
-            ifRight = { Either.Right(it) }
-        )
 }

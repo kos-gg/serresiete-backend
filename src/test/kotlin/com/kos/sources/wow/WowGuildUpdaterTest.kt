@@ -8,7 +8,6 @@ import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildPayload
@@ -26,13 +25,18 @@ import org.mockito.kotlin.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
+import org.mockito.kotlin.any
 
 class WowGuildUpdaterTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val season = WowSeason(16, "Midnight Season 1", "season-mn-1", 11, "{}", true)
+    private val seasonRepository = runBlocking { WowSeasonInMemoryRepository().withState(WowSeasonsState(listOf(season))) }
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
-    private val guildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+    private val guildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     private val updater = WowGuildUpdater(guildResolver, entitiesRepository, viewsRepository)
 
     private val region = "eu"
@@ -84,7 +88,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
 
@@ -121,7 +125,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val errors = updater.update(
                 listOf(
@@ -132,7 +136,7 @@ class WowGuildUpdaterTest {
 
             assertEquals(emptyList(), errors)
             verify(blizzardClient, times(1)).getRetailGuildRoster(region, realm, guildName)
-            verify(raiderIoClient, times(1)).getScore(joining)
+            verify(blizzardClient, times(1)).getMythicRating(joining.region, joining.realm, joining.name, season.id)
 
             val joiningEntity = entitiesRepository.get(joining as EntityRequest, Game.WOW)!!
             val finalA = viewsRepository.get(viewIdA)!!.entitiesIds.toSet()
@@ -168,7 +172,7 @@ class WowGuildUpdaterTest {
             val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
-            verify(raiderIoClient, never()).getScore(org.mockito.kotlin.any())
+            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
 
             val updated = entitiesRepository.get(trackedId, Game.WOW) as WowEntity
             assertEquals("newname", updated.name)
@@ -205,8 +209,8 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(memberA.copy(blizzardId = 111))).thenReturn(Either.Right(1500.0))
-            `when`(raiderIoClient.getScore(memberB.copy(blizzardId = 222))).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(memberA.region, memberA.realm, memberA.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(memberB.region, memberB.realm, memberB.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val errors = updater.update(
                 listOf(
@@ -243,7 +247,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(healthyMember)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicRating(healthyMember.region, healthyMember.realm, healthyMember.name, season.id)).thenReturn(Either.Right(1500.0))
 
             val errors = updater.update(
                 listOf(

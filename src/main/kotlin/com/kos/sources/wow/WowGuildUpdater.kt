@@ -1,5 +1,6 @@
 package com.kos.sources.wow
 
+import arrow.core.getOrElse
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.toEntityResolverError
@@ -82,7 +83,7 @@ class WowGuildUpdater(
         newMembers: List<WowEntityRequest>,
         entityIdsStillInGuild: Set<Long>
     ): List<ServiceError> {
-        val newMembers = guildResolver.resolveMembers(newMembers)
+        val newMembers = guildResolver.resolveMembers(newMembers).getOrElse { return listOf(it) }
 
         return entitiesRepository.insert(newMembers.map { it.first }, Game.WOW).fold(
             ifLeft = { insertError ->

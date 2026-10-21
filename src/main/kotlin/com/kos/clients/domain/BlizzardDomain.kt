@@ -372,3 +372,14 @@ data class GetWowRosterResponse(
     val members: List<WowMemberResponse>,
     val guild: WowGuildResponse
 )
+
+@Serializable
+data class MythicRatingResponse(
+    val rating: Double
+)
+
+@Serializable
+data class GetWowMythicKeystoneSeasonResponse(
+    @SerialName("mythic_rating")
+    val mythicRating: MythicRatingResponse? = null
+)

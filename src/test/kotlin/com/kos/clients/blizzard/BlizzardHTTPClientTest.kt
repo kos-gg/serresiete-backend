@@ -145,6 +145,27 @@ class BlizzardHTTPClientTest {
         assertEquals(Either.Right(BlizzardMockHelper.getWowRetailGuildRosterResponse.toGuildRoster()), result)
     }
 
+    @Test
+    fun `getMythicRating returns the character's rating for the season`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right(3521.2056), blizzardClient.getMythicRating("eu", "realm", "name", 16))
+    }
+
+    @Test
+    fun `getMythicRating returns 0 when the character has no rating for the season`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right(0.0), blizzardClient.getMythicRating("eu", "realm", "unrated", 16))
+    }
+
+    @Test
+    fun `getMythicRating returns 0 when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right(0.0), blizzardClient.getMythicRating("eu", "realm", "unknown", 16))
+    }
+
     private suspend fun givenAValidToken() {
         `when`(blizzardAuthClient.getAccessToken())
             .thenReturn(BlizzardMockHelper.getToken())

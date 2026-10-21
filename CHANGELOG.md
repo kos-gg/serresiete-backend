@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.0.3] - 20-10-2026
+
+### Changed
+
+- **Guild members are filtered by Blizzard's mythic rating**: resolving a WOW guild (view creation and `UPDATE_WOW_GUILDS`)
+  checks each member's rating with Blizzard's `mythic-keystone-profile/season/{id}` instead of RaiderIO's profile, which
+  timed out often and made big guilds take minutes. The season id is the current season in `wow_seasons`. A character
+  Blizzard doesn't find, or with no rating that season, counts as 0. The 1000 cutoff doesn't change.
+- `RaiderIoClient.getScore` is gone.
+
+### Deploy notes
+
+- `wow_seasons` needs a current season (run `updateMythicPlusSeason` if it doesn't). Without one, creating a WOW guild
+  view fails with "There is no current mythic+ season" and `UPDATE_WOW_GUILDS` skips new members.
+
 ## [6.0.2] - 20-10-2026
 
 ### Added
