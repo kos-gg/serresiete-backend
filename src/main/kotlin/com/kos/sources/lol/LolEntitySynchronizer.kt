@@ -100,13 +100,11 @@ class LolEntitySynchronizer(
             errorsCollector.join()
             dataCollector.join()
 
-            logger.info("Finished Caching Lol entities")
-            logger.debug(
-                "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toMinutes()
-                } minutes"
+            logger.info(
+                "Finished caching Lol entities: ${lolEntities.size - errorsList.size} cached, " +
+                        "${errorsList.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s. " +
+                        "Match cache hit rate: ${"%.2f".format(matchCache.hitRate * 100)}%"
             )
-            logger.debug("dynamic match cache hit rate: ${"%.2f".format(matchCache.hitRate)}%")
             errorsList
         }
 

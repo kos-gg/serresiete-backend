@@ -14,6 +14,11 @@
   again on the next sync.
 - **HTTP requests to third parties time out after 5s** instead of 15s (`HttpTimeout` on the shared client). With retries,
   a call that keeps timing out now gives up after ~24s instead of ~64s.
+- **Sync logs say what actually happened**: WOW logs one line per entity with run details reused/fetched/failed. WOW,
+  WOW_HC and LOL end with a summary of entities cached/failed (WOW_HC also skipped dead characters) and the duration in
+  seconds instead of minutes. WOW adds run detail totals, and WOW and LOL the match cache hit rate (it printed a
+  fraction as a percentage). RaiderIO's `access_key` is masked in timeout messages. The non-retryable
+  "Retry aborted" and Blizzard's "token in good state" logs moved to TRACE.
 
 ### Deploy notes
 

@@ -13,6 +13,12 @@ val json = Json {
     ignoreUnknownKeys = true
 }
 
+private val accessKeyParameter = Regex("access_key=[^&,\\s\\]]+")
+
+@PublishedApi
+internal fun redactAccessKey(message: String): String =
+    message.replace(accessKeyParameter, "access_key=***")
+
 suspend inline fun <reified A> fetchFromApi(
     crossinline request: suspend () -> HttpResponse
 ): Either<ClientError, A> =
@@ -20,7 +26,7 @@ suspend inline fun <reified A> fetchFromApi(
         val response = try {
             request()
         } catch (e: HttpRequestTimeoutException) {
-            raise(TimeoutError(e.message ?: "Request timeout"))
+            raise(TimeoutError(redactAccessKey(e.message ?: "Request timeout")))
         }
 
         ensure(response.status.isSuccess()) {
@@ -52,7 +58,7 @@ suspend inline fun <reified A> fetchFromApi(
         val response = try {
             request()
         } catch (e: HttpRequestTimeoutException) {
-            raise(TimeoutError(e.message ?: "Request timeout"))
+            raise(TimeoutError(redactAccessKey(e.message ?: "Request timeout")))
         }
 
         ensure(response.status.isSuccess()) {

@@ -430,7 +430,7 @@ class BlizzardHttpClient(
                         )
                         blizzardAuthClient.getAccessToken()
                     } else {
-                        logger.debug("token in good state")
+                        logger.trace("token in good state")
                         Either.Right(it.tokenResponse)
                     }
                 }

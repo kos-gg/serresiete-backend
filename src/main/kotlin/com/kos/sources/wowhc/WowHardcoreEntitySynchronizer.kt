@@ -31,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -86,15 +87,23 @@ class WowHardcoreEntitySynchronizer(
             }
 
             val start = OffsetDateTime.now()
-            wowEntities
+            val cached = wowEntities
                 .asFlow()
                 .parMap(concurrency) { entity ->
                     synchronizeWowHcEntity(entity)
                 }
-                .collect { result ->
+                .fold(0) { cached, result ->
                     result.fold(
-                        ifLeft = { errorChannel.send(it) },
-                        ifRight = { it?.let { dataChannel.send(it) } }
+                        ifLeft = {
+                            errorChannel.send(it)
+                            cached
+                        },
+                        ifRight = { data ->
+                            data?.let {
+                                dataChannel.send(it)
+                                cached + 1
+                            } ?: cached
+                        }
                     )
                 }
 
@@ -104,11 +113,10 @@ class WowHardcoreEntitySynchronizer(
             errorsCollector.join()
             dataCollector.join()
 
-            logger.info("Finished Caching Wow HC entities")
-            logger.debug(
-                "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toMinutes()
-                } minutes"
+            logger.info(
+                "Finished caching Wow HC entities: $cached cached, " +
+                        "${wowEntities.size - cached - errors.size} skipped (dead), " +
+                        "${errors.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s"
             )
 
             errors

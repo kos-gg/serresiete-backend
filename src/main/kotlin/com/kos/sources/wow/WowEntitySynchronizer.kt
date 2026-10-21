@@ -26,6 +26,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -93,14 +94,20 @@ class WowEntitySynchronizer(
             }
 
             val start = OffsetDateTime.now()
-            wowEntities.asFlow()
+            val runDetailsStats = wowEntities.asFlow()
                 .parMap(concurrency = concurrency) { entity ->
                     synchronizeWowEntity(entity, currentSeasonSlug, cutoff, runDetailsCache)
                 }
-                .collect { result ->
+                .fold(RunDetailsStats.NONE) { stats, result ->
                     result.fold(
-                        ifLeft = { errorsChannel.send(it) },
-                        ifRight = { dataChannel.send(it) }
+                        ifLeft = {
+                            errorsChannel.send(it)
+                            stats
+                        },
+                        ifRight = {
+                            dataChannel.send(it.dataCache)
+                            stats + it.runDetailsStats
+                        }
                     )
                 }
 
@@ -110,13 +117,13 @@ class WowEntitySynchronizer(
             errorsCollector.join()
             dataCollector.join()
 
-            logger.info("Finished Caching Wow entities")
-            logger.debug(
-                "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toMinutes()
-                } minutes"
+            logger.info(
+                "Finished caching Wow entities: ${wowEntities.size - errorsList.size} cached, " +
+                        "${errorsList.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s. " +
+                        "Run details: ${runDetailsStats.reused} reused, ${runDetailsStats.fetched} fetched, " +
+                        "${runDetailsStats.failed} failed. " +
+                        "Match cache hit rate: ${"%.2f".format(runDetailsCache.hitRate * 100)}%"
             )
-            logger.debug("dynamic match cache hit rate: ${"%.2f".format(runDetailsCache.hitRate)}%")
 
             errorsList
         }
@@ -127,7 +134,7 @@ class WowEntitySynchronizer(
         season: String?,
         cutoff: SeasonCutoff?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>
-    ): Either<ServiceError, DataCache> =
+    ): Either<ServiceError, SyncedEntity> =
         either {
 
             val newestDataCacheEntry: WowData? = getNewestDataCacheEntry(entity.id)
@@ -145,17 +152,26 @@ class WowEntitySynchronizer(
                 newestDataCacheEntry
             )
 
-            DataCache(
-                entity.id,
-                json.encodeToString<Data>(
-                    profile.toWowData(
-                        entity.id,
-                        quantile,
-                        enrichedRuns
-                    )
+            logger.debug(
+                "Run details for entity ${entity.id} (${entity.name}-${entity.realm}): " +
+                        "${enrichedRuns.stats.reused} reused, ${enrichedRuns.stats.fetched} fetched, " +
+                        "${enrichedRuns.stats.failed} failed"
+            )
+
+            SyncedEntity(
+                DataCache(
+                    entity.id,
+                    json.encodeToString<Data>(
+                        profile.toWowData(
+                            entity.id,
+                            quantile,
+                            enrichedRuns.runs
+                        )
+                    ),
+                    OffsetDateTime.now(),
+                    Game.WOW
                 ),
-                OffsetDateTime.now(),
-                Game.WOW
+                enrichedRuns.stats
             )
         }
 
@@ -188,9 +204,9 @@ class WowEntitySynchronizer(
         currentSeasonSlug: String?,
         runDetailsCache: DynamicCache<Either<ServiceError, RunDetails>>,
         newestDataCacheEntry: WowData?
-    ): List<EnrichedMythicPlusRun> {
+    ): EnrichedRuns {
         if (currentSeasonSlug == null) {
-            return responseRuns.map { EnrichedMythicPlusRun(it, null) }
+            return EnrichedRuns(responseRuns.map { EnrichedMythicPlusRun(it, null) }, RunDetailsStats.NONE)
         }
 
         val responseRunIds = responseRuns
@@ -208,7 +224,7 @@ class WowEntitySynchronizer(
                 }
             }.fold(
                 ifLeft = { error ->
-                    logger.warn("Failed to fetch run details for runId=${run.runId}: ${error.error()}")
+                    logger.debug("Failed to fetch run details for runId=${run.runId}: ${error.error()}")
                     null
                 },
                 ifRight = { it }
@@ -220,11 +236,16 @@ class WowEntitySynchronizer(
             ?.associate { it.run.runId to it.details }
             .orEmpty()
 
-        logger.debug("Not requesting ${cachedRunDetails.size} run details because they are already cached")
-
-        return responseRuns.map { run ->
-            EnrichedMythicPlusRun(run, fetchedRunDetails[run.runId] ?: cachedRunDetails[run.runId])
-        }
+        return EnrichedRuns(
+            responseRuns.map { run ->
+                EnrichedMythicPlusRun(run, fetchedRunDetails[run.runId] ?: cachedRunDetails[run.runId])
+            },
+            RunDetailsStats(
+                reused = responseRuns.size - uncachedRuns.size,
+                fetched = fetchedRunDetails.values.count { it != null },
+                failed = fetchedRunDetails.values.count { it == null }
+            )
+        )
     }
 
     private suspend fun <A> executeClientCall(
@@ -236,4 +257,17 @@ class WowEntitySynchronizer(
         } catch (e: RequestNotPermitted) {
             Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
         }
+
+    private data class RunDetailsStats(val reused: Int, val fetched: Int, val failed: Int) {
+        operator fun plus(other: RunDetailsStats) =
+            RunDetailsStats(reused + other.reused, fetched + other.fetched, failed + other.failed)
+
+        companion object {
+            val NONE = RunDetailsStats(0, 0, 0)
+        }
+    }
+
+    private data class EnrichedRuns(val runs: List<EnrichedMythicPlusRun>, val stats: RunDetailsStats)
+
+    private data class SyncedEntity(val dataCache: DataCache, val runDetailsStats: RunDetailsStats)
 }
