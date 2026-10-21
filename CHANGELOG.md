@@ -9,6 +9,11 @@
   timed out often and made big guilds take minutes. The season id is the current season in `wow_seasons`. A character
   Blizzard doesn't find, or with no rating that season, counts as 0. The 1000 cutoff doesn't change.
 - `RaiderIoClient.getScore` is gone.
+- **Run details are no longer retried**: `getRunDetails` makes a single attempt. RaiderIO fails
+  often lately and the retries blocked the whole WOW sync. A run whose details fail is stored without them and fetched
+  again on the next sync.
+- **HTTP requests to third parties time out after 5s** instead of 15s (`HttpTimeout` on the shared client). With retries,
+  a call that keeps timing out now gives up after ~24s instead of ~64s.
 
 ### Deploy notes
 

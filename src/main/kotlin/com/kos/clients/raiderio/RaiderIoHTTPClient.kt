@@ -61,24 +61,18 @@ data class RaiderIoHTTPClient(
         }
     }
 
-    override suspend fun getRunDetails(season: String, runId: String): Either<ClientError, RunDetails> {
-        return retryEitherWithFixedDelay(
-            retryConfig = retryConfig,
-            functionName = "getRunDetails",
-        ) {
-            fetchFromApi<RunDetailsResponse> {
-                apiGet(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
-                    headers {
-                        append(HttpHeaders.Accept, "*/*")
-                    }
-                    url {
-                        parameters.append("season", season)
-                        parameters.append("id", runId)
-                    }
+    override suspend fun getRunDetails(season: String, runId: String): Either<ClientError, RunDetails> =
+        fetchFromApi<RunDetailsResponse> {
+            apiGet(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
+                headers {
+                    append(HttpHeaders.Accept, "*/*")
                 }
-            }.map { it.toRunDetails() }
-        }
-    }
+                url {
+                    parameters.append("season", season)
+                    parameters.append("id", runId)
+                }
+            }
+        }.map { it.toRunDetails() }
 
     override suspend fun get(wowEntity: WowEntity): Either<ClientError, WowCharacterProfile> {
         return retryEitherWithFixedDelay(

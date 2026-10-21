@@ -74,6 +74,7 @@ import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -106,7 +107,11 @@ fun Application.module() {
 
     val db = DatabaseFactory.pooledDatabase()
 
-    val client = HttpClient(CIO)
+    val client = HttpClient(CIO) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 5_000
+        }
+    }
     val defaultRetryConfig = RetryConfig(3, 1200)
     val raiderIoHTTPClient = RaiderIoHTTPClient(client, defaultRetryConfig, raiderIoApiKey)
     val riotHTTPClient = RiotHTTPClient(client, defaultRetryConfig, riotApiKey)
