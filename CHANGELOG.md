@@ -19,6 +19,8 @@
   seconds instead of minutes. WOW adds run detail totals, and WOW and LOL the match cache hit rate (it printed a
   fraction as a percentage). RaiderIO's `access_key` is masked in timeout messages. The non-retryable
   "Retry aborted" and Blizzard's "token in good state" logs moved to TRACE.
+- **Guild resolution logs one summary line** (kept / below minimum mythic+ score / failed) instead of a WARN per member.
+  Members below the score are logged at TRACE; members whose rating couldn't be fetched still log a WARN.
 
 ### Deploy notes
 

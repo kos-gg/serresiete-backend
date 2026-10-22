@@ -80,9 +80,18 @@ class WowGuildResolver(
             .toList()
             .split()
 
-        errors.forEach { (req, error) ->
+        val (belowScore, failed) = errors.partition { (_, error) -> error is NotCompetitiveCharacter }
+
+        belowScore.forEach { (req, error) ->
+            logger.trace("Skipping guild member ${req.name}-${req.realm}: ${error.error()}")
+        }
+        failed.forEach { (req, error) ->
             logger.warn("Skipping guild member ${req.name}-${req.realm}: ${error.error()}")
         }
+        logger.info(
+            "Resolved ${newRequests.size} new guild members: ${resolved.size} kept, " +
+                "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"
+        )
 
         resolved
     }
