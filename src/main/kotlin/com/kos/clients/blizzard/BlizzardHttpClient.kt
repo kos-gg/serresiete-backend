@@ -1,6 +1,7 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
@@ -31,6 +32,7 @@ import java.time.OffsetDateTime
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
+import com.kos.sources.wow.MythicKeystoneProfile
 
 data class TokenState(val obtainedAt: OffsetDateTime, val tokenResponse: TokenResponse)
 
@@ -369,12 +371,12 @@ class BlizzardHttpClient(
         }
     }
 
-    override suspend fun getMythicRating(
+    override suspend fun getMythicKeystoneProfile(
         region: String,
         realm: String,
         character: String,
         seasonId: Int
-    ): Either<ClientError, Double> {
+    ): Either<ClientError, MythicKeystoneProfile> {
         return throttleRequest {
             either {
                 val tokenResponse = getAndUpdateToken().bind()
@@ -384,7 +386,7 @@ class BlizzardHttpClient(
 
                 retryEitherWithFixedDelay(
                     retryConfig = retryConfig,
-                    functionName = "getMythicRating",
+                    functionName = "getMythicKeystoneProfile",
                 ) {
                     fetchFromApi<GetWowMythicKeystoneSeasonResponse> {
                         client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
@@ -395,7 +397,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.map { it.mythicRating?.rating ?: 0.0 }.orNotFound(0.0).bind()
+                }.flatMap { it.toMythicKeystoneProfile() }.orNotFound(MythicKeystoneProfile.EMPTY).bind()
             }
         }
     }

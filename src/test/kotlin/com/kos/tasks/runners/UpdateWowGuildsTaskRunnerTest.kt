@@ -1,5 +1,6 @@
 package com.kos.tasks.runners
 
+import com.kos.sources.wow.MythicKeystoneProfile
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -81,8 +82,8 @@ class UpdateWowGuildsTaskRunnerTest {
                     ).toGuildRoster()
                 )
             )
-        `when`(blizzardClient.getMythicRating(region, realm, character, season.id))
-            .thenReturn(Either.Right(1500.0))
+        `when`(blizzardClient.getMythicKeystoneProfile(region, realm, character, season.id))
+            .thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
         val id = UUID.randomUUID().toString()
         tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))

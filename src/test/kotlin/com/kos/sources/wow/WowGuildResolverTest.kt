@@ -52,7 +52,7 @@ class WowGuildResolverTest {
                     assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), guild)
                 }
 
-            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
         }
     }
 
@@ -92,7 +92,7 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
@@ -136,7 +136,7 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
@@ -167,7 +167,7 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
@@ -203,7 +203,7 @@ class WowGuildResolverTest {
                     assertEquals(listOf(), res.unchecked)
                 }
 
-            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
         }
     }
 
@@ -221,7 +221,7 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(0.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(0.0, emptyList())))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
@@ -249,7 +249,7 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(1000.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1000.0, emptyList())))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
@@ -281,7 +281,7 @@ class WowGuildResolverTest {
                         ).toGuildRoster()
                     )
                 )
-            `when`(blizzardClient.getMythicRating(member.region, member.realm, member.name, season.id)).thenReturn(Either.Left(timeoutError))
+            `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id)).thenReturn(Either.Left(timeoutError))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
@@ -322,7 +322,7 @@ class WowGuildResolverTest {
                     assertEquals(listOf(), res.entities)
                 }
 
-            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
         }
     }
 
@@ -345,7 +345,7 @@ class WowGuildResolverTest {
                 .onRight { fail() }
                 .onLeft { assertEquals(NoCurrentMythicPlusSeason, it) }
 
-            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
         }
     }
 }

@@ -24,6 +24,12 @@ object BlizzardHttpClientHelper {
         ignoreUnknownKeys = true
     }
 
+    private val mythicKeystoneProfileResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-mythic-keystone-profile-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
     val client = HttpClient(MockEngine) {
         install(ContentNegotiation) {
             json()
@@ -69,8 +75,11 @@ object BlizzardHttpClientHelper {
                         }
 
                     "/profile/wow/character/realm/name/mythic-keystone-profile/season/16" ->
+                        respond(mythicKeystoneProfileResponse, HttpStatusCode.OK)
+
+                    "/profile/wow/character/realm/unknownspec/mythic-keystone-profile/season/16" ->
                         respond(
-                            """{"mythic_rating":{"color":{"r":255,"g":128,"b":0,"a":1},"rating":3521.2056}}""",
+                            mythicKeystoneProfileResponse.replace("\"id\": 66", "\"id\": 9999"),
                             HttpStatusCode.OK
                         )
 

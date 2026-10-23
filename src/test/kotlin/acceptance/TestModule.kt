@@ -138,7 +138,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         blizzardClient,
         wowItemsDatabaseRepository
     )
-    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, seasonRepository)
+    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, blizzardClient, seasonRepository)
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
             wowSynchronizer = wowEntitySynchronizer,

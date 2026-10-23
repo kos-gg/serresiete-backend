@@ -1,5 +1,9 @@
 package com.kos.clients.blizzard
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
+import com.kos.clients.JsonParseError
 import com.kos.clients.domain.*
 import com.kos.datacache.domain.*
 import com.kos.entities.domain.GuildRoster
@@ -11,6 +15,9 @@ import java.time.ZoneId
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
+import com.kos.entities.domain.findClassAndSpec
+import com.kos.sources.wow.KeystoneBestRun
+import com.kos.sources.wow.MythicKeystoneProfile
 
 fun GetWowCharacterResponse.toWowCharacter() = WowCharacter(
     id = id,
@@ -95,3 +102,33 @@ fun GetWowRosterResponse.toGuildRoster() = GuildRoster(
     guild.id,
     members.map { GuildRosterMember(it.character.name, it.character.level, it.character.id, it.character.realm?.slug) }
 )
+
+fun GetWowMythicKeystoneSeasonResponse.toMythicKeystoneProfile(): Either<JsonParseError, MythicKeystoneProfile> =
+    either {
+        MythicKeystoneProfile(
+            rating = mythicRating?.rating ?: 0.0,
+            bestRuns = bestRuns.map { run ->
+                KeystoneBestRun(
+                    dungeonId = run.dungeon.id,
+                    keyLevel = run.keystoneLevel,
+                    timed = run.isCompletedWithinTime,
+                    details = RunDetails(run.members.map { it.toRunMember().bind() })
+                )
+            }
+        )
+    }
+
+private fun KeystoneRunMemberResponse.toRunMember(): Either<JsonParseError, RunMember> =
+    either {
+        val (wowClass, spec) = ensureNotNull(findClassAndSpec(specialization.id)) {
+            JsonParseError(raw = "", error = "/best_runs/members/specialization/id unknown: ${specialization.id}")
+        }
+        RunMember(
+            name = character.name,
+            realm = character.realm.slug,
+            `class` = wowClass,
+            spec = ClassSpec(spec.externalSpec, specialization.name, spec.role),
+            race = race.name,
+            itemLevel = equippedItemLevel
+        )
+    }

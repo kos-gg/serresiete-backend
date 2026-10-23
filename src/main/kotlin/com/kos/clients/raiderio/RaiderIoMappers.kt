@@ -24,6 +24,7 @@ fun MythicPlusRankResponse.toMythicPlusRank() = MythicPlusRank(world, region, re
 
 fun MythicPlusRunResponse.toMythicPlusRun() = MythicPlusRun(
     runId = runId,
+    dungeonId = dungeonId,
     dungeon = dungeon,
     shortName = shortName,
     keyLevel = keyLevel,
@@ -35,27 +36,6 @@ fun MythicPlusRunResponse.toMythicPlusRun() = MythicPlusRun(
     url = url,
     affixes = affixes.map { Affix(it.affix) },
     spec = spec?.let { ClassSpec(it.id, it.name, it.role) }
-)
-
-fun RunDetailsResponse.toRunDetails() = RunDetails(
-    roster = roster.map { entry ->
-        RunDetailsRosterEntry(
-            character = with(entry.character) {
-                RunDetailsCharacter(
-                    name,
-                    RunDetailsCharacterClass(`class`.name),
-                    RunDetailsCharacterSpec(spec.name),
-                    RunDetailsCharacterRealm(realm.id, realm.name, realm.slug),
-                    RunDetailsCharacterRegion(region.name, region.shortName, region.slug)
-                )
-            },
-            role = entry.role,
-            ranks = RunDetailsRosterRanks(entry.ranks.score)
-        )
-    },
-    loggedDetails = loggedDetails?.let { details ->
-        LoggedDetails(details.deaths.map { RunDetailsDeath(it.approximateDiedAt) })
-    }
 )
 
 fun SeasonResponse.toSeason() = Season(

@@ -10,10 +10,8 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.B
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_CUTOFFS_PATH
-import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_RUN_DETAILS_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.WithLogger
-import com.kos.datacache.domain.RunDetails
 import com.kos.entities.domain.WowEntity
 import com.kos.sources.wow.staticdata.wowseason.Season
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
@@ -40,7 +38,6 @@ data class RaiderIoHTTPClient(
         const val CHARACTERS_PROFILE_PATH = "/characters/profile"
         const val MYTHIC_PLUS_STATIC_DATA_PATH = "/mythic-plus/static-data"
         const val MYTHIC_PLUS_CUTOFFS_PATH = "/mythic-plus/season-cutoffs"
-        const val MYTHIC_PLUS_RUN_DETAILS_PATH = "/mythic-plus/run-details"
     }
 
     override suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, List<Season>> {
@@ -60,19 +57,6 @@ data class RaiderIoHTTPClient(
             }.map { expansionSeasons -> expansionSeasons.seasons.map { it.toSeason() } }
         }
     }
-
-    override suspend fun getRunDetails(season: String, runId: String): Either<ClientError, RunDetails> =
-        fetchFromApi<RunDetailsResponse> {
-            apiGet(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
-                headers {
-                    append(HttpHeaders.Accept, "*/*")
-                }
-                url {
-                    parameters.append("season", season)
-                    parameters.append("id", runId)
-                }
-            }
-        }.map { it.toRunDetails() }
 
     override suspend fun get(wowEntity: WowEntity): Either<ClientError, WowCharacterProfile> {
         return retryEitherWithFixedDelay(

@@ -4,6 +4,7 @@ import com.kos.credentials.Credentials
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -12,7 +13,7 @@ import java.time.Duration
 fun UserPasswordCredential.toCredentials() = Credentials(this.name, this.password)
 
 fun Application.launchSubscription(subscription: EventSubscription) {
-    val backgroundJob = launch {
+    val backgroundJob = launch(Dispatchers.IO) {
         while (isActive) {
             try {
                 subscription.processPendingEvents()

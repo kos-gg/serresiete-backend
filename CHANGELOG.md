@@ -1,5 +1,39 @@
 # Changelog
 
+## [7.0.0] - 22-10-2026
+
+### Changed
+
+- **Breaking — WOW run details come from Blizzard**: each best run's `details` is now
+  `{ "members": [{ name, realm, class, spec: { id, name, role }, race, itemLevel }] }`, built from Blizzard's
+  `mythic-keystone-profile/season/{id}`. `realm` is the slug, `spec.name` is Blizzard's (e.g. "Holy", "Brewmaster", the
+  same style as RaiderIO and `run.spec`, so `class` + `spec.name` identifies the icon), `class` and `spec.role` come
+  from our spec table by Blizzard's spec id, and `itemLevel` is the item level the member had in that run. The RaiderIO roster (`roster`, member `region`,
+  `ranks.score`) and `loggedDetails` (deaths) are gone.
+- Each best run has a new `dungeonId` (RaiderIO's `map_challenge_mode_id`, the same id as Blizzard's dungeon). Runs are
+  matched to Blizzard's best runs by `dungeonId` + `keyLevel` + timed (Blizzard keeps a best timed and a best untimed run
+  per dungeon; a RaiderIO run is timed when `upgrades > 0`). A run with no match is stored with `details: null`.
+- One Blizzard call per character fetches the members of all its best runs, instead of one RaiderIO `run-details` call
+  per run. The call is skipped when every best run already has details from the previous sync (details are kept by
+  `runId`, so a new best run triggers it). RaiderIO's `run-details` client is gone.
+- `Spec` has a `role` (`tank` / `healer` / `dps`).
+- The WOW sync logs no longer print run details reused/fetched/failed (per entity or in the summary) nor a match cache
+  hit rate; the summary keeps entities cached/failed and the duration.
+- The WOW guild resolver logs which guild it starts resolving (name, region/realm).
+- **Scheduled WOW and WOW_HC data caching runs every 2h instead of every 30 min** (`CACHE_WOW_DATA_TASK`,
+  `CACHE_WOW_HC_DATA_TASK`). Data rarely changes much in 30 min, and a view can still be synced on demand. LOL stays at
+  30 min.
+- **WOW sync no longer waits for slow entities in order**: entities are processed with `parMapUnordered` instead of
+  `parMap`, so one entity stuck in RaiderIO retries (~22s) no longer holds back the ones after it. WOW_HC sync does the
+  same.
+- **Event subscriptions run on `Dispatchers.IO`**: in Ktor's development mode they inherited its
+  `ClassLoaderAwareContinuationInterceptor`, which made `parMapUnordered` fail with "Flow invariant is violated" when
+  syncing a new view. They now run like the scheduled tasks, without it.
+
+### Deploy notes
+
+- WOW `data_cache` must be wiped: old entries carry RaiderIO run details that the new model can't read.
+
 ## [6.0.3] - 20-10-2026
 
 ### Changed

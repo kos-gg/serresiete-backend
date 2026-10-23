@@ -2,7 +2,7 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import arrow.core.raise.either
-import arrow.fx.coroutines.parMap
+import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
 import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
@@ -89,7 +89,7 @@ class WowHardcoreEntitySynchronizer(
             val start = OffsetDateTime.now()
             val cached = wowEntities
                 .asFlow()
-                .parMap(concurrency) { entity ->
+                .parMapUnordered(concurrency) { entity ->
                     synchronizeWowHcEntity(entity)
                 }
                 .fold(0) { cached, result ->

@@ -24,6 +24,7 @@ data class TasksLauncher(
     suspend fun launchTasks() {
         val now = OffsetDateTime.now()
         val thirtyMinutesDelay = 30
+        val twoHoursDelay = 120
         val fifteenMinutesDelay = 15
         val oneWeekDelay = 10080
         val oneDayDelay = 1440
@@ -37,9 +38,9 @@ data class TasksLauncher(
                 else timeDelay - differenceBetweenNowAndLastExecutionTime
             } ?: 0
 
-        val cacheWowDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_WOW_DATA_TASK, thirtyMinutesDelay)
+        val cacheWowDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_WOW_DATA_TASK, twoHoursDelay)
         val cacheWowHcDataTaskInitDelay: Long =
-            getTaskInitialDelay(now, TaskType.CACHE_WOW_HC_DATA_TASK, thirtyMinutesDelay)
+            getTaskInitialDelay(now, TaskType.CACHE_WOW_HC_DATA_TASK, twoHoursDelay)
         val cacheLolDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_LOL_DATA_TASK, thirtyMinutesDelay)
         val tokenCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TOKEN_CLEANUP_TASK, fifteenMinutesDelay)
         val tasksCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TASK_CLEANUP_TASK, oneWeekDelay)
@@ -82,7 +83,7 @@ data class TasksLauncher(
                 Game.WOW,
                 TaskType.CACHE_WOW_DATA_TASK
             ),
-            cacheWowDataTaskInitDelay, thirtyMinutesDelay.toLong(), TimeUnit.MINUTES
+            cacheWowDataTaskInitDelay, twoHoursDelay.toLong(), TimeUnit.MINUTES
         )
 
         executorService.scheduleAtFixedRate(
@@ -93,7 +94,7 @@ data class TasksLauncher(
                 Game.WOW_HC,
                 TaskType.CACHE_WOW_HC_DATA_TASK
             ),
-            cacheWowHcDataTaskInitDelay, thirtyMinutesDelay.toLong(), TimeUnit.MINUTES
+            cacheWowHcDataTaskInitDelay, twoHoursDelay.toLong(), TimeUnit.MINUTES
         )
 
         executorService.scheduleAtFixedRate(

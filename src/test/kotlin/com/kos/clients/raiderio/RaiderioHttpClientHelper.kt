@@ -57,15 +57,6 @@ object RaiderIoHttpClientHelper {
                         )
                     }
 
-                    "/api/v1/mythic-plus/run-details" -> {
-                        val response = ResourceLoader.readResource("unit/wow/raiderio-run-details-response.json")
-                        respond(
-                            content = response,
-                            status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType, "application/json")
-                        )
-                    }
-
                     else -> error("Unhandled ${request.url.encodedPath}")
                 }
             }
@@ -91,6 +82,7 @@ object RaiderIoHttpClientHelper {
             bestRuns = listOf(
                 MythicPlusRun(
                     4462779L,
+                    456,
                     "Throne of the Tides",
                     "TOTT",
                     20,
@@ -104,6 +96,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     3814291L,
+                    244,
                     "Atal'Dazar",
                     "AD",
                     20,
@@ -117,6 +110,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     4879212L,
+                    248,
                     "Waycrest Manor",
                     "WM",
                     20,
@@ -130,6 +124,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     3709222L,
+                    198,
                     "Darkheart Thicket",
                     "DHT",
                     20,
@@ -143,6 +138,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     3628977L,
+                    199,
                     "Black Rook Hold",
                     "BRH",
                     20,
@@ -156,6 +152,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     3775347L,
+                    463,
                     "DOTI: Galakrond's Fall",
                     "FALL",
                     20,
@@ -169,6 +166,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     4267361L,
+                    168,
                     "The Everbloom",
                     "EB",
                     20,
@@ -182,6 +180,7 @@ object RaiderIoHttpClientHelper {
                 ),
                 MythicPlusRun(
                     4382848L,
+                    464,
                     "DOTI: Murozond's Rise",
                     "RISE",
                     20,
@@ -199,6 +198,7 @@ object RaiderIoHttpClientHelper {
     val mythicPlusRunJson = """
         {
             "keystone_run_id": 4462779,
+            "map_challenge_mode_id": 456,
             "dungeon": "Throne of the Tides",
             "short_name": "TOTT",
             "mythic_level": 20,
@@ -216,44 +216,9 @@ object RaiderIoHttpClientHelper {
         }
     """.trimIndent()
 
-    private val usRegion = RunDetailsCharacterRegion("United States & Oceania", "US", "us")
-
-    val runDetails = RunDetails(
-        roster = listOf(
-            RunDetailsRosterEntry(
-                character = RunDetailsCharacter(
-                    "Nareez",
-                    RunDetailsCharacterClass("Warlock"),
-                    RunDetailsCharacterSpec("Affliction"),
-                    RunDetailsCharacterRealm(1, "Blackrock", "blackrock"),
-                    usRegion
-                ),
-                role = "dps",
-                ranks = RunDetailsRosterRanks(3200.5)
-            ),
-            RunDetailsRosterEntry(
-                character = RunDetailsCharacter(
-                    "Surmana",
-                    RunDetailsCharacterClass("Warrior"),
-                    RunDetailsCharacterSpec("Protection"),
-                    RunDetailsCharacterRealm(2, "Soulseeker", "soulseeker"),
-                    usRegion
-                ),
-                role = "tank",
-                ranks = RunDetailsRosterRanks(2800.0)
-            )
-        ),
-        loggedDetails = LoggedDetails(
-            deaths = listOf(
-                RunDetailsDeath(1441041),
-                RunDetailsDeath(1446140),
-                RunDetailsDeath(914295)
-            )
-        )
-    )
-
     val mythicPlusRun = MythicPlusRun(
         runId = 4462779L,
+        dungeonId = 456,
         dungeon = "Throne of the Tides",
         shortName = "TOTT",
         keyLevel = 20,

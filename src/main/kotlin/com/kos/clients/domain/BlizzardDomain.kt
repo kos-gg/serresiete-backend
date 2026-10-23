@@ -379,7 +379,46 @@ data class MythicRatingResponse(
 )
 
 @Serializable
+data class KeystoneRunRealmResponse(val slug: String)
+
+@Serializable
+data class KeystoneRunCharacterResponse(
+    val name: String,
+    val realm: KeystoneRunRealmResponse
+)
+
+@Serializable
+data class KeystoneRunSpecializationResponse(val id: Int, val name: String)
+
+@Serializable
+data class KeystoneRunRaceResponse(val name: String)
+
+@Serializable
+data class KeystoneRunMemberResponse(
+    val character: KeystoneRunCharacterResponse,
+    val specialization: KeystoneRunSpecializationResponse,
+    val race: KeystoneRunRaceResponse,
+    @SerialName("equipped_item_level")
+    val equippedItemLevel: Int
+)
+
+@Serializable
+data class KeystoneRunDungeonResponse(val id: Int)
+
+@Serializable
+data class KeystoneBestRunResponse(
+    @SerialName("keystone_level")
+    val keystoneLevel: Int,
+    val dungeon: KeystoneRunDungeonResponse,
+    @SerialName("is_completed_within_time")
+    val isCompletedWithinTime: Boolean,
+    val members: List<KeystoneRunMemberResponse>
+)
+
+@Serializable
 data class GetWowMythicKeystoneSeasonResponse(
     @SerialName("mythic_rating")
-    val mythicRating: MythicRatingResponse? = null
+    val mythicRating: MythicRatingResponse? = null,
+    @SerialName("best_runs")
+    val bestRuns: List<KeystoneBestRunResponse> = emptyList()
 )

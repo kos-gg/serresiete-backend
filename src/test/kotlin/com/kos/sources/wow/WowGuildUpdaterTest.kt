@@ -88,7 +88,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(blizzardClient.getMythicRating(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
 
@@ -125,7 +125,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(blizzardClient.getMythicRating(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(
                 listOf(
@@ -136,7 +136,7 @@ class WowGuildUpdaterTest {
 
             assertEquals(emptyList(), errors)
             verify(blizzardClient, times(1)).getRetailGuildRoster(region, realm, guildName)
-            verify(blizzardClient, times(1)).getMythicRating(joining.region, joining.realm, joining.name, season.id)
+            verify(blizzardClient, times(1)).getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)
 
             val joiningEntity = entitiesRepository.get(joining as EntityRequest, Game.WOW)!!
             val finalA = viewsRepository.get(viewIdA)!!.entitiesIds.toSet()
@@ -172,7 +172,7 @@ class WowGuildUpdaterTest {
             val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
-            verify(blizzardClient, never()).getMythicRating(any(), any(), any(), any())
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
 
             val updated = entitiesRepository.get(trackedId, Game.WOW) as WowEntity
             assertEquals("newname", updated.name)
@@ -209,8 +209,8 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(blizzardClient.getMythicRating(memberA.region, memberA.realm, memberA.name, season.id)).thenReturn(Either.Right(1500.0))
-            `when`(blizzardClient.getMythicRating(memberB.region, memberB.realm, memberB.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(memberA.region, memberA.realm, memberA.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
+            `when`(blizzardClient.getMythicKeystoneProfile(memberB.region, memberB.realm, memberB.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(
                 listOf(
@@ -247,7 +247,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(blizzardClient.getMythicRating(healthyMember.region, healthyMember.realm, healthyMember.name, season.id)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(healthyMember.region, healthyMember.realm, healthyMember.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(
                 listOf(

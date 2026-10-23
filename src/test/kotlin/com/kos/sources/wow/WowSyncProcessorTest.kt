@@ -47,7 +47,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -79,7 +79,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -111,7 +111,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -143,7 +143,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
             val spied = spyk(service)
 
             assertWowCacheInvocation(

@@ -2,6 +2,7 @@ package com.kos.clients.blizzard
 
 import arrow.core.Either
 import com.kos.clients.ClientError
+import com.kos.clients.JsonParseError
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.datacache.BlizzardMockHelper
@@ -12,6 +13,12 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import com.kos.datacache.domain.ClassSpec
+import com.kos.datacache.domain.RunDetails
+import com.kos.datacache.domain.RunMember
+import com.kos.sources.wow.KeystoneBestRun
+import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.entities.domain.WowCharacter
 
 class BlizzardHTTPClientTest {
@@ -146,24 +153,55 @@ class BlizzardHTTPClientTest {
     }
 
     @Test
-    fun `getMythicRating returns the character's rating for the season`() = runBlocking {
+    fun `getMythicKeystoneProfile returns the rating and the members of each best run`() = runBlocking {
         givenAValidToken()
 
-        assertEquals(Either.Right(3521.2056), blizzardClient.getMythicRating("eu", "realm", "name", 16))
+        val sanxei = RunMember("Sanxei", "zuljin", "Mage", ClassSpec(62, "Arcane", "dps"), "Dwarf", 328)
+        val sanxeiTank = RunMember("Sanxeitank", "kazzak", "Paladin", ClassSpec(66, "Protection", "tank"), "Human", 330)
+
+        assertEquals(
+            Either.Right(
+                MythicKeystoneProfile(
+                    rating = 3521.2056,
+                    bestRuns = listOf(
+                        KeystoneBestRun(249, 11, false, RunDetails(listOf(sanxei.copy(itemLevel = 292)))),
+                        KeystoneBestRun(249, 20, true, RunDetails(listOf(sanxei, sanxeiTank)))
+                    )
+                )
+            ),
+            blizzardClient.getMythicKeystoneProfile("eu", "realm", "name", 16)
+        )
     }
 
     @Test
-    fun `getMythicRating returns 0 when the character has no rating for the season`() = runBlocking {
-        givenAValidToken()
+    fun `getMythicKeystoneProfile returns no rating and no runs when the character has not played the season`() =
+        runBlocking {
+            givenAValidToken()
 
-        assertEquals(Either.Right(0.0), blizzardClient.getMythicRating("eu", "realm", "unrated", 16))
-    }
+            assertEquals(
+                Either.Right(MythicKeystoneProfile.EMPTY),
+                blizzardClient.getMythicKeystoneProfile("eu", "realm", "unrated", 16)
+            )
+        }
 
     @Test
-    fun `getMythicRating returns 0 when blizzard doesn't find the character`() = runBlocking {
+    fun `getMythicKeystoneProfile returns no rating and no runs when blizzard doesn't find the character`() =
+        runBlocking {
+            givenAValidToken()
+
+            assertEquals(
+                Either.Right(MythicKeystoneProfile.EMPTY),
+                blizzardClient.getMythicKeystoneProfile("eu", "realm", "unknown", 16)
+            )
+        }
+
+    @Test
+    fun `getMythicKeystoneProfile fails when a member has a spec we don't know`() = runBlocking {
         givenAValidToken()
 
-        assertEquals(Either.Right(0.0), blizzardClient.getMythicRating("eu", "realm", "unknown", 16))
+        val result = blizzardClient.getMythicKeystoneProfile("eu", "realm", "unknownspec", 16)
+
+        assertTrue(result.isLeft { it is JsonParseError })
     }
 
     private suspend fun givenAValidToken() {

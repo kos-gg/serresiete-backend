@@ -39,6 +39,8 @@ class WowGuildResolver(
         requested: List<EntityRequest>
     ): Either<ServiceError, ResolvedEntities> = either {
         val guildReq = requested.first() as WowEntityRequest
+        logger.info("Resolving guild ${guildReq.name} (${guildReq.region}/${guildReq.realm})")
+
         val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
         val (existing, newRequests) = repo.getCurrentAndNewEntities(members, Game.WOW)
 
@@ -68,8 +70,9 @@ class WowGuildResolver(
             .parMap(10) { req ->
                 req as WowEntityRequest
                 either {
-                    val score = blizzardClient.getMythicRating(req.region, req.realm, req.name, seasonId)
-                        .mapLeft { it.toSyncProcessingError("getMythicRating") }
+                    val score = blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId)
+                        .map { it.rating }
+                        .mapLeft { it.toSyncProcessingError("getMythicKeystoneProfile") }
                         .bind()
 
                     ensure(score >= SCORE_CUTOFF) { NotCompetitiveCharacter(req) }
@@ -82,12 +85,6 @@ class WowGuildResolver(
 
         val (belowScore, failed) = errors.partition { (_, error) -> error is NotCompetitiveCharacter }
 
-        belowScore.forEach { (req, error) ->
-            logger.trace("Skipping guild member ${req.name}-${req.realm}: ${error.error()}")
-        }
-        failed.forEach { (req, error) ->
-            logger.warn("Skipping guild member ${req.name}-${req.realm}: ${error.error()}")
-        }
         logger.info(
             "Resolved ${newRequests.size} new guild members: ${resolved.size} kept, " +
                 "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"

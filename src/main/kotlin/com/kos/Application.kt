@@ -109,7 +109,7 @@ fun Application.module() {
 
     val client = HttpClient(CIO) {
         install(HttpTimeout) {
-            requestTimeoutMillis = 5_000
+            requestTimeoutMillis = 8_000
         }
     }
     val defaultRetryConfig = RetryConfig(3, 1200)
@@ -175,6 +175,7 @@ fun Application.module() {
     val wowEntitySynchronizer = WowEntitySynchronizer(
         dataCacheRepository,
         raiderIoHTTPClient,
+        blizzardClient,
         seasonRepository,
         System.getenv("WOW_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )

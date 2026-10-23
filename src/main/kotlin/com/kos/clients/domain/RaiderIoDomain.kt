@@ -142,6 +142,8 @@ data class ClassSpecResponse(
 data class MythicPlusRunResponse(
     @SerialName("keystone_run_id")
     val runId: Long,
+    @SerialName("map_challenge_mode_id")
+    val dungeonId: Int,
     val dungeon: String,
     @SerialName("short_name")
     val shortName: String,
@@ -179,65 +181,6 @@ data class RaiderIoProfile(
     @SerialName("mythic_plus_recent_runs")
     val mythicPlusRecentRuns: List<MythicPlusRunResponse> = emptyList()
 )
-
-@Serializable
-data class RunDetailsCharacterClassResponse(val name: String)
-
-@Serializable
-data class RunDetailsCharacterSpecResponse(val name: String)
-
-@Serializable
-data class RunDetailsCharacterRealmResponse(
-    val id: Int,
-    val name: String,
-    val slug: String
-)
-
-@Serializable
-data class RunDetailsCharacterRegionResponse(
-    val name: String,
-    @SerialName("short_name")
-    val shortName: String,
-    val slug: String
-)
-
-@Serializable
-data class RunDetailsRosterRanksResponse(
-    val score: Double
-)
-
-@Serializable
-data class RunDetailsCharacterResponse(
-    val name: String,
-    val `class`: RunDetailsCharacterClassResponse,
-    val spec: RunDetailsCharacterSpecResponse,
-    val realm: RunDetailsCharacterRealmResponse,
-    val region: RunDetailsCharacterRegionResponse
-)
-
-@Serializable
-data class RunDetailsRosterEntryResponse(
-    val character: RunDetailsCharacterResponse,
-    val role: String,
-    val ranks: RunDetailsRosterRanksResponse
-)
-
-@Serializable
-data class RunDetailsDeathResponse(
-    @SerialName("approximate_died_at")
-    val approximateDiedAt: Int
-)
-
-@Serializable
-data class LoggedDetailsResponse(val deaths: List<RunDetailsDeathResponse> = emptyList())
-
-@Serializable
-data class RunDetailsResponse(
-    val roster: List<RunDetailsRosterEntryResponse>,
-    @SerialName("logged_details")
-    val loggedDetails: LoggedDetailsResponse? = null
-) {
-}
 
 object CodeExtractorSerializer : KSerializer<String> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CodeExtractor", PrimitiveKind.STRING)

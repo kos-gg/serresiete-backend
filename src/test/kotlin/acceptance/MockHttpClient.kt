@@ -144,13 +144,6 @@ val mockHttpClient = HttpClient(MockEngine) {
                         respond("", status, json)
                 }
 
-                path.contains("/run-details") ->
-                    respond(
-                        readResource("acceptance/files/responses/wow/raiderio-run-details-response.json"),
-                        HttpStatusCode.OK,
-                        json
-                    )
-
                 path.contains("/accounts/by-riot-id") ->
                     respond(
                         readResource("acceptance/files/responses/lol/riot-get-puuid-by-riot-id-response.json"),

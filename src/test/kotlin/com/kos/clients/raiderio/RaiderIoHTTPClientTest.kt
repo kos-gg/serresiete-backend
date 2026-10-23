@@ -9,9 +9,6 @@ import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfile
 import com.kos.entities.domain.WowEntity
 import com.kos.sources.wow.staticdata.wowseason.Dungeon
 import com.kos.sources.wow.staticdata.wowseason.Season
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
-import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -52,31 +49,6 @@ class RaiderIoHTTPClientTest {
                     )
                 )
             }
-        }
-    }
-
-    @Test
-    fun `test getRunDetails() method with successful response`() {
-        runBlocking {
-            val result = raiderIoClient.getRunDetails("season-mn-1", "3415343")
-            result.onLeft { fail() }
-            result.onRight {
-                assertEquals(RaiderIoHttpClientHelper.runDetails, it)
-                assertEquals(3, it.loggedDetails?.deaths?.size)
-            }
-        }
-    }
-
-    @Test
-    fun `getRunDetails() does not retry when the request fails`() {
-        runBlocking {
-            val failingEngine = MockEngine { respondError(HttpStatusCode.InternalServerError) }
-            val failingClient = RaiderIoHTTPClient(HttpClient(failingEngine), RetryConfig(3, 0), apiKey = "test-key")
-
-            val result = failingClient.getRunDetails("season-mn-1", "3415343")
-
-            assertTrue(result.isLeft())
-            assertEquals(1, failingEngine.requestHistory.size)
         }
     }
 
