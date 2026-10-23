@@ -27,8 +27,7 @@ class OperationsService(private val eventStore: EventStore) {
 
             failedEvent != null -> OperationStatus(
                 id = operationId,
-                status = OperationStatusType.FAILED,
-                reason = (failedEvent.event.eventData as OperationFailedEvent).reason
+                status = OperationStatusType.FAILED
             )
 
             else -> OperationStatus(

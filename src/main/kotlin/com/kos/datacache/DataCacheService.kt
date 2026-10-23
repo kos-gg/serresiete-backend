@@ -5,7 +5,6 @@ import arrow.core.raise.either
 import com.kos.common.WithLogger
 import com.kos.common.error.SerializationError
 import com.kos.common.error.ServiceError
-import com.kos.common.error.toEventPersistenceError
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.LolData
 import com.kos.datacache.domain.WowData
@@ -66,25 +65,24 @@ data class DataCacheService(
 
     suspend fun getOrSync(request: Pair<EntityRequest, Game>): Either<ServiceError, EntityDataResponse> {
 
-        suspend fun syncOperation(entityId: Long): Either<ServiceError, Operation> {
+        suspend fun syncOperation(entityId: Long): Operation {
             val eventData = RequestToBeSynced(request.first, request.second)
             return eventStore.save(Event("/entity/$entityId", UUID.randomUUID().toString(), eventData))
-                .mapLeft { it.toEventPersistenceError() }
         }
 
         return either {
             when (val maybeEntity = entitiesRepository.get(request.first, request.second)) {
-                null -> EntityDataResponse(null, syncOperation(-1).bind())
+                null -> EntityDataResponse(null, syncOperation(-1))
 
                 else -> {
                     when (val maybeCachedRecord = get(maybeEntity.id).maxByOrNull { it.inserted }) {
-                        null -> EntityDataResponse(null, syncOperation(maybeEntity.id).bind())
+                        null -> EntityDataResponse(null, syncOperation(maybeEntity.id))
 
                         else -> {
                             if (maybeCachedRecord.isTooOld()) {
                                 EntityDataResponse(
                                     parseData(maybeCachedRecord).bind(),
-                                    syncOperation(maybeEntity.id).bind()
+                                    syncOperation(maybeEntity.id)
                                 )
                             } else {
                                 EntityDataResponse(parseData(maybeCachedRecord).bind(), null)

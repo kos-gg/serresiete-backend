@@ -219,9 +219,17 @@ data class RequestToBeSynced(
 }
 
 @Serializable
+data class EventError(
+    val eventType: EventType,
+    val version: Long,
+    val payload: EventData,
+    val stackTrace: String
+)
+
+@Serializable
 data class OperationFailedEvent(
     val operationId: String,
-    val reason: String
+    val error: EventError? = null
 ) : EventData {
     override val eventType: EventType = EventType.OPERATION_FAILED
 }

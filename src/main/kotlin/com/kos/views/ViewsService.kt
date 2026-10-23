@@ -86,7 +86,7 @@ class ViewsService(
                     request.extraArguments
                 )
             )
-            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind().copy(resourceId = viewId)
+            eventStore.save(event).copy(resourceId = viewId)
         }
     }
 
@@ -109,7 +109,7 @@ class ViewsService(
                     request.featured
                 )
             )
-            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind()
+            eventStore.save(event)
         }
     }
 
@@ -133,7 +133,7 @@ class ViewsService(
                 )
             )
 
-            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind()
+            eventStore.save(event)
         }
     }
 
@@ -153,7 +153,7 @@ class ViewsService(
                 viewToDelete.featured
             )
         )
-        return eventStore.save(event).mapLeft { ViewDataError(it.message) }
+        return Either.Right(eventStore.save(event))
     }
 
     suspend fun getData(view: View): Either<ServiceError, List<Data>> =

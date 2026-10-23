@@ -56,8 +56,6 @@ class GameSyncEventProcessor(
                                 EntitySyncCompletedEvent(payload.request, payload.game)
                             )
                         )
-                            .mapLeft { it.toEventPersistenceError() }
-                            .bind()
                         EventProcessOutcome.Processed
                     }.orFail()
 
@@ -74,19 +72,16 @@ class GameSyncEventProcessor(
         entities: List<Long>?,
         operationId: String,
         aggregateRoot: String
-    ): EventProcessOutcome =
-        either {
-            logger.debug("processing event v${eventWithVersion.version}")
-            if (entities != null) {
-                val resolved = entities.mapNotNull { entitiesService.get(it, game) }
-                val errors = synchronizer.synchronize(resolved)
-                if (errors.isNotEmpty()) {
-                    logger.warn("sync completed with non-fatal errors: ${errors.joinToString("; ") { it.error() }}")
-                }
+    ): EventProcessOutcome {
+        logger.debug("processing event v${eventWithVersion.version}")
+        if (entities != null) {
+            val resolved = entities.mapNotNull { entitiesService.get(it, game) }
+            val errors = synchronizer.synchronize(resolved)
+            if (errors.isNotEmpty()) {
+                logger.warn("sync completed with non-fatal errors: ${errors.joinToString("; ") { it.error() }}")
             }
-            eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-                .mapLeft { it.toEventPersistenceError() }
-                .bind()
-            EventProcessOutcome.Processed
-        }.orFail()
+        }
+        eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
+        return EventProcessOutcome.Processed
+    }
 }

@@ -6,7 +6,6 @@ import arrow.core.raise.ensureNotNull
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.ViewEventError
-import com.kos.common.error.toEventPersistenceError
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
@@ -61,7 +60,7 @@ class ViewsEventService(
                 operationId,
                 ViewCreatedEventEvent.fromSimpleView(view)
             )
-            eventStore.save(event).mapLeft { it.toEventPersistenceError() }.bind()
+            eventStore.save(event)
         }
     }
 
@@ -134,7 +133,7 @@ class ViewsEventService(
                 operationId,
                 ViewEditedEventEvent.fromViewModified(operationId, viewToBeEditedEvent.game, viewModified)
             )
-            eventStore.save(event).mapLeft { it.toEventPersistenceError() }.bind()
+            eventStore.save(event)
         }
     }
 
@@ -176,7 +175,7 @@ class ViewsEventService(
                 operationId,
                 ViewPatchedEventEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
             )
-            eventStore.save(event).mapLeft { it.toEventPersistenceError() }.bind()
+            eventStore.save(event)
         }
     }
 
@@ -200,7 +199,7 @@ class ViewsEventService(
                     event.featured
                 )
             )
-            eventStore.save(completionEvent).mapLeft { it.toEventPersistenceError() }.bind()
+            eventStore.save(completionEvent)
         }
     }
 }

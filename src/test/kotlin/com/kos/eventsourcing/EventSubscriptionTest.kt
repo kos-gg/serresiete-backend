@@ -2,6 +2,7 @@ package com.kos.eventsourcing
 
 import com.kos.assertTrue
 import com.kos.eventsourcing.events.Event
+import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.OperationFailedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
@@ -274,7 +275,12 @@ class EventSubscriptionTest {
             assertEquals(1, recordedFailures.size)
             val failure = recordedFailures.first()
             assertEquals("root", failure.event.aggregateRoot)
-            assertTrue((failure.event.eventData as OperationFailedEvent).reason.contains("Simulated error"))
+            val failed = failure.event.eventData as OperationFailedEvent
+            assertEquals(EventType.VIEW_TO_BE_CREATED, failed.error?.eventType)
+            assertEquals(1, failed.error?.version)
+            assertEquals(eventData, failed.error?.payload)
+            assertTrue(failed.error?.stackTrace?.startsWith("java.lang.IllegalStateException: Simulated error") == true)
+            assertTrue(failed.error?.stackTrace?.contains("\tat ") == true)
         }
     }
 

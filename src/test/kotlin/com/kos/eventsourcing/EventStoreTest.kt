@@ -1,6 +1,9 @@
 package com.kos.eventsourcing
 
 import com.kos.eventsourcing.events.Event
+import com.kos.eventsourcing.events.EventError
+import com.kos.eventsourcing.events.EventType
+import com.kos.eventsourcing.events.OperationFailedEvent
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.repository.EventStore
@@ -11,6 +14,8 @@ import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -181,6 +186,30 @@ abstract class EventStoreTest {
             assertEquals(2, remaining.single().version)
         }
     }
+    @Test
+    fun `failed events keep the error of the event that failed`() {
+        runBlocking {
+            val payload = ViewToBeCreatedEvent(
+                UUID.randomUUID().toString(),
+                basicSimpleWowView.name,
+                basicSimpleWowView.published,
+                listOf(),
+                basicSimpleWowView.game,
+                basicSimpleWowView.owner,
+                basicSimpleWowView.featured,
+                null
+            )
+            val failed = EventWithVersion(1, Event("/credentials/client1", UUID.randomUUID().toString(), payload))
+
+            store.saveFailedEvent(failed, "boom")
+
+            val expected = OperationFailedEvent(
+                failed.event.operationId,
+                EventError(EventType.VIEW_TO_BE_CREATED, 1, payload, "boom")
+            )
+            assertEquals(expected, store.getEventsByOperationId(failed.event.operationId).last().event.eventData)
+        }
+    }
 }
 
 class EventStoreInMemoryTest : EventStoreTest() {
@@ -203,7 +232,26 @@ class EventStoreDatabaseTest : EventStoreTest() {
         .cleanDisabled(false)
         .load()
 
-    override val store = EventStoreDatabase(Database.connect(embeddedPostgres.postgresDatabase))
+    private val db = Database.connect(embeddedPostgres.postgresDatabase)
+    override val store = EventStoreDatabase(db)
+
+    @Test
+    fun `failed events stored before event error existed can still be read`() {
+        runBlocking {
+            newSuspendedTransaction(db = db) {
+                EventStoreDatabase.Events.insert {
+                    it[version] = 1
+                    it[aggregateRoot] = "/credentials/client1"
+                    it[operationId] = "op"
+                    it[eventType] = EventType.OPERATION_FAILED.toString()
+                    it[data] = """{"type":"com.kos.eventsourcing.events.OperationFailedEvent","operationId":"op","reason":"old"}"""
+                    it[timestamp] = OffsetDateTime.now().toString()
+                }
+            }
+
+            assertEquals(OperationFailedEvent("op"), store.getEventsByOperationId("op").single().event.eventData)
+        }
+    }
 
     @BeforeEach
     fun beforeEach() {
