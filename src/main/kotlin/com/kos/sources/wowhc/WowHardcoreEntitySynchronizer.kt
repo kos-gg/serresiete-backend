@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
-import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.toSyncProcessingError
@@ -23,7 +22,6 @@ import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.views.Game
-import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -142,21 +140,13 @@ class WowHardcoreEntitySynchronizer(
                 return@either null
             }
 
-            val hardcoreData: WowHardcoreData = blizzardClient.getClassicProfile(
-                entity.region,
-                entity.realm,
-                entity.name
-            ).fold(
-                ifLeft = { error ->
-                    when {
-                        error is HttpError && error.status == 404 ->
-                            handleNotFoundHardcoreCharacter(newestDataCacheEntry, entity)
+            val character = execute("getClassicProfile") {
+                blizzardClient.getClassicProfile(entity.region, entity.realm, entity.name)
+            }.bind()
 
-                        else ->
-                            Either.Left(error.toSyncProcessingError("getClassicProfile"))
-                    }.bind()
-                },
-                ifRight = { character ->
+            val hardcoreData: WowHardcoreData = when (character) {
+                null -> handleNotFoundHardcoreCharacter(newestDataCacheEntry, entity).bind()
+                else ->
                     if (deadCharacterHasBeenCreatedAgain(newestDataCacheEntry, entity, character)) {
                         markWowHardcoreCharacterAsDead(newestDataCacheEntry!!)
                     } else {
@@ -211,7 +201,7 @@ class WowHardcoreEntitySynchronizer(
                             WowTalents(wowHeadEmbeddedTalents, specializations)
                         )
                     }
-                })
+            }
 
             DataCache(entity.id, json.encodeToString<Data>(hardcoreData), OffsetDateTime.now(), Game.WOW_HC)
         }
@@ -296,10 +286,6 @@ class WowHardcoreEntitySynchronizer(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        try {
-            block().mapLeft { it.toSyncProcessingError(operation) }
-        } catch (e: RequestNotPermitted) {
-            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
-        }
+        block().mapLeft { it.toSyncProcessingError(operation) }
 
 }

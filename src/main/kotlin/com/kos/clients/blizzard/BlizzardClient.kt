@@ -15,13 +15,13 @@ interface BlizzardClient {
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, WowCharacter>
+    ): Either<ClientError, WowCharacter?>
 
     suspend fun getRetailProfile(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, WowCharacter>
+    ): Either<ClientError, WowCharacter?>
 
     suspend fun getCharacterMedia(
         region: String,
@@ -60,7 +60,7 @@ interface BlizzardClient {
         region: String,
         realm: String,
         guild: String
-    ): Either<ClientError, GuildRoster>
+    ): Either<ClientError, GuildRoster?>
 
     suspend fun getMythicKeystoneProfile(
         region: String,

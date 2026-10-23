@@ -3,7 +3,6 @@ package com.kos.sources.wow
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
-import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
@@ -44,13 +43,9 @@ class WowEntityResolver(
         val (unchecked, checked) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
-                blizzardClient.getRetailProfile(req.region, req.realm, req.name).fold(
-                    ifLeft = { error ->
-                        if (error is HttpError && error.status == 404) Either.Right(req to null)
-                        else Either.Left(req to error.toSyncProcessingError("getRetailProfile"))
-                    },
-                    ifRight = { profile -> Either.Right(req to profile.id) }
-                )
+                blizzardClient.getRetailProfile(req.region, req.realm, req.name)
+                    .map { profile -> req to profile?.id }
+                    .mapLeft { error -> req to error.toSyncProcessingError("getRetailProfile") }
             }
             .toList()
             .split()

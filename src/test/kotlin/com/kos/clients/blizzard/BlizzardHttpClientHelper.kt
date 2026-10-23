@@ -86,6 +86,10 @@ object BlizzardHttpClientHelper {
                     "/profile/wow/character/realm/unrated/mythic-keystone-profile/season/16" ->
                         respond("""{"season":{"id":16}}""", HttpStatusCode.OK)
 
+                    "/profile/wow/character/realm/unknown",
+                    "/data/wow/guild/realm/unknown/roster" ->
+                        respond("""{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}""", HttpStatusCode.NotFound)
+
                     "/profile/wow/character/realm/unknown/mythic-keystone-profile/season/16" ->
                         respond("""{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}""", HttpStatusCode.NotFound)
 

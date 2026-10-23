@@ -17,7 +17,6 @@ import com.kos.entities.domain.Entity
 import com.kos.entities.domain.LolEntity
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.views.Game
-import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
@@ -177,9 +176,5 @@ class LolEntitySynchronizer(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        try {
-            block().mapLeft { it.toSyncProcessingError(operation) }
-        } catch (e: RequestNotPermitted) {
-            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
-        }
+        block().mapLeft { it.toSyncProcessingError(operation) }
 }

@@ -1,7 +1,6 @@
 package com.kos.sources.wow
 
 import arrow.core.Either
-import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -60,7 +59,7 @@ class WowGuildResolverTest {
     fun `exists returns null when the guild doesn't exist`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
-                .thenReturn(Either.Left(HttpError(404, null)))
+                .thenReturn(Either.Right(null))
 
             guildResolver.exists(guildRequest)
                 .onLeft { fail() }

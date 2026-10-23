@@ -35,7 +35,7 @@ class WowHardcoreEntityResolver(
                     req as WowEntityRequest
                     val profile = blizzardClient.getClassicProfile(
                         req.region, req.realm, req.name
-                    ).bind()
+                    ).bind() ?: return@either null
 
                     val realm = blizzardClient.getRealm(req.region, profile.realmId).bind()
 
@@ -54,7 +54,7 @@ class WowHardcoreEntityResolver(
 
         errors.forEach { logger.error(it.toString()) }
 
-        val validatedTuples: List<Pair<InsertEntityRequest, String?>> = oks
+        val validatedTuples: List<Pair<InsertEntityRequest, String?>> = oks.filterNotNull()
 
         ResolvedEntities(
             entities = validatedTuples,

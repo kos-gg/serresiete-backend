@@ -14,6 +14,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.clients.toClientError
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.*
 import com.kos.entities.domain.GuildRoster
@@ -21,6 +22,7 @@ import com.kos.entities.domain.WowRealm
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -57,7 +59,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, WowCharacter> {
+    ): Either<ClientError, WowCharacter?> {
         return throttleRequest {
             either {
                 logger.debug("getClassicProfile for $region $realm $character")
@@ -78,7 +80,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind().toWowCharacter()
+                }.map { it.toWowCharacter() }.orNotFound(null).bind()
             }
         }
     }
@@ -87,7 +89,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, WowCharacter> {
+    ): Either<ClientError, WowCharacter?> {
         return throttleRequest {
             either {
                 logger.debug("getRetailProfile for $region $realm $character")
@@ -108,7 +110,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind().toWowCharacter()
+                }.map { it.toWowCharacter() }.orNotFound(null).bind()
             }
         }
     }
@@ -345,7 +347,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         guild: String
-    ): Either<ClientError, GuildRoster> {
+    ): Either<ClientError, GuildRoster?> {
         return throttleRequest {
             either {
                 val tokenResponse = getAndUpdateToken().bind()
@@ -366,7 +368,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind().toGuildRoster()
+                }.map { it.toGuildRoster() }.orNotFound(null).bind()
             }
         }
     }
@@ -454,9 +456,12 @@ class BlizzardHttpClient(
         }
     )
 
-    private suspend fun <T> throttleRequest(request: suspend () -> T): T {
-        return perSecondRateLimiter.executeSuspendFunction(request)
-    }
+    private suspend fun <T> throttleRequest(request: suspend () -> Either<ClientError, T>): Either<ClientError, T> =
+        try {
+            perSecondRateLimiter.executeSuspendFunction(request)
+        } catch (e: RequestNotPermitted) {
+            Either.Left(e.toClientError())
+        }
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 

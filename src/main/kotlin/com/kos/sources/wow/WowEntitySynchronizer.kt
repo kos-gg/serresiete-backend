@@ -19,7 +19,6 @@ import com.kos.entities.domain.WowEntity
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
-import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -215,9 +214,5 @@ class WowEntitySynchronizer(
         operation: String,
         block: suspend () -> Either<ClientError, A>
     ): Either<ServiceError, A> =
-        try {
-            block().mapLeft { it.toSyncProcessingError(operation) }
-        } catch (e: RequestNotPermitted) {
-            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
-        }
+        block().mapLeft { it.toSyncProcessingError(operation) }
 }

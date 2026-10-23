@@ -5,13 +5,13 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.fx.coroutines.parMap
-import com.kos.clients.HttpError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
 import com.kos.common.error.NoCurrentMythicPlusSeason
 import com.kos.common.error.NotCompetitiveCharacter
 import com.kos.common.error.ServiceError
+import com.kos.common.error.SyncProcessingError
 import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
@@ -53,13 +53,9 @@ class WowGuildResolver(
     }
 
     suspend fun exists(guild: WowEntityRequest): Either<ServiceError, GuildPayload?> =
-        blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name).fold(
-            ifLeft = { error ->
-                if (error is HttpError && error.status == 404) Either.Right(null)
-                else Either.Left(error.toSyncProcessingError("GetRetailGuildRoster"))
-            },
-            ifRight = { roster -> Either.Right(payload(roster, guild)) }
-        )
+        blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name)
+            .map { roster -> roster?.let { payload(it, guild) } }
+            .mapLeft { it.toSyncProcessingError("GetRetailGuildRoster") }
 
     suspend fun resolveMembers(
         newRequests: List<EntityRequest>
@@ -106,9 +102,11 @@ class WowGuildResolver(
         realm: String,
         name: String
     ): Either<ServiceError, Pair<GuildRoster, List<WowEntityRequest>>> = either {
-        val roster = blizzardClient.getRetailGuildRoster(region, realm, name)
-            .mapLeft { it.toSyncProcessingError("GetRetailGuildRoster") }
-            .bind()
+        val roster = ensureNotNull(
+            blizzardClient.getRetailGuildRoster(region, realm, name)
+                .mapLeft { it.toSyncProcessingError("GetRetailGuildRoster") }
+                .bind()
+        ) { SyncProcessingError("NOT_FOUND", "Guild $name ($region/$realm) not found") }
 
         val members = roster.members
             .asSequence()

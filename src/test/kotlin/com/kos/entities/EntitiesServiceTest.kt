@@ -1,7 +1,6 @@
 package com.kos.entities
 
 import arrow.core.Either
-import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -152,7 +151,7 @@ class EntitiesServiceTest {
             )
             `when`(
                 blizzardClient.getRetailProfile(request2.region, request2.realm, request2.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Right(null))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -519,7 +518,7 @@ class EntitiesServiceTest {
         runBlocking {
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Right(null))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -589,7 +588,7 @@ class EntitiesServiceTest {
     fun `guildExists returns a null guild when it doesn't exist`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster("eu", "twisting-nether", "Method"))
-                .thenReturn(Either.Left(HttpError(404, null)))
+                .thenReturn(Either.Right(null))
 
             val entitiesService = createService(emptyEntitiesState)
 

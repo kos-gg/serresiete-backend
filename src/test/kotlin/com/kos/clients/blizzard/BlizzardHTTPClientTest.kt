@@ -30,11 +30,32 @@ class BlizzardHTTPClientTest {
     fun `getCharacterProfile returns successful response`() {
         runBlocking {
             givenAValidToken()
-            val result: Either<ClientError, WowCharacter> = blizzardClient.getClassicProfile(
+            val result: Either<ClientError, WowCharacter?> = blizzardClient.getClassicProfile(
                 "region", "realm", "name"
             )
             assertEquals(Either.Right(getWowCharacterResponse.toWowCharacter()), result)
         }
+    }
+
+    @Test
+    fun `getClassicProfile returns null when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right(null), blizzardClient.getClassicProfile("region", "realm", "unknown"))
+    }
+
+    @Test
+    fun `getRetailProfile returns null when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right(null), blizzardClient.getRetailProfile("eu", "realm", "unknown"))
+    }
+
+    @Test
+    fun `getRetailGuildRoster returns null when blizzard doesn't find the guild`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right(null), blizzardClient.getRetailGuildRoster("us", "realm", "unknown"))
     }
 
     @Test

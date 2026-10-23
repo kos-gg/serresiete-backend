@@ -1,7 +1,6 @@
 package com.kos.sources.wow
 
 import arrow.core.Either
-import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
@@ -55,7 +54,7 @@ class WowEntityResolverTest {
         runBlocking {
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Right(null))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, blizzardClient)
@@ -95,7 +94,7 @@ class WowEntityResolverTest {
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowEntity))
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest2.region, basicWowRequest2.realm, basicWowRequest2.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Right(null))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, blizzardClient)
@@ -150,7 +149,7 @@ class WowEntityResolverTest {
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowEntity))
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest2.region, basicWowRequest2.realm, basicWowRequest2.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Right(null))
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest3.region, basicWowRequest3.realm, basicWowRequest3.name)
             ).thenReturn(Either.Left(timeoutError))
