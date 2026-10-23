@@ -9,6 +9,7 @@ import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
+import com.kos.common.error.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntity
@@ -16,6 +17,7 @@ import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
+import com.kos.views.repository.ViewsRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -51,7 +53,7 @@ class WowGuildUpdaterTest {
 
     private suspend fun alreadyTracked(name: String, viewId: String): Long {
         val request = WowEntityRequest(name, region, realm)
-        val entity = entitiesRepository.insert(listOf(request), Game.WOW).fold({ error(it.toString()) }, { it }).first()
+        val entity = entitiesRepository.insert(listOf(request), Game.WOW).first()
         viewsRepository.associateEntitiesIdsToView(listOf(entity.id to null), viewId)
         return entity.id
     }
@@ -63,7 +65,7 @@ class WowGuildUpdaterTest {
         memberRealm: String = realm
     ): Long {
         val request = WowEntityRequest(name, region, memberRealm, memberBlizzardId)
-        val entity = entitiesRepository.insert(listOf(request), Game.WOW).fold({ error(it.toString()) }, { it }).first()
+        val entity = entitiesRepository.insert(listOf(request), Game.WOW).first()
         viewsRepository.associateEntitiesIdsToView(listOf(entity.id to null), viewId)
         return entity.id
     }
@@ -257,6 +259,49 @@ class WowGuildUpdaterTest {
             )
 
             assertEquals(1, errors.size)
+
+            val healthyMemberEntity = entitiesRepository.get(healthyMember as EntityRequest, Game.WOW)!!
+            assertEquals(setOf(healthyMemberEntity.id), viewsRepository.get(healthyViewId)!!.entitiesIds.toSet())
+        }
+    }
+
+    @Test
+    fun `update reports a guild that fails while being stored without blocking the other guilds`() {
+        runBlocking {
+            val brokenViewId = createGuildView("broken-guild-view")
+            val healthyViewId = createGuildView("healthy-guild-view")
+            val failingViewsRepository = object : ViewsRepository by viewsRepository {
+                override suspend fun associateEntitiesIdsToView(entities: List<Pair<Long, String?>>, id: String) =
+                    if (id == brokenViewId) error("connection lost")
+                    else viewsRepository.associateEntitiesIdsToView(entities, id)
+            }
+            val updater = WowGuildUpdater(guildResolver, entitiesRepository, failingViewsRepository)
+
+            val brokenMember = WowEntityRequest("brokenmember", region, realm)
+            val healthyMember = WowEntityRequest("healthymember", region, realm)
+            listOf("BrokenGuild" to brokenMember, "HealthyGuild" to healthyMember).forEachIndexed { index, (guild, member) ->
+                `when`(blizzardClient.getRetailGuildRoster(region, realm, guild)).thenReturn(
+                    Either.Right(
+                        GetWowRosterResponse(
+                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90))),
+                            WowGuildResponse(index + 1L)
+                        ).toGuildRoster()
+                    )
+                )
+                `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id))
+                    .thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
+            }
+
+            val errors = updater.update(
+                listOf(
+                    GuildPayload("BrokenGuild", realm, region, 1L) to brokenViewId,
+                    GuildPayload("HealthyGuild", realm, region, 2L) to healthyViewId
+                )
+            )
+
+            val failure = errors.single() as GuildUpdateFailed
+            assertEquals("BrokenGuild", failure.guild.name)
+            assertTrue(failure.error().contains("connection lost"))
 
             val healthyMemberEntity = entitiesRepository.get(healthyMember as EntityRequest, Game.WOW)!!
             assertEquals(setOf(healthyMemberEntity.id), viewsRepository.get(healthyViewId)!!.entitiesIds.toSet())

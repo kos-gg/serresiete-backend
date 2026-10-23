@@ -36,8 +36,6 @@ class AuthService(
                 val refreshToken =
                     authCall { generateUserToken(userName, TokenMode.REFRESH) }.bind()
                 authRepository.insertToken(userName, refreshToken, isAccess = false)
-                    .mapLeft { it.toAuthTokenError(it.message) }
-                    .bind()
                 LoginResponse(
                     authCall { generateUserToken(userName, TokenMode.ACCESS) }.bind(),
                     refreshToken

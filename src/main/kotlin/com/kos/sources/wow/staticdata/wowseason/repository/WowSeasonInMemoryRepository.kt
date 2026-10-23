@@ -2,16 +2,16 @@ package com.kos.sources.wow.staticdata.wowseason.repository
 
 import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.RepositoryError
+import com.kos.sources.wow.staticdata.wowseason.SeasonAlreadyExists
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 
 class WowSeasonInMemoryRepository : WowSeasonRepository, InMemoryRepository {
 
     private val wowSeasons: MutableList<WowSeason> = mutableListOf()
 
-    override suspend fun insert(season: WowSeason): Either<RepositoryError, Boolean> {
+    override suspend fun insert(season: WowSeason): Either<SeasonAlreadyExists, Boolean> {
         return if (this.wowSeasons.any { wowSeason -> season.same(wowSeason) })
-            Either.Left(RepositoryError("Error inserting wow season $season because it already exists."))
+            Either.Left(SeasonAlreadyExists(season))
         else {
             if (season.isCurrentSeason)
                 this.wowSeasons.replaceAll { it.copy(isCurrentSeason = false) }

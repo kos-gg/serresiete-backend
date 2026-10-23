@@ -1,7 +1,5 @@
 package com.kos.entities.repository.wowguilds
 
-import arrow.core.Either
-import com.kos.common.error.RepositoryError
 import com.kos.common.getOrThrow
 import com.kos.entities.domain.GuildPayload
 import com.kos.views.Game
@@ -9,7 +7,6 @@ import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.sql.SQLException
 
 class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepository {
 
@@ -40,8 +37,8 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         region: String,
         viewId: String,
         game: Game
-    ): Either<RepositoryError, Unit> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
+    ) {
+        newSuspendedTransaction(Dispatchers.IO, db) {
             val alreadyTracked = WowGuilds.selectAll()
                 .where {
                     WowGuilds.blizzardId.eq(blizzardId)
@@ -49,21 +46,14 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
                         .and(WowGuilds.viewId.eq(viewId))
                 }
                 .empty().not()
-            when {
-                alreadyTracked -> Either.Right(Unit)
-                else -> try {
-                    WowGuilds.insert {
-                        it[WowGuilds.blizzardId] = blizzardId
-                        it[WowGuilds.name] = name.lowercase()
-                        it[WowGuilds.realm] = realm.lowercase()
-                        it[WowGuilds.region] = region.lowercase()
-                        it[WowGuilds.viewId] = viewId
-                        it[WowGuilds.game] = game.toString()
-                    }
-                    Either.Right(Unit)
-                } catch (e: SQLException) {
-                    if (e.sqlState == "23505") Either.Left(RepositoryError("Duplicated guild $name $realm $region"))
-                    else Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
+            if (!alreadyTracked) {
+                WowGuilds.insert {
+                    it[WowGuilds.blizzardId] = blizzardId
+                    it[WowGuilds.name] = name.lowercase()
+                    it[WowGuilds.realm] = realm.lowercase()
+                    it[WowGuilds.region] = region.lowercase()
+                    it[WowGuilds.viewId] = viewId
+                    it[WowGuilds.game] = game.toString()
                 }
             }
         }

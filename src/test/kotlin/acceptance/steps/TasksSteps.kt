@@ -166,7 +166,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
                 ), Game.WOW
             )
-        }.getOrNull()!!.first()
+        }.first()
 
         val viewsRepo = ViewsDatabaseRepository(db)
         val guildsRepo = WowGuildsDatabaseRepository(db)
@@ -195,7 +195,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
                 ), Game.WOW
             )
-        }.getOrNull()!!.first()
+        }.first()
 
         val viewsRepo = ViewsDatabaseRepository(db)
         val guildsRepo = WowGuildsDatabaseRepository(db)
@@ -312,7 +312,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     )
                 ), Game.LOL
             )
-        }.getOrNull()!!.first()
+        }.first()
 
         val viewsRepo = ViewsDatabaseRepository(db)
         runBlocking {

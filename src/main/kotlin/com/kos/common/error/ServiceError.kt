@@ -1,5 +1,6 @@
 package com.kos.common.error
 
+import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.EventData
 import com.kos.views.Game
@@ -22,12 +23,6 @@ data class SyncProcessingError(
     override fun error(): String = "$type: $message"
 }
 
-data class EventPersistenceError(
-    val message: String
-) : ServiceError() {
-    override fun error(): String = "Couldn't persist event: $message"
-}
-
 data class NonHardcoreCharacter(
     val wowEntity: WowEntityRequest
 ) : ServiceError() {
@@ -42,12 +37,12 @@ data class NotCompetitiveCharacter(
         "${wowEntity.name}-${wowEntity.realm} does not meet the minimum mythic+ score"
 }
 
-data class ResolveEntityError(
-    val game: Game,
-    val message: String
+data class GuildUpdateFailed(
+    val guild: GuildPayload,
+    val cause: Throwable
 ) : ServiceError() {
     override fun error(): String =
-        "Couldn't resolve $game entity with error: $message"
+        "Couldn't update guild ${guild.name} (${guild.region}/${guild.realm}): ${cause.stackTraceToString()}"
 }
 
 data class ResolverNotFound(

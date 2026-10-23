@@ -31,6 +31,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.jupiter.api.assertThrows
 
 abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, T : WithState<List<WowEntity>, T> {
 
@@ -41,7 +42,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given an empty repository i can insert wow characters`() {
         runBlocking {
             val expected = listOf(basicWowEntity)
-            repository.insert(listOf(basicWowRequest)).fold({ fail() }) { assertEquals(expected, it) }
+            assertEquals(expected, repository.insert(listOf(basicWowRequest)))
         }
     }
 
@@ -50,7 +51,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
         runBlocking {
             val character = WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
 
-            assertTrue(repository.insert(listOf(character, character)).isLeft())
+            assertThrows<Exception> { repository.insert(listOf(character, character)) }
         }
     }
 
@@ -58,7 +59,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given a repository that includes a wow character, adding the same one fails`() {
         runBlocking {
             repository.withState(listOf(basicWowEntity, basicWowEntity2))
-            assertTrue(repository.insert(listOf(basicWowRequest)).isLeft())
+            assertThrows<Exception> { repository.insert(listOf(basicWowRequest)) }
             assertEquals(listOf(basicWowEntity, basicWowEntity2), repository.state())
         }
     }
@@ -68,16 +69,14 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
         runBlocking {
             repository.withState(listOf(basicWowEntity))
             val inserted = repository.insert(listOf(basicWowRequest2))
-            inserted
-                .onRight { characters -> assertEquals(listOf<Long>(2), characters.map { it.id }) }
-                .onLeft { fail(it.message) }
+            assertEquals(listOf<Long>(2), inserted.map { it.id })
         }
     }
 
     @Test
     fun `inserting a request of the wrong type fails`() {
         runBlocking {
-            assertTrue(repository.insert(listOf(basicLolEntityEnrichedRequest)).isLeft())
+            assertThrows<Exception> { repository.insert(listOf(basicLolEntityEnrichedRequest)) }
             assertEquals(listOf(), repository.state())
         }
     }
@@ -86,7 +85,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given an empty repository i can insert a wow character with a blizzardId`() {
         runBlocking {
             val expected = listOf(basicWowEntity.copy(blizzardId = basicWowRequestWithBlizzardId.blizzardId))
-            repository.insert(listOf(basicWowRequestWithBlizzardId)).fold({ fail() }) { assertEquals(expected, it) }
+            assertEquals(expected, repository.insert(listOf(basicWowRequestWithBlizzardId)))
         }
     }
 
@@ -99,9 +98,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
             val updatedRealm = "stitches"
             val request = WowEntityRequest(updatedName, updatedRegion, updatedRealm)
             val update = repository.update(1, request)
-            update
-                .onRight { assertEquals(1, it) }
-                .onLeft { fail(it.message) }
+            assertEquals(1, update)
             val updated = repository.state().first()
             assertEquals(updatedName, updated.name)
             assertEquals(updatedRegion, updated.region)
@@ -113,7 +110,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `updating a request of the wrong type fails`() {
         runBlocking {
             repository.withState(listOf(basicWowEntity))
-            assertTrue(repository.update(1, basicLolEntityEnrichedRequest).isLeft())
+            assertThrows<Exception> { repository.update(1, basicLolEntityEnrichedRequest) }
         }
     }
 

@@ -1,11 +1,13 @@
 package com.kos.sources.wow.staticdata.wowseason.repository
 
+import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionInMemoryRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionRepository
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionState
+import com.kos.sources.wow.staticdata.wowseason.SeasonAlreadyExists
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
@@ -34,6 +36,17 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
             result.onRight {
                 assertTrue(it)
             }
+            assertEquals(WowSeasonsState(listOf(wowSeason)), repository.state())
+        }
+    }
+
+    @Test
+    open fun `inserting a season that already exists returns it as already existing and keeps the current one`() {
+        runBlocking {
+            wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
+            repository.withState(WowSeasonsState(listOf(wowSeason)))
+
+            assertEquals(Either.Left(SeasonAlreadyExists(wowSeason)), repository.insert(wowSeason))
             assertEquals(WowSeasonsState(listOf(wowSeason)), repository.state())
         }
     }

@@ -29,6 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.jupiter.api.assertThrows
 
 abstract class LolEntityRepositoryTestCommon<T> where T : GameEntityRepository, T : WithState<List<LolEntity>, T> {
 
@@ -39,7 +40,7 @@ abstract class LolEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given an empty repository i can insert lol characters`() {
         runBlocking {
             val expected = listOf(basicLolEntity)
-            repository.insert(listOf(basicLolEntityEnrichedRequest)).fold({ fail() }) { assertEquals(expected, it) }
+            assertEquals(expected, repository.insert(listOf(basicLolEntityEnrichedRequest)))
         }
     }
 
@@ -49,9 +50,7 @@ abstract class LolEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
             repository.withState(listOf(basicLolEntity))
             val request = basicLolEntityEnrichedRequest.copy(puuid = "different-puuid")
             val inserted = repository.insert(listOf(request))
-            inserted
-                .onRight { characters -> assertEquals(listOf<Long>(2), characters.map { it.id }) }
-                .onLeft { fail(it.message) }
+            assertEquals(listOf<Long>(2), inserted.map { it.id })
         }
     }
 
@@ -60,16 +59,14 @@ abstract class LolEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
         runBlocking {
             val request = basicLolEntityEnrichedRequest.copy(tag = "12345")
             val inserted = repository.insert(listOf(request))
-            inserted
-                .onRight { characters -> assertEquals(listOf<Long>(1), characters.map { it.id }) }
-                .onLeft { fail(it.message) }
+            assertEquals(listOf<Long>(1), inserted.map { it.id })
         }
     }
 
     @Test
     fun `inserting a request of the wrong type fails`() {
         runBlocking {
-            assertTrue(repository.insert(listOf(basicWowRequest)).isLeft())
+            assertThrows<Exception> { repository.insert(listOf(basicWowRequest)) }
             assertEquals(listOf(), repository.state())
         }
     }
@@ -90,9 +87,7 @@ abstract class LolEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
                 updatedSummonerLevel
             )
             val update = repository.update(1, request)
-            update
-                .onRight { assertEquals(1, it) }
-                .onLeft { fail(it.message) }
+            assertEquals(1, update)
             val updated = repository.state().first()
             assertEquals(updatedName, updated.name)
             assertEquals(updatedTag, updated.tag)
@@ -106,7 +101,7 @@ abstract class LolEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `updating a request of the wrong type fails`() {
         runBlocking {
             repository.withState(listOf(basicLolEntity))
-            assertTrue(repository.update(1, basicWowRequest).isLeft())
+            assertThrows<Exception> { repository.update(1, basicWowRequest) }
         }
     }
 

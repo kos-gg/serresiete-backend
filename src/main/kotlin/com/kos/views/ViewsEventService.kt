@@ -33,8 +33,6 @@ class ViewsEventService(
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
-                .mapLeft { ViewEventError(viewToBeCreatedEvent, it.message) }
-                .bind()
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
                     resolved.existing
@@ -47,12 +45,10 @@ class ViewsEventService(
                 viewToBeCreatedEvent.game,
                 viewToBeCreatedEvent.featured,
                 viewToBeCreatedEvent.extraArguments
-            ).mapLeft { ViewEventError(viewToBeCreatedEvent, it.message) }.bind()
+            )
 
             resolved.guild?.let {
                 entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
-                    .mapLeft { ViewEventError(viewToBeCreatedEvent, it.message) }
-                    .bind()
             }
 
             val event = Event(
@@ -115,8 +111,6 @@ class ViewsEventService(
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
-                .mapLeft { ViewEventError(viewToBeEditedEvent, it.message) }
-                .bind()
 
             val entities = inserted.zip(resolved.entities.map { it.second }) +
                     resolved.existing
@@ -126,7 +120,7 @@ class ViewsEventService(
                 viewToBeEditedEvent.published,
                 entities.map { it.first.id to it.second },
                 viewToBeEditedEvent.featured
-            ).mapLeft { ViewEventError(viewToBeEditedEvent, it.message) }.bind()
+            )
 
             val event = Event(
                 aggregateRoot,
@@ -156,8 +150,6 @@ class ViewsEventService(
 
                 val inserted = entitiesService
                     .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)
-                    .mapLeft { ViewEventError(viewToBePatchedEvent, it.message) }
-                    .bind()
 
                 inserted.zip(resolved.entities.map { it.second }) +
                         resolved.existing
@@ -168,7 +160,7 @@ class ViewsEventService(
                 viewToBePatchedEvent.published,
                 entitiesToInsert?.map { it.first.id to it.second },
                 viewToBePatchedEvent.featured
-            ).mapLeft { ViewEventError(viewToBePatchedEvent, it.message) }.bind()
+            )
 
             val event = Event(
                 aggregateRoot,
@@ -185,7 +177,7 @@ class ViewsEventService(
         event: ViewToBeDeletedEvent
     ): Either<ServiceError, Operation> {
         return either {
-            viewsRepository.delete(event.id).mapLeft { ViewEventError(event, it.message) }.bind()
+            viewsRepository.delete(event.id)
             val completionEvent = Event(
                 aggregateRoot,
                 operationId,

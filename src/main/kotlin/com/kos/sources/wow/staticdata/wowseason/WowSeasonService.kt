@@ -59,7 +59,7 @@ data class WowSeasonService(
             )
 
             wowSeasonRepository.insert(wowSeason)
-                .mapLeft { UnableToAddNewMythicPlusSeason(it.message) }
+                .mapLeft { UnableToAddNewMythicPlusSeason("Season ${it.season.name} (${it.season.id}) already exists") }
                 .bind()
 
             wowSeason

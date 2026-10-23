@@ -1,17 +1,11 @@
 package com.kos.entities.repository
 
-import arrow.core.Either
-import arrow.core.raise.either
-import arrow.core.raise.ensure
 import com.kos.common.WithState
-import com.kos.common.error.RepositoryError
 import com.kos.entities.domain.*
 import com.kos.views.Game
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.SQLException
 
 class WowHardcoreEntityDatabaseRepository(private val db: Database) :
     GameEntityRepository,
@@ -35,9 +29,9 @@ class WowHardcoreEntityDatabaseRepository(private val db: Database) :
         row[WowHardcoreEntities.blizzardId]
     )
 
-    override suspend fun insert(entities: List<InsertEntityRequest>): Either<RepositoryError, List<Entity>> = either {
+    override suspend fun insert(entities: List<InsertEntityRequest>): List<Entity> {
         val charsToInsert = entities.map { request ->
-            ensure(request is WowEntityRequest) { RepositoryError("problem inserting $request for WOW_HC") }
+            require(request is WowEntityRequest) { "problem inserting $request for WOW_HC" }
             WowEntity(
                 selectNextId(db),
                 request.name.lowercase(),
@@ -46,41 +40,31 @@ class WowHardcoreEntityDatabaseRepository(private val db: Database) :
                 request.blizzardId ?: 0
             )
         }
-        newSuspendedTransaction(Dispatchers.IO, db) {
-            transaction {
-                try {
-                    EntitiesDatabaseRepository.Entities.batchInsert(charsToInsert) {
-                        this[EntitiesDatabaseRepository.Entities.id] = it.id
-                    }
-                    val inserted = WowHardcoreEntities.batchInsert(charsToInsert) {
-                        this[WowHardcoreEntities.id] = it.id
-                        this[WowHardcoreEntities.name] = it.name
-                        this[WowHardcoreEntities.region] = it.region
-                        this[WowHardcoreEntities.realm] = it.realm
-                        this[WowHardcoreEntities.blizzardId] = it.blizzardId ?: 0
-                    }.map { resultRowToEntity(it) }
-                    Either.Right(inserted)
-                } catch (e: SQLException) {
-                    // Exposed only auto-rolls-back on an uncaught exception; catching it here to return
-                    // an Either means we have to undo the partial insert ourselves.
-                    rollback()
-                    Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
-                }
+        return newSuspendedTransaction(Dispatchers.IO, db) {
+            EntitiesDatabaseRepository.Entities.batchInsert(charsToInsert) {
+                this[EntitiesDatabaseRepository.Entities.id] = it.id
             }
-        }.bind()
+            WowHardcoreEntities.batchInsert(charsToInsert) {
+                this[WowHardcoreEntities.id] = it.id
+                this[WowHardcoreEntities.name] = it.name
+                this[WowHardcoreEntities.region] = it.region
+                this[WowHardcoreEntities.realm] = it.realm
+                this[WowHardcoreEntities.blizzardId] = it.blizzardId ?: 0
+            }.map { resultRowToEntity(it) }
+        }
     }
 
-    override suspend fun update(id: Long, entity: InsertEntityRequest): Either<RepositoryError, Int> =
+    override suspend fun update(id: Long, entity: InsertEntityRequest): Int =
         newSuspendedTransaction(Dispatchers.IO, db) {
             when (entity) {
-                is WowEntityRequest -> Either.Right(WowHardcoreEntities.update({ WowHardcoreEntities.id eq id }) {
+                is WowEntityRequest -> WowHardcoreEntities.update({ WowHardcoreEntities.id eq id }) {
                     it[name] = entity.name.lowercase()
                     it[region] = entity.region
                     it[realm] = entity.realm
                     entity.blizzardId?.let { blizzardIdValue -> it[blizzardId] = blizzardIdValue }
-                })
+                }
 
-                else -> Either.Left(RepositoryError("problem updating $id: $entity for WOW_HC"))
+                else -> throw IllegalArgumentException("problem updating $id: $entity for WOW_HC")
             }
         }
 

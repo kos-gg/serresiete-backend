@@ -29,6 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.jupiter.api.assertThrows
 
 abstract class WowHardcoreEntityRepositoryTestCommon<T> where T : GameEntityRepository, T : WithState<List<WowEntity>, T> {
 
@@ -39,7 +40,7 @@ abstract class WowHardcoreEntityRepositoryTestCommon<T> where T : GameEntityRepo
     fun `given an empty repository i can insert wow hardcore characters`() {
         runBlocking {
             val expected = listOf(basicWowHardcoreEntity)
-            repository.insert(listOf(basicWowRequestWithBlizzardId)).fold({ fail() }) { assertEquals(expected, it) }
+            assertEquals(expected, repository.insert(listOf(basicWowRequestWithBlizzardId)))
         }
     }
 
@@ -47,23 +48,25 @@ abstract class WowHardcoreEntityRepositoryTestCommon<T> where T : GameEntityRepo
     fun `inserting a wow hardcore character with the same blizzardId as an existing one fails`() {
         runBlocking {
             repository.withState(listOf(basicWowHardcoreEntity))
-            repository.insert(
-                listOf(
-                    WowEntityRequest(
-                        basicWowHardcoreEntity.name,
-                        basicWowHardcoreEntity.region,
-                        basicWowHardcoreEntity.realm,
-                        basicWowHardcoreEntity.blizzardId
+            assertThrows<Exception> {
+                repository.insert(
+                    listOf(
+                        WowEntityRequest(
+                            basicWowHardcoreEntity.name,
+                            basicWowHardcoreEntity.region,
+                            basicWowHardcoreEntity.realm,
+                            basicWowHardcoreEntity.blizzardId
+                        )
                     )
                 )
-            ).onRight { fail() }.onLeft { assertTrue(true) }
+            }
         }
     }
 
     @Test
     fun `inserting a request of the wrong type fails`() {
         runBlocking {
-            assertTrue(repository.insert(listOf(basicLolEntityEnrichedRequest)).isLeft())
+            assertThrows<Exception> { repository.insert(listOf(basicLolEntityEnrichedRequest)) }
             assertEquals(listOf(), repository.state())
         }
     }
@@ -72,7 +75,7 @@ abstract class WowHardcoreEntityRepositoryTestCommon<T> where T : GameEntityRepo
     fun `inserting a wow character request without a blizzardId is also accepted, defaulting blizzardId to 0`() {
         runBlocking {
             val expected = basicWowHardcoreEntity.copy(blizzardId = 0)
-            repository.insert(listOf(basicWowRequest)).fold({ fail() }) { assertEquals(listOf(expected), it) }
+            assertEquals(listOf(expected), repository.insert(listOf(basicWowRequest)))
         }
     }
 
@@ -85,9 +88,7 @@ abstract class WowHardcoreEntityRepositoryTestCommon<T> where T : GameEntityRepo
             val updatedRealm = "stitches"
             val request = WowEntityRequest(updatedName, updatedRegion, updatedRealm)
             val update = repository.update(1, request)
-            update
-                .onRight { assertEquals(1, it) }
-                .onLeft { fail(it.message) }
+            assertEquals(1, update)
             val updated = repository.state().first()
             assertEquals(updatedName, updated.name)
             assertEquals(updatedRegion, updated.region)
@@ -99,7 +100,7 @@ abstract class WowHardcoreEntityRepositoryTestCommon<T> where T : GameEntityRepo
     fun `updating a request of the wrong type fails`() {
         runBlocking {
             repository.withState(listOf(basicWowHardcoreEntity))
-            assertTrue(repository.update(1, basicLolEntityEnrichedRequest).isLeft())
+            assertThrows<Exception> { repository.update(1, basicLolEntityEnrichedRequest) }
         }
     }
 

@@ -1,7 +1,5 @@
 package com.kos.entities.repository
 
-import arrow.core.Either
-import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.EntityRequest
@@ -43,13 +41,13 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     override suspend fun insert(
         entities: List<InsertEntityRequest>,
         game: Game
-    ): Either<RepositoryError, List<Entity>> = repositoryFor(game).insert(entities)
+    ): List<Entity> = repositoryFor(game).insert(entities)
 
     override suspend fun update(
         id: Long,
         entity: InsertEntityRequest,
         game: Game
-    ): Either<RepositoryError, Int> = repositoryFor(game).update(id, entity)
+    ): Int = repositoryFor(game).update(id, entity)
 
     override suspend fun get(id: Long, game: Game): Entity? = repositoryFor(game).get(id)
 

@@ -1,8 +1,6 @@
 package com.kos.entities.repository
 
-import arrow.core.Either
 import com.kos.common.WithState
-import com.kos.common.error.RepositoryError
 import com.kos.entities.domain.*
 import com.kos.views.Game
 
@@ -15,8 +13,8 @@ data class EntitiesState(
 interface EntitiesRepository : WithState<EntitiesState, EntitiesRepository> {
 
     //TODO: insert should be on conflict do nothing so we can avoid the select all + diff on service
-    suspend fun insert(entities: List<InsertEntityRequest>, game: Game): Either<RepositoryError, List<Entity>>
-    suspend fun update(id: Long, entity: InsertEntityRequest, game: Game): Either<RepositoryError, Int>
+    suspend fun insert(entities: List<InsertEntityRequest>, game: Game): List<Entity>
+    suspend fun update(id: Long, entity: InsertEntityRequest, game: Game): Int
     suspend fun get(id: Long, game: Game): Entity?
     suspend fun get(request: EntityRequest, game: Game): Entity?
     suspend fun get(game: Game): List<Entity>

@@ -2,7 +2,6 @@ package com.kos.eventsourcing.subscriptions.sync
 
 import arrow.core.raise.either
 import com.kos.common.WithLogger
-import com.kos.common.error.toEventPersistenceError
 import com.kos.common.orFail
 import com.kos.entities.EntitiesService
 import com.kos.entities.sync.EntitySynchronizer
@@ -42,8 +41,6 @@ class GameSyncEventProcessor(
                             logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
                         }
                         val inserted = entitiesService.insert(resolved.entities.map { it.first }, payload.game)
-                            .mapLeft { it.toEventPersistenceError() }
-                            .bind()
                         val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
                         val errors = synchronizer.synchronize(entities.map { it.first })
                         if (errors.isNotEmpty()) {

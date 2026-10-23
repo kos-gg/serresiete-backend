@@ -1,7 +1,9 @@
 package com.kos.sources.wowhc
 
+import arrow.core.Either
+import arrow.core.getOrElse
+import com.kos.common.error.GuildUpdateFailed
 import com.kos.common.error.ServiceError
-import com.kos.common.error.toEntityResolverError
 import com.kos.common.split
 import com.kos.entities.EntityUpdater
 import com.kos.entities.domain.GuildPayload
@@ -23,38 +25,31 @@ class WowHardcoreGuildUpdater(
             .map { (guild, viewId) ->
                 guildResolver
                     .resolveRoster(guild.region, guild.realm, guild.name)
-                    .map { (_, roster) -> roster to viewId }
+                    .map { (_, roster) -> Triple(guild, roster, viewId) }
             }
 
         val (initialErrors, rostersWithViewIds) = initialResults.split()
 
-        val downstreamErrors = rostersWithViewIds.flatMap { (requests, viewId) ->
+        val downstreamErrors = rostersWithViewIds.flatMap { (guild, requests, viewId) ->
+            Either.catch {
+                resolver.resolve(requests).fold(
+                    ifLeft = { listOf(it) },
 
-            resolver.resolve(requests).fold(
-                ifLeft = { listOf(it) },
+                    ifRight = { resolved ->
+                        val inserted = entitiesRepository.insert(resolved.entities.map { it.first }, Game.WOW_HC)
+                        val entitiesToAssociate =
+                            inserted.map { it.id to null } +
+                                    resolved.existing.map { it.first.id to it.second }
 
-                ifRight = { resolved ->
-                    entitiesRepository
-                        .insert(resolved.entities.map { it.first }, Game.WOW_HC)
-                        .fold(
-                            ifLeft = {
-                                listOf(it.toEntityResolverError(Game.WOW_HC, it.message))
-                            },
-                            ifRight = { inserted ->
-                                val entitiesToAssociate =
-                                    inserted.map { it.id to null } +
-                                            resolved.existing.map { it.first.id to it.second }
-
-                                viewsRepository.associateEntitiesIdsToView(
-                                    entitiesToAssociate,
-                                    viewId
-                                )
-
-                                emptyList()
-                            }
+                        viewsRepository.associateEntitiesIdsToView(
+                            entitiesToAssociate,
+                            viewId
                         )
-                }
-            )
+
+                        emptyList()
+                    }
+                )
+            }.getOrElse { listOf(GuildUpdateFailed(guild, it)) }
         }
 
         return initialErrors + downstreamErrors

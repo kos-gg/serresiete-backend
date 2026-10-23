@@ -57,7 +57,7 @@ abstract class CredentialsRepositoryTest {
         runBlocking {
             repository.withState(basicCredentialsInitialState)
             repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
-                .onLeft { assertTrue(it.message.contains("Duplicated")) }
+                .onLeft { assertEquals(UserAlreadyExists(encryptedCredentials.userName), it) }
                 .onRight { fail() }
         }
     }
@@ -140,7 +140,7 @@ abstract class CredentialsRepositoryTest {
             repository.withState(basicCredentialsInitialState)
             repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password)
                 .onRight { fail() }
-                .onLeft { assertEquals(it.message, "Duplicated user $user") }
+                .onLeft { assertEquals(UserAlreadyExists(user), it) }
         }
     }
 

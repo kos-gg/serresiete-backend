@@ -1,11 +1,12 @@
 package com.kos.sources.wow.staticdata.wowseason.repository
 
 import arrow.core.Either
-import com.kos.common.error.RepositoryError
+import com.kos.sources.wow.staticdata.wowseason.SeasonAlreadyExists
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.sql.SQLException
 
 class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepository {
     object WowSeasons : Table("mythic_plus_seasons") {
@@ -19,9 +20,9 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
         override val primaryKey = PrimaryKey(seasonId, expansionId)
     }
 
-    override suspend fun insert(season: WowSeason): Either<RepositoryError, Boolean> {
+    override suspend fun insert(season: WowSeason): Either<SeasonAlreadyExists, Boolean> {
         return newSuspendedTransaction(Dispatchers.IO, db) {
-            Either.catch {
+            try {
                 if (season.isCurrentSeason)
                     WowSeasons.update({ WowSeasons.isCurrentSeason eq true }) {
                         it[isCurrentSeason] = false
@@ -34,8 +35,12 @@ class WowSeasonDatabaseRepository(private val db: Database) : WowSeasonRepositor
                     it[data] = season.seasonData
                     it[isCurrentSeason] = season.isCurrentSeason
                 }
-                true
-            }.onLeft { rollback() }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
+                Either.Right(true)
+            } catch (e: SQLException) {
+                if (e.sqlState != "23505") throw e
+                rollback()
+                Either.Left(SeasonAlreadyExists(season))
+            }
         }
     }
 
