@@ -9,7 +9,7 @@ object TasksTestHelper {
         Task(
             UUID.randomUUID().toString(),
             TaskType.CACHE_WOW_DATA_TASK,
-            TaskStatus(Status.SUCCESSFUL, "message"),
+            TaskStatus(Status.SUCCESSFUL),
             now
         )
     }
@@ -18,7 +18,7 @@ object TasksTestHelper {
         Task(
             UUID.randomUUID().toString(),
             taskType,
-            TaskStatus(Status.SUCCESSFUL, "message"),
+            TaskStatus(Status.SUCCESSFUL),
             now
         )
     }

@@ -5,6 +5,7 @@ import com.kos.entities.sync.EntitySynchronizerProvider
 import com.kos.entities.sync.SyncEntitySelector
 import com.kos.tasks.Status
 import com.kos.tasks.Task
+import com.kos.tasks.TaskError
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksRepository
@@ -25,11 +26,17 @@ class CacheGameDataTaskRunner(
         logger.debug("entities to be synced: {}", entities.map { it.id }.joinToString(","))
         val errors = entitySynchronizerProvider.synchronizerFor(game).synchronize(entities)
 
-        val taskStatus = if (errors.isEmpty())
-            TaskStatus(Status.SUCCESSFUL, "entities synced: ${entities.map { it.id }.joinToString(",")}")
+        val task = if (errors.isEmpty())
+            Task(id, type, TaskStatus(Status.SUCCESSFUL), OffsetDateTime.now())
         else
-            TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() })
+            Task(
+                id,
+                type,
+                TaskStatus(Status.ERROR),
+                OffsetDateTime.now(),
+                TaskError(arguments, errors.joinToString(",\n") { it.error() })
+            )
 
-        tasksRepository.updateTask(Task(id, type, taskStatus, OffsetDateTime.now()))
+        tasksRepository.updateTask(task)
     }
 }

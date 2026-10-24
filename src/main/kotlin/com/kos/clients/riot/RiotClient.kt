@@ -9,7 +9,7 @@ import com.kos.sources.lol.LeagueEntry
 import com.kos.sources.lol.LolMatch
 
 interface RiotClient {
-    suspend fun getPUUIDByRiotId(riotName: String, riotTag: String): Either<ClientError, String>
+    suspend fun getPUUIDByRiotId(riotName: String, riotTag: String): Either<ClientError, String?>
     suspend fun getSummonerByPuuid(puuid: String): Either<ClientError, LolSummoner>
     suspend fun getMatchesByPuuid(puuid: String, queue: QueueType): Either<ClientError, List<String>>
     suspend fun getMatchById(matchId: String): Either<ClientError, LolMatch>

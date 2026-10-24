@@ -2,11 +2,10 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import arrow.core.raise.either
-import arrow.core.raise.ensure
 import arrow.fx.coroutines.parMap
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.NonHardcoreCharacter
 import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.EntityResolver
@@ -29,36 +28,29 @@ class WowHardcoreEntityResolver(
     ): Either<ServiceError, ResolvedEntities> = either {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW_HC)
 
-        val (errors, oks) = newRequests.asFlow()
+        val (unchecked, checked) = newRequests.asFlow()
             .parMap(10) { req ->
+                req as WowEntityRequest
                 either {
-                    req as WowEntityRequest
-                    val profile = blizzardClient.getClassicProfile(
-                        req.region, req.realm, req.name
-                    ).bind() ?: return@either null
-
-                    val realm = blizzardClient.getRealm(req.region, profile.realmId).bind()
-
-                    ensure(realm.isHardcore) { NonHardcoreCharacter(req) }
-
-                    WowEntityRequest(
-                        req.name,
-                        req.region,
-                        req.realm,
-                        profile.id
-                    ) to req.alias
+                    blizzardClient.getClassicProfile(req.region, req.realm, req.name)
+                        .mapLeft { req to it.toSyncProcessingError("getClassicProfile") }
+                        .bind()
+                        ?.let { profile ->
+                            blizzardClient.getRealm(req.region, profile.realmId)
+                                .mapLeft { req to it.toSyncProcessingError("getRealm") }
+                                .bind()
+                                .takeIf { it.isHardcore }
+                                ?.let { WowEntityRequest(req.name, req.region, req.realm, profile.id) to req.alias }
+                        }
                 }
             }
             .toList()
             .split()
 
-        errors.forEach { logger.error(it.toString()) }
-
-        val validatedTuples: List<Pair<InsertEntityRequest, String?>> = oks.filterNotNull()
-
         ResolvedEntities(
-            entities = validatedTuples,
+            entities = checked.filterNotNull(),
             existing = existing.map { it.value to it.alias },
+            unchecked = unchecked,
             guild = null
         )
     }

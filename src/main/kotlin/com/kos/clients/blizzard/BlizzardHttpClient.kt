@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.clients.HttpError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.BATTLENET_NAMESPACE
@@ -14,6 +13,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.clients.orNotFound
 import com.kos.clients.toClientError
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.*
@@ -403,12 +403,6 @@ class BlizzardHttpClient(
             }
         }
     }
-
-    private fun <T> Either<ClientError, T>.orNotFound(fallback: T): Either<ClientError, T> =
-        fold(
-            ifLeft = { error -> if (error is HttpError && error.status == 404) Either.Right(fallback) else Either.Left(error) },
-            ifRight = { Either.Right(it) }
-        )
 
     private suspend fun getAndUpdateToken(): Either<ClientError, TokenState> {
         val newTokenState = when (token) {

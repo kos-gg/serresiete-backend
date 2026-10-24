@@ -29,7 +29,7 @@ class CacheClearTaskRunner(
             Task(
                 id,
                 type,
-                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedRecords old tasks"),
+                TaskStatus(Status.SUCCESSFUL),
                 OffsetDateTime.now()
             )
         )

@@ -75,7 +75,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     Task(
                         id = "old-task-id",
                         type = TaskType.TOKEN_CLEANUP_TASK,
-                        taskStatus = TaskStatus(Status.SUCCESSFUL, null),
+                        taskStatus = TaskStatus(Status.SUCCESSFUL),
                         inserted = OffsetDateTime.now().minusDays(10)
                     )
                 )

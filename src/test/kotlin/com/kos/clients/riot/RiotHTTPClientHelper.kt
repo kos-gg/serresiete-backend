@@ -25,6 +25,8 @@ object RiotHTTPClientHelper {
                         HttpStatusCode.OK
                     )
 
+                    "/riot/account/v1/accounts/by-riot-id/unknown/WOW" -> respond("", HttpStatusCode.NotFound)
+
                     "/lol/summoner/v4/summoners/by-puuid/vJre0esG5sIx3rvCAe-YVsDfqCIMV5b2P-61wrYZ4w-hs9u_Ek8dVlo-KLo-GNA4NumLV1YTNxeCmA" ->
                         respond(
                             responseFromResource("unit/lol/riot-get-summoner-by-puuid-response.json"),

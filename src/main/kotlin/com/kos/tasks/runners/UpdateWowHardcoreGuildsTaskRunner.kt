@@ -4,6 +4,7 @@ import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.tasks.Status
 import com.kos.tasks.Task
+import com.kos.tasks.TaskError
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksRepository
@@ -20,14 +21,15 @@ class UpdateWowHardcoreGuildsTaskRunner(
         logger.info("Updating wow hardcore guild entities")
         val errors = entitiesService.updateWowHardcoreGuilds()
         if (errors.isEmpty()) {
-            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
+            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL), OffsetDateTime.now()))
         } else {
             tasksRepository.updateTask(
                 Task(
                     id,
                     type,
-                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
-                    OffsetDateTime.now()
+                    TaskStatus(Status.ERROR),
+                    OffsetDateTime.now(),
+                    TaskError(arguments, errors.joinToString(",\n") { it.error() })
                 )
             )
         }

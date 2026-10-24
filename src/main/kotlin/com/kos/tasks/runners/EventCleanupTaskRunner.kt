@@ -34,7 +34,7 @@ class EventCleanupTaskRunner(
         logger.info(message)
 
         tasksRepository.updateTask(
-            Task(id, type, TaskStatus(Status.SUCCESSFUL, message), OffsetDateTime.now())
+            Task(id, type, TaskStatus(Status.SUCCESSFUL), OffsetDateTime.now())
         )
     }
 }

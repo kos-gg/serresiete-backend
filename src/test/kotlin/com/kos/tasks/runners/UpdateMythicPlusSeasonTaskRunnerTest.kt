@@ -37,7 +37,7 @@ class UpdateMythicPlusSeasonTaskRunnerTest {
             .thenReturn(Either.Right(listOf(Season(true, "TWW3", "tww-3", 15, listOf()))))
 
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, null)
 

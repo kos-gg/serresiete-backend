@@ -30,7 +30,7 @@ class CacheClearTaskRunnerTest {
         dataCacheRepo.withState(listOf(wowDataCache, lolDataCache))
         val id = UUID.randomUUID().toString()
 
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, null)
 
@@ -45,7 +45,7 @@ class CacheClearTaskRunnerTest {
     fun `only lol cache is cleared when game argument is lol`() = runBlocking {
         dataCacheRepo.withState(listOf(wowDataCache, lolDataCache))
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, mapOf("game" to Game.LOL.toString()))
 

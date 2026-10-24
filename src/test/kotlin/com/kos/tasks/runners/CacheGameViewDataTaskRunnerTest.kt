@@ -21,6 +21,7 @@ import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.Status
 import com.kos.tasks.Task
+import com.kos.tasks.TaskError
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksInMemoryRepository
@@ -95,7 +96,7 @@ class CacheGameViewDataTaskRunnerTest {
         viewsRepo.withState(ViewsState(listOf(lolView), emptyList()))
         val id = UUID.randomUUID().toString()
 
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, mapOf("viewId" to lolView.id))
 
@@ -109,27 +110,27 @@ class CacheGameViewDataTaskRunnerTest {
     @Test
     fun `task fails when viewId argument is missing`() = runBlocking {
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, null)
 
         val task = tasksRepo.state().first()
         assertEquals(id, task.id)
         assertEquals(Status.ERROR, task.taskStatus.status)
-        assertEquals("viewId argument is required", task.taskStatus.message)
+        assertEquals(TaskError(null, "viewId argument is required"), task.error)
     }
 
     @Test
     fun `task fails when view does not exist`() = runBlocking {
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, mapOf("viewId" to "non-existent"))
 
         val task = tasksRepo.state().first()
         assertEquals(id, task.id)
         assertEquals(Status.ERROR, task.taskStatus.status)
-        assertEquals("view non-existent not found", task.taskStatus.message)
+        assertEquals(TaskError(mapOf("viewId" to "non-existent"), "view non-existent not found"), task.error)
     }
 
     @Test
@@ -137,7 +138,7 @@ class CacheGameViewDataTaskRunnerTest {
         val recentlySynced = lolView.copy(lastSyncedAt = OffsetDateTime.now().minusSeconds(10))
         viewsRepo.withState(ViewsState(listOf(recentlySynced), emptyList()))
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, mapOf("viewId" to recentlySynced.id))
 
@@ -162,7 +163,7 @@ class CacheGameViewDataTaskRunnerTest {
         )
         viewsRepo.withState(ViewsState(listOf(wowHcView), emptyList()))
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, mapOf("viewId" to wowHcView.id))
 

@@ -1,6 +1,8 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.recover
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
@@ -218,23 +220,13 @@ class WowHardcoreEntitySynchronizer(
     ): List<Either<ServiceError, WowItem>> =
         existentItemsAndItemsToRequest.second.map { equippedItem ->
             either {
-                val item = blizzardClient.getItem(wowEntity.region, equippedItem.itemId).fold(
-                    ifLeft = {
-                        execute("getItem") {
-                            wowItemsDatabaseRepository.getItem(equippedItem.itemId)
-                        }
-                    },
-                    ifRight = { Either.Right(it) }
-                ).bind()
+                val item = blizzardClient.getItem(wowEntity.region, equippedItem.itemId)
+                    .recover { blizzardError -> wowItemsDatabaseRepository.getItem(equippedItem.itemId) ?: raise(blizzardError) }
+                    .mapLeft { it.toSyncProcessingError("getItem") }
+                    .bind()
 
-                val icon = blizzardClient.getItemMedia(
-                    wowEntity.region,
-                    equippedItem.itemId,
-                ).fold(ifLeft = {
-                    execute("getItemMedia") {
-                        wowItemsDatabaseRepository.getItemMedia(equippedItem.itemId)
-                    }
-                }, ifRight = { Either.Right(it) }).getOrNull()
+                val icon = blizzardClient.getItemMedia(wowEntity.region, equippedItem.itemId)
+                    .getOrElse { wowItemsDatabaseRepository.getItemMedia(equippedItem.itemId) }
 
                 item.toWowItem(equippedItem, icon)
             }

@@ -23,6 +23,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
         val type = text("type")
         val taskStatus = text("status")
         val inserted = text("inserted")
+        val error = text("error").nullable()
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -31,7 +32,8 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
         row[Tasks.id],
         TaskType.fromString(row[Tasks.type]).getOrThrow(),
         json.decodeFromString(row[Tasks.taskStatus]),
-        OffsetDateTime.parse(row[Tasks.inserted])
+        OffsetDateTime.parse(row[Tasks.inserted]),
+        row[Tasks.error]?.let { json.decodeFromString(it) }
     )
 
     override suspend fun insertTask(task: Task) {
@@ -41,6 +43,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
                 it[type] = task.type.toString()
                 it[taskStatus] = json.encodeToString(task.taskStatus)
                 it[inserted] = task.inserted.toString()
+                it[error] = task.error?.let { json.encodeToString(it) }
             }
         }
     }
@@ -49,6 +52,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
         newSuspendedTransaction(Dispatchers.IO, db) {
             Tasks.update({ Tasks.id.eq(task.id) }) {
                 it[taskStatus] = json.encodeToString(task.taskStatus)
+                it[error] = task.error?.let { json.encodeToString(it) }
             }
         }
     }
@@ -96,6 +100,7 @@ class TasksDatabaseRepository(private val db: Database) : TasksRepository {
                 this[Tasks.type] = it.type.toString()
                 this[Tasks.taskStatus] = json.encodeToString(it.taskStatus)
                 this[Tasks.inserted] = it.inserted.toString()
+                this[Tasks.error] = it.error?.let { error -> json.encodeToString(error) }
             }
         }
         return this

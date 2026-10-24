@@ -23,7 +23,7 @@ class TaskCleanupTaskRunner(
             Task(
                 id,
                 type,
-                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTasks old tasks"),
+                TaskStatus(Status.SUCCESSFUL),
                 OffsetDateTime.now()
             )
         )

@@ -1,5 +1,6 @@
 package com.kos.tasks
 
+import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.tasks.repository.TasksRepository
 import com.kos.tasks.runners.TaskRunnerProvider
@@ -27,21 +28,22 @@ data class TasksService(
         }
         val taskId = UUID.randomUUID().toString()
 
-        tasksRepository.insertTask(Task(taskId, taskType, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepository.insertTask(Task(taskId, taskType, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         scope.launch {
-            try {
-                taskRunner.run(taskId, arguments)
-            } catch (e: Exception) {
-                tasksRepository.updateTask(
-                    Task(
-                        taskId,
-                        taskType,
-                        TaskStatus(Status.ERROR, e.message ?: e.stackTraceToString()),
-                        OffsetDateTime.now()
+            Either.catch { taskRunner.run(taskId, arguments) }
+                .onLeft { e ->
+                    logger.error("Task $taskType $taskId failed", e)
+                    tasksRepository.updateTask(
+                        Task(
+                            taskId,
+                            taskType,
+                            TaskStatus(Status.ERROR),
+                            OffsetDateTime.now(),
+                            TaskError(arguments, e.stackTraceToString())
+                        )
                     )
-                )
-            }
+                }
         }
 
         return taskId

@@ -1,11 +1,13 @@
 package com.kos.clients.riot
 
+import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.RetryConfig
 import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotHTTPClientHelper.client
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class RiotHTTPClientTest {
     private val riotHTTPClient = RiotHTTPClient(client, RetryConfig(0, 0), "fake-key")
@@ -15,6 +17,13 @@ class RiotHTTPClientTest {
         runBlocking {
             val res = riotHTTPClient.getPUUIDByRiotId("GTP ZeroMVPs", "WOW")
             assertTrue(res.isRight())
+        }
+    }
+
+    @Test
+    fun `get puuid by riot id returns null when riot does not know the player`() {
+        runBlocking {
+            assertEquals(Either.Right(null), riotHTTPClient.getPUUIDByRiotId("unknown", "WOW"))
         }
     }
 

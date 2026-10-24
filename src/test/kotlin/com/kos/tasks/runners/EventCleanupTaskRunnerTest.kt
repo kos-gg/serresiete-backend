@@ -41,13 +41,12 @@ class EventCleanupTaskRunnerTest {
         eventStore.save(Event("/credentials/client1", UUID.randomUUID().toString(), payload))
 
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, null)
 
         val recorded = tasksRepo.getTask(id)
         assertEquals(Status.SUCCESSFUL, recorded?.taskStatus?.status)
-        assertEquals("No subscriptions found, nothing deleted", recorded?.taskStatus?.message)
         assertEquals(1, eventStore.getEvents(null).toList().size)
     }
 
@@ -64,13 +63,12 @@ class EventCleanupTaskRunnerTest {
             )
 
             val id = UUID.randomUUID().toString()
-            tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+            tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
             runner.run(id, null)
 
             val recorded = tasksRepo.getTask(id)
             assertEquals(Status.SUCCESSFUL, recorded?.taskStatus?.status)
-            assertEquals("Deleted 0 old events", recorded?.taskStatus?.message)
             assertEquals(2, eventStore.getEvents(null).toList().size)
         }
 }

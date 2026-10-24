@@ -30,6 +30,23 @@ abstract class TasksRepositoryTest {
     }
 
     @Test
+    fun `a failed task keeps its internal error`() {
+        runBlocking {
+            val now = OffsetDateTime.now()
+            val task = task(now)
+            repository.insertTask(task)
+
+            val failed = task.copy(
+                taskStatus = TaskStatus(Status.ERROR),
+                error = TaskError(mapOf("viewId" to "1"), "java.lang.IllegalStateException: boom\n\tat ...")
+            )
+            repository.updateTask(failed)
+
+            assertEquals(failed, repository.getTask(task.id))
+        }
+    }
+
+    @Test
     fun `given a repository with tasks I can retrieve the latest inserted`() {
         runBlocking {
             val now = OffsetDateTime.now()

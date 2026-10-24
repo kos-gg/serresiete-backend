@@ -78,7 +78,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
             .thenReturn(Either.Right(GetWowRealmResponse("Hardcore").toWowRealm()))
 
         val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         runner.run(id, null)
 

@@ -7,6 +7,7 @@ import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.clients.orNotFound
 import com.kos.clients.toClientError
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
 import com.kos.common.WithLogger
@@ -40,7 +41,7 @@ data class RiotHTTPClient(
 
     private val baseURI: (String) -> URI = { region -> URI("https://$region.api.riotgames.com") }
 
-    override suspend fun getPUUIDByRiotId(riotName: String, riotTag: String): Either<ClientError, String> {
+    override suspend fun getPUUIDByRiotId(riotName: String, riotTag: String): Either<ClientError, String?> {
         return throttleRequest {
             either {
                 val encodedRiotName = URLEncoder.encode(riotName, StandardCharsets.UTF_8.toString())
@@ -58,8 +59,7 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind().puuid
-
+                }.map { it.puuid }.orNotFound(null).bind()
             }
         }
     }

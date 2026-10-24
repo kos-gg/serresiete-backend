@@ -16,13 +16,6 @@ data class SyncProcessingError(
     override fun error(): String = "$type: $message"
 }
 
-data class NonHardcoreCharacter(
-    val wowEntity: WowEntityRequest
-) : ServiceError() {
-    override fun error(): String =
-        "${wowEntity.realm} realm is not hardcore"
-}
-
 data class NotCompetitiveCharacter(
     val wowEntity: WowEntityRequest
 ) : ServiceError() {

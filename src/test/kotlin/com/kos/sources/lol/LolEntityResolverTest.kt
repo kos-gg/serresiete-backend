@@ -1,11 +1,12 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
-import com.kos.clients.HttpError
+import com.kos.clients.TimeoutError
 import com.kos.entities.domain.LolSummoner
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.lolEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
@@ -39,17 +40,38 @@ class LolEntityResolverTest {
     }
 
     @Test
-    fun `a character not found in riot is dropped instead of failing the whole batch`() {
+    fun `a character not found in riot is neither resolved nor unchecked`() {
         runBlocking {
             `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
-                .thenReturn(Either.Left(HttpError(404, "not found")))
+                .thenReturn(Either.Right(null))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = LolEntityResolver(repo, riotClient)
 
             resolver.resolve(listOf(lolEntityRequest))
                 .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(), res.entities) }
+                .onRight { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf(), res.unchecked)
+                }
+        }
+    }
+
+    @Test
+    fun `a character that riot could not check is reported as unchecked instead of failing the whole batch`() {
+        runBlocking {
+            `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
+                .thenReturn(Either.Left(TimeoutError("timeout")))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = LolEntityResolver(repo, riotClient)
+
+            resolver.resolve(listOf(lolEntityRequest))
+                .onLeft { fail() }
+                .onRight { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf<EntityRequest>(lolEntityRequest), res.unchecked.map { it.first })
+                }
         }
     }
 

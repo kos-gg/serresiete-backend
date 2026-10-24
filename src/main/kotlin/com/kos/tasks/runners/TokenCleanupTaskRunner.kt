@@ -24,7 +24,7 @@ class TokenCleanupTaskRunner(
             Task(
                 id,
                 type,
-                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTokens expired tokens"),
+                TaskStatus(Status.SUCCESSFUL),
                 OffsetDateTime.now()
             )
         )
