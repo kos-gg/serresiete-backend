@@ -1,8 +1,6 @@
 package com.kos.eventsourcing.subscriptions.sync
 
-import arrow.core.raise.either
 import com.kos.common.WithLogger
-import com.kos.common.orFail
 import com.kos.entities.EntitiesService
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.eventsourcing.events.*
@@ -34,9 +32,9 @@ class GameSyncEventProcessor(
             EventType.REQUEST_TO_BE_SYNCED -> {
                 val payload = eventWithVersion.event.eventData as RequestToBeSynced
                 when (payload.game) {
-                    game -> either {
+                    game -> {
                         logger.debug("processing event v${eventWithVersion.version}")
-                        val resolved = entitiesService.resolveEntities(listOf(payload.request), payload.game).bind()
+                        val resolved = entitiesService.resolveEntities(listOf(payload.request), payload.game)
                         if (resolved.unchecked.isNotEmpty()) {
                             logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
                         }
@@ -54,7 +52,7 @@ class GameSyncEventProcessor(
                             )
                         )
                         EventProcessOutcome.Processed
-                    }.orFail()
+                    }
 
                     else -> EventProcessOutcome.Skipped
                 }

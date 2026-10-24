@@ -77,8 +77,7 @@ class EntitiesServiceTest {
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -109,8 +108,7 @@ class EntitiesServiceTest {
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -135,8 +133,7 @@ class EntitiesServiceTest {
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -164,8 +161,7 @@ class EntitiesServiceTest {
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -200,8 +196,7 @@ class EntitiesServiceTest {
                 guild = null
             )
             entitiesService.resolveEntities(listOf(request), Game.WOW_HC)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -338,8 +333,7 @@ class EntitiesServiceTest {
             )
 
             resolvedEntities
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -362,8 +356,7 @@ class EntitiesServiceTest {
 
             val resolvedEntities = entitiesService.resolveEntities(listOf(request), Game.LOL)
             resolvedEntities
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -483,8 +476,7 @@ class EntitiesServiceTest {
 
 
             result
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertResolvedEntities(expected, res)
                     assertEquals(expected.entities.map { it.second }, res.entities.map { it.second })
                     assertEquals(expected.existing.map { it.second }, res.existing.map { it.second })

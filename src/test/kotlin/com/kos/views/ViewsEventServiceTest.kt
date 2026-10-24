@@ -127,10 +127,8 @@ class ViewsEventServiceTest {
                 id,
                 aggregateRoot,
                 viewToBeCreatedEvent
-            ).onRight {
+            ).let {
                 assertOperation(it, EventType.VIEW_CREATED)
-            }.onLeft {
-                fail()
             }
         }
     }
@@ -153,10 +151,8 @@ class ViewsEventServiceTest {
                     id,
                     aggregateRoot,
                     ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false)
-                ).onRight {
+                ).let {
                     assertOperation(it, EventType.VIEW_EDITED)
-                }.onLeft {
-                    fail(it.toStr())
                 }
 
                 assertEventStoredCorrectly(
@@ -205,10 +201,8 @@ class ViewsEventServiceTest {
                         Game.WOW,
                         false
                     )
-                ).onRight {
+                ).let {
                     assertOperation(it, EventType.VIEW_EDITED)
-                }.onLeft {
-                    fail(it.toStr())
                 }
 
                 assertEventStoredCorrectly(
@@ -251,10 +245,8 @@ class ViewsEventServiceTest {
                     id,
                     aggregateRoot,
                     ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL, false)
-                ).onRight {
+                ).let {
                     assertOperation(it, EventType.VIEW_EDITED)
-                }.onLeft {
-                    fail(it.toStr())
                 }
 
                 assertEventStoredCorrectly(
@@ -296,10 +288,8 @@ class ViewsEventServiceTest {
                     id,
                     aggregateRoot,
                     ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL, false)
-                ).onRight {
+                ).let {
                     assertOperation(it, EventType.VIEW_PATCHED)
-                }.onLeft {
-                    fail(it.toStr())
                 }
 
                 assertEventStoredCorrectly(
@@ -340,10 +330,8 @@ class ViewsEventServiceTest {
                     id,
                     aggregateRoot,
                     ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW, false)
-                ).onRight {
+                ).let {
                     assertOperation(it, EventType.VIEW_PATCHED)
-                }.onLeft {
-                    fail(it.toStr())
                 }
 
                 assertEventStoredCorrectly(

@@ -3,15 +3,14 @@ package com.kos.sources.wow
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import arrow.core.raise.ensureNotNull
 import arrow.fx.coroutines.parMap
+import com.kos.clients.ClientError
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.clients.orThrow
 import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.NoCurrentMythicPlusSeason
 import com.kos.common.error.NotCompetitiveCharacter
 import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
 import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
@@ -35,32 +34,27 @@ class WowGuildResolver(
         private const val SCORE_CUTOFF = 1000
     }
 
-    override suspend fun resolve(
-        requested: List<EntityRequest>
-    ): Either<ServiceError, ResolvedEntities> = either {
+    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val guildReq = requested.first() as WowEntityRequest
         logger.info("Resolving guild ${guildReq.name} (${guildReq.region}/${guildReq.realm})")
 
-        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
+        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
         val (existing, newRequests) = repo.getCurrentAndNewEntities(members, Game.WOW)
 
-        ResolvedEntities(
-            entities = resolveMembers(newRequests).bind(),
+        return ResolvedEntities(
+            entities = resolveMembers(newRequests),
             existing = existing.map { it.value to it.alias },
             unchecked = emptyList(),
             guild = payload(guildRoster, guildReq)
         )
     }
 
-    suspend fun exists(guild: WowEntityRequest): Either<ServiceError, GuildPayload?> =
+    suspend fun exists(guild: WowEntityRequest): Either<ClientError, GuildPayload?> =
         blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name)
             .map { roster -> roster?.let { payload(it, guild) } }
-            .mapLeft { it.toSyncProcessingError("GetRetailGuildRoster") }
 
-    suspend fun resolveMembers(
-        newRequests: List<EntityRequest>
-    ): Either<ServiceError, List<Pair<InsertEntityRequest, String?>>> = either {
-        val seasonId = ensureNotNull(wowSeasonRepository.getCurrentSeason()?.id) { NoCurrentMythicPlusSeason }
+    suspend fun resolveMembers(newRequests: List<EntityRequest>): List<Pair<InsertEntityRequest, String?>> {
+        val seasonId = checkNotNull(wowSeasonRepository.getCurrentSeason()?.id) { "There is no current mythic+ season" }
 
         val (errors, resolved) = newRequests.asFlow()
             .parMap(10) { req ->
@@ -86,7 +80,7 @@ class WowGuildResolver(
                 "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"
         )
 
-        resolved
+        return resolved
     }
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
@@ -101,12 +95,10 @@ class WowGuildResolver(
         region: String,
         realm: String,
         name: String
-    ): Either<ServiceError, Pair<GuildRoster, List<WowEntityRequest>>> = either {
-        val roster = ensureNotNull(
-            blizzardClient.getRetailGuildRoster(region, realm, name)
-                .mapLeft { it.toSyncProcessingError("GetRetailGuildRoster") }
-                .bind()
-        ) { SyncProcessingError("NOT_FOUND", "Guild $name ($region/$realm) not found") }
+    ): Pair<GuildRoster, List<WowEntityRequest>> {
+        val roster = checkNotNull(blizzardClient.getRetailGuildRoster(region, realm, name).orThrow("getRetailGuildRoster")) {
+            "Guild $name ($region/$realm) not found"
+        }
 
         val members = roster.members
             .asSequence()
@@ -121,6 +113,6 @@ class WowGuildResolver(
             }
             .toList()
 
-        Pair(roster, members)
+        return Pair(roster, members)
     }
 }

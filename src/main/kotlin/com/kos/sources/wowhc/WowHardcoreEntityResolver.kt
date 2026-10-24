@@ -1,12 +1,9 @@
 package com.kos.sources.wowhc
 
-import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
@@ -23,9 +20,7 @@ class WowHardcoreEntityResolver(
     private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowHardcoreResolver") {
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    override suspend fun resolve(
-        requested: List<EntityRequest>
-    ): Either<ServiceError, ResolvedEntities> = either {
+    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW_HC)
 
         val (unchecked, checked) = newRequests.asFlow()
@@ -33,11 +28,11 @@ class WowHardcoreEntityResolver(
                 req as WowEntityRequest
                 either {
                     blizzardClient.getClassicProfile(req.region, req.realm, req.name)
-                        .mapLeft { req to it.toSyncProcessingError("getClassicProfile") }
+                        .mapLeft { req to it }
                         .bind()
                         ?.let { profile ->
                             blizzardClient.getRealm(req.region, profile.realmId)
-                                .mapLeft { req to it.toSyncProcessingError("getRealm") }
+                                .mapLeft { req to it }
                                 .bind()
                                 .takeIf { it.isHardcore }
                                 ?.let { WowEntityRequest(req.name, req.region, req.realm, profile.id) to req.alias }
@@ -47,7 +42,7 @@ class WowHardcoreEntityResolver(
             .toList()
             .split()
 
-        ResolvedEntities(
+        return ResolvedEntities(
             entities = checked.filterNotNull(),
             existing = existing.map { it.value to it.alias },
             unchecked = unchecked,

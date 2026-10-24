@@ -1,10 +1,7 @@
 package com.kos.sources.wowhc
 
-import arrow.core.Either
-import arrow.core.raise.either
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.toSyncProcessingError
-import com.kos.common.error.ServiceError
+import com.kos.clients.orThrow
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildPayload
@@ -21,13 +18,11 @@ class WowHardcoreGuildResolver(
         private const val MIN_MEMBER_LEVEL = 10
     }
 
-    override suspend fun resolve(
-        requested: List<EntityRequest>
-    ): Either<ServiceError, ResolvedEntities> = either {
+    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val guildReq = requested.first() as WowEntityRequest
-        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name).bind()
+        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
 
-        characterResolver.resolve(members).bind().copy(guild = payload(guildRoster, guildReq))
+        return characterResolver.resolve(members).copy(guild = payload(guildRoster, guildReq))
     }
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
@@ -42,11 +37,10 @@ class WowHardcoreGuildResolver(
         region: String,
         realm: String,
         name: String
-    ): Either<ServiceError, Pair<GuildRoster, List<WowEntityRequest>>> = either {
+    ): Pair<GuildRoster, List<WowEntityRequest>> {
         val roster = blizzardClient
             .getHardcoreGuildRoster(region, realm, name)
-            .mapLeft { it.toSyncProcessingError("GetHardcoreGuildRoster") }
-            .bind()
+            .orThrow("getHardcoreGuildRoster")
 
         val memberReqs = roster.members
             .asSequence()
@@ -54,6 +48,6 @@ class WowHardcoreGuildResolver(
             .map { WowEntityRequest(it.name.lowercase(), region, it.realmSlug ?: realm) }
             .toList()
 
-        Pair(roster, memberReqs)
+        return Pair(roster, memberReqs)
     }
 }

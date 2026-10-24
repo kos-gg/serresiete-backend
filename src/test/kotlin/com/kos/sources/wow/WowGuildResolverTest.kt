@@ -9,7 +9,6 @@ import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
-import com.kos.common.error.NoCurrentMythicPlusSeason
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
@@ -23,6 +22,7 @@ import org.mockito.Mockito.*
 import org.mockito.kotlin.any
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.fail
 
 class WowGuildResolverTest {
@@ -97,8 +97,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(WowEntityRequest(member.name, member.region, member.realm, 555) to null),
                         res.entities
@@ -141,8 +140,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(WowEntityRequest(member.name, member.region, member.realm, 105161061) to null),
                         res.entities
@@ -172,8 +170,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(mixedCaseRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
                 }
         }
@@ -196,8 +193,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf(), res.unchecked)
                 }
@@ -226,8 +222,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf(), res.unchecked)
                 }
@@ -254,8 +249,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(WowEntityRequest(member.name, member.region, member.realm, 777) to null),
                         res.entities
@@ -286,8 +280,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf(), res.unchecked)
                 }
@@ -315,8 +308,7 @@ class WowGuildResolverTest {
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
             resolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(trackedEntity to null), res.existing)
                     assertEquals(listOf(), res.entities)
                 }
@@ -340,11 +332,33 @@ class WowGuildResolverTest {
 
             val resolver = WowGuildResolver(EntitiesInMemoryRepository(), blizzardClient, WowSeasonInMemoryRepository())
 
-            resolver.resolve(listOf(guildRequest))
-                .onRight { fail() }
-                .onLeft { assertEquals(NoCurrentMythicPlusSeason, it) }
+            assertFailsWith<IllegalStateException> { resolver.resolve(listOf(guildRequest)) }
 
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `resolving a guild that blizzard does not know fails with the guild in the message`() {
+        runBlocking {
+            `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
+                .thenReturn(Either.Right(null))
+
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+
+            assertEquals("Guild method (eu/twisting-nether) not found", error.message)
+        }
+    }
+
+    @Test
+    fun `resolving a guild fails with blizzard's error when its roster cannot be fetched`() {
+        runBlocking {
+            `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
+                .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
+
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+
+            assertEquals("getRetailGuildRoster failed: TimeoutError(message=Request timeout has expired)", error.message)
         }
     }
 }

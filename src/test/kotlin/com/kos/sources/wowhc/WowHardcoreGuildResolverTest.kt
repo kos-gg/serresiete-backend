@@ -1,6 +1,7 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
+import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
 import com.kos.clients.blizzard.toWowRealm
@@ -18,6 +19,7 @@ import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.fail
 
 class WowHardcoreGuildResolverTest {
@@ -46,8 +48,7 @@ class WowHardcoreGuildResolverTest {
             `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
             guildResolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(basicWowRequest.name), res.entities.map { it.first.name })
                     assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
                 }
@@ -68,10 +69,21 @@ class WowHardcoreGuildResolverTest {
                 )
 
             guildResolver.resolve(listOf(guildRequest))
-                .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(), res.entities) }
+                .let { res -> assertEquals(listOf(), res.entities) }
 
             verify(blizzardClient, never()).getClassicProfile(anyString(), anyString(), anyString())
+        }
+    }
+
+    @Test
+    fun `resolving a guild fails with blizzard's error when its roster cannot be fetched`() {
+        runBlocking {
+            `when`(blizzardClient.getHardcoreGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
+                .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
+
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+
+            assertEquals("getHardcoreGuildRoster failed: TimeoutError(message=Request timeout has expired)", error.message)
         }
     }
 }

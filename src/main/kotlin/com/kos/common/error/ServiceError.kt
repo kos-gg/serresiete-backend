@@ -2,7 +2,6 @@ package com.kos.common.error
 
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
-import com.kos.eventsourcing.events.EventData
 import com.kos.views.Game
 
 sealed class ServiceError {
@@ -43,18 +42,6 @@ data class SynchronizerNotFound(
 ) : ServiceError() {
     override fun error(): String =
         "No synchronizer found for game [$game]"
-}
-
-class ViewEventError(
-    val payload: EventData,
-    val message: String
-) : ServiceError() {
-    override fun error(): String =
-        "Couldn't process view event with payload [$payload] with error $message"
-}
-
-data object NoCurrentMythicPlusSeason : ServiceError() {
-    override fun error(): String = "There is no current mythic+ season"
 }
 
 class UnableToAddNewMythicPlusSeason(

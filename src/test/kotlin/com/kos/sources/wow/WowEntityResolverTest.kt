@@ -30,8 +30,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(
                             WowEntityRequest(
@@ -60,8 +59,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf(), res.unchecked)
                 }
@@ -76,8 +74,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(basicWowEntity to null), res.existing)
                     assertEquals(listOf(), res.entities)
                 }
@@ -100,8 +97,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest, basicWowRequest2))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(
                             WowEntityRequest(
@@ -129,8 +125,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(1, res.unchecked.size)
                     assertEquals(basicWowRequest, res.unchecked.single().first)
@@ -158,8 +153,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest, basicWowRequest2, basicWowRequest3))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(
                             WowEntityRequest(

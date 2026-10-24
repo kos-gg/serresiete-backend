@@ -1,13 +1,10 @@
 package com.kos.sources.wow
 
-import arrow.core.Either
-import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.toSyncProcessingError
+import com.kos.clients.ClientError
 import com.kos.common.WithLogger
 import com.kos.common.collect
-import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
@@ -24,12 +21,10 @@ class WowEntityResolver(
     private val repo: EntitiesRepository,
     private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowEntityResolver") {
-    override suspend fun resolve(
-        requested: List<EntityRequest>
-    ): Either<ServiceError, ResolvedEntities> = either {
+    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW)
         val (entities, unchecked) = resolveCharacters(newRequests)
-        ResolvedEntities(
+        return ResolvedEntities(
             entities = entities,
             existing = existing.map { it.value to it.alias },
             unchecked = unchecked,
@@ -39,13 +34,13 @@ class WowEntityResolver(
 
     private suspend fun resolveCharacters(
         newRequests: List<EntityRequest>
-    ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ServiceError>>> {
+    ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ClientError>>> {
         val (unchecked, checked) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
                 blizzardClient.getRetailProfile(req.region, req.realm, req.name)
                     .map { profile -> req to profile?.id }
-                    .mapLeft { error -> req to error.toSyncProcessingError("getRetailProfile") }
+                    .mapLeft { error -> req to error }
             }
             .toList()
             .split()

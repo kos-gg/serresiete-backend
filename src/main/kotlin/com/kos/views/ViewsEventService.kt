@@ -1,11 +1,6 @@
 package com.kos.views
 
-import arrow.core.Either
-import arrow.core.raise.either
-import arrow.core.raise.ensureNotNull
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
-import com.kos.common.error.ViewEventError
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
@@ -23,46 +18,44 @@ class ViewsEventService(
         operationId: String,
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
-    ): Either<ServiceError, Operation> {
-        return either {
-            val resolved = resolveEntitiesForCreate(viewToBeCreatedEvent).bind()
+    ): Operation {
+        val resolved = resolveEntitiesForCreate(viewToBeCreatedEvent)
 
-            if (resolved.unchecked.isNotEmpty()) {
-                logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-            }
-
-            val inserted = entitiesService
-                .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
-
-            val entities = inserted.zip(resolved.entities.map { it.second }) +
-                    resolved.existing
-
-            val view = viewsRepository.create(
-                viewToBeCreatedEvent.id,
-                viewToBeCreatedEvent.name,
-                viewToBeCreatedEvent.owner,
-                entities.map { it.first.id to it.second },
-                viewToBeCreatedEvent.game,
-                viewToBeCreatedEvent.featured,
-                viewToBeCreatedEvent.extraArguments
-            )
-
-            resolved.guild?.let {
-                entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
-            }
-
-            val event = Event(
-                aggregateRoot,
-                operationId,
-                ViewCreatedEventEvent.fromSimpleView(view)
-            )
-            eventStore.save(event)
+        if (resolved.unchecked.isNotEmpty()) {
+            logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
         }
+
+        val inserted = entitiesService
+            .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
+
+        val entities = inserted.zip(resolved.entities.map { it.second }) +
+                resolved.existing
+
+        val view = viewsRepository.create(
+            viewToBeCreatedEvent.id,
+            viewToBeCreatedEvent.name,
+            viewToBeCreatedEvent.owner,
+            entities.map { it.first.id to it.second },
+            viewToBeCreatedEvent.game,
+            viewToBeCreatedEvent.featured,
+            viewToBeCreatedEvent.extraArguments
+        )
+
+        resolved.guild?.let {
+            entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
+        }
+
+        val event = Event(
+            aggregateRoot,
+            operationId,
+            ViewCreatedEventEvent.fromSimpleView(view)
+        )
+        return eventStore.save(event)
     }
 
     private suspend fun resolveEntitiesForCreate(
         event: ViewToBeCreatedEvent
-    ): Either<ServiceError, ResolvedEntities> = either {
+    ): ResolvedEntities {
         val guildReq = (event.extraArguments as? WowExtraArguments)
             ?.takeIf { it.isGuild && event.game == Game.WOW }
             ?.let { event.entities.first() as WowEntityRequest }
@@ -71,12 +64,12 @@ class ViewsEventService(
             entitiesService.findTrackedGuild(req.name, req.realm, req.region, Game.WOW)
         }
 
-        when (trackedGuild) {
-            null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments).bind()
+        return when (trackedGuild) {
+            null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments)
             else -> {
                 val (guildPayload, sourceViewId) = trackedGuild
-                val sourceView = ensureNotNull(viewsRepository.get(sourceViewId)) {
-                    ViewEventError(event, "tracked guild's source view $sourceViewId no longer exists")
+                val sourceView = checkNotNull(viewsRepository.get(sourceViewId)) {
+                    "tracked guild's source view $sourceViewId no longer exists"
                 }
                 val existing = sourceView.entitiesIds.mapNotNull { id ->
                     entitiesService.get(id, Game.WOW)?.let { entity ->
@@ -97,101 +90,95 @@ class ViewsEventService(
         operationId: String,
         aggregateRoot: String,
         viewToBeEditedEvent: ViewToBeEditedEvent
-    ): Either<ServiceError, Operation> {
-        return either {
-            val resolved =
-                entitiesService.resolveEntities(
-                    viewToBeEditedEvent.entities,
-                    viewToBeEditedEvent.game
-                ).bind()
-
-            if (resolved.unchecked.isNotEmpty()) {
-                logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-            }
-
-            val inserted = entitiesService
-                .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
-
-            val entities = inserted.zip(resolved.entities.map { it.second }) +
-                    resolved.existing
-            val viewModified = viewsRepository.edit(
-                viewToBeEditedEvent.id,
-                viewToBeEditedEvent.name,
-                viewToBeEditedEvent.published,
-                entities.map { it.first.id to it.second },
-                viewToBeEditedEvent.featured
+    ): Operation {
+        val resolved =
+            entitiesService.resolveEntities(
+                viewToBeEditedEvent.entities,
+                viewToBeEditedEvent.game
             )
 
-            val event = Event(
-                aggregateRoot,
-                operationId,
-                ViewEditedEventEvent.fromViewModified(operationId, viewToBeEditedEvent.game, viewModified)
-            )
-            eventStore.save(event)
+        if (resolved.unchecked.isNotEmpty()) {
+            logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
         }
+
+        val inserted = entitiesService
+            .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
+
+        val entities = inserted.zip(resolved.entities.map { it.second }) +
+                resolved.existing
+        val viewModified = viewsRepository.edit(
+            viewToBeEditedEvent.id,
+            viewToBeEditedEvent.name,
+            viewToBeEditedEvent.published,
+            entities.map { it.first.id to it.second },
+            viewToBeEditedEvent.featured
+        )
+
+        val event = Event(
+            aggregateRoot,
+            operationId,
+            ViewEditedEventEvent.fromViewModified(operationId, viewToBeEditedEvent.game, viewModified)
+        )
+        return eventStore.save(event)
     }
 
     suspend fun patchView(
         operationId: String,
         aggregateRoot: String,
         viewToBePatchedEvent: ViewToBePatchedEvent
-    ): Either<ServiceError, Operation> {
-        return either {
-            val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
-                val resolved =
-                    entitiesService.resolveEntities(
-                        entitiesToInsert,
-                        viewToBePatchedEvent.game
-                    ).bind()
+    ): Operation {
+        val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
+            val resolved =
+                entitiesService.resolveEntities(
+                    entitiesToInsert,
+                    viewToBePatchedEvent.game
+                )
 
-                if (resolved.unchecked.isNotEmpty()) {
-                    logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-                }
-
-                val inserted = entitiesService
-                    .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)
-
-                inserted.zip(resolved.entities.map { it.second }) +
-                        resolved.existing
+            if (resolved.unchecked.isNotEmpty()) {
+                logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
             }
-            val patchedView = viewsRepository.patch(
-                viewToBePatchedEvent.id,
-                viewToBePatchedEvent.name,
-                viewToBePatchedEvent.published,
-                entitiesToInsert?.map { it.first.id to it.second },
-                viewToBePatchedEvent.featured
-            )
 
-            val event = Event(
-                aggregateRoot,
-                operationId,
-                ViewPatchedEventEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
-            )
-            eventStore.save(event)
+            val inserted = entitiesService
+                .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)
+
+            inserted.zip(resolved.entities.map { it.second }) +
+                    resolved.existing
         }
+        val patchedView = viewsRepository.patch(
+            viewToBePatchedEvent.id,
+            viewToBePatchedEvent.name,
+            viewToBePatchedEvent.published,
+            entitiesToInsert?.map { it.first.id to it.second },
+            viewToBePatchedEvent.featured
+        )
+
+        val event = Event(
+            aggregateRoot,
+            operationId,
+            ViewPatchedEventEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
+        )
+        return eventStore.save(event)
     }
 
     suspend fun deleteView(
         operationId: String,
         aggregateRoot: String,
         event: ViewToBeDeletedEvent
-    ): Either<ServiceError, Operation> {
-        return either {
-            viewsRepository.delete(event.id)
-            val completionEvent = Event(
-                aggregateRoot,
-                operationId,
-                ViewDeletedEvent(
-                    event.id,
-                    event.name,
-                    event.owner,
-                    event.entities,
-                    event.published,
-                    event.game,
-                    event.featured
-                )
+    ): Operation {
+        viewsRepository.delete(event.id)
+        val completionEvent = Event(
+            aggregateRoot,
+            operationId,
+            ViewDeletedEvent(
+                event.id,
+                event.name,
+                event.owner,
+                event.entities,
+                event.published,
+                event.game,
+                event.featured
             )
-            eventStore.save(completionEvent)
-        }
+        )
+        return eventStore.save(completionEvent)
     }
 }

@@ -1,7 +1,6 @@
 package com.kos.eventsourcing.subscriptions.sync
 
 import com.kos.common.WithLogger
-import com.kos.common.orFail
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 import com.kos.views.ViewsEventService
@@ -22,7 +21,7 @@ class ViewsEventProcessor(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeCreatedEvent
-                ).orFail()
+                )
                 EventProcessOutcome.Processed
             }
 
@@ -31,7 +30,7 @@ class ViewsEventProcessor(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeEditedEvent
-                ).orFail()
+                )
                 EventProcessOutcome.Processed
             }
 
@@ -40,7 +39,7 @@ class ViewsEventProcessor(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBePatchedEvent
-                ).orFail()
+                )
                 EventProcessOutcome.Processed
             }
 
@@ -49,7 +48,7 @@ class ViewsEventProcessor(
                     operationId,
                     aggregateRoot,
                     eventWithVersion.event.eventData as ViewToBeDeletedEvent
-                ).orFail()
+                )
                 EventProcessOutcome.Processed
             }
 

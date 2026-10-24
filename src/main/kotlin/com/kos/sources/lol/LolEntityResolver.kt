@@ -1,12 +1,9 @@
 package com.kos.sources.lol
 
-import arrow.core.Either
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMap
 import com.kos.clients.riot.RiotClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
 import com.kos.common.isDefined
 import com.kos.common.split
 import com.kos.entities.EntityResolver
@@ -27,9 +24,7 @@ class LolEntityResolver(
     private val riotClient: RiotClient
 ) : EntityResolver, WithLogger("LolResolver") {
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    override suspend fun resolve(
-        requested: List<EntityRequest>
-    ): Either<ServiceError, ResolvedEntities> = either {
+    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.LOL)
 
         val (unchecked, checked) = newRequests.asFlow()
@@ -37,11 +32,11 @@ class LolEntityResolver(
                 req as LolEntityRequest
                 either {
                     riotClient.getPUUIDByRiotId(req.name, req.tag)
-                        .mapLeft { req to it.toSyncProcessingError("getPUUIDByRiotId") }
+                        .mapLeft { req to it }
                         .bind()
                         ?.let { puuid ->
                             riotClient.getSummonerByPuuid(puuid)
-                                .mapLeft { req to it.toSyncProcessingError("getSummonerByPuuid") }
+                                .mapLeft { req to it }
                                 .bind()
                         }
                         ?.let { summoner ->
@@ -62,7 +57,7 @@ class LolEntityResolver(
             .filterNotNull()
             .filterNot { (insertReq, _) -> repo.get(insertReq, Game.LOL).isDefined() }
 
-        ResolvedEntities(
+        return ResolvedEntities(
             entities = validated,
             existing = existing.map { it.value to it.alias },
             unchecked = unchecked,

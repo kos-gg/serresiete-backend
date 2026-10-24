@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
 import com.kos.common.error.ThirdPartyUnavailable
-import com.kos.common.orFail
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
@@ -31,7 +30,6 @@ data class EntitiesService(
         game: Game
     ): EntitiesExistResponse {
         return resolveEntities(requestedEntities, game)
-            .orFail()
             .let { resolved ->
                 val exist =
                     resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
@@ -52,7 +50,7 @@ data class EntitiesService(
             ?: wowGuildResolver.exists(WowEntityRequest(name, region, realm))
                 .map { GuildExistsResponse(it) }
                 .mapLeft {
-                    logger.warn("Couldn't check whether guild $name ($region/$realm) exists: ${it.error()}")
+                    logger.warn("Couldn't check whether guild $name ($region/$realm) exists: $it")
                     ThirdPartyUnavailable
                 }
 
@@ -60,7 +58,7 @@ data class EntitiesService(
         requestedEntities: List<EntityRequest>,
         game: Game,
         extraArguments: ViewExtraArguments? = null
-    ): Either<ServiceError, ResolvedEntities> =
+    ): ResolvedEntities =
         entitiesResolverProvider.resolverFor(game, extraArguments).resolve(requestedEntities)
 
     suspend fun updateEntities(

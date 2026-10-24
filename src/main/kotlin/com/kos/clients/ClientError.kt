@@ -1,6 +1,7 @@
 package com.kos.clients
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.kos.common.error.ServiceError
 import com.kos.common.error.SyncProcessingError
 
@@ -17,6 +18,8 @@ fun <T> Either<ClientError, T>.orNotFound(fallback: T): Either<ClientError, T> =
         ifLeft = { error -> if (error is HttpError && error.status == 404) Either.Right(fallback) else Either.Left(error) },
         ifRight = { Either.Right(it) }
     )
+
+fun <T> Either<ClientError, T>.orThrow(operation: String): T = getOrElse { error("$operation failed: $it") }
 
 fun ClientError.toSyncProcessingError(operation: String): ServiceError =
     when (this) {

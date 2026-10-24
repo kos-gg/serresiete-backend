@@ -31,8 +31,7 @@ class LolEntityResolverTest {
             val resolver = LolEntityResolver(repo, riotClient)
 
             resolver.resolve(listOf(lolEntityRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(1, res.entities.size)
                     assertEquals(lolEntityRequest.name, res.entities.first().first.name)
                 }
@@ -49,8 +48,7 @@ class LolEntityResolverTest {
             val resolver = LolEntityResolver(repo, riotClient)
 
             resolver.resolve(listOf(lolEntityRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf(), res.unchecked)
                 }
@@ -67,8 +65,7 @@ class LolEntityResolverTest {
             val resolver = LolEntityResolver(repo, riotClient)
 
             resolver.resolve(listOf(lolEntityRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf<EntityRequest>(lolEntityRequest), res.unchecked.map { it.first })
                 }
@@ -85,8 +82,7 @@ class LolEntityResolverTest {
             val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag)
 
             resolver.resolve(listOf(request))
-                .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(basicLolEntity to null), res.existing) }
+                .let { res -> assertEquals(listOf(basicLolEntity to null), res.existing) }
 
             verifyNoInteractions(riotClient)
         }
