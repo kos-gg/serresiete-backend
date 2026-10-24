@@ -1,7 +1,7 @@
 package com.kos.credentials.repository
 
 import arrow.core.Either
-import com.kos.credentials.UserAlreadyExists
+import com.kos.common.error.UserAlreadyExists
 import com.kos.credentials.Credentials
 import com.kos.credentials.CredentialsRole
 import com.kos.credentials.PatchCredentialRequest

@@ -1,5 +1,6 @@
 package com.kos.entities
 
+import com.kos.common.error.ThirdPartyUnavailable
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -501,15 +502,13 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
 
-            val result = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
+            val res = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res ->
-                assertEquals(
-                    setOf(basicWowRequest.toResponse(), basicWowRequest2.toResponse()),
-                    res.exist.toSet()
-                )
-                assertEquals(listOf(), res.nonExisting)
-            }
+            assertEquals(
+                setOf(basicWowRequest.toResponse(), basicWowRequest2.toResponse()),
+                res.exist.toSet()
+            )
+            assertEquals(listOf(), res.nonExisting)
         }
     }
 
@@ -522,12 +521,10 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+            val res = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res ->
-                assertEquals(listOf(), res.exist)
-                assertEquals(listOf(basicWowRequest.toResponse()), res.nonExisting)
-            }
+            assertEquals(listOf(), res.exist)
+            assertEquals(listOf(basicWowRequest.toResponse()), res.nonExisting)
         }
     }
 
@@ -540,13 +537,11 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+            val res = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res ->
-                assertEquals(listOf(), res.exist)
-                assertEquals(listOf(), res.nonExisting)
-                assertEquals(listOf(basicWowRequest.toResponse()), res.unchecked)
-            }
+            assertEquals(listOf(), res.exist)
+            assertEquals(listOf(), res.nonExisting)
+            assertEquals(listOf(basicWowRequest.toResponse()), res.unchecked)
         }
     }
 
@@ -601,7 +596,7 @@ class EntitiesServiceTest {
     }
 
     @Test
-    fun `guildExists returns a Left when blizzard can't be reached`() {
+    fun `guildExists reports the third party as unavailable when blizzard can't be reached`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster("eu", "twisting-nether", "Method"))
                 .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
@@ -610,7 +605,7 @@ class EntitiesServiceTest {
 
             val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
 
-            result.onRight { fail() }
+            assertEquals(Either.Left(ThirdPartyUnavailable), result)
         }
     }
 

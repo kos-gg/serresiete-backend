@@ -62,7 +62,7 @@ class ViewsService(
     suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime) =
         viewsRepository.updateLastSyncedAt(viewId, at)
 
-    suspend fun create(owner: String, request: ViewRequest): Either<ControllerError, Operation> {
+    suspend fun create(owner: String, request: ViewRequest): Either<CreateViewError, Operation> {
         return either {
             ensureMaxNumberOfViews(owner).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
@@ -90,7 +90,7 @@ class ViewsService(
         }
     }
 
-    suspend fun edit(owner: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
+    suspend fun edit(owner: String, id: String, request: ViewRequest): Either<EditViewError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
@@ -113,7 +113,7 @@ class ViewsService(
         }
     }
 
-    suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
+    suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<EditViewError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
@@ -137,7 +137,7 @@ class ViewsService(
         }
     }
 
-    suspend fun delete(owner: String, viewToDelete: SimpleView): Either<ControllerError, Operation> {
+    suspend fun delete(owner: String, viewToDelete: SimpleView): Operation {
         val operationId = UUID.randomUUID().toString()
         val aggregateRoot = "/credentials/$owner"
         val event = Event(
@@ -153,10 +153,10 @@ class ViewsService(
                 viewToDelete.featured
             )
         )
-        return Either.Right(eventStore.save(event))
+        return eventStore.save(event)
     }
 
-    suspend fun getData(view: View): Either<ServiceError, List<Data>> =
+    suspend fun getData(view: View): List<Data> =
         dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =
@@ -175,7 +175,7 @@ class ViewsService(
             else -> Either.Right(maxNumberOfEntities)
         }
 
-    private suspend fun ensureMaxNumberOfViews(owner: String): Either<ControllerError, Unit> {
+    private suspend fun ensureMaxNumberOfViews(owner: String): Either<CreateViewError, Unit> {
         return either {
             val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
             val ownViewsCount =
@@ -187,7 +187,7 @@ class ViewsService(
     private suspend fun ensureMaxNumberOfEntities(
         owner: String,
         entities: List<EntityRequest>?
-    ): Either<ControllerError, Unit> {
+    ): Either<ViewEntitiesError, Unit> {
         return either {
             val ownerMaxNumberOfEntities = getMaxNumberOfEntitiesByRole(owner).bind()
             entities?.let { entitiesToInsert ->
@@ -199,13 +199,13 @@ class ViewsService(
     private fun ensureEntitiesMatchGame(
         entities: List<EntityRequest>?,
         game: Game
-    ): Either<ControllerError, Unit> = either {
+    ): Either<EntitiesDoNotMatchGame, Unit> = either {
         ensure(entities.orEmpty().all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
     }
 
     private fun ensureRequest(
         request: ViewRequest
-    ): Either<ControllerError, Unit> = either {
+    ): Either<CreateViewError, Unit> = either {
         request.extraArguments?.let { extra ->
             when (request.game) {
                 Game.WOW, Game.WOW_HC -> {

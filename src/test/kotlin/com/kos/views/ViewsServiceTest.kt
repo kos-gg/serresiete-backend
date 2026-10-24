@@ -631,11 +631,7 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                viewsService.delete(owner, basicSimpleWowView).onRight {
-                    assertOperation(it, EventType.VIEW_TO_BE_DELETED)
-                }.onLeft {
-                    fail(it.toStr())
-                }
+                assertOperation(viewsService.delete(owner, basicSimpleWowView), EventType.VIEW_TO_BE_DELETED)
                 assertEventStoredCorrectly(
                     eventStore,
                     ViewToBeDeletedEvent(
@@ -809,9 +805,7 @@ class ViewsServiceTest {
                     emptyCredentialsInitialState
                 )
 
-                viewsService.getData(view)
-                    .onLeft { fail(it.error()) }
-                    .onRight { assertEquals(listOf(anotherRiotData), it) }
+                assertEquals(listOf(anotherRiotData), viewsService.getData(view))
             }
         }
     }

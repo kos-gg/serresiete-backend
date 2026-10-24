@@ -345,4 +345,5 @@ fun Application.module() {
     )
     configureSerialization()
     configureLogging()
+    configureStatusPages()
 }

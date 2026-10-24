@@ -1,5 +1,7 @@
 package com.kos.credentials
 
+import arrow.core.Either
+import com.kos.common.error.UserAlreadyExists
 import com.kos.common.isDefined
 import com.kos.credentials.repository.CredentialsRepository
 import com.kos.roles.Role
@@ -8,16 +10,14 @@ import org.mindrot.jbcrypt.BCrypt
 class CredentialsService(
     private val credentialsRepository: CredentialsRepository,
 ) {
-    suspend fun createCredentials(createCredentialRequest: CreateCredentialRequest): Unit {
+    suspend fun createCredentials(createCredentialRequest: CreateCredentialRequest): Either<UserAlreadyExists, Unit> =
         credentialsRepository.insertCredentials(
             createCredentialRequest.userName,
             password = BCrypt.hashpw(
                 createCredentialRequest.password,
                 BCrypt.gensalt(12)
             )
-        )
-        credentialsRepository.insertRoles(createCredentialRequest.userName, createCredentialRequest.roles)
-    }
+        ).map { credentialsRepository.insertRoles(createCredentialRequest.userName, createCredentialRequest.roles) }
 
     suspend fun validateCredentials(credentials: Credentials): Boolean =
         credentialsRepository.getCredentials(credentials.userName)

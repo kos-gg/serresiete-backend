@@ -9,13 +9,6 @@ sealed class ServiceError {
     abstract fun error(): String
 }
 
-data class SerializationError(
-    val raw: String,
-    val error: String
-) : ServiceError() {
-    override fun error(): String = "JSON parse error. raw: $raw; error: $error"
-}
-
 data class SyncProcessingError(
     val type: String,
     val message: String
@@ -72,12 +65,6 @@ data object NoCurrentMythicPlusSeason : ServiceError() {
 }
 
 class UnableToAddNewMythicPlusSeason(
-    private val reason: String
-) : ServiceError() {
-    override fun error(): String = reason
-}
-
-class AuthTokenError(
     private val reason: String
 ) : ServiceError() {
     override fun error(): String = reason

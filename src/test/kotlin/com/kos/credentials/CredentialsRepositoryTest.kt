@@ -1,5 +1,6 @@
 package com.kos.credentials
 
+import com.kos.common.error.UserAlreadyExists
 import com.kos.common.isDefined
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsInitialState
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRolesInitialState

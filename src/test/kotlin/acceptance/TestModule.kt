@@ -39,6 +39,7 @@ import com.kos.plugins.configureAuthentication
 import com.kos.plugins.configureCors
 import com.kos.plugins.configureRouting
 import com.kos.plugins.configureSerialization
+import com.kos.plugins.configureStatusPages
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesDatabaseRepository
@@ -229,6 +230,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     configureAuthentication(credentialsService, jwtConfig)
     configureSerialization()
     configureCors()
+    configureStatusPages()
     configureRouting(
         activitiesController,
         authController,

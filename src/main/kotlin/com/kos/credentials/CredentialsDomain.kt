@@ -20,5 +20,3 @@ data class PatchCredentialRequest(val password: String? = null, val roles: Set<R
 
 data class CredentialsRole(val userName: String, val role: Role)
 
-data class UserAlreadyExists(val userName: String)
-

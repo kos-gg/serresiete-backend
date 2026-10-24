@@ -1,7 +1,6 @@
 package com.kos.views
 
 import arrow.core.Either
-import arrow.core.raise.either
 import com.kos.activities.Activities
 import com.kos.activities.Activity
 import com.kos.common.error.*
@@ -65,12 +64,7 @@ class ViewsController(
                     null -> Either.Left(NotFound(id))
                     else -> {
                         if (activities.contains(Activities.getViewData) && maybeView.published) {
-                            either {
-                                ViewData(
-                                    maybeView.name, viewsService.getData(maybeView)
-                                        .mapLeft { ViewDataError(it.error()) }
-                                        .bind())
-                            }
+                            Either.Right(ViewData(maybeView.name, viewsService.getData(maybeView)))
                         } else if (!maybeView.published) Either.Left(NotPublished(id))
                         else Either.Left(NotEnoughPermissions(client))
                     }
@@ -91,12 +85,7 @@ class ViewsController(
                     null -> Either.Left(NotFound(id))
                     else -> {
                         if (activities.contains(Activities.getViewCachedData) && maybeView.published)
-                            either {
-                                ViewData(
-                                    maybeView.name, viewsService.getCachedData(maybeView)
-                                        .mapLeft { ViewDataError(it.error()) }
-                                        .bind())
-                            }
+                            Either.Right(ViewData(maybeView.name, viewsService.getCachedData(maybeView)))
                         else if (!maybeView.published) Either.Left(NotPublished(id))
                         else Either.Left(NotEnoughPermissions(client))
                     }
@@ -116,10 +105,7 @@ class ViewsController(
                 if (activities.contains(Activities.createViews)) {
                     if (request.featured && !activities.contains(Activities.featureView))
                         Either.Left(CantFeatureView)
-                    else when (val res = viewsService.create(client, request)) {
-                        is Either.Right -> Either.Right(res.value)
-                        is Either.Left -> res
-                    }
+                    else viewsService.create(client, request)
                 } else Either.Left(NotEnoughPermissions(client))
             }
         }
@@ -181,7 +167,7 @@ class ViewsController(
                 null -> Either.Left(NotFound(id))
                 else -> {
                     if (canDeleteView(maybeView, client, activities)) {
-                        viewsService.delete(client, maybeView)
+                        Either.Right(viewsService.delete(client, maybeView))
                     } else
                         Either.Left(NotEnoughPermissions(client))
                 }

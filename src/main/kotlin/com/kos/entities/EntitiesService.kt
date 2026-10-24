@@ -3,6 +3,8 @@ package com.kos.entities
 import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.common.error.ServiceError
+import com.kos.common.error.ThirdPartyUnavailable
+import com.kos.common.orFail
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
@@ -27,9 +29,10 @@ data class EntitiesService(
     suspend fun exists(
         requestedEntities: List<EntityRequest>,
         game: Game
-    ): Either<ServiceError, EntitiesExistResponse> {
+    ): EntitiesExistResponse {
         return resolveEntities(requestedEntities, game)
-            .map { resolved ->
+            .orFail()
+            .let { resolved ->
                 val exist =
                     resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
                 val unchecked = resolved.unchecked.map { it.first }
@@ -43,10 +46,15 @@ data class EntitiesService(
             }
     }
 
-    suspend fun guildExists(name: String, region: String, realm: String): Either<ServiceError, GuildExistsResponse> =
+    suspend fun guildExists(name: String, region: String, realm: String): Either<ThirdPartyUnavailable, GuildExistsResponse> =
         findTrackedGuild(name, realm, region, Game.WOW)
             ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
-            ?: wowGuildResolver.exists(WowEntityRequest(name, region, realm)).map { GuildExistsResponse(it) }
+            ?: wowGuildResolver.exists(WowEntityRequest(name, region, realm))
+                .map { GuildExistsResponse(it) }
+                .mapLeft {
+                    logger.warn("Couldn't check whether guild $name ($region/$realm) exists: ${it.error()}")
+                    ThirdPartyUnavailable
+                }
 
     suspend fun resolveEntities(
         requestedEntities: List<EntityRequest>,
