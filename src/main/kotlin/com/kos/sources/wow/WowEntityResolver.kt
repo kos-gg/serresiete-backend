@@ -1,13 +1,16 @@
 package com.kos.sources.wow
 
 import arrow.fx.coroutines.parMap
-import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.ClientError
+import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.common.collect
 import com.kos.common.split
 import com.kos.entities.EntityResolver
-import com.kos.entities.domain.*
+import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.InsertEntityRequest
+import com.kos.entities.domain.ResolvedEntities
+import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
@@ -21,6 +24,7 @@ class WowEntityResolver(
     private val repo: EntitiesRepository,
     private val blizzardClient: BlizzardClient
 ) : EntityResolver, WithLogger("WowEntityResolver") {
+
     override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW)
         val (entities, unchecked) = resolveCharacters(newRequests)

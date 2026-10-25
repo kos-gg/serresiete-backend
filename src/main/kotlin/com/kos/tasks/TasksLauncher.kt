@@ -30,7 +30,6 @@ data class TasksLauncher(
         val oneDayDelay = 1440
         val threeDaysDelay = oneDayDelay * 3
 
-
         suspend fun getTaskInitialDelay(now: OffsetDateTime, taskType: TaskType, timeDelay: Int): Long =
             tasksRepository.getLastExecution(taskType)?.inserted?.let {
                 val differenceBetweenNowAndLastExecutionTime = Duration.between(it, now).toMinutes()

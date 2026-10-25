@@ -194,7 +194,8 @@ fun Application.module() {
             eventStore
         )
 
-    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+    val wowHardcoreGuildUpdater =
+        WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
     val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
     val entitiesService = EntitiesService(
@@ -284,11 +285,18 @@ fun Application.module() {
         )
     )
     val tasksService = TasksService(tasksRepository, taskRunnerProvider)
-    val tasksLauncher =
-        TasksLauncher(tasksService, tasksRepository, executorService, authService, dataCacheService, coroutineScope)
     val tasksController = TasksController(tasksService)
 
-    coroutineScope.launch { tasksLauncher.launchTasks() }
+    coroutineScope.launch {
+        TasksLauncher(
+            tasksService,
+            tasksRepository,
+            executorService,
+            authService,
+            dataCacheService,
+            coroutineScope
+        ).launchTasks()
+    }
 
     val eventSubscriptionsService = EventSubscriptionService(subscriptionsRepository)
     val eventSubscriptionController = EventSubscriptionController(eventSubscriptionsService)

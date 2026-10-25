@@ -15,6 +15,7 @@ class WowHardcoreGuildUpdater(
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
 ) : EntityUpdater<Pair<GuildPayload, String>> {
+
     override suspend fun update(
         entities: List<Pair<GuildPayload, String>>
     ): List<PartialFailure> =

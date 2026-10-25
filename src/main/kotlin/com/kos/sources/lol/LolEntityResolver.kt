@@ -19,11 +19,12 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.toList
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class LolEntityResolver(
     private val repo: EntitiesRepository,
     private val riotClient: RiotClient
 ) : EntityResolver, WithLogger("LolResolver") {
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+
     override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.LOL)
 

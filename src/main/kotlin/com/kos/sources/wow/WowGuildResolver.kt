@@ -64,7 +64,7 @@ class WowGuildResolver(
 
         logger.info(
             "Resolved ${newRequests.size} new guild members: ${competitive.size} kept, " +
-                "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"
+                    "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"
         )
 
         return competitive.map { (req, _) -> req to req.alias }
