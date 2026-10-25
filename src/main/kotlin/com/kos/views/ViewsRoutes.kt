@@ -143,7 +143,7 @@ fun Route.viewsRouting(
     }
 }
 
-private fun parsePositiveIntQueryParam(param: String, rawValue: String?): Either<InvalidQueryParameter, Int?> =
+internal fun parsePositiveIntQueryParam(param: String, rawValue: String?): Either<InvalidQueryParameter, Int?> =
     rawValue.recoverToEither(
         { InvalidQueryParameter(param, it, listOf("a positive integer")) },
         { value ->
