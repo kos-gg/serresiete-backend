@@ -9,7 +9,7 @@ import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
-import com.kos.common.error.GuildUpdateFailed
+import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntity

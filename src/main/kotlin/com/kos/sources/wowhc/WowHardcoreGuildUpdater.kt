@@ -1,9 +1,9 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
-import com.kos.common.error.GuildUpdateFailed
-import com.kos.common.error.ServiceError
 import com.kos.entities.EntityUpdater
+import com.kos.entities.GuildUpdateFailed
+import com.kos.entities.PartialFailure
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
@@ -17,7 +17,7 @@ class WowHardcoreGuildUpdater(
 ) : EntityUpdater<Pair<GuildPayload, String>> {
     override suspend fun update(
         entities: List<Pair<GuildPayload, String>>
-    ): List<ServiceError> =
+    ): List<PartialFailure> =
         entities.mapNotNull { (guild, viewId) ->
             Either.catch { updateGuild(guild, viewId) }
                 .leftOrNull()

@@ -2,8 +2,6 @@ package com.kos.clients
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
 
 
 sealed class ClientError
@@ -19,13 +17,4 @@ fun <T> Either<ClientError, T>.orNotFound(fallback: T): Either<ClientError, T> =
         ifRight = { Either.Right(it) }
     )
 
-fun <T> Either<ClientError, T>.orThrow(operation: String): T = getOrElse { error("$operation failed: $it") }
-
-fun ClientError.toSyncProcessingError(operation: String): ServiceError =
-    when (this) {
-        is HttpError -> SyncProcessingError("HTTP_ERROR", "Failed $operation: $status $body")
-        is JsonParseError -> SyncProcessingError("JSON_PARSE_ERROR", "JSON parse error on $operation: $error")
-        is TimeoutError -> SyncProcessingError("TIMEOUT_ERROR", "Timeout on $operation: $message")
-        is NetworkError -> SyncProcessingError("NETWORK_ERROR", "Network error on $operation: $message")
-    }
-
+fun <T> Either<ClientError, T>.orThrow(): T = getOrElse { error("Third party call failed: $it") }

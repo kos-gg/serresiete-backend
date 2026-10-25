@@ -1,16 +1,11 @@
 package com.kos.sources.wow
 
 import arrow.core.Either
-import arrow.core.raise.either
-import arrow.core.raise.ensure
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.orThrow
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.NotCompetitiveCharacter
-import com.kos.common.error.ServiceError
 import com.kos.common.split
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.*
@@ -56,31 +51,23 @@ class WowGuildResolver(
     suspend fun resolveMembers(newRequests: List<EntityRequest>): List<Pair<InsertEntityRequest, String?>> {
         val seasonId = checkNotNull(wowSeasonRepository.getCurrentSeason()?.id) { "There is no current mythic+ season" }
 
-        val (errors, resolved) = newRequests.asFlow()
+        val (failed, scored) = newRequests.asFlow()
             .parMap(10) { req ->
                 req as WowEntityRequest
-                either {
-                    val score = blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId)
-                        .map { it.rating }
-                        .mapLeft { it.toSyncProcessingError("getMythicKeystoneProfile") }
-                        .bind()
-
-                    ensure(score >= SCORE_CUTOFF) { NotCompetitiveCharacter(req) }
-
-                    req to req.alias
-                }.mapLeft { req to it }
+                blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId)
+                    .map { req to it.rating }
             }
             .toList()
             .split()
 
-        val (belowScore, failed) = errors.partition { (_, error) -> error is NotCompetitiveCharacter }
+        val (competitive, belowScore) = scored.partition { (_, score) -> score >= SCORE_CUTOFF }
 
         logger.info(
-            "Resolved ${newRequests.size} new guild members: ${resolved.size} kept, " +
+            "Resolved ${newRequests.size} new guild members: ${competitive.size} kept, " +
                 "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"
         )
 
-        return resolved
+        return competitive.map { (req, _) -> req to req.alias }
     }
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
@@ -96,7 +83,7 @@ class WowGuildResolver(
         realm: String,
         name: String
     ): Pair<GuildRoster, List<WowEntityRequest>> {
-        val roster = checkNotNull(blizzardClient.getRetailGuildRoster(region, realm, name).orThrow("getRetailGuildRoster")) {
+        val roster = checkNotNull(blizzardClient.getRetailGuildRoster(region, realm, name).orThrow()) {
             "Guild $name ($region/$realm) not found"
         }
 

@@ -20,16 +20,12 @@ class ViewsController(
             else -> {
                 if (activities.contains(Activities.getAnyViews)) {
                     Either.Right(viewsService.getViews(query).withMetadataIfRequested(query.includeMetadata))
-                } else if (activities.contains(Activities.getOwnViews))
+                } else if (activities.contains(Activities.getOwnViews)) {
                     Either.Right(viewsService.getOwnViews(client, query).withMetadataIfRequested(query.includeMetadata))
-                else Either.Left(NotEnoughPermissions(client))
+                } else Either.Left(NotEnoughPermissions(client))
             }
         }
     }
-
-    private fun Pair<ViewMetadata, List<SimpleView>>.withMetadataIfRequested(
-        includeMetadata: Boolean
-    ): Pair<ViewMetadata?, List<SimpleView>> = if (includeMetadata) this else Pair(null, second)
 
     suspend fun getView(
         client: String?,
@@ -188,5 +184,9 @@ class ViewsController(
         activities: Set<Activity>
     ) = ((maybeView.owner == client && activities.contains(Activities.editOwnView))
             || activities.contains(Activities.editAnyView))
+
+    private fun Pair<ViewMetadata, List<SimpleView>>.withMetadataIfRequested(
+        includeMetadata: Boolean
+    ): Pair<ViewMetadata?, List<SimpleView>> = if (includeMetadata) this else Pair(null, second)
 
 }

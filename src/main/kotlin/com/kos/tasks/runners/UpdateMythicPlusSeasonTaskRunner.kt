@@ -4,7 +4,6 @@ import com.kos.common.WithLogger
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.tasks.Status
 import com.kos.tasks.Task
-import com.kos.tasks.TaskError
 import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksRepository
@@ -19,28 +18,8 @@ class UpdateMythicPlusSeasonTaskRunner(
 
     override suspend fun run(id: String, arguments: Map<String, String>?) {
         logger.info("Running $type with id=$id")
-        wowSeasonsService.addNewMythicPlusSeason()
-            .onLeft {
-                tasksRepository.updateTask(
-                    Task(
-                        id,
-                        type,
-                        TaskStatus(Status.ERROR),
-                        OffsetDateTime.now(),
-                        TaskError(arguments, it.error())
-                    )
-                )
-            }
-            .onRight {
-                logger.info("Updated Wow Season to season ${it.id} - ${it.name}")
-                tasksRepository.updateTask(
-                    Task(
-                        id,
-                        type,
-                        TaskStatus(Status.SUCCESSFUL),
-                        OffsetDateTime.now()
-                    )
-                )
-            }
+        val season = wowSeasonsService.addNewMythicPlusSeason()
+        logger.info("Updated Wow Season to season ${season.id} - ${season.name}")
+        tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL), OffsetDateTime.now()))
     }
 }

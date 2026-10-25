@@ -4,6 +4,7 @@ import com.kos.credentials.Credentials
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -17,6 +18,8 @@ fun Application.launchSubscription(subscription: EventSubscription) {
         while (isActive) {
             try {
                 subscription.processPendingEvents()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 log.error("Error processing subscription: ${e.message}", e)
             }

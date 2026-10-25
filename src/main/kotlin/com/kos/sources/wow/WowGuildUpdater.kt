@@ -2,9 +2,9 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import com.kos.common.WithLogger
-import com.kos.common.error.GuildUpdateFailed
-import com.kos.common.error.ServiceError
 import com.kos.entities.EntityUpdater
+import com.kos.entities.GuildUpdateFailed
+import com.kos.entities.PartialFailure
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
@@ -17,7 +17,7 @@ class WowGuildUpdater(
     private val viewsRepository: ViewsRepository
 ) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("WowGuildUpdater") {
 
-    override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<ServiceError> =
+    override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<PartialFailure> =
         entities.groupBy { it.first.blizzardId }
             .values
             .mapNotNull { rows ->

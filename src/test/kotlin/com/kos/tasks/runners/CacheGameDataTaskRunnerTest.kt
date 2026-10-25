@@ -3,10 +3,11 @@ package com.kos.tasks.runners
 import arrow.core.Either
 import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotClient
-import com.kos.common.error.SyncProcessingError
+import com.kos.clients.TimeoutError
 import com.kos.datacache.RiotMockHelper
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
+import com.kos.entities.ThirdPartyCallFailed
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.EntitiesState
@@ -93,7 +94,7 @@ class CacheGameDataTaskRunnerTest {
             entitiesRepository.withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
             val failingSynchronizer = mock(EntitySynchronizer::class.java)
             `when`(failingSynchronizer.synchronize(listOf(basicLolEntity)))
-                .thenReturn(listOf(SyncProcessingError("LOL", "boom")))
+                .thenReturn(listOf(ThirdPartyCallFailed(1, TimeoutError("boom"))))
             val runner = CacheGameDataTaskRunner(
                 Game.LOL,
                 TaskType.CACHE_LOL_DATA_TASK,
@@ -113,6 +114,6 @@ class CacheGameDataTaskRunnerTest {
 
             val task = tasksRepo.state().first()
             assertEquals(Status.ERROR, task.taskStatus.status)
-            assertEquals(TaskError(null, "LOL: boom"), task.error)
+            assertEquals(TaskError(null, "Entity 1: TimeoutError(message=boom)"), task.error)
         }
 }

@@ -2,7 +2,6 @@ package com.kos.entities
 
 import arrow.core.Either
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
 import com.kos.common.error.ThirdPartyUnavailable
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
@@ -63,7 +62,7 @@ data class EntitiesService(
 
     suspend fun updateEntities(
         game: Game
-    ): List<ServiceError> {
+    ): List<PartialFailure> {
         @Suppress("UNCHECKED_CAST")
         return when (game) {
             Game.LOL -> lolUpdater.update(entitiesRepository.get(game) as List<LolEntity>)
@@ -72,12 +71,12 @@ data class EntitiesService(
         }
     }
 
-    suspend fun updateWowHardcoreGuilds(): List<ServiceError> {
+    suspend fun updateWowHardcoreGuilds(): List<PartialFailure> {
         val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW_HC)
         return wowHardcoreGuildUpdater.update(guildsWithViewId)
     }
 
-    suspend fun updateWowGuilds(): List<ServiceError> {
+    suspend fun updateWowGuilds(): List<PartialFailure> {
         val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW)
         return wowGuildUpdater.update(guildsWithViewId)
     }

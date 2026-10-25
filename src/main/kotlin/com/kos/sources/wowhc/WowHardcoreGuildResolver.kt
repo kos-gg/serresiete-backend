@@ -40,7 +40,7 @@ class WowHardcoreGuildResolver(
     ): Pair<GuildRoster, List<WowEntityRequest>> {
         val roster = blizzardClient
             .getHardcoreGuildRoster(region, realm, name)
-            .orThrow("getHardcoreGuildRoster")
+            .orThrow()
 
         val memberReqs = roster.members
             .asSequence()

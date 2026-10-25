@@ -6,7 +6,6 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowCharacter
 import com.kos.datacache.domain.WowHardcoreData
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
 import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
 import com.kos.datacache.BlizzardMockHelper.getCharacterProfile
@@ -136,7 +135,7 @@ class WowHardcoreEntitySynchronizerTest {
                 )
             )
 
-            cacheResult.any { it is SyncProcessingError }
+            assertTrue(cacheResult.isEmpty())
             assertNull(entitiesRepository.get(1, Game.WOW_HC))
         }
     }

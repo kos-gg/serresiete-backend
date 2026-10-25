@@ -7,13 +7,12 @@ import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
+import com.kos.entities.PartialFailure
+import com.kos.entities.ThirdPartyCallFailed
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.sync.EntitySynchronizer
@@ -57,13 +56,13 @@ class WowEntitySynchronizer(
         encodeDefaults = false
     }
 
-    override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
+    override suspend fun synchronize(entities: List<Entity>): List<PartialFailure> =
         coroutineScope {
             val wowEntities = entities.filterIsInstance<WowEntity>()
 
             val dataChannel = Channel<DataCache>()
-            val errorsChannel = Channel<ServiceError>()
-            val errorsList = mutableListOf<ServiceError>()
+            val errorsChannel = Channel<PartialFailure>()
+            val errorsList = mutableListOf<PartialFailure>()
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -88,15 +87,15 @@ class WowEntitySynchronizer(
             }
 
             val cutoff = currentSeasonSlug?.let {
-                executeClientCall("raiderIoCutoff") { raiderIoClient.cutoff(it) }
-                    .onLeft { logger.warn("Failed to fetch cutoff, quantile will be null for this sync: ${it.error()}") }
+                raiderIoClient.cutoff(it)
+                    .onLeft { logger.warn("Failed to fetch cutoff, quantile will be null for this sync: $it") }
                     .getOrNull()
             }
 
             val start = OffsetDateTime.now()
             wowEntities.asFlow()
                 .parMapUnordered(concurrency = concurrency) { entity ->
-                    synchronizeWowEntity(entity, currentSeason?.id, cutoff)
+                    synchronizeWowEntity(entity, currentSeason?.id, cutoff).mapLeft { ThirdPartyCallFailed(entity.id, it) }
                 }
                 .collect { result ->
                     result.fold(
@@ -124,11 +123,11 @@ class WowEntitySynchronizer(
         entity: WowEntity,
         seasonId: Int?,
         cutoff: SeasonCutoff?
-    ): Either<ServiceError, DataCache> =
+    ): Either<ClientError, DataCache> =
         either {
 
             val newestDataCacheEntry: WowData? = getNewestDataCacheEntry(entity.id)
-            val profile = executeClientCall("raiderIoGet") { raiderIoClient.get(entity) }.bind()
+            val profile = raiderIoClient.get(entity).bind()
             val quantile = getQuantile(cutoff, profile)
             val enrichedRuns = fetchRunDetails(entity, profile.bestRuns, seasonId, newestDataCacheEntry)
 
@@ -153,7 +152,7 @@ class WowEntitySynchronizer(
                 try {
                     json.decodeFromString<WowData>(it.data)
                 } catch (e: SerializationException) {
-                    logger.debug(
+                    logger.warn(
                         "Couldn't deserialize entity $entityId " +
                                 "while trying to obtain newest cached record.\n${e.message}"
                     )
@@ -188,13 +187,11 @@ class WowEntitySynchronizer(
             if (seasonId == null || uncachedRuns.isEmpty()) {
                 emptyList()
             } else {
-                executeClientCall("blizzardGetMythicKeystoneProfile") {
-                    logger.debug("Fetching best runs details for ${entity.id} since ${uncachedRuns.size} are not cached")
-
-                    blizzardClient.getMythicKeystoneProfile(entity.region, entity.realm, entity.name, seasonId)
-                }.map { it.bestRuns }
+                logger.debug("Fetching best runs details for ${entity.id} since ${uncachedRuns.size} are not cached")
+                blizzardClient.getMythicKeystoneProfile(entity.region, entity.realm, entity.name, seasonId)
+                    .map { it.bestRuns }
                     .getOrElse { error ->
-                        logger.debug("Failed to fetch Blizzard best runs for entity ${entity.id}: ${error.error()}")
+                        logger.debug("Failed to fetch Blizzard best runs for entity ${entity.id}: $error")
                         emptyList()
                     }
             }
@@ -210,9 +207,4 @@ class WowEntitySynchronizer(
         }
     }
 
-    private suspend fun <A> executeClientCall(
-        operation: String,
-        block: suspend () -> Either<ClientError, A>
-    ): Either<ServiceError, A> =
-        block().mapLeft { it.toSyncProcessingError(operation) }
 }

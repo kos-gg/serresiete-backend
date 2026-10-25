@@ -83,7 +83,7 @@ class WowHardcoreGuildResolverTest {
 
             val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
 
-            assertEquals("getHardcoreGuildRoster failed: TimeoutError(message=Request timeout has expired)", error.message)
+            assertEquals("Third party call failed: TimeoutError(message=Request timeout has expired)", error.message)
         }
     }
 }
