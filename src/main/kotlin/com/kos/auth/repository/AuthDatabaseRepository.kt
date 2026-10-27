@@ -50,7 +50,7 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
         userName: String,
         token: String,
         isAccess: Boolean
-    ): Authorization? =
+    ) {
         newSuspendedTransaction(Dispatchers.IO, db) {
             Authorizations.insert {
                 it[Authorizations.userName] = userName
@@ -60,8 +60,9 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
                     .plusDays(if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires)
                     .toString()
                 it[Authorizations.isAccess] = isAccess
-            }.resultedValues?.singleOrNull()?.let { resultRowToAuthorization(it) }
+            }
         }
+    }
 
     override suspend fun deleteTokensFromUser(userName: String): Boolean { //TODO: Suspicious return type
         newSuspendedTransaction(Dispatchers.IO, db) {

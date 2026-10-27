@@ -26,7 +26,7 @@ class AuthController(
         }
     }
 
-    suspend fun refresh(userName: String?): Either<ControllerError, LoginResponse?> {
+    suspend fun refresh(userName: String?): Either<ControllerError, LoginResponse> {
         return when (userName) {
             null -> Either.Left(NotAuthorized)
             else -> Either.Right(authService.refresh(userName))

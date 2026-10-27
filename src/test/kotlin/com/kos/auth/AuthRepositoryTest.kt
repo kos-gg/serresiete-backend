@@ -36,8 +36,8 @@ abstract class AuthRepositoryTest {
         runBlocking {
             val token =
                 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im9zY2FyIiwiYWN0aXZpdGllcyI6WyJhZGQgYWN0aXZpdHkgdG8gcm9sZSIsImFkZCByb2xlIHRvIHVzZXIiLCJjcmVhdGUgYSB2aWV3IiwiY3JlYXRlIGFjdGl2aXRpZXMiLCJjcmVhdGUgY3JlZGVudGlhbHMiLCJjcmVhdGUgcm9sZXMiLCJkZWxldGUgYWN0aXZpdGllcyIsImRlbGV0ZSBhY3Rpdml0eSBmcm9tIHJvbGUiLCJkZWxldGUgYW55IHZpZXciLCJkZWxldGUgY3JlZGVudGlhbHMiLCJkZWxldGUgb3duIHZpZXciLCJkZWxldGUgcm9sZSBmcm9tIHVzZXIiLCJkZWxldGUgcm9sZXMiLCJlZGl0IGFueSB2aWV3IiwiZWRpdCBjcmVkZW50aWFscyIsImVkaXQgb3duIHZpZXciLCJnZXQgYW55IGFjdGl2aXRpZXMiLCJnZXQgYW55IGNyZWRlbnRpYWxzIiwiZ2V0IGFueSBjcmVkZW50aWFscyByb2xlcyIsImdldCBhbnkgcm9sZXMiLCJnZXQgYW55IHZpZXciLCJnZXQgYW55IHZpZXdzIiwiZ2V0IG93biBjcmVkZW50aWFscyByb2xlcyIsImdldCBvd24gdmlldyIsImdldCBvd24gdmlld3MiLCJnZXQgdGFzayIsImdldCB0YXNrcyIsImdldCB2aWV3IGNhY2hlZCBkYXRhIiwiZ2V0IHZpZXcgZGF0YSIsImxvZ2luIiwibG9nb3V0IiwicnVuIHRhc2siXX0.7FhxhHM0VtRTmWsu4Oy7A_dLroiO0jMFIDq_8ZnDrOQ"
-            val userName = repository.insertToken(user, token, isAccess = true)?.userName
-            assertEquals(user, userName)
+            repository.insertToken(user, token, isAccess = true)
+            assertEquals(user, repository.getAuthorization(token)?.userName)
             val finalStateOfAuthorizations = repository.state()
             assertContains(finalStateOfAuthorizations.map { it.token }, token)
             assertContains(finalStateOfAuthorizations.map { it.userName }, user)

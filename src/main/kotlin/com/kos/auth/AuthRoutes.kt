@@ -38,10 +38,7 @@ fun Route.authRouting(
                     authController.refresh(call.principal<UserIdPrincipal>()?.name).fold({
                         call.respondWithHandledError(it)
                     }, {
-                        when (it) {
-                            null -> call.respond(HttpStatusCode.NotFound)
-                            else -> call.respond(HttpStatusCode.OK, it)
-                        }
+                        call.respond(HttpStatusCode.OK, it)
                     })
                 }
             }

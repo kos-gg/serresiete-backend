@@ -29,7 +29,7 @@ class AuthService(
 
     suspend fun logout(user: String) = authRepository.deleteTokensFromUser(user)
 
-    suspend fun refresh(userName: String): LoginResponse? =
+    suspend fun refresh(userName: String): LoginResponse =
         LoginResponse(generateToken(userName, TokenMode.ACCESS, expirationMinutes = 15), null)
 
     suspend fun deleteExpiredTokens(): Int {

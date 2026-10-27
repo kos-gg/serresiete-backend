@@ -14,15 +14,15 @@ class AuthInMemoryRepository : AuthRepository, InMemoryRepository {
         userName: String,
         token: String,
         isAccess: Boolean
-    ): Authorization? {
+    ) {
         check(token !in authorizations.map { it.token }) { "Error inserting token $token" }
-        val authorization = Authorization(
-            userName, token, OffsetDateTime.now(), OffsetDateTime.now().plusDays(
-                if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires
-            ), isAccess
+        authorizations.add(
+            Authorization(
+                userName, token, OffsetDateTime.now(), OffsetDateTime.now().plusDays(
+                    if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires
+                ), isAccess
+            )
         )
-        authorizations.add(authorization)
-        return authorization
     }
 
     override suspend fun deleteTokensFromUser(userName: String) = authorizations.removeIf { it.userName == userName }
