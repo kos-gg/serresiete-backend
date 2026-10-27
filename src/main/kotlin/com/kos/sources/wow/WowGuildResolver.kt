@@ -1,10 +1,12 @@
 package com.kos.sources.wow
 
 import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.recover
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
+import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.orThrow
 import com.kos.common.WithLogger
 import com.kos.common.split
 import com.kos.entities.EntityResolver
@@ -44,9 +46,8 @@ class WowGuildResolver(
         )
     }
 
-    suspend fun exists(guild: WowEntityRequest): Either<ClientError, GuildPayload?> =
-        blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name)
-            .map { roster -> roster?.let { payload(it, guild) } }
+    suspend fun exists(guild: WowEntityRequest): Either<ClientError, GuildPayload> =
+        blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name).map { payload(it, guild) }
 
     suspend fun resolveMembers(newRequests: List<EntityRequest>): List<Pair<InsertEntityRequest, String?>> {
         val seasonId = checkNotNull(wowSeasonRepository.getCurrentSeason()?.id) { "There is no current mythic+ season" }
@@ -55,7 +56,9 @@ class WowGuildResolver(
             .parMap(10) { req ->
                 req as WowEntityRequest
                 blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId)
-                    .map { req to it.rating }
+                    .map { it.rating }
+                    .recover { if (it is NotFound) 0.0 else raise(it) }
+                    .map { req to it }
             }
             .toList()
             .split()
@@ -83,8 +86,8 @@ class WowGuildResolver(
         realm: String,
         name: String
     ): Pair<GuildRoster, List<WowEntityRequest>> {
-        val roster = checkNotNull(blizzardClient.getRetailGuildRoster(region, realm, name).orThrow()) {
-            "Guild $name ($region/$realm) not found"
+        val roster = blizzardClient.getRetailGuildRoster(region, realm, name).getOrElse {
+            if (it is NotFound) error("Guild $name ($region/$realm) not found") else error("Third party call failed: $it")
         }
 
         val members = roster.members

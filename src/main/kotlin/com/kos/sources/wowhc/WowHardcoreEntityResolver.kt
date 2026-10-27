@@ -1,7 +1,9 @@
 package com.kos.sources.wowhc
 
 import arrow.core.raise.either
+import arrow.core.getOrElse
 import arrow.fx.coroutines.parMap
+import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.common.split
@@ -30,16 +32,14 @@ class WowHardcoreEntityResolver(
             .parMap(10) { req ->
                 req as WowEntityRequest
                 either {
-                    blizzardClient.getClassicProfile(req.region, req.realm, req.name)
+                    val profile = blizzardClient.getClassicProfile(req.region, req.realm, req.name)
+                        .getOrElse { if (it is NotFound) return@either null else raise(req to it) }
+                    val realm = blizzardClient.getRealm(req.region, profile.realmId)
                         .mapLeft { req to it }
                         .bind()
-                        ?.let { profile ->
-                            blizzardClient.getRealm(req.region, profile.realmId)
-                                .mapLeft { req to it }
-                                .bind()
-                                .takeIf { it.isHardcore }
-                                ?.let { WowEntityRequest(req.name, req.region, req.realm, profile.id) to req.alias }
-                        }
+
+                    if (realm.isHardcore) WowEntityRequest(req.name, req.region, req.realm, profile.id) to req.alias
+                    else null
                 }
             }
             .toList()

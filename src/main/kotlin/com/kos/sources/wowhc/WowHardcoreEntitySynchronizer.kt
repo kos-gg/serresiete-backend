@@ -6,6 +6,7 @@ import arrow.core.recover
 import arrow.core.raise.either
 import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
+import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.WithLogger
@@ -141,7 +142,8 @@ class WowHardcoreEntitySynchronizer(
                 return@either null
             }
 
-            val character = blizzardClient.getClassicProfile(entity.region, entity.realm, entity.name).bind()
+            val character: WowCharacter? = blizzardClient.getClassicProfile(entity.region, entity.realm, entity.name)
+                .getOrElse { if (it is NotFound) null else raise(it) }
 
             val hardcoreData: WowHardcoreData = when (character) {
                 null -> handleNotFoundHardcoreCharacter(newestDataCacheEntry, entity) ?: return@either null

@@ -1,6 +1,8 @@
 package com.kos.entities
 
 import arrow.core.Either
+import arrow.core.recover
+import com.kos.clients.NotFound
 import com.kos.common.WithLogger
 import com.kos.common.error.ThirdPartyUnavailable
 import com.kos.entities.domain.*
@@ -48,9 +50,12 @@ data class EntitiesService(
             ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
             ?: wowGuildResolver.exists(WowEntityRequest(name, region, realm))
                 .map { GuildExistsResponse(it) }
-                .mapLeft {
-                    logger.warn("Couldn't check whether guild $name ($region/$realm) exists: $it")
-                    ThirdPartyUnavailable
+                .recover {
+                    if (it is NotFound) GuildExistsResponse(null)
+                    else {
+                        logger.warn("Couldn't check whether guild $name ($region/$realm) exists: $it")
+                        raise(ThirdPartyUnavailable)
+                    }
                 }
 
     suspend fun resolveEntities(

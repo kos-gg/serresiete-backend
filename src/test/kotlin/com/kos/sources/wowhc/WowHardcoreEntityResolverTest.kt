@@ -1,6 +1,7 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
+import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowRealm
@@ -98,7 +99,7 @@ class WowHardcoreEntityResolverTest {
         runBlocking {
             `when`(
                 blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
-            ).thenReturn(Either.Right(null))
+            ).thenReturn(Either.Left(NotFound))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)

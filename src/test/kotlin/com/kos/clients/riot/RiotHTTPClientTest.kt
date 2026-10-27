@@ -2,6 +2,7 @@ package com.kos.clients.riot
 
 import arrow.core.Either
 import com.kos.assertTrue
+import com.kos.clients.NotFound
 import com.kos.clients.RetryConfig
 import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotHTTPClientHelper.client
@@ -21,9 +22,9 @@ class RiotHTTPClientTest {
     }
 
     @Test
-    fun `get puuid by riot id returns null when riot does not know the player`() {
+    fun `get puuid by riot id returns not found when riot does not know the player`() {
         runBlocking {
-            assertEquals(Either.Right(null), riotHTTPClient.getPUUIDByRiotId("unknown", "WOW"))
+            assertEquals(Either.Left(NotFound), riotHTTPClient.getPUUIDByRiotId("unknown", "WOW"))
         }
     }
 

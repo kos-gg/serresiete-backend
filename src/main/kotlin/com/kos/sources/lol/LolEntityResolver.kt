@@ -1,7 +1,9 @@
 package com.kos.sources.lol
 
 import arrow.core.raise.either
+import arrow.core.getOrElse
 import arrow.fx.coroutines.parMap
+import com.kos.clients.NotFound
 import com.kos.clients.riot.RiotClient
 import com.kos.common.WithLogger
 import com.kos.common.isDefined
@@ -32,23 +34,19 @@ class LolEntityResolver(
             .parMap(10) { req ->
                 req as LolEntityRequest
                 either {
-                    riotClient.getPUUIDByRiotId(req.name, req.tag)
+                    val puuid = riotClient.getPUUIDByRiotId(req.name, req.tag)
+                        .getOrElse { if (it is NotFound) return@either null else raise(req to it) }
+                    val summoner = riotClient.getSummonerByPuuid(puuid)
                         .mapLeft { req to it }
                         .bind()
-                        ?.let { puuid ->
-                            riotClient.getSummonerByPuuid(puuid)
-                                .mapLeft { req to it }
-                                .bind()
-                        }
-                        ?.let { summoner ->
-                            LolEnrichedEntityRequest(
-                                req.name,
-                                req.tag,
-                                summoner.puuid,
-                                summoner.profileIconId,
-                                summoner.summonerLevel
-                            ) to req.alias
-                        }
+
+                    LolEnrichedEntityRequest(
+                        req.name,
+                        req.tag,
+                        summoner.puuid,
+                        summoner.profileIconId,
+                        summoner.summonerLevel
+                    ) to req.alias
                 }
             }
             .toList()

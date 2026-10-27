@@ -13,7 +13,6 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
-import com.kos.clients.orNotFound
 import com.kos.clients.toClientError
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.*
@@ -59,7 +58,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, WowCharacter?> {
+    ): Either<ClientError, WowCharacter> {
         return throttleRequest {
             either {
                 logger.debug("getClassicProfile for $region $realm $character")
@@ -80,7 +79,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.map { it.toWowCharacter() }.orNotFound(null).bind()
+                }.map { it.toWowCharacter() }.bind()
             }
         }
     }
@@ -89,7 +88,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         character: String
-    ): Either<ClientError, WowCharacter?> {
+    ): Either<ClientError, WowCharacter> {
         return throttleRequest {
             either {
                 logger.debug("getRetailProfile for $region $realm $character")
@@ -110,7 +109,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.map { it.toWowCharacter() }.orNotFound(null).bind()
+                }.map { it.toWowCharacter() }.bind()
             }
         }
     }
@@ -347,7 +346,7 @@ class BlizzardHttpClient(
         region: String,
         realm: String,
         guild: String
-    ): Either<ClientError, GuildRoster?> {
+    ): Either<ClientError, GuildRoster> {
         return throttleRequest {
             either {
                 val tokenResponse = getAndUpdateToken().bind()
@@ -368,7 +367,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.map { it.toGuildRoster() }.orNotFound(null).bind()
+                }.map { it.toGuildRoster() }.bind()
             }
         }
     }
@@ -399,7 +398,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.flatMap { it.toMythicKeystoneProfile() }.orNotFound(MythicKeystoneProfile.EMPTY).bind()
+                }.flatMap { it.toMythicKeystoneProfile() }.bind()
             }
         }
     }

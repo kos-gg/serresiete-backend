@@ -1,6 +1,7 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
+import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.entities.domain.LolSummoner
 import com.kos.clients.riot.RiotClient
@@ -42,7 +43,7 @@ class LolEntityResolverTest {
     fun `a character not found in riot is neither resolved nor unchecked`() {
         runBlocking {
             `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
-                .thenReturn(Either.Right(null))
+                .thenReturn(Either.Left(NotFound))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = LolEntityResolver(repo, riotClient)

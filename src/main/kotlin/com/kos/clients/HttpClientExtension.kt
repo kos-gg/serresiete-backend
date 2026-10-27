@@ -43,7 +43,8 @@ suspend inline fun <reified A> fetchFromApi(
         val response = send(request)
 
         ensure(response.status.isSuccess()) {
-            HttpError(
+            if (response.status == HttpStatusCode.NotFound) NotFound
+            else HttpError(
                 status = response.status.value,
                 body = response.bodyAsText()
             )
@@ -71,7 +72,8 @@ suspend inline fun <reified A> fetchFromApi(
         val response = send(request)
 
         ensure(response.status.isSuccess()) {
-            HttpError(
+            if (response.status == HttpStatusCode.NotFound) NotFound
+            else HttpError(
                 status = response.status.value,
                 body = response.bodyAsText()
             )

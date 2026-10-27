@@ -2,6 +2,7 @@ package com.kos.common
 
 import arrow.core.Either
 import com.kos.clients.*
+import com.kos.clients.NotFound
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -32,13 +33,13 @@ class RetryTest {
             val attempts = mutableListOf<Either<ClientError, String>>()
 
             val block: suspend () -> Either<ClientError, String> = {
-                val result = Either.Left(HttpError(404, "NouFound"))
+                val result = Either.Left(NotFound)
                 attempts.add(result)
                 result
             }
 
             val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
-            assertEquals(Either.Left(HttpError(404, "NouFound")), result)
+            assertEquals(Either.Left(NotFound), result)
             assertEquals(1, attempts.size)
         }
     }

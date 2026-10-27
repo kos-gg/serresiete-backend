@@ -1,6 +1,7 @@
 package com.kos.sources.wow
 
 import arrow.core.Either
+import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -56,14 +57,12 @@ class WowGuildResolverTest {
     }
 
     @Test
-    fun `exists returns null when the guild doesn't exist`() {
+    fun `exists returns not found when the guild doesn't exist`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
-                .thenReturn(Either.Right(null))
+                .thenReturn(Either.Left(NotFound))
 
-            guildResolver.exists(guildRequest)
-                .onLeft { fail() }
-                .onRight { guild -> assertEquals(null, guild) }
+            assertEquals(Either.Left(NotFound), guildResolver.exists(guildRequest))
         }
     }
 
@@ -342,7 +341,7 @@ class WowGuildResolverTest {
     fun `resolving a guild that blizzard does not know fails with the guild in the message`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
-                .thenReturn(Either.Right(null))
+                .thenReturn(Either.Left(NotFound))
 
             val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
 

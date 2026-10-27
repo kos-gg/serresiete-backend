@@ -2,6 +2,7 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import com.kos.clients.ClientError
+import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowCharacter
 import com.kos.datacache.domain.WowHardcoreData
@@ -97,7 +98,7 @@ class WowHardcoreEntitySynchronizerTest {
                     basicWowHardcoreEntity.name
                 )
             ).thenReturn(
-                Either.Right(null)
+                Either.Left(NotFound)
             )
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf())
@@ -151,7 +152,7 @@ class WowHardcoreEntitySynchronizerTest {
                     basicWowHardcoreEntity.name
                 )
             ).thenReturn(
-                Either.Right(null)
+                Either.Left(NotFound)
             )
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf(wowHardcoreDataCache))

@@ -1,7 +1,9 @@
 package com.kos.sources.wow
 
+import arrow.core.recover
 import arrow.fx.coroutines.parMap
 import com.kos.clients.ClientError
+import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.common.collect
@@ -43,8 +45,8 @@ class WowEntityResolver(
             .parMap(10) { req ->
                 req as WowEntityRequest
                 blizzardClient.getRetailProfile(req.region, req.realm, req.name)
-                    .map { profile -> req to profile?.id }
-                    .mapLeft { error -> req to error }
+                    .map<Pair<WowEntityRequest, Long?>> { profile -> req to profile.id }
+                    .recover { error -> if (error is NotFound) req to null else raise(req to error) }
             }
             .toList()
             .split()

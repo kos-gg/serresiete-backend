@@ -3,6 +3,7 @@ package com.kos.clients.blizzard
 import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.JsonParseError
+import com.kos.clients.NotFound
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.datacache.BlizzardMockHelper
@@ -38,24 +39,24 @@ class BlizzardHTTPClientTest {
     }
 
     @Test
-    fun `getClassicProfile returns null when blizzard doesn't find the character`() = runBlocking {
+    fun `getClassicProfile returns not found when blizzard doesn't find the character`() = runBlocking {
         givenAValidToken()
 
-        assertEquals(Either.Right(null), blizzardClient.getClassicProfile("region", "realm", "unknown"))
+        assertEquals(Either.Left(NotFound), blizzardClient.getClassicProfile("region", "realm", "unknown"))
     }
 
     @Test
-    fun `getRetailProfile returns null when blizzard doesn't find the character`() = runBlocking {
+    fun `getRetailProfile returns not found when blizzard doesn't find the character`() = runBlocking {
         givenAValidToken()
 
-        assertEquals(Either.Right(null), blizzardClient.getRetailProfile("eu", "realm", "unknown"))
+        assertEquals(Either.Left(NotFound), blizzardClient.getRetailProfile("eu", "realm", "unknown"))
     }
 
     @Test
-    fun `getRetailGuildRoster returns null when blizzard doesn't find the guild`() = runBlocking {
+    fun `getRetailGuildRoster returns not found when blizzard doesn't find the guild`() = runBlocking {
         givenAValidToken()
 
-        assertEquals(Either.Right(null), blizzardClient.getRetailGuildRoster("us", "realm", "unknown"))
+        assertEquals(Either.Left(NotFound), blizzardClient.getRetailGuildRoster("us", "realm", "unknown"))
     }
 
     @Test
@@ -206,12 +207,12 @@ class BlizzardHTTPClientTest {
         }
 
     @Test
-    fun `getMythicKeystoneProfile returns no rating and no runs when blizzard doesn't find the character`() =
+    fun `getMythicKeystoneProfile returns not found when blizzard doesn't find the character`() =
         runBlocking {
             givenAValidToken()
 
             assertEquals(
-                Either.Right(MythicKeystoneProfile.EMPTY),
+                Either.Left(NotFound),
                 blizzardClient.getMythicKeystoneProfile("eu", "realm", "unknown", 16)
             )
         }

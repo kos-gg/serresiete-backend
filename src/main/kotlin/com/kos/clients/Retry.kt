@@ -52,6 +52,7 @@ object Retry : WithLogger("retry") {
         return when (error) {
             is HttpError -> error.status < 500 && error.status != 429
             is JsonParseError -> true
+            is NotFound -> true
             else -> false
         }
     }
