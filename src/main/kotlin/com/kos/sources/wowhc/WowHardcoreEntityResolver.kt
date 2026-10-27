@@ -1,8 +1,10 @@
 package com.kos.sources.wowhc
 
+import arrow.core.Either
 import arrow.core.raise.either
-import arrow.core.getOrElse
-import arrow.fx.coroutines.parMap
+import arrow.core.raise.recover
+import arrow.fx.coroutines.parMapUnordered
+import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
@@ -29,19 +31,7 @@ class WowHardcoreEntityResolver(
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW_HC)
 
         val (unchecked, checked) = newRequests.asFlow()
-            .parMap(10) { req ->
-                req as WowEntityRequest
-                either {
-                    val profile = blizzardClient.getClassicProfile(req.region, req.realm, req.name)
-                        .getOrElse { if (it is NotFound) return@either null else raise(req to it) }
-                    val realm = blizzardClient.getRealm(req.region, profile.realmId)
-                        .mapLeft { req to it }
-                        .bind()
-
-                    if (realm.isHardcore) WowEntityRequest(req.name, req.region, req.realm, profile.id) to req.alias
-                    else null
-                }
-            }
+            .parMapUnordered(10) { req -> resolveCharacter(req as WowEntityRequest) }
             .toList()
             .split()
 
@@ -52,4 +42,16 @@ class WowHardcoreEntityResolver(
             guild = null
         )
     }
+
+    private suspend fun resolveCharacter(
+        req: WowEntityRequest
+    ): Either<Pair<EntityRequest, ClientError>, Pair<WowEntityRequest, String?>?> =
+        either {
+            recover({
+                val profile = blizzardClient.getClassicProfile(req.region, req.realm, req.name).bind()
+                val realm = blizzardClient.getRealm(req.region, profile.realmId).bind()
+                if (realm.isHardcore) WowEntityRequest(req.name, req.region, req.realm, profile.id) to req.alias
+                else null
+            }) { error -> if (error is NotFound) null else raise(req to error) }
+        }
 }

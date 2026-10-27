@@ -2,8 +2,9 @@ package com.kos.sources.wow
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.recover
-import arrow.fx.coroutines.parMap
+import arrow.core.raise.either
+import arrow.core.raise.recover
+import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
@@ -53,13 +54,7 @@ class WowGuildResolver(
         val seasonId = checkNotNull(wowSeasonRepository.getCurrentSeason()?.id) { "There is no current mythic+ season" }
 
         val (failed, scored) = newRequests.asFlow()
-            .parMap(10) { req ->
-                req as WowEntityRequest
-                blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId)
-                    .map { it.rating }
-                    .recover { if (it is NotFound) 0.0 else raise(it) }
-                    .map { req to it }
-            }
+            .parMapUnordered(10) { req -> scoreOf(req as WowEntityRequest, seasonId) }
             .toList()
             .split()
 
@@ -72,6 +67,13 @@ class WowGuildResolver(
 
         return competitive.map { (req, _) -> req to req.alias }
     }
+
+    private suspend fun scoreOf(req: WowEntityRequest, seasonId: Int): Either<ClientError, Pair<WowEntityRequest, Double>> =
+        either {
+            recover({ req to blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId).bind().rating }) {
+                if (it is NotFound) req to 0.0 else raise(it)
+            }
+        }
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
         GuildPayload(

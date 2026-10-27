@@ -125,4 +125,20 @@ class WowHardcoreEntityResolverTest {
             verifyNoInteractions(blizzardClient)
         }
     }
+
+    @Test
+    fun `a character whose realm blizzard does not know is neither resolved nor unchecked`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
+            ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
+            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Left(NotFound))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val res = WowHardcoreEntityResolver(repo, blizzardClient).resolve(listOf(basicWowRequest))
+
+            assertEquals(listOf(), res.entities)
+            assertEquals(listOf(), res.unchecked)
+        }
+    }
 }

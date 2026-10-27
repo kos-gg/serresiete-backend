@@ -1,6 +1,5 @@
 package com.kos.credentials
 
-import com.kos.common.error.UserAlreadyExists
 import com.kos.common.isDefined
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsInitialState
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRolesInitialState
@@ -21,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
 abstract class CredentialsRepositoryTest {
 
@@ -57,9 +55,7 @@ abstract class CredentialsRepositoryTest {
     open fun `given a repository with credentials i can not insert a credential with existing username`() {
         runBlocking {
             repository.withState(basicCredentialsInitialState)
-            repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
-                .onLeft { assertEquals(UserAlreadyExists(encryptedCredentials.userName), it) }
-                .onRight { fail() }
+            assertFalse(repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password))
         }
     }
 
@@ -139,9 +135,7 @@ abstract class CredentialsRepositoryTest {
     open fun `given a repository with a credential i cant insert it again`() {
         runBlocking {
             repository.withState(basicCredentialsInitialState)
-            repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password)
-                .onRight { fail() }
-                .onLeft { assertEquals(UserAlreadyExists(user), it) }
+            assertFalse(repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password))
         }
     }
 

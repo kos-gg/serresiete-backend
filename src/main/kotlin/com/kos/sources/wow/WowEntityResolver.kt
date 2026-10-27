@@ -1,7 +1,9 @@
 package com.kos.sources.wow
 
-import arrow.core.recover
-import arrow.fx.coroutines.parMap
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.recover
+import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
@@ -42,12 +44,7 @@ class WowEntityResolver(
         newRequests: List<EntityRequest>
     ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ClientError>>> {
         val (unchecked, checked) = newRequests.asFlow()
-            .parMap(10) { req ->
-                req as WowEntityRequest
-                blizzardClient.getRetailProfile(req.region, req.realm, req.name)
-                    .map<Pair<WowEntityRequest, Long?>> { profile -> req to profile.id }
-                    .recover { error -> if (error is NotFound) req to null else raise(req to error) }
-            }
+            .parMapUnordered(10) { req -> resolveCharacter(req as WowEntityRequest) }
             .toList()
             .split()
 
@@ -58,4 +55,13 @@ class WowEntityResolver(
 
         return entities to unchecked
     }
+
+    private suspend fun resolveCharacter(
+        req: WowEntityRequest
+    ): Either<Pair<EntityRequest, ClientError>, Pair<WowEntityRequest, Long?>> =
+        either {
+            recover({ req to blizzardClient.getRetailProfile(req.region, req.realm, req.name).bind().id }) { error ->
+                if (error is NotFound) req to null else raise(req to error)
+            }
+        }
 }

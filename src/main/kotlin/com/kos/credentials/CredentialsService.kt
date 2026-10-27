@@ -1,6 +1,8 @@
 package com.kos.credentials
 
 import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.kos.common.error.UserAlreadyExists
 import com.kos.common.isDefined
 import com.kos.credentials.repository.CredentialsRepository
@@ -11,13 +13,17 @@ class CredentialsService(
     private val credentialsRepository: CredentialsRepository,
 ) {
     suspend fun createCredentials(createCredentialRequest: CreateCredentialRequest): Either<UserAlreadyExists, Unit> =
-        credentialsRepository.insertCredentials(
-            createCredentialRequest.userName,
-            password = BCrypt.hashpw(
-                createCredentialRequest.password,
-                BCrypt.gensalt(12)
+        either {
+            val inserted = credentialsRepository.insertCredentials(
+                createCredentialRequest.userName,
+                password = BCrypt.hashpw(
+                    createCredentialRequest.password,
+                    BCrypt.gensalt(12)
+                )
             )
-        ).map { credentialsRepository.insertRoles(createCredentialRequest.userName, createCredentialRequest.roles) }
+            ensure(inserted) { UserAlreadyExists(createCredentialRequest.userName) }
+            credentialsRepository.insertRoles(createCredentialRequest.userName, createCredentialRequest.roles)
+        }
 
     suspend fun validateCredentials(credentials: Credentials): Boolean =
         credentialsRepository.getCredentials(credentials.userName)

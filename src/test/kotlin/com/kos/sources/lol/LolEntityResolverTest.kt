@@ -88,4 +88,20 @@ class LolEntityResolverTest {
             verifyNoInteractions(riotClient)
         }
     }
+
+    @Test
+    fun `a character whose summoner riot does not know is neither resolved nor unchecked`() {
+        runBlocking {
+            `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
+                .thenReturn(Either.Right("1"))
+            `when`(riotClient.getSummonerByPuuid("1"))
+                .thenReturn(Either.Left(NotFound))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val res = LolEntityResolver(repo, riotClient).resolve(listOf(lolEntityRequest))
+
+            assertEquals(listOf(), res.entities)
+            assertEquals(listOf(), res.unchecked)
+        }
+    }
 }

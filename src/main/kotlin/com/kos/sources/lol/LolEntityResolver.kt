@@ -1,8 +1,10 @@
 package com.kos.sources.lol
 
+import arrow.core.Either
 import arrow.core.raise.either
-import arrow.core.getOrElse
-import arrow.fx.coroutines.parMap
+import arrow.core.raise.recover
+import arrow.fx.coroutines.parMapUnordered
+import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.riot.RiotClient
 import com.kos.common.WithLogger
@@ -31,24 +33,7 @@ class LolEntityResolver(
         val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.LOL)
 
         val (unchecked, checked) = newRequests.asFlow()
-            .parMap(10) { req ->
-                req as LolEntityRequest
-                either {
-                    val puuid = riotClient.getPUUIDByRiotId(req.name, req.tag)
-                        .getOrElse { if (it is NotFound) return@either null else raise(req to it) }
-                    val summoner = riotClient.getSummonerByPuuid(puuid)
-                        .mapLeft { req to it }
-                        .bind()
-
-                    LolEnrichedEntityRequest(
-                        req.name,
-                        req.tag,
-                        summoner.puuid,
-                        summoner.profileIconId,
-                        summoner.summonerLevel
-                    ) to req.alias
-                }
-            }
+            .parMapUnordered(10) { req -> resolveCharacter(req as LolEntityRequest) }
             .toList()
             .split()
 
@@ -63,4 +48,21 @@ class LolEntityResolver(
             guild = null
         )
     }
+
+    private suspend fun resolveCharacter(
+        req: LolEntityRequest
+    ): Either<Pair<EntityRequest, ClientError>, Pair<LolEnrichedEntityRequest, String?>?> =
+        either {
+            recover({
+                val puuid = riotClient.getPUUIDByRiotId(req.name, req.tag).bind()
+                val summoner = riotClient.getSummonerByPuuid(puuid).bind()
+                LolEnrichedEntityRequest(
+                    req.name,
+                    req.tag,
+                    summoner.puuid,
+                    summoner.profileIconId,
+                    summoner.summonerLevel
+                ) to req.alias
+            }) { error -> if (error is NotFound) null else raise(req to error) }
+        }
 }

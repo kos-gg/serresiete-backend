@@ -1,7 +1,5 @@
 package com.kos.credentials.repository
 
-import arrow.core.Either
-import com.kos.common.error.UserAlreadyExists
 import com.kos.credentials.Credentials
 import com.kos.credentials.CredentialsRole
 import com.kos.credentials.PatchCredentialRequest
@@ -51,17 +49,17 @@ class CredentialsDatabaseRepository(private val db: Database) : CredentialsRepos
         }
     }
 
-    override suspend fun insertCredentials(userName: String, password: String): Either<UserAlreadyExists, Unit> {
+    override suspend fun insertCredentials(userName: String, password: String): Boolean {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             try {
                 Users.insert {
                     it[Users.userName] = userName
                     it[Users.password] = password
                 }
-                Either.Right(Unit)
+                true
             } catch (e: SQLException) {
                 if (e.sqlState != "23505") throw e
-                Either.Left(UserAlreadyExists(userName))
+                false
             }
         }
     }

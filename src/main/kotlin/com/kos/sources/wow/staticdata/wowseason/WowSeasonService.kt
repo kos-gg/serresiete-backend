@@ -1,6 +1,5 @@
 package com.kos.sources.wow.staticdata.wowseason
 
-import arrow.core.getOrElse
 import com.kos.clients.orThrow
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.WithLogger
@@ -37,8 +36,7 @@ data class WowSeasonService(
             currentSeason.isCurrentSeason
         )
 
-        wowSeasonRepository.insert(wowSeason)
-            .getOrElse { error("Season ${it.season.name} (${it.season.id}) already exists") }
+        check(wowSeasonRepository.insert(wowSeason)) { "Season ${wowSeason.name} (${wowSeason.id}) already exists" }
 
         return wowSeason
     }

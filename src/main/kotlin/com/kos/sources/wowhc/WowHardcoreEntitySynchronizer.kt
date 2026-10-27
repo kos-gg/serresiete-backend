@@ -2,8 +2,8 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.recover
 import arrow.core.raise.either
+import arrow.core.raise.recover
 import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
 import com.kos.clients.NotFound
@@ -122,31 +122,30 @@ class WowHardcoreEntitySynchronizer(
             errors
         }
 
-    private suspend fun synchronizeWowHcEntity(entity: WowEntity): Either<ClientError, DataCache?> =
-        either {
-            val newestDataCacheEntry: WowHardcoreData? =
-                dataCacheRepository.get(entity.id).maxByOrNull {
-                    it.inserted
-                }?.let {
-                    try {
-                        json.decodeFromString<WowHardcoreData>(it.data)
-                    } catch (e: SerializationException) {
-                        logger.warn(
-                            "Couldn't deserialize entity ${entity.id} while trying to obtain newest cached record.\n${e.message}"
-                        )
-                        null
-                    }
+    private suspend fun getNewestDataCacheEntry(entityId: Long): WowHardcoreData? =
+        dataCacheRepository.get(entityId)
+            .maxByOrNull { it.inserted }
+            ?.let {
+                try {
+                    json.decodeFromString<WowHardcoreData>(it.data)
+                } catch (e: SerializationException) {
+                    logger.warn(
+                        "Couldn't deserialize entity $entityId while trying to obtain newest cached record.\n${e.message}"
+                    )
+                    null
                 }
-
-            if (newestDataCacheEntry?.isDead == true) {
-                return@either null
             }
 
+    private suspend fun synchronizeWowHcEntity(entity: WowEntity): Either<ClientError, DataCache?> {
+        val newestDataCacheEntry = getNewestDataCacheEntry(entity.id)
+
+        return if (newestDataCacheEntry?.isDead == true) Either.Right(null)
+        else either {
             val character: WowCharacter? = blizzardClient.getClassicProfile(entity.region, entity.realm, entity.name)
                 .getOrElse { if (it is NotFound) null else raise(it) }
 
-            val hardcoreData: WowHardcoreData = when (character) {
-                null -> handleNotFoundHardcoreCharacter(newestDataCacheEntry, entity) ?: return@either null
+            val hardcoreData: WowHardcoreData? = when (character) {
+                null -> handleNotFoundHardcoreCharacter(newestDataCacheEntry, entity)
                 else ->
                     if (deadCharacterHasBeenCreatedAgain(newestDataCacheEntry, entity, character)) {
                         markWowHardcoreCharacterAsDead(newestDataCacheEntry!!)
@@ -195,8 +194,9 @@ class WowHardcoreEntitySynchronizer(
                     }
             }
 
-            DataCache(entity.id, json.encodeToString<Data>(hardcoreData), OffsetDateTime.now(), Game.WOW_HC)
+            hardcoreData?.let { DataCache(entity.id, json.encodeToString<Data>(it), OffsetDateTime.now(), Game.WOW_HC) }
         }
+    }
 
     private fun deadCharacterHasBeenCreatedAgain(
         newestDataCacheEntry: WowHardcoreData?,
@@ -210,9 +210,9 @@ class WowHardcoreEntitySynchronizer(
     ): List<Either<ClientError, WowItem>> =
         existentItemsAndItemsToRequest.second.map { equippedItem ->
             either {
-                val item = blizzardClient.getItem(wowEntity.region, equippedItem.itemId)
-                    .recover { blizzardError -> wowItemsDatabaseRepository.getItem(equippedItem.itemId) ?: raise(blizzardError) }
-                    .bind()
+                val item = recover({ blizzardClient.getItem(wowEntity.region, equippedItem.itemId).bind() }) { blizzardError ->
+                    wowItemsDatabaseRepository.getItem(equippedItem.itemId) ?: raise(blizzardError)
+                }
 
                 val icon = blizzardClient.getItemMedia(wowEntity.region, equippedItem.itemId)
                     .getOrElse { wowItemsDatabaseRepository.getItemMedia(equippedItem.itemId) }

@@ -16,8 +16,6 @@ data class WowSeason(
 
 }
 
-data class SeasonAlreadyExists(val season: WowSeason)
-
 @Serializable
 data class Season(
     val isCurrentSeason: Boolean,

@@ -1,7 +1,7 @@
 package com.kos.entities.repository
 
 import arrow.core.Either
-import arrow.fx.coroutines.parMap
+import arrow.fx.coroutines.parMapUnordered
 import com.kos.common.split
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
@@ -17,7 +17,7 @@ suspend fun EntitiesRepository.getCurrentAndNewEntities(
     game: Game
 ): Pair<List<EntityWithAlias>, List<EntityRequest>> =
     entities.asFlow()
-        .parMap(3) { req ->
+        .parMapUnordered(3) { req ->
             val existing = get(req, game)
             if (existing == null) Either.Right(req)
             else Either.Left(EntityWithAlias(existing, req.alias))

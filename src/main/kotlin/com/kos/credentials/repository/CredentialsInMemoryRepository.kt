@@ -1,8 +1,6 @@
 package com.kos.credentials.repository
 
-import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.UserAlreadyExists
 import com.kos.credentials.Credentials
 import com.kos.credentials.PatchCredentialRequest
 import com.kos.roles.Role
@@ -18,14 +16,8 @@ class CredentialsInMemoryRepository : CredentialsRepository, InMemoryRepository 
         return users.find { it.userName == userName }
     }
 
-    override suspend fun insertCredentials(userName: String, password: String): Either<UserAlreadyExists, Unit> {
-        return if (users.map { it.userName }
-                .contains(userName)) Either.Left(UserAlreadyExists(userName))
-        else {
-            users.add(Credentials(userName, password))
-            Either.Right(Unit)
-        }
-    }
+    override suspend fun insertCredentials(userName: String, password: String): Boolean =
+        userName !in users.map { it.userName } && users.add(Credentials(userName, password))
 
     override suspend fun editCredentials(userName: String, newPassword: String) {
         val index = users.map { it.userName }.indexOf(userName)
