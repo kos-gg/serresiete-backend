@@ -3,6 +3,7 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import com.kos.common.WithLogger
 import com.kos.common.error.*
 import com.kos.credentials.CredentialsService
@@ -162,18 +163,14 @@ class ViewsService(
     suspend fun getCachedData(simpleView: SimpleView) =
         dataCacheService.getData(simpleView.entitiesIds, oldFirst = true)
 
-    private suspend fun getMaxNumberOfViewsByRole(owner: String): Either<UserWithoutRoles, Int> =
-        when (val maxNumberOfViews = credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfViews }) {
-            null -> Either.Left(UserWithoutRoles)
-            else -> Either.Right(maxNumberOfViews)
-        }
+    private suspend fun getMaxNumberOfViewsByRole(owner: String): Either<UserWithoutRoles, Int> = either {
+        ensureNotNull(credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfViews }) { UserWithoutRoles }
+    }
 
-    private suspend fun getMaxNumberOfEntitiesByRole(owner: String): Either<UserWithoutRoles, Int> =
-        when (val maxNumberOfEntities =
-            credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) {
-            null -> Either.Left(UserWithoutRoles)
-            else -> Either.Right(maxNumberOfEntities)
-        }
+    private suspend fun getMaxNumberOfEntitiesByRole(owner: String): Either<UserWithoutRoles, Int> = either {
+        ensureNotNull(
+            credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) { UserWithoutRoles }
+    }
 
     private suspend fun ensureMaxNumberOfViews(owner: String): Either<CreateViewError, Unit> {
         return either {

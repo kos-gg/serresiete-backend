@@ -1,8 +1,8 @@
 package com.kos.views
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import com.kos.common.error.InvalidQueryParameter
 import com.kos.common.error.respondWithHandledError
 import com.kos.common.recoverToEither
@@ -143,11 +143,11 @@ fun Route.viewsRouting(
     }
 }
 
-internal fun parsePositiveIntQueryParam(param: String, rawValue: String?): Either<InvalidQueryParameter, Int?> =
-    rawValue.recoverToEither(
-        { InvalidQueryParameter(param, it, listOf("a positive integer")) },
-        { value ->
-            Either.catch { value.toInt() }
-                .flatMap { parsed -> if (parsed >= 1) Either.Right(parsed) else Either.Left(IllegalArgumentException()) }
+internal fun parsePositiveIntQueryParam(param: String, value: String?): Either<InvalidQueryParameter, Int?> =
+    either {
+        value?.let { it ->
+            ensureNotNull(it.toIntOrNull()?.takeIf { it >= 1 }) {
+                InvalidQueryParameter(param, value, listOf("a positive integer"))
+            }
         }
-    )
+    }

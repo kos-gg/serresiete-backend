@@ -10,8 +10,6 @@ import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.common.WithLogger
-import com.kos.common._fold
-import com.kos.common.split
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
@@ -224,18 +222,10 @@ class WowHardcoreEntitySynchronizer(
     private fun getExistentItemsAndItemsToRequest(
         newestDataCacheEntry: WowHardcoreData?,
         equippedItems: List<WowEquippedItemRef>
-    ) = newestDataCacheEntry._fold(
-        left = { equippedItems.map { Either.Right(it) } },
-        right = { record ->
-            equippedItems.fold(emptyList<Either<WowItem, WowEquippedItemRef>>()) { acc, equippedItem ->
-                when (val maybeItem =
-                    record.items.find { equippedItem.itemId == it.id }) {
-                    null -> acc + Either.Right(equippedItem)
-                    else -> acc + Either.Left(maybeItem)
-                }
-
-            }
-        }).split()
+    ): Pair<List<WowItem>, List<WowEquippedItemRef>> {
+        val cachedItems = newestDataCacheEntry?.items.orEmpty().associateBy { it.id }
+        return equippedItems.mapNotNull { cachedItems[it.itemId] } to equippedItems.filter { it.itemId !in cachedItems }
+    }
 
     private suspend fun handleNotFoundHardcoreCharacter(
         newestCharacterDataCacheEntry: WowHardcoreData?,
