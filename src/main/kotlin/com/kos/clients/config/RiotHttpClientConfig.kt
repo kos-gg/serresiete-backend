@@ -48,7 +48,7 @@ object RiotHttpClientConfig : WithLogger("riotClient") {
                 retryOnExceptionIf { _, cause -> cause is IOException }
                 delayMillis { retryConfig.delayTime }
                 modifyRequest { request ->
-                    logger.info("Retry {} for {}", retryCount, request.url.buildString())
+                    logger.info("Retry {} for {} after {}", retryCount, request.url.buildString(), response?.status ?: cause?.message)
                 }
             }
             install(createClientPlugin("RiotRateLimit") {

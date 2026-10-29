@@ -37,7 +37,12 @@ object RaiderIoHttpClientConfig : WithLogger("RaiderioClient") {
                 retryOnExceptionIf { _, cause -> cause is IOException }
                 delayMillis { retryConfig.delayTime }
                 modifyRequest { request ->
-                    logger.info("Retry {} for {}", retryCount, redactAccessKey(request.url.buildString()))
+                    logger.info(
+                        "Retry {} for {} after {}",
+                        retryCount,
+                        redactAccessKey(request.url.buildString()),
+                        response?.status ?: cause?.message?.let(::redactAccessKey)
+                    )
                 }
             }
             install(createClientPlugin("RaiderIoRateLimit") {
