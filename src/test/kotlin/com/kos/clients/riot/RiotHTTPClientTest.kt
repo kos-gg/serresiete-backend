@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.NotFound
 import com.kos.clients.RetryConfig
+import com.kos.clients.config.RiotHttpClientConfig
 import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotHTTPClientHelper.client
 import kotlinx.coroutines.runBlocking
@@ -11,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class RiotHTTPClientTest {
-    private val riotHTTPClient = RiotHTTPClient(client, RetryConfig(0, 0), "fake-key")
+    private val riotHTTPClient = RiotHTTPClient(RiotHttpClientConfig.create(client.engine, RetryConfig(0, 0), "fake-key"))
 
     @Test
     fun `get puuid by riot id works as expected`() {
