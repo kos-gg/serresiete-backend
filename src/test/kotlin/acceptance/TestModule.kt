@@ -7,6 +7,7 @@ import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.clients.RetryConfig
+import com.kos.clients.config.BlizzardHttpClientConfig
 import com.kos.clients.config.RaiderIoHttpClientConfig
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
@@ -89,7 +90,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val raiderIoHTTPClient = RaiderIoHTTPClient(RaiderIoHttpClientConfig.create(mockHttpClient.engine, retryConfig, apiKey = "test-key"))
     val riotHTTPClient = RiotHTTPClient(mockHttpClient, retryConfig, "test-api-key")
     val blizzardAuthClient = BlizzardHttpAuthClient(mockHttpClient, BlizzardCredentials("id", "secret"))
-    val blizzardClient = BlizzardHttpClient(mockHttpClient, retryConfig, blizzardAuthClient)
+    val blizzardClient = BlizzardHttpClient(BlizzardHttpClientConfig.create(mockHttpClient.engine, retryConfig, blizzardAuthClient))
 
     val eventStore = EventStoreDatabase(db)
 

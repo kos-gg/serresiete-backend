@@ -7,6 +7,7 @@ import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.clients.RetryConfig
+import com.kos.clients.config.BlizzardHttpClientConfig
 import com.kos.clients.config.RaiderIoHttpClientConfig
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
@@ -117,7 +118,7 @@ fun Application.module() {
     val raiderIoHTTPClient = RaiderIoHTTPClient(RaiderIoHttpClientConfig.create(CIO.create(), defaultRetryConfig, raiderIoApiKey))
     val riotHTTPClient = RiotHTTPClient(client, defaultRetryConfig, riotApiKey)
     val blizzardAuthClient = BlizzardHttpAuthClient(client, blizzardCredentials)
-    val blizzardClient = BlizzardHttpClient(client, defaultRetryConfig, blizzardAuthClient)
+    val blizzardClient = BlizzardHttpClient(BlizzardHttpClientConfig.create(CIO.create(), defaultRetryConfig, blizzardAuthClient))
     val wowItemsDatabaseRepository = WowItemsDatabaseRepository(db)
 
     val eventStore = EventStoreDatabase(db)

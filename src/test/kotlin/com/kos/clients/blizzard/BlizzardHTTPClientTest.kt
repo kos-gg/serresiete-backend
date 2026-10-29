@@ -5,6 +5,7 @@ import com.kos.clients.ClientError
 import com.kos.clients.JsonParseError
 import com.kos.clients.NotFound
 import com.kos.clients.RetryConfig
+import com.kos.clients.config.BlizzardHttpClientConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
@@ -25,7 +26,7 @@ import com.kos.entities.domain.WowCharacter
 class BlizzardHTTPClientTest {
 
     private val blizzardAuthClient = mock(BlizzardAuthClient::class.java)
-    private val blizzardClient = BlizzardHttpClient(client, RetryConfig(0, 0), blizzardAuthClient)
+    private val blizzardClient = BlizzardHttpClient(BlizzardHttpClientConfig.create(client.engine, RetryConfig(0, 0), blizzardAuthClient))
 
     @Test
     fun `getCharacterProfile returns successful response`() {

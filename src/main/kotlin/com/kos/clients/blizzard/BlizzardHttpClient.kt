@@ -2,10 +2,7 @@ package com.kos.clients.blizzard
 
 import arrow.core.Either
 import arrow.core.flatMap
-import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.clients.Retry.retryEitherWithFixedDelay
-import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.BATTLENET_NAMESPACE
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.DYNAMIC_CLASSIC1X_NAMESPACE
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.PROFILE_CLASSIC1X_EU_NAMESPACE
@@ -13,34 +10,22 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
-import com.kos.clients.toClientError
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.*
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.WowRealm
-import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
-import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
-import io.github.resilience4j.ratelimiter.RateLimiter
-import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.ktor.client.*
 import io.ktor.client.request.*
-import io.ktor.http.*
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.time.Duration
-import java.time.OffsetDateTime
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
 import com.kos.sources.wow.MythicKeystoneProfile
 
-data class TokenState(val obtainedAt: OffsetDateTime, val tokenResponse: TokenResponse)
-
 class BlizzardHttpClient(
-    private val client: HttpClient,
-    private val retryConfig: RetryConfig,
-    private val blizzardAuthClient: BlizzardAuthClient
+    private val client: HttpClient
 ) : BlizzardClient, WithLogger("blizzardClient") {
 
     object BlizzardHttpClientConstants {
@@ -52,36 +37,18 @@ class BlizzardHttpClient(
     }
 
     private val baseURI: (String) -> URI = { region -> URI("https://$region.api.blizzard.com") }
-    private var token: Either<ClientError, TokenState>? = null
 
     override suspend fun getClassicProfile(
         region: String,
         realm: String,
         character: String
     ): Either<ClientError, WowCharacter> {
-        return throttleRequest {
-            either {
-                logger.debug("getClassicProfile for $region $realm $character")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")
-
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getClassicProfile",
-                ) {
-                    fetchFromApi<GetWowCharacterResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
-                            }
-                        }
-                    }
-                }.map { it.toWowCharacter() }.bind()
+        logger.debug("getClassicProfile for $region $realm $character")
+        return fetchFromApi<GetWowCharacterResponse> {
+            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
-        }
+        }.map { it.toWowCharacter() }
     }
 
     override suspend fun getRetailProfile(
@@ -89,29 +56,12 @@ class BlizzardHttpClient(
         realm: String,
         character: String
     ): Either<ClientError, WowCharacter> {
-        return throttleRequest {
-            either {
-                logger.debug("getRetailProfile for $region $realm $character")
-                val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-$region"
-                val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getRetailProfile",
-                ) {
-                    fetchFromApi<GetWowCharacterResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, namespace)
-                            }
-                        }
-                    }
-                }.map { it.toWowCharacter() }.bind()
+        logger.debug("getRetailProfile for $region $realm $character")
+        return fetchFromApi<GetWowCharacterResponse> {
+            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, "profile-$region")
             }
-        }
+        }.map { it.toWowCharacter() }
     }
 
     override suspend fun getCharacterMedia(
@@ -119,29 +69,14 @@ class BlizzardHttpClient(
         realm: String,
         character: String
     ): Either<ClientError, String?> {
-        return throttleRequest {
-            either {
-                logger.debug("getCharacterMedia for $region $realm $character")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI =
-                    URI("/profile/wow/character/$realm/${encodedName(character)}/character-media?locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getCharacterMedia",
-                ) {
-                    fetchFromApi<GetWowMediaResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().asset("avatar")
+        logger.debug("getCharacterMedia for $region $realm $character")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(
+                url(region, "/profile/wow/character/$realm/${encodedName(character)}/character-media?locale=en_US")
+            ) {
+                header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
-        }
+        }.map { it.asset("avatar") }
     }
 
     override suspend fun getCharacterEquipment(
@@ -149,28 +84,12 @@ class BlizzardHttpClient(
         realm: String,
         character: String
     ): Either<ClientError, List<WowEquippedItemRef>> {
-        return throttleRequest {
-            either {
-                logger.debug("getCharacterEquipment for $region $realm $character")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}/equipment?locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getCharacterEquipment",
-                ) {
-                    fetchFromApi<GetWowEquipmentResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().toEquippedItemRefs()
+        logger.debug("getCharacterEquipment for $region $realm $character")
+        return fetchFromApi<GetWowEquipmentResponse> {
+            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}/equipment?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
-        }
+        }.map { it.toEquippedItemRefs() }
     }
 
     override suspend fun getCharacterSpecializations(
@@ -178,29 +97,17 @@ class BlizzardHttpClient(
         realm: String,
         character: String
     ): Either<ClientError, List<WowSpecialization>> {
-        return throttleRequest {
-            either {
-                logger.debug("getCharacterSpecialitzation for $region $realm $character")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI =
-                    URI("/profile/wow/character/$realm/${encodedName(character)}/specializations?namespace=profile-classic1x-eu&locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getCharacterSpecializations",
-                ) {
-                    fetchFromApi<GetWowSpecializationsResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().toActiveSpecializations()
+        logger.debug("getCharacterSpecialitzation for $region $realm $character")
+        return fetchFromApi<GetWowSpecializationsResponse> {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/$realm/${encodedName(character)}/specializations?namespace=profile-classic1x-eu&locale=en_US"
+                )
+            ) {
+                header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
-        }
+        }.map { it.toActiveSpecializations() }
     }
 
     override suspend fun getCharacterStats(
@@ -208,168 +115,69 @@ class BlizzardHttpClient(
         realm: String,
         character: String
     ): Either<ClientError, WowStats> {
-        return throttleRequest {
-            either {
-                logger.debug("getCharacterStats for $region $realm $character")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI = URI("/profile/wow/character/$realm/${encodedName(character)}/statistics?locale=en_US")
-
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getCharacterStats",
-                ) {
-                    fetchFromApi<GetWowCharacterStatsResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().toWowStats()
+        logger.debug("getCharacterStats for $region $realm $character")
+        return fetchFromApi<GetWowCharacterStatsResponse> {
+            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}/statistics?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
-        }
+        }.map { it.toWowStats() }
     }
 
     override suspend fun getItemMedia(
         region: String,
         id: Long
     ): Either<ClientError, String?> {
-        return throttleRequest {
-            either {
-                logger.debug("getItemMedia for $id")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI = URI("/data/wow/media/item/$id?locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getItemMedia",
-                ) {
-                    fetchFromApi<GetWowMediaResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, STATIC_CLASSIC_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().asset("icon")
+        logger.debug("getItemMedia for $id")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/data/wow/media/item/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, STATIC_CLASSIC_NAMESPACE)
             }
-        }
+        }.map { it.asset("icon") }
     }
 
     override suspend fun getItem(region: String, id: Long): Either<ClientError, WowItemDetails> {
-        return throttleRequest {
-            either {
-                logger.debug("getItem for $id")
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI = URI("/data/wow/item/$id?locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getItem",
-                ) {
-                    fetchFromApi<GetWowItemResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, STATIC_CLASSIC_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().toWowItemDetails()
+        logger.debug("getItem for $id")
+        return fetchFromApi<GetWowItemResponse> {
+            client.get(url(region, "/data/wow/item/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, STATIC_CLASSIC_NAMESPACE)
             }
-        }
+        }.map { it.toWowItemDetails() }
     }
 
     override suspend fun getRealm(
         region: String,
         id: Long
-    ): Either<ClientError, WowRealm> {
-        return throttleRequest {
-            either {
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI = URI("/data/wow/realm/$id?locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getRealm",
-                ) {
-                    fetchFromApi<GetWowRealmResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, DYNAMIC_CLASSIC1X_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().toWowRealm()
+    ): Either<ClientError, WowRealm> =
+        fetchFromApi<GetWowRealmResponse> {
+            client.get(url(region, "/data/wow/realm/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, DYNAMIC_CLASSIC1X_NAMESPACE)
             }
-        }
-    }
+        }.map { it.toWowRealm() }
 
     override suspend fun getHardcoreGuildRoster(
         region: String,
         realm: String,
         guild: String
-    ): Either<ClientError, GuildRoster> {
-        return throttleRequest {
-            either {
-                val tokenResponse = getAndUpdateToken().bind()
-                val partialURI =
-                    URI("/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=profile-classic1x-eu&locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getGuildRoster",
-                ) {
-                    fetchFromApi<GetWowRosterResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_EU_NAMESPACE)
-                            }
-                        }
-                    }
-                }.bind().toGuildRoster()
+    ): Either<ClientError, GuildRoster> =
+        fetchFromApi<GetWowRosterResponse> {
+            client.get(
+                url(region, "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=profile-classic1x-eu&locale=en_US")
+            ) {
+                header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_EU_NAMESPACE)
             }
-        }
-    }
+        }.map { it.toGuildRoster() }
 
     override suspend fun getRetailGuildRoster(
         region: String,
         realm: String,
         guild: String
     ): Either<ClientError, GuildRoster> {
-        return throttleRequest {
-            either {
-                val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-$region"
-                val partialURI =
-                    URI("/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getRetailGuildRoster",
-                ) {
-                    fetchFromApi<GetWowRosterResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, namespace)
-                            }
-                        }
-                    }
-                }.map { it.toGuildRoster() }.bind()
+        val namespace = "profile-$region"
+        return fetchFromApi<GetWowRosterResponse> {
+            client.get(url(region, "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US")) {
+                header(BATTLENET_NAMESPACE, namespace)
             }
-        }
+        }.map { it.toGuildRoster() }
     }
 
     override suspend fun getMythicKeystoneProfile(
@@ -378,83 +186,20 @@ class BlizzardHttpClient(
         character: String,
         seasonId: Int
     ): Either<ClientError, MythicKeystoneProfile> {
-        return throttleRequest {
-            either {
-                val tokenResponse = getAndUpdateToken().bind()
-                val namespace = "profile-$region"
-                val partialURI =
-                    URI("/profile/wow/character/$realm/${encodedName(character)}/mythic-keystone-profile/season/$seasonId?namespace=$namespace&locale=en_US")
-
-                retryEitherWithFixedDelay(
-                    retryConfig = retryConfig,
-                    functionName = "getMythicKeystoneProfile",
-                ) {
-                    fetchFromApi<GetWowMythicKeystoneSeasonResponse> {
-                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
-                            headers {
-                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
-                                append(HttpHeaders.Accept, "*/*")
-                                append(BATTLENET_NAMESPACE, namespace)
-                            }
-                        }
-                    }
-                }.flatMap { it.toMythicKeystoneProfile() }.bind()
+        val namespace = "profile-$region"
+        return fetchFromApi<GetWowMythicKeystoneSeasonResponse> {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/$realm/${encodedName(character)}/mythic-keystone-profile/season/$seasonId?namespace=$namespace&locale=en_US"
+                )
+            ) {
+                header(BATTLENET_NAMESPACE, namespace)
             }
-        }
+        }.flatMap { it.toMythicKeystoneProfile() }
     }
 
-    private suspend fun getAndUpdateToken(): Either<ClientError, TokenState> {
-        val newTokenState = when (token) {
-            null -> {
-                logger.debug("null token state")
-                blizzardAuthClient.getAccessToken()
-            }
-
-            else -> token!!.fold(
-                ifLeft = {
-                    logger.debug("token state with ClientError: {}", it.toString())
-                    blizzardAuthClient.getAccessToken()
-                },
-                ifRight = {
-                    if (it.obtainedAt.plusSeconds(it.tokenResponse.expiresIn)
-                            .minusSeconds(10)
-                            .isBefore(OffsetDateTime.now())
-                    ) {
-                        logger.debug(
-                            "token state expired: expiresIn - {} obtainedAt - {} ",
-                            it.tokenResponse.expiresIn,
-                            it.obtainedAt
-                        )
-                        blizzardAuthClient.getAccessToken()
-                    } else {
-                        logger.trace("token in good state")
-                        Either.Right(it.tokenResponse)
-                    }
-                }
-            )
-        }.map {
-            TokenState(OffsetDateTime.now(), it)
-        }
-        token = newTokenState
-        return newTokenState
-    }
-
-    private val perSecondRateLimiter = RateLimiter.of(
-        "perSecondLimiter",
-        RateLimiterConfig {
-            this.limitForPeriod(100)
-                .limitRefreshPeriod(Duration.ofSeconds(1))
-                .timeoutDuration(Duration.ofSeconds(1))
-                .build()
-        }
-    )
-
-    private suspend fun <T> throttleRequest(request: suspend () -> Either<ClientError, T>): Either<ClientError, T> =
-        try {
-            perSecondRateLimiter.executeSuspendFunction(request)
-        } catch (e: RequestNotPermitted) {
-            Either.Left(e.toClientError())
-        }
+    private fun url(region: String, path: String) = (baseURI(region).toString() + URI(path).toString()).lowercase()
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 
