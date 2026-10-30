@@ -22,8 +22,6 @@ private val accessKeyParameter = Regex("access_key=[^&,\\s\\]]+")
 internal fun redactAccessKey(message: String): String =
     message.replace(accessKeyParameter, "access_key=***")
 
-fun RequestNotPermitted.toClientError(): ClientError = TimeoutError("Rate limiter timeout: $message")
-
 @PublishedApi
 internal suspend inline fun Raise<ClientError>.send(crossinline request: suspend () -> HttpResponse): HttpResponse =
     try {
@@ -33,7 +31,7 @@ internal suspend inline fun Raise<ClientError>.send(crossinline request: suspend
     } catch (e: IOException) {
         raise(NetworkError(redactAccessKey(e.message ?: e.javaClass.simpleName)))
     } catch (e: RequestNotPermitted) {
-        raise(e.toClientError())
+        raise(TimeoutError("Rate limiter timeout: ${e.message}"))
     }
 
 suspend inline fun <reified A> fetchFromApi(

@@ -4,12 +4,13 @@ import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.ClientError
 import com.kos.clients.RetryConfig
-import com.kos.clients.config.RaiderIoHttpClientConfig
+import com.kos.clients.config.raiderIoHttpClientConfig
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.client
 import com.kos.clients.raiderio.RaiderIoHttpClientHelper.raiderioProfile
 import com.kos.entities.domain.WowEntity
 import com.kos.sources.wow.staticdata.wowseason.Dungeon
 import com.kos.sources.wow.staticdata.wowseason.Season
+import io.ktor.client.*
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -19,7 +20,7 @@ import com.kos.sources.wow.WowCharacterProfile
 
 class RaiderIoHTTPClientTest {
 
-    private val raiderIoClient = RaiderIoHTTPClient(RaiderIoHttpClientConfig.create(client.engine, RetryConfig(0, 0), apiKey = "test-key"))
+    private val raiderIoClient = RaiderIoHTTPClient(HttpClient(client.engine) { raiderIoHttpClientConfig(RetryConfig(0, 0), apiKey = "test-key") })
 
     @Test
     fun `test get() method with successful response`() {

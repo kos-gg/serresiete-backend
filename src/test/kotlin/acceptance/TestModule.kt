@@ -7,9 +7,10 @@ import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
 import com.kos.clients.RetryConfig
-import com.kos.clients.config.BlizzardHttpClientConfig
-import com.kos.clients.config.RaiderIoHttpClientConfig
-import com.kos.clients.config.RiotHttpClientConfig
+import com.kos.clients.config.blizzardHttpClientConfig
+import com.kos.clients.config.raiderIoHttpClientConfig
+import com.kos.clients.config.riotHttpClientConfig
+import io.ktor.client.*
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
@@ -88,10 +89,10 @@ data class TestSubscriptions(
 fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
 
     val retryConfig = RetryConfig(maxAttempts = 1, delayTime = 0)
-    val raiderIoHTTPClient = RaiderIoHTTPClient(RaiderIoHttpClientConfig.create(mockHttpClient.engine, retryConfig, apiKey = "test-key"))
-    val riotHTTPClient = RiotHTTPClient(RiotHttpClientConfig.create(mockHttpClient.engine, retryConfig, "test-api-key"))
+    val raiderIoHTTPClient = RaiderIoHTTPClient(HttpClient(mockHttpClient.engine) { raiderIoHttpClientConfig(retryConfig, apiKey = "test-key") })
+    val riotHTTPClient = RiotHTTPClient(HttpClient(mockHttpClient.engine) { riotHttpClientConfig(retryConfig, "test-api-key") })
     val blizzardAuthClient = BlizzardHttpAuthClient(mockHttpClient, BlizzardCredentials("id", "secret"))
-    val blizzardClient = BlizzardHttpClient(BlizzardHttpClientConfig.create(mockHttpClient.engine, retryConfig, blizzardAuthClient))
+    val blizzardClient = BlizzardHttpClient(HttpClient(mockHttpClient.engine) { blizzardHttpClientConfig(retryConfig, blizzardAuthClient) })
 
     val eventStore = EventStoreDatabase(db)
 

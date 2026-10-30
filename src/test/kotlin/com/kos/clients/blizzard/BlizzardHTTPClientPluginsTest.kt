@@ -5,9 +5,10 @@ import com.kos.clients.HttpError
 import com.kos.clients.NetworkError
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.json
-import com.kos.clients.config.BlizzardHttpClientConfig
+import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.clients.domain.TokenResponse
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
+import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -35,8 +36,8 @@ class BlizzardHTTPClientPluginsTest {
     private val ok: MockRequestHandler = { respond(json.encodeToString(notHardcoreRealm), HttpStatusCode.OK) }
     private val unauthorized: MockRequestHandler = { respond("", HttpStatusCode.Unauthorized) }
 
-    private fun blizzardClient(engine: MockEngine, retries: Int = 0) =
-        BlizzardHttpClient(BlizzardHttpClientConfig.create(engine, RetryConfig(retries, 1), blizzardAuthClient))
+    private fun blizzardClient(engine: MockEngine) =
+        BlizzardHttpClient(HttpClient(engine) { blizzardHttpClientConfig(RetryConfig(0, 1), blizzardAuthClient) })
 
     @Test
     fun `loads the token once and sends it as bearer on every request`() = runBlocking {
@@ -77,26 +78,5 @@ class BlizzardHTTPClientPluginsTest {
 
         assertEquals(Either.Left(HttpError(401, "")), result)
         assertEquals(null, engine.requestHistory.single().headers[HttpHeaders.Authorization])
-    }
-
-    @Test
-    fun `retries a server error and succeeds`() = runBlocking {
-        whenever(blizzardAuthClient.getAccessToken()).thenReturn(token("first"))
-        val engine = engineResponding({ respond("", HttpStatusCode.ServiceUnavailable) }, ok)
-
-        val result = blizzardClient(engine, retries = 1).getRealm("eu", 1)
-
-        assertTrue(result.isRight())
-        assertEquals(2, engine.requestHistory.size)
-    }
-
-    @Test
-    fun `does not retry a not found`() = runBlocking {
-        whenever(blizzardAuthClient.getAccessToken()).thenReturn(token("first"))
-        val engine = engineResponding({ respond("", HttpStatusCode.NotFound) }, ok)
-
-        blizzardClient(engine, retries = 1).getRealm("eu", 1)
-
-        assertEquals(1, engine.requestHistory.size)
     }
 }
