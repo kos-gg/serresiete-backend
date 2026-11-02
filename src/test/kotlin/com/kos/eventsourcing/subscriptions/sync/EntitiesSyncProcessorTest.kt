@@ -23,7 +23,10 @@ import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsState
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
 import kotlin.test.Test
 import com.kos.sources.wow.WowGuildResolver
@@ -117,6 +120,20 @@ class EntitiesSyncProcessorTest {
                 expectedRemainingCharacters,
                 entitiesRepository.state().wowHardcoreEntities.map { it.id })
 
+        }
+    }
+
+    @Test
+    fun `a failure while cleaning up entities reaches the subscription instead of being swallowed`() {
+        runBlocking {
+            val service = mockk<EntitiesService>()
+            coEvery { service.getViewsFromEntity(1, Game.WOW_HC) } throws IllegalStateException("database is down")
+            val eventData = ViewDeletedEvent("deleted", "name", "owner", listOf(1), true, Game.WOW_HC, false)
+            val eventWithVersion = EventWithVersion(1L, Event(aggregateRoot, ViewsTestHelper.id, eventData))
+
+            assertThrows<IllegalStateException> {
+                EntitiesEventProcessor(eventWithVersion, service).process()
+            }
         }
     }
 }
