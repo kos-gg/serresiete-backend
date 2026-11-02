@@ -180,36 +180,32 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val tasksRepository = TasksDatabaseRepository(db)
     val taskRunnerProvider = TaskRunnerProvider(
         listOf(
-            TokenCleanupTaskRunner(tasksRepository, authService),
+            TokenCleanupTaskRunner(authService),
             TaskCleanupTaskRunner(tasksRepository),
-            UpdateLolEntitiesTaskRunner(tasksRepository, entitiesService),
-            CacheClearTaskRunner(tasksRepository, dataCacheService),
-            UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
-            UpdateWowGuildsTaskRunner(tasksRepository, entitiesService),
-            UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
+            UpdateLolEntitiesTaskRunner(entitiesService),
+            CacheClearTaskRunner(dataCacheService),
+            UpdateWowHardcoreGuildsTaskRunner(entitiesService),
+            UpdateWowGuildsTaskRunner(entitiesService),
+            UpdateMythicPlusSeasonTaskRunner(wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,
                 TaskType.CACHE_LOL_DATA_TASK,
-                tasksRepository,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
             CacheGameDataTaskRunner(
                 Game.WOW,
                 TaskType.CACHE_WOW_DATA_TASK,
-                tasksRepository,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
             CacheGameDataTaskRunner(
                 Game.WOW_HC,
                 TaskType.CACHE_WOW_HC_DATA_TASK,
-                tasksRepository,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
             CacheGameViewDataTaskRunner(
-                tasksRepository,
                 viewsService,
                 entitiesService,
                 entitySynchronizerProvider,

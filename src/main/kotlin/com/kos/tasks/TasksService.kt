@@ -31,21 +31,33 @@ data class TasksService(
         tasksRepository.insertTask(Task(taskId, taskType, TaskStatus(Status.PENDING), OffsetDateTime.now()))
 
         scope.launch {
-            Either.catch { taskRunner.run(taskId, arguments) }
-                .onLeft { e ->
-                    logger.error("Task $taskType $taskId failed", e)
-                    tasksRepository.updateTask(
-                        Task(
-                            taskId,
-                            taskType,
-                            TaskStatus(Status.ERROR),
-                            OffsetDateTime.now(),
-                            TaskError(arguments, e.stackTraceToString())
-                        )
+            val task = Either.catch { taskRunner.run(arguments) }.fold(
+                {
+                    logger.error("Task $taskType $taskId failed", it)
+                    failed(taskId, taskType, arguments, TaskFailed(it.stackTraceToString()))
+                },
+                { taskResult ->
+                    taskResult.fold(
+                        { failed(taskId, taskType, arguments, it) },
+                        { completed(taskId, taskType, it) }
                     )
                 }
+            )
+            tasksRepository.updateTask(task)
         }
 
         return taskId
     }
+
+    private fun failed(id: String, type: TaskType, arguments: Map<String, String>?, failure: TaskFailed) =
+        Task(
+            id,
+            type,
+            TaskStatus(Status.ERROR, failure.retryAfter),
+            OffsetDateTime.now(),
+            TaskError(arguments, failure.detail)
+        )
+
+    private fun completed(id: String, type: TaskType, completion: TaskCompleted) =
+        Task(id, type, TaskStatus(Status.SUCCESSFUL, completion.retryAfter), OffsetDateTime.now())
 }

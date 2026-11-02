@@ -1,16 +1,13 @@
 package com.kos.tasks.runners
 
+import com.kos.tasks.TaskCompleted
+import arrow.core.Either
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.SubscriptionState
 import com.kos.eventsourcing.subscriptions.SubscriptionStatus
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsInMemoryRepository
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
-import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
 import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
@@ -20,10 +17,9 @@ import kotlin.test.assertEquals
 
 class EventCleanupTaskRunnerTest {
 
-    private val tasksRepo = TasksInMemoryRepository()
     private val eventStore = EventStoreInMemory()
     private val subscriptionsRepo = SubscriptionsInMemoryRepository()
-    private val runner = EventCleanupTaskRunner(tasksRepo, eventStore, subscriptionsRepo)
+    private val runner = EventCleanupTaskRunner(eventStore, subscriptionsRepo)
 
     private val payload = ViewToBeCreatedEvent(
         UUID.randomUUID().toString(),
@@ -40,13 +36,9 @@ class EventCleanupTaskRunnerTest {
     fun `cleanup is skipped and recorded as successful when there are no subscriptions`() = runBlocking {
         eventStore.save(Event("/credentials/client1", UUID.randomUUID().toString(), payload))
 
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
+        val result = runner.run(null)
 
-        runner.run(id, null)
-
-        val recorded = tasksRepo.getTask(id)
-        assertEquals(Status.SUCCESSFUL, recorded?.taskStatus?.status)
+        assertEquals(Either.Right(TaskCompleted()), result)
         assertEquals(1, eventStore.getEvents(null).toList().size)
     }
 
@@ -62,13 +54,9 @@ class EventCleanupTaskRunnerTest {
                 )
             )
 
-            val id = UUID.randomUUID().toString()
-            tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
+            val result = runner.run(null)
 
-            runner.run(id, null)
-
-            val recorded = tasksRepo.getTask(id)
-            assertEquals(Status.SUCCESSFUL, recorded?.taskStatus?.status)
+            assertEquals(Either.Right(TaskCompleted()), result)
             assertEquals(2, eventStore.getEvents(null).toList().size)
         }
 }

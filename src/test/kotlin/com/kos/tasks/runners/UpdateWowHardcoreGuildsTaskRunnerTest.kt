@@ -1,5 +1,6 @@
 package com.kos.tasks.runners
 
+import com.kos.tasks.TaskCompleted
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -15,19 +16,12 @@ import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
-import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import java.time.OffsetDateTime
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
@@ -49,8 +43,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
         WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository),
         mock()
     )
-    private val tasksRepo = TasksInMemoryRepository()
-    private val runner = UpdateWowHardcoreGuildsTaskRunner(tasksRepo, entitiesService)
+    private val runner = UpdateWowHardcoreGuildsTaskRunner(entitiesService)
 
     @Test
     fun `wow hardcore guilds are updated and task is recorded as successful`() = runBlocking {
@@ -77,14 +70,8 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
         `when`(blizzardClient.getRealm(region, 5220))
             .thenReturn(Either.Right(GetWowRealmResponse("Hardcore").toWowRealm()))
 
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
+        val result = runner.run(null)
 
-        runner.run(id, null)
-
-        val task = tasksRepo.state().first()
-        assertEquals(id, task.id)
-        assertEquals(TaskType.UPDATE_WOW_HARDCORE_GUILDS, task.type)
-        assertEquals(Status.SUCCESSFUL, task.taskStatus.status)
+        assertEquals(Either.Right(TaskCompleted()), result)
     }
 }
