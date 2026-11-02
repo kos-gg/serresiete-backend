@@ -32,7 +32,7 @@ sealed interface ViewEntitiesError : CreateViewError, EditViewError
 
 data object TooMuchViews : CreateViewError
 data object ExtraArgumentsWrongType : CreateViewError
-data object GuildViewMoreThanTwoEntities : CreateViewError
+data object GuildViewMoreThanOneEntity : CreateViewError
 data object TooMuchEntities : ViewEntitiesError
 data object UserWithoutRoles : ViewEntitiesError
 data object EntitiesDoNotMatchGame : ViewEntitiesError
@@ -49,7 +49,7 @@ fun ControllerError.toProblem(): Problem =
 
         is TooMuchEntities -> Problem(HttpStatusCode.BadRequest, "TOO_MANY_ENTITIES", "Too many entities in a view")
         is BadRequest -> Problem(HttpStatusCode.BadRequest, "BAD_REQUEST", "Bad request", problem)
-        is GuildViewMoreThanTwoEntities ->
+        is GuildViewMoreThanOneEntity ->
             Problem(HttpStatusCode.BadRequest, "GUILD_VIEW_MORE_THAN_ONE_ENTITY", "Guild views must have only 1 entity")
 
         is EntitiesDoNotMatchGame ->

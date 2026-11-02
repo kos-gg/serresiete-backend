@@ -67,13 +67,13 @@ class RetryTest {
             val attempts = mutableListOf<Either<ClientError, String>>()
 
             val block: suspend () -> Either<ClientError, String> = {
-                val result = Either.Left(JsonParseError("", ""))
+                val result = Either.Left(JsonParseError(""))
                 attempts.add(result)
                 result
             }
 
             val result = Retry.retryEitherWithFixedDelay(zeroDelayRetryConfig, "testFunction", block)
-            assertEquals(Either.Left(JsonParseError("", "")), result)
+            assertEquals(Either.Left(JsonParseError("")), result)
             assertEquals(1, attempts.size)
         }
     }

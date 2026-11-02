@@ -55,12 +55,7 @@ suspend inline fun <reified A> fetchFromApi(
         try {
             json.decodeFromString<A>(rawBody)
         } catch (e: Exception) {
-            raise(
-                JsonParseError(
-                    raw = rawBody,
-                    error = e.stackTraceToString()
-                )
-            )
+            raise(JsonParseError(e.message ?: e::class.simpleName.orEmpty()))
         }
     }
 
@@ -84,11 +79,6 @@ suspend inline fun <reified A> fetchFromApi(
         try {
             parseResponse(rawBody)
         } catch (e: Exception) {
-            raise(
-                JsonParseError(
-                    raw = rawBody,
-                    error = e.stackTraceToString()
-                )
-            )
+            raise(JsonParseError(e.message ?: e::class.simpleName.orEmpty()))
         }
     }

@@ -201,7 +201,7 @@ class BlizzardHTTPClientTest {
             givenAValidToken()
 
             assertEquals(
-                Either.Right(MythicKeystoneProfile.EMPTY),
+                Either.Right(MythicKeystoneProfile(0.0, emptyList())),
                 blizzardClient.getMythicKeystoneProfile("eu", "realm", "unrated", 16)
             )
         }

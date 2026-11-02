@@ -46,10 +46,7 @@ object RaiderIoProtocol {
             specs.map { spec ->
                 val rank = ranksByExternalSpec["spec_${spec.externalSpec}"]
                     ?: raise(
-                        com.kos.clients.JsonParseError(
-                            raw = "",
-                            error = "/mythic_plus_ranks/spec_${spec.externalSpec}"
-                        )
+                        com.kos.clients.JsonParseError("/mythic_plus_ranks/spec_${spec.externalSpec}")
                     )
 
                 val score = when (spec.internalSpec) {

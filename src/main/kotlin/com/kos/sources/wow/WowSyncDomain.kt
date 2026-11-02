@@ -12,11 +12,7 @@ data class SeasonCutoff(val totalPopulation: Int)
 
 data class KeystoneBestRun(val dungeonId: Int, val keyLevel: Int, val timed: Boolean, val details: RunDetails)
 
-data class MythicKeystoneProfile(val rating: Double, val bestRuns: List<KeystoneBestRun>) {
-    companion object {
-        val EMPTY = MythicKeystoneProfile(0.0, emptyList())
-    }
-}
+data class MythicKeystoneProfile(val rating: Double, val bestRuns: List<KeystoneBestRun>)
 
 data class WowCharacterProfile(
     val name: String,

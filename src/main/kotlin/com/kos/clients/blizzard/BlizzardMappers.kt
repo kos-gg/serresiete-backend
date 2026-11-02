@@ -121,7 +121,7 @@ fun GetWowMythicKeystoneSeasonResponse.toMythicKeystoneProfile(): Either<JsonPar
 private fun KeystoneRunMemberResponse.toRunMember(): Either<JsonParseError, RunMember> =
     either {
         val (wowClass, spec) = ensureNotNull(findClassAndSpec(specialization.id)) {
-            JsonParseError(raw = "", error = "/best_runs/members/specialization/id unknown: ${specialization.id}")
+            JsonParseError("/best_runs/members/specialization/id unknown: ${specialization.id}")
         }
         RunMember(
             name = character.name,

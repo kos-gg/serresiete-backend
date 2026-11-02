@@ -49,12 +49,9 @@ class EventSubscription(
             .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
                 val error = Either.catch { process(event) }
                     .fold(
-                        { throwable ->
-                            logger.error(throwable.stackTraceToString())
-                            recordFailure(event, throwable)
-                        },
-                        { outcome ->
-                            when (outcome) {
+                        { saveFailedEvent(event, it) },
+                        {
+                            when (it) {
                                 EventProcessOutcome.Processed ->
                                     logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
 
@@ -86,12 +83,10 @@ class EventSubscription(
         )
     }
 
-    private suspend fun recordFailure(event: EventWithVersion, throwable: Throwable): String {
-        val error = throwable.message ?: throwable.javaClass.simpleName
-        logger.error("processing event ${event.version} has failed because $error, skipping it")
-        Either.catch { eventStore.saveFailedEvent(event, throwable.stackTraceToString()) }
-            .onLeft { logger.error("failed to store OperationFailedEvent: ${it.message}") }
-        return error
+    private suspend fun saveFailedEvent(event: EventWithVersion, throwable: Throwable): String {
+        logger.error("processing event ${event.version} has failed, skipping it", throwable)
+        eventStore.saveFailedEvent(event, throwable.stackTraceToString())
+        return throwable.message ?: throwable.javaClass.simpleName
     }
 }
 

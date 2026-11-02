@@ -31,18 +31,15 @@ data class EntitiesService(
         requestedEntities: List<EntityRequest>,
         game: Game
     ): EntitiesExistResponse {
-        return resolveEntities(requestedEntities, game)
-            .let { resolved ->
-                val exist =
-                    resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
-                val nonExisting = requestedEntities.filterNot { it in exist || it in resolved.unchecked }
+        val resolved = resolveEntities(requestedEntities, game)
+        val exist = resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
+        val nonExisting = requestedEntities.filterNot { it in exist || it in resolved.unchecked }
 
-                EntitiesExistResponse(
-                    exist = exist.map { it.toResponse() },
-                    nonExisting = nonExisting.map { it.toResponse() },
-                    unchecked = resolved.unchecked.map { it.toResponse() }
-                )
-            }
+        return EntitiesExistResponse(
+            exist = exist.map { it.toResponse() },
+            nonExisting = nonExisting.map { it.toResponse() },
+            unchecked = resolved.unchecked.map { it.toResponse() }
+        )
     }
 
     suspend fun guildExists(name: String, region: String, realm: String): Either<ThirdPartyUnavailable, GuildExistsResponse> =
