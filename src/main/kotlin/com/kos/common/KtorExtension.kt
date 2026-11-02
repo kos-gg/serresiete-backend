@@ -1,10 +1,10 @@
 package com.kos.common
 
+import arrow.core.Either
 import com.kos.credentials.Credentials
 import com.kos.eventsourcing.subscriptions.EventSubscription
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -16,13 +16,8 @@ fun UserPasswordCredential.toCredentials() = Credentials(this.name, this.passwor
 fun Application.launchSubscription(subscription: EventSubscription) {
     val backgroundJob = launch(Dispatchers.IO) {
         while (isActive) {
-            try {
-                subscription.processPendingEvents()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                log.error("Error processing subscription: ${e.message}", e)
-            }
+            Either.catch { subscription.processPendingEvents() }
+                .onLeft { log.error("Error processing subscription: ${it.message}", it) }
             delay(Duration.ofSeconds(10).toMillis()) //TODO: We could want this to depend on subscription
         }
     }

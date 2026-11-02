@@ -35,9 +35,6 @@ class GameSyncEventProcessor(
                     game -> {
                         logger.debug("processing event v${eventWithVersion.version}")
                         val resolved = entitiesService.resolveEntities(listOf(payload.request), payload.game)
-                        if (resolved.unchecked.isNotEmpty()) {
-                            logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-                        }
                         val inserted = entitiesService.insert(resolved.entities.map { it.first }, payload.game)
                         val entities = inserted.zip(resolved.entities.map { it.second }) + resolved.existing
                         val errors = synchronizer.synchronize(entities.map { it.first })

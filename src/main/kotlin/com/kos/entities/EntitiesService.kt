@@ -35,13 +35,12 @@ data class EntitiesService(
             .let { resolved ->
                 val exist =
                     resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
-                val unchecked = resolved.unchecked.map { it.first }
-                val nonExisting = requestedEntities.filterNot { it in exist || it in unchecked }
+                val nonExisting = requestedEntities.filterNot { it in exist || it in resolved.unchecked }
 
                 EntitiesExistResponse(
                     exist = exist.map { it.toResponse() },
                     nonExisting = nonExisting.map { it.toResponse() },
-                    unchecked = unchecked.map { it.toResponse() }
+                    unchecked = resolved.unchecked.map { it.toResponse() }
                 )
             }
     }

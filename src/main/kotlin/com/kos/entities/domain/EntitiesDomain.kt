@@ -1,6 +1,5 @@
 package com.kos.entities.domain
 
-import com.kos.clients.ClientError
 import com.kos.datacache.domain.Data
 import com.kos.eventsourcing.events.Operation
 import com.kos.views.Game
@@ -97,7 +96,7 @@ data class GuildExistsResponse(
 data class ResolvedEntities(
     val entities: List<Pair<InsertEntityRequest, String?>>,
     val existing: List<Pair<Entity, String?>>,
-    val unchecked: List<Pair<EntityRequest, ClientError>> = emptyList(),
+    val unchecked: List<EntityRequest> = emptyList(),
     val guild: GuildPayload?,
 )
 

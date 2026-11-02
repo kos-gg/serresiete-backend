@@ -19,11 +19,7 @@ class ViewsEventService(
         aggregateRoot: String,
         viewToBeCreatedEvent: ViewToBeCreatedEvent
     ): Operation {
-        val resolved = resolveEntitiesForCreate(viewToBeCreatedEvent)
-
-        if (resolved.unchecked.isNotEmpty()) {
-            logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-        }
+        val resolved = resolveViewEntities(viewToBeCreatedEvent)
 
         val inserted = entitiesService
             .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
@@ -53,7 +49,7 @@ class ViewsEventService(
         return eventStore.save(event)
     }
 
-    private suspend fun resolveEntitiesForCreate(
+    private suspend fun resolveViewEntities(
         event: ViewToBeCreatedEvent
     ): ResolvedEntities {
         val guildReq = (event.extraArguments as? WowExtraArguments)
@@ -97,10 +93,6 @@ class ViewsEventService(
                 viewToBeEditedEvent.game
             )
 
-        if (resolved.unchecked.isNotEmpty()) {
-            logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-        }
-
         val inserted = entitiesService
             .insert(resolved.entities.map { it.first }, viewToBeEditedEvent.game)
 
@@ -133,10 +125,6 @@ class ViewsEventService(
                     entitiesToInsert,
                     viewToBePatchedEvent.game
                 )
-
-            if (resolved.unchecked.isNotEmpty()) {
-                logger.warn("Could not verify existence for entities, they will be skipped: ${resolved.unchecked}")
-            }
 
             val inserted = entitiesService
                 .insert(resolved.entities.map { it.first }, viewToBePatchedEvent.game)

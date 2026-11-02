@@ -129,7 +129,7 @@ class WowEntityResolverTest {
                 .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(1, res.unchecked.size)
-                    assertEquals(basicWowRequest, res.unchecked.single().first)
+                    assertEquals(basicWowRequest, res.unchecked.single())
                 }
         }
     }
@@ -166,7 +166,7 @@ class WowEntityResolverTest {
                         ),
                         res.entities
                     )
-                    assertEquals(listOf(basicWowRequest3), res.unchecked.map { it.first })
+                    assertEquals(listOf(basicWowRequest3), res.unchecked)
                 }
         }
     }
