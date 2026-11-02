@@ -36,8 +36,7 @@ class WowHardcoreEntityResolver(
         return ResolvedEntities(
             entities = checked.filterNotNull(),
             existing = existing.map { it.value to it.alias },
-            unchecked = unchecked,
-            guild = null
+            unchecked = unchecked
         )
     }
 

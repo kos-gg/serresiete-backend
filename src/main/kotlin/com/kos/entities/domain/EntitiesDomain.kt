@@ -97,7 +97,7 @@ data class ResolvedEntities(
     val entities: List<Pair<InsertEntityRequest, String?>>,
     val existing: List<Pair<Entity, String?>>,
     val unchecked: List<EntityRequest> = emptyList(),
-    val guild: GuildPayload?,
+    val guild: GuildPayload? = null,
 )
 
 class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSerializer<WithAlias<T>> {

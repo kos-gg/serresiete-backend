@@ -42,8 +42,7 @@ class LolEntityResolver(
         return ResolvedEntities(
             entities = validated,
             existing = existing.map { it.value to it.alias },
-            unchecked = unchecked,
-            guild = null
+            unchecked = unchecked
         )
     }
 

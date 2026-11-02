@@ -33,8 +33,7 @@ class WowEntityResolver(
         return ResolvedEntities(
             entities = entities,
             existing = existing.map { it.value to it.alias },
-            unchecked = unchecked,
-            guild = null
+            unchecked = unchecked
         )
     }
 

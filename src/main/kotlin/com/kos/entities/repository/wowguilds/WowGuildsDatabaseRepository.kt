@@ -39,22 +39,13 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         game: Game
     ) {
         newSuspendedTransaction(Dispatchers.IO, db) {
-            val alreadyTracked = WowGuilds.selectAll()
-                .where {
-                    WowGuilds.blizzardId.eq(blizzardId)
-                        .and(WowGuilds.game.eq(game.toString()))
-                        .and(WowGuilds.viewId.eq(viewId))
-                }
-                .empty().not()
-            if (!alreadyTracked) {
-                WowGuilds.insert {
-                    it[WowGuilds.blizzardId] = blizzardId
-                    it[WowGuilds.name] = name.lowercase()
-                    it[WowGuilds.realm] = realm.lowercase()
-                    it[WowGuilds.region] = region.lowercase()
-                    it[WowGuilds.viewId] = viewId
-                    it[WowGuilds.game] = game.toString()
-                }
+            WowGuilds.insertIgnore {
+                it[WowGuilds.blizzardId] = blizzardId
+                it[WowGuilds.name] = name.lowercase()
+                it[WowGuilds.realm] = realm.lowercase()
+                it[WowGuilds.region] = region.lowercase()
+                it[WowGuilds.viewId] = viewId
+                it[WowGuilds.game] = game.toString()
             }
         }
     }
