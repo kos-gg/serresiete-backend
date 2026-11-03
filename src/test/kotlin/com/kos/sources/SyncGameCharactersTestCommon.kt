@@ -14,7 +14,6 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
@@ -111,8 +110,7 @@ abstract class SyncGameCharactersTestCommon {
         GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
-            lolEntitySynchronizer,
-            EventStoreInMemory()
+            lolEntitySynchronizer
         ).process()
 
         if (shouldCache) {
@@ -139,8 +137,7 @@ abstract class SyncGameCharactersTestCommon {
         GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
-            wowEntityCacheService,
-            EventStoreInMemory()
+            wowEntityCacheService
         ).process()
 
         if (shouldCache) {
@@ -166,8 +163,7 @@ abstract class SyncGameCharactersTestCommon {
         GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
-            wowHardcoreEntityCacheService,
-            EventStoreInMemory()
+            wowHardcoreEntityCacheService
         ).process()
 
         if (shouldCache) {

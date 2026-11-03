@@ -218,7 +218,7 @@ fun Application.module() {
             credentialsService,
             eventStore
         )
-    val viewsEventService = ViewsEventService(viewsRepository, entitiesService, eventStore)
+    val viewsEventService = ViewsEventService(viewsRepository, entitiesService)
     val viewsController = ViewsController(viewsService)
 
     val operationsService = OperationsService(eventStore)
@@ -307,19 +307,19 @@ fun Application.module() {
         "sync-lol",
         eventStore,
         subscriptionsRepository
-    ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository
-    ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository
-    ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",

@@ -5,6 +5,7 @@ import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.OperationFailedEvent
+import com.kos.eventsourcing.events.ViewSyncCompletedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.EventProcessOutcome
@@ -34,7 +35,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { EventProcessOutcome.Processed }
+                process = { EventProcessOutcome.Processed() }
             )
 
             assertThrows<Exception> {
@@ -69,7 +70,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { EventProcessOutcome.Processed }
+                process = { EventProcessOutcome.Processed() }
             )
 
             subscription.processPendingEvents()
@@ -192,7 +193,7 @@ class EventSubscriptionTest {
                 subscriptionsRepository = subscriptionsRepository,
                 process = {
                     if (it.version == 5L) error("Simulated error")
-                    else EventProcessOutcome.Processed
+                    else EventProcessOutcome.Processed()
                 }
             )
 
@@ -234,7 +235,7 @@ class EventSubscriptionTest {
                 subscriptionName = "testSubscription",
                 eventStore = eventStore,
                 subscriptionsRepository = subscriptionsRepository,
-                process = { EventProcessOutcome.Processed }
+                process = { EventProcessOutcome.Processed() }
             )
 
             subscription.processPendingEvents()
@@ -313,6 +314,56 @@ class EventSubscriptionTest {
             }
 
             assertEquals(subscriptionState, subscriptionsRepository.getState("testSubscription"))
+        }
+    }
+
+    @Test
+    fun `processPendingEvents stores the emitted completion event under the processed event's aggregate root and operation`() {
+        runBlocking {
+            val eventData = ViewToBeCreatedEvent("view-id", "name", true, listOf(), Game.LOL, "owner", false, null)
+            val eventWithVersion = EventWithVersion(1, Event("root", "operation-id", eventData))
+            val eventStore = EventStoreInMemory().withState(listOf(eventWithVersion))
+            val subscriptionsRepository = SubscriptionsInMemoryRepository().withState(
+                mapOf("testSubscription" to SubscriptionState(SubscriptionStatus.WAITING, 0, OffsetDateTime.now()))
+            )
+
+            EventSubscription(
+                subscriptionName = "testSubscription",
+                eventStore = eventStore,
+                subscriptionsRepository = subscriptionsRepository,
+                process = { EventProcessOutcome.Processed(ViewSyncCompletedEvent("view-id")) }
+            ).processPendingEvents()
+
+            assertEquals(
+                listOf(Event("root", "operation-id", ViewSyncCompletedEvent("view-id"))),
+                eventStore.getEventsByOperationId("operation-id").drop(1).map { it.event }
+            )
+        }
+    }
+
+    @Test
+    fun `processPendingEvents records a completion event that cannot be stored as a failure and moves on`() {
+        runBlocking {
+            val eventData = ViewToBeCreatedEvent("view-id", "name", true, listOf(), Game.LOL, "owner", false, null)
+            val eventWithVersion = EventWithVersion(1, Event("root", "operation-id", eventData))
+            val eventStore = spyk(EventStoreInMemory().withState(listOf(eventWithVersion)))
+            coEvery { eventStore.save(match { it.eventData is ViewSyncCompletedEvent }) } throws
+                IllegalStateException("completion event could not be serialized")
+            val subscriptionsRepository = SubscriptionsInMemoryRepository().withState(
+                mapOf("testSubscription" to SubscriptionState(SubscriptionStatus.WAITING, 0, OffsetDateTime.now()))
+            )
+
+            EventSubscription(
+                subscriptionName = "testSubscription",
+                eventStore = eventStore,
+                subscriptionsRepository = subscriptionsRepository,
+                process = { EventProcessOutcome.Processed(ViewSyncCompletedEvent("view-id")) }
+            ).processPendingEvents()
+
+            val stored = eventStore.getEventsByOperationId("operation-id").drop(1).map { it.event.eventData }
+            assertEquals(1, stored.size)
+            assertTrue(stored.single() is OperationFailedEvent)
+            assertEquals(1, subscriptionsRepository.getState("testSubscription")?.version)
         }
     }
 

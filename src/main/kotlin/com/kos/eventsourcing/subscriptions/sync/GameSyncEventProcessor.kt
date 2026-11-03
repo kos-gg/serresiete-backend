@@ -4,27 +4,22 @@ import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.EventProcessOutcome
 
 class GameSyncEventProcessor(
     private val eventWithVersion: EventWithVersion,
     private val entitiesService: EntitiesService,
-    private val synchronizer: EntitySynchronizer,
-    private val eventStore: EventStore
+    private val synchronizer: EntitySynchronizer
 ) : EventProcessor, WithLogger("eventSubscription.syncEntitiesProcessor") {
 
     private val game = synchronizer.game
 
     override suspend fun process(): EventProcessOutcome {
-        val operationId = eventWithVersion.event.operationId
-        val aggregateRoot = eventWithVersion.event.aggregateRoot
-
         return when (eventWithVersion.event.eventData.eventType) {
             EventType.VIEW_CREATED, EventType.VIEW_EDITED, EventType.VIEW_PATCHED -> {
                 val payload = eventWithVersion.event.eventData as ViewSyncTriggerEvent
                 when (payload.game) {
-                    game -> synchronizeView(payload.id, payload.entities, operationId, aggregateRoot)
+                    game -> synchronizeView(payload.id, payload.entities)
                     else -> EventProcessOutcome.Skipped
                 }
             }
@@ -41,14 +36,7 @@ class GameSyncEventProcessor(
                         if (errors.isNotEmpty()) {
                             logger.warn("sync completed with non-fatal errors: ${errors.joinToString("; ") { it.error() }}")
                         }
-                        eventStore.save(
-                            Event(
-                                aggregateRoot,
-                                operationId,
-                                EntitySyncCompletedEvent(payload.request, payload.game)
-                            )
-                        )
-                        EventProcessOutcome.Processed
+                        EventProcessOutcome.Processed(EntitySyncCompletedEvent(payload.request, payload.game))
                     }
 
                     else -> EventProcessOutcome.Skipped
@@ -61,9 +49,7 @@ class GameSyncEventProcessor(
 
     private suspend fun synchronizeView(
         viewId: String,
-        entities: List<Long>?,
-        operationId: String,
-        aggregateRoot: String
+        entities: List<Long>?
     ): EventProcessOutcome {
         logger.debug("processing event v${eventWithVersion.version}")
         if (entities != null) {
@@ -73,7 +59,6 @@ class GameSyncEventProcessor(
                 logger.warn("sync completed with non-fatal errors: ${errors.joinToString("; ") { it.error() }}")
             }
         }
-        eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-        return EventProcessOutcome.Processed
+        return EventProcessOutcome.Processed(ViewSyncCompletedEvent(viewId))
     }
 }

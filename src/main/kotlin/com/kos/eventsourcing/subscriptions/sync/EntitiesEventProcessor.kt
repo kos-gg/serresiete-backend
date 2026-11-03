@@ -27,7 +27,7 @@ class EntitiesEventProcessor(
                         views
                     )
                 }
-                EventProcessOutcome.Processed
+                EventProcessOutcome.Processed()
             }
 
             else -> EventProcessOutcome.Skipped

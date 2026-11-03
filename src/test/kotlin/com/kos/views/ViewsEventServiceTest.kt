@@ -20,8 +20,6 @@ import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStore
-import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
@@ -53,27 +51,22 @@ class ViewsEventServiceTest {
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
 
-    private val aggregateRoot = "/credentials/owner"
-
     @Nested
     inner class BehaviorOfCreateView {
 
         @Test
         fun `create view processing view to be created event stores an event`() {
             runBlocking {
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(listOf(), listOf()),
                     emptyEntitiesState
                 )
 
-                createViewFromEventAndAssert(
-                    viewsEventService,
-                    ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false, null)
-                )
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewCreatedEventEvent(id, name, owner, listOf(), published, Game.LOL, false, null)
+                assertEquals(
+                    ViewCreatedEventEvent(id, name, owner, listOf(), published, Game.LOL, false, null),
+                    viewsEventService.createView(
+                        ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false, null)
+                    )
                 )
             }
         }
@@ -90,7 +83,7 @@ class ViewsEventServiceTest {
                     listOf(basicWowEntity.id), Game.WOW, false, guildExtraArguments
                 )
 
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(
                         listOf(existingView),
                         listOf(ViewEntity(basicWowEntity.id, existingViewId, "alias"))
@@ -101,34 +94,18 @@ class ViewsEventServiceTest {
                     )
                 )
 
-                createViewFromEventAndAssert(
-                    viewsEventService,
-                    ViewToBeCreatedEvent(
-                        id, "Method roster copy", published, listOf(guildRequest), Game.WOW, owner, false, guildExtraArguments
-                    )
-                )
-
-                assertEventStoredCorrectly(
-                    eventStore,
+                assertEquals(
                     ViewCreatedEventEvent(
                         id, "Method roster copy", owner, listOf(basicWowEntity.id), published, Game.WOW, false, guildExtraArguments
+                    ),
+                    viewsEventService.createView(
+                        ViewToBeCreatedEvent(
+                            id, "Method roster copy", published, listOf(guildRequest), Game.WOW, owner, false, guildExtraArguments
+                        )
                     )
                 )
 
                 verifyNoInteractions(blizzardClient)
-            }
-        }
-
-        private suspend fun createViewFromEventAndAssert(
-            viewsEventService: ViewsEventService,
-            viewToBeCreatedEvent: ViewToBeCreatedEvent
-        ) {
-            viewsEventService.createView(
-                id,
-                aggregateRoot,
-                viewToBeCreatedEvent
-            ).let {
-                assertOperation(it, EventType.VIEW_CREATED)
             }
         }
     }
@@ -139,7 +116,7 @@ class ViewsEventServiceTest {
         @Test
         fun `editing a lol view processing view to be edited stores an event`() {
             runBlocking {
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(
                         listOf(basicSimpleLolView),
                         basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
@@ -147,17 +124,9 @@ class ViewsEventServiceTest {
                 )
 
                 val newName = "new-name"
-                viewsEventService.editView(
-                    id,
-                    aggregateRoot,
-                    ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false)
-                ).let {
-                    assertOperation(it, EventType.VIEW_EDITED)
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewEditedEventEvent(id, newName, listOf(), published, Game.LOL, false)
+                assertEquals(
+                    ViewEditedEventEvent(id, newName, listOf(), published, Game.LOL, false),
+                    viewsEventService.editView(ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false))
                 )
             }
         }
@@ -179,7 +148,7 @@ class ViewsEventServiceTest {
                 `when`(blizzardClient.getRetailProfile(request4.region, request4.realm, request4.name))
                     .thenReturn(BlizzardMockHelper.getCharacterProfile(request4))
 
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(
                         listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
                         basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
@@ -190,24 +159,18 @@ class ViewsEventServiceTest {
                     )
                 )
 
-                viewsEventService.editView(
-                    id,
-                    aggregateRoot,
-                    ViewToBeEditedEvent(
-                        id,
-                        name,
-                        published,
-                        listOf(request1, request2, request3, request4),
-                        Game.WOW,
-                        false
+                assertEquals(
+                    ViewEditedEventEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW, false),
+                    viewsEventService.editView(
+                        ViewToBeEditedEvent(
+                            id,
+                            name,
+                            published,
+                            listOf(request1, request2, request3, request4),
+                            Game.WOW,
+                            false
+                        )
                     )
-                ).let {
-                    assertOperation(it, EventType.VIEW_EDITED)
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewEditedEventEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW, false)
                 )
             }
         }
@@ -217,7 +180,7 @@ class ViewsEventServiceTest {
             runBlocking {
                 val charactersRequest = (3..6).map { LolEntityRequest(it.toString(), it.toString()) }
 
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(
                         listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
                         basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
@@ -241,17 +204,11 @@ class ViewsEventServiceTest {
                     )
                 }
 
-                viewsEventService.editView(
-                    id,
-                    aggregateRoot,
-                    ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL, false)
-                ).let {
-                    assertOperation(it, EventType.VIEW_EDITED)
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewEditedEventEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL, false)
+                assertEquals(
+                    ViewEditedEventEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL, false),
+                    viewsEventService.editView(
+                        ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL, false)
+                    )
                 )
             }
         }
@@ -264,7 +221,7 @@ class ViewsEventServiceTest {
             runBlocking {
                 val charactersRequest = (3..6).map { LolEntityRequest(it.toString(), it.toString()) }
 
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(
                         listOf(basicSimpleLolView.copy(entitiesIds = listOf(1))),
                         basicSimpleLolView.entitiesIds.map { ViewEntity(it, basicSimpleLolView.id, "alias") }),
@@ -284,17 +241,11 @@ class ViewsEventServiceTest {
                     )
                 }
 
-                viewsEventService.patchView(
-                    id,
-                    aggregateRoot,
-                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL, false)
-                ).let {
-                    assertOperation(it, EventType.VIEW_PATCHED)
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewPatchedEventEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL, false)
+                assertEquals(
+                    ViewPatchedEventEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL, false),
+                    viewsEventService.patchView(
+                        ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL, false)
+                    )
                 )
             }
         }
@@ -317,7 +268,7 @@ class ViewsEventServiceTest {
                 `when`(blizzardClient.getRetailProfile(request4.region, request4.realm, request4.name))
                     .thenReturn(BlizzardMockHelper.getCharacterProfile(request4))
 
-                val (eventStore, viewsEventService) = createService(
+                val viewsEventService = createService(
                     ViewsState(
                         listOf(basicSimpleWowView.copy(entitiesIds = listOf(1))),
                         basicSimpleWowView.entitiesIds.map { ViewEntity(it, basicSimpleWowView.id, "alias") }),
@@ -326,17 +277,11 @@ class ViewsEventServiceTest {
 
                 val charactersRequest = listOf(request1, request2, request3, request4)
 
-                viewsEventService.patchView(
-                    id,
-                    aggregateRoot,
-                    ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW, false)
-                ).let {
-                    assertOperation(it, EventType.VIEW_PATCHED)
-                }
-
-                assertEventStoredCorrectly(
-                    eventStore,
-                    ViewPatchedEventEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW, false)
+                assertEquals(
+                    ViewPatchedEventEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW, false),
+                    viewsEventService.patchView(
+                        ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW, false)
+                    )
                 )
             }
         }
@@ -346,12 +291,11 @@ class ViewsEventServiceTest {
         viewsState: ViewsState,
         entitiesState: EntitiesState,
         wowGuildsState: List<Triple<GuildPayload, String, Game>> = listOf(),
-    ): Pair<EventStore, ViewsEventService> {
+    ): ViewsEventService {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)
         val entitiesRepository = EntitiesInMemoryRepository()
             .withState(entitiesState)
-        val eventStore = EventStoreInMemory()
 
         val wowGuildsRepository = WowGuildsInMemoryRepository()
             .withState(WowGuildsState(wowGuildsState))
@@ -384,22 +328,6 @@ class ViewsEventServiceTest {
             wowGuildUpdater
         )
 
-        val service = ViewsEventService(viewsRepository, entitiesService, eventStore)
-
-        return Pair(eventStore, service)
-    }
-
-    private fun assertOperation(operation: Operation, expectedType: EventType) {
-        assertTrue(operation.id.isNotEmpty())
-        assertEquals(expectedType, operation.type)
-    }
-
-    private suspend fun assertEventStoredCorrectly(eventStore: EventStore, eventData: EventData) {
-        val events = eventStore.getEvents(null).toList()
-        assertEquals(1, events.size)
-        val actual = events.first().event
-        assertTrue(actual.operationId.isNotEmpty())
-        assertEquals(aggregateRoot, actual.aggregateRoot)
-        assertEquals(eventData, actual.eventData)
+        return ViewsEventService(viewsRepository, entitiesService)
     }
 }

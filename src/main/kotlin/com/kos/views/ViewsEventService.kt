@@ -5,20 +5,14 @@ import com.kos.entities.EntitiesService
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.views.repository.ViewsRepository
 
 class ViewsEventService(
     private val viewsRepository: ViewsRepository,
-    private val entitiesService: EntitiesService,
-    private val eventStore: EventStore
+    private val entitiesService: EntitiesService
 ) : WithLogger("ViewsEventService") {
 
-    suspend fun createView(
-        operationId: String,
-        aggregateRoot: String,
-        viewToBeCreatedEvent: ViewToBeCreatedEvent
-    ): Operation {
+    suspend fun createView(viewToBeCreatedEvent: ViewToBeCreatedEvent): ViewCreatedEventEvent {
         val resolved = resolveViewEntities(viewToBeCreatedEvent)
 
         val inserted = entitiesService
@@ -41,12 +35,7 @@ class ViewsEventService(
             entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
         }
 
-        val event = Event(
-            aggregateRoot,
-            operationId,
-            ViewCreatedEventEvent.fromSimpleView(view)
-        )
-        return eventStore.save(event)
+        return ViewCreatedEventEvent.fromSimpleView(view)
     }
 
     private suspend fun resolveViewEntities(
@@ -82,11 +71,7 @@ class ViewsEventService(
         }
     }
 
-    suspend fun editView(
-        operationId: String,
-        aggregateRoot: String,
-        viewToBeEditedEvent: ViewToBeEditedEvent
-    ): Operation {
+    suspend fun editView(viewToBeEditedEvent: ViewToBeEditedEvent): ViewEditedEventEvent {
         val resolved =
             entitiesService.resolveEntities(
                 viewToBeEditedEvent.entities,
@@ -106,19 +91,10 @@ class ViewsEventService(
             viewToBeEditedEvent.featured
         )
 
-        val event = Event(
-            aggregateRoot,
-            operationId,
-            ViewEditedEventEvent.fromViewModified(operationId, viewToBeEditedEvent.game, viewModified)
-        )
-        return eventStore.save(event)
+        return ViewEditedEventEvent.fromViewModified(viewToBeEditedEvent.id, viewToBeEditedEvent.game, viewModified)
     }
 
-    suspend fun patchView(
-        operationId: String,
-        aggregateRoot: String,
-        viewToBePatchedEvent: ViewToBePatchedEvent
-    ): Operation {
+    suspend fun patchView(viewToBePatchedEvent: ViewToBePatchedEvent): ViewPatchedEventEvent {
         val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
             val resolved =
                 entitiesService.resolveEntities(
@@ -140,33 +116,19 @@ class ViewsEventService(
             viewToBePatchedEvent.featured
         )
 
-        val event = Event(
-            aggregateRoot,
-            operationId,
-            ViewPatchedEventEvent.fromViewPatched(operationId, viewToBePatchedEvent.game, patchedView)
-        )
-        return eventStore.save(event)
+        return ViewPatchedEventEvent.fromViewPatched(viewToBePatchedEvent.id, viewToBePatchedEvent.game, patchedView)
     }
 
-    suspend fun deleteView(
-        operationId: String,
-        aggregateRoot: String,
-        event: ViewToBeDeletedEvent
-    ): Operation {
+    suspend fun deleteView(event: ViewToBeDeletedEvent): ViewDeletedEvent {
         viewsRepository.delete(event.id)
-        val completionEvent = Event(
-            aggregateRoot,
-            operationId,
-            ViewDeletedEvent(
-                event.id,
-                event.name,
-                event.owner,
-                event.entities,
-                event.published,
-                event.game,
-                event.featured
-            )
+        return ViewDeletedEvent(
+            event.id,
+            event.name,
+            event.owner,
+            event.entities,
+            event.published,
+            event.game,
+            event.featured
         )
-        return eventStore.save(completionEvent)
     }
 }

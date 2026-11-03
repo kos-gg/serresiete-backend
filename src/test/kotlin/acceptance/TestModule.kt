@@ -164,7 +164,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
     val viewsService = ViewsService(viewsRepository, entitiesService, dataCacheService, credentialsService, eventStore)
-    val viewsEventService = ViewsEventService(viewsRepository, entitiesService, eventStore)
+    val viewsEventService = ViewsEventService(viewsRepository, entitiesService)
     val viewsController = ViewsController(viewsService)
 
     val sourcesService = SourcesService(wowSeasonService)
@@ -245,13 +245,13 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             ViewsEventProcessor(it, viewsEventService).process()
         },
         syncLol = EventSubscription("sync-lol", eventStore, subscriptionsRepository) {
-            GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process()
+            GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer).process()
         },
         syncWow = EventSubscription("sync-wow", eventStore, subscriptionsRepository) {
-            GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process()
+            GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer).process()
         },
         syncWowHc = EventSubscription("sync-wow-hc", eventStore, subscriptionsRepository) {
-            GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process()
+            GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process()
         },
         entities = EventSubscription("entities", eventStore, subscriptionsRepository) {
             EntitiesEventProcessor(it, entitiesService).process()
