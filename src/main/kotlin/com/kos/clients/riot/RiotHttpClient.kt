@@ -8,13 +8,13 @@ import com.kos.common.WithLogger
 import com.kos.datacache.domain.QueueType
 import com.kos.entities.domain.LolSummoner
 import com.kos.entities.domain.RiotAccount
+import com.kos.sources.lol.LeagueEntry
+import com.kos.sources.lol.LolMatch
 import io.ktor.client.*
 import io.ktor.client.request.*
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import com.kos.sources.lol.LeagueEntry
-import com.kos.sources.lol.LolMatch
 
 
 class RiotHttpClient(

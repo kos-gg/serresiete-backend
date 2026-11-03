@@ -5,15 +5,16 @@ import com.kos.assertTrue
 import com.kos.clients.NotFound
 import com.kos.clients.config.RetryConfig
 import com.kos.clients.config.riotHttpClientConfig
-import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotHttpClientHelper.client
+import com.kos.datacache.domain.QueueType
 import io.ktor.client.*
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class RiotHttpClientTest {
-    private val riotHttpClient = RiotHttpClient(HttpClient(client.engine) { riotHttpClientConfig(RetryConfig(0, 0), "fake-key") })
+    private val riotHttpClient =
+        RiotHttpClient(HttpClient(client.engine) { riotHttpClientConfig(RetryConfig(0, 0), "fake-key") })
 
     @Test
     fun `get puuid by riot id works as expected`() {

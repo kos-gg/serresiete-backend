@@ -3,7 +3,9 @@ package com.kos.clients.raiderio
 import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
-import com.kos.clients.domain.*
+import com.kos.clients.domain.ExpansionSeasons
+import com.kos.clients.domain.RaiderIoProfile
+import com.kos.clients.domain.RaiderioWowHeadEmbeddedResponse
 import com.kos.clients.fetchFromApi
 import com.kos.clients.raiderio.RaiderIoHttpClient.RaiderIoHttpClientConstants.BASE_URI
 import com.kos.clients.raiderio.RaiderIoHttpClient.RaiderIoHttpClientConstants.CHARACTERS_PROFILE_PATH
@@ -12,14 +14,13 @@ import com.kos.clients.raiderio.RaiderIoHttpClient.RaiderIoHttpClientConstants.M
 import com.kos.clients.raiderio.RaiderIoHttpClient.RaiderIoHttpClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.WithLogger
 import com.kos.entities.domain.WowEntity
+import com.kos.sources.wow.SeasonCutoff
+import com.kos.sources.wow.WowCharacterProfile
 import com.kos.sources.wow.staticdata.wowseason.Season
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.http.*
 import java.net.URI
-import com.kos.sources.wow.SeasonCutoff
-import com.kos.sources.wow.WowCharacterProfile
 
 class RaiderIoHttpClient(
     val client: HttpClient
@@ -52,7 +53,8 @@ class RaiderIoHttpClient(
                 )
             }
         }.bind()
-        val specsWithName = RaiderIoProtocol.getMythicPlusRanks(profile, wowEntity.specsWithName(profile.`class`)).bind()
+        val specsWithName =
+            RaiderIoProtocol.getMythicPlusRanks(profile, wowEntity.specsWithName(profile.`class`)).bind()
         profile.toWowCharacterProfile(specsWithName)
     }
 

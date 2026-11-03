@@ -11,18 +11,19 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.S
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
-import com.kos.datacache.domain.*
+import com.kos.datacache.domain.WowSpecialization
+import com.kos.datacache.domain.WowStats
 import com.kos.entities.domain.GuildRoster
+import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowRealm
+import com.kos.sources.wow.MythicKeystoneProfile
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
 import io.ktor.client.*
 import io.ktor.client.request.*
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import com.kos.sources.wowhc.WowEquippedItemRef
-import com.kos.sources.wowhc.WowItemDetails
-import com.kos.entities.domain.WowCharacter
-import com.kos.sources.wow.MythicKeystoneProfile
 
 class BlizzardHttpClient(
     private val client: HttpClient
@@ -161,7 +162,10 @@ class BlizzardHttpClient(
     ): Either<ClientError, GuildRoster> =
         fetchFromApi<GetWowRosterResponse> {
             client.get(
-                url(region, "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=profile-classic1x-eu&locale=en_US")
+                url(
+                    region,
+                    "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=profile-classic1x-eu&locale=en_US"
+                )
             ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_EU_NAMESPACE)
             }
@@ -174,7 +178,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, GuildRoster> {
         val namespace = "profile-$region"
         return fetchFromApi<GetWowRosterResponse> {
-            client.get(url(region, "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, namespace)
             }
         }.map { it.toGuildRoster() }

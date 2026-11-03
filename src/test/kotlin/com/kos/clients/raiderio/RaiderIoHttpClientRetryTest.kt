@@ -34,7 +34,12 @@ class RaiderIoHttpClientRetryTest {
     fun `retries a server error and succeeds`() {
         runBlocking {
             val engine = engineResponding(status(HttpStatusCode.ServiceUnavailable), ok)
-            val result = RaiderIoHttpClient(HttpClient(engine) { raiderIoHttpClientConfig(RetryConfig(1, 1), "test-key") }).getExpansionSeasons(10)
+            val result = RaiderIoHttpClient(HttpClient(engine) {
+                raiderIoHttpClientConfig(
+                    RetryConfig(1, 1),
+                    "test-key"
+                )
+            }).getExpansionSeasons(10)
 
             assertTrue(result.isRight())
             assertEquals(2, engine.requestHistory.size)
@@ -45,7 +50,12 @@ class RaiderIoHttpClientRetryTest {
     fun `retries a too many requests response`() {
         runBlocking {
             val engine = engineResponding(status(HttpStatusCode.TooManyRequests), ok)
-            val result = RaiderIoHttpClient(HttpClient(engine) { raiderIoHttpClientConfig(RetryConfig(1, 1), "test-key") }).getExpansionSeasons(10)
+            val result = RaiderIoHttpClient(HttpClient(engine) {
+                raiderIoHttpClientConfig(
+                    RetryConfig(1, 1),
+                    "test-key"
+                )
+            }).getExpansionSeasons(10)
 
             assertTrue(result.isRight())
             assertEquals(2, engine.requestHistory.size)
@@ -56,7 +66,12 @@ class RaiderIoHttpClientRetryTest {
     fun `retries a network failure and succeeds`() {
         runBlocking {
             val engine = engineResponding({ throw IOException("connection reset") }, ok)
-            val result = RaiderIoHttpClient(HttpClient(engine) { raiderIoHttpClientConfig(RetryConfig(1, 1), "test-key") }).getExpansionSeasons(10)
+            val result = RaiderIoHttpClient(HttpClient(engine) {
+                raiderIoHttpClientConfig(
+                    RetryConfig(1, 1),
+                    "test-key"
+                )
+            }).getExpansionSeasons(10)
 
             assertTrue(result.isRight())
         }
@@ -66,7 +81,12 @@ class RaiderIoHttpClientRetryTest {
     fun `does not retry a client error`() {
         runBlocking {
             val engine = engineResponding(status(HttpStatusCode.BadRequest), ok)
-            val result = RaiderIoHttpClient(HttpClient(engine) { raiderIoHttpClientConfig(RetryConfig(1, 1), "test-key") }).getExpansionSeasons(10)
+            val result = RaiderIoHttpClient(HttpClient(engine) {
+                raiderIoHttpClientConfig(
+                    RetryConfig(1, 1),
+                    "test-key"
+                )
+            }).getExpansionSeasons(10)
 
             assertEquals(Either.Left(HttpError(400, "")), result)
             assertEquals(1, engine.requestHistory.size)
@@ -77,7 +97,12 @@ class RaiderIoHttpClientRetryTest {
     fun `cutoff is never retried`() {
         runBlocking {
             val engine = engineResponding(status(HttpStatusCode.ServiceUnavailable), ok)
-            val result = RaiderIoHttpClient(HttpClient(engine) { raiderIoHttpClientConfig(RetryConfig(1, 1), "test-key") }).cutoff("season-tww-1")
+            val result = RaiderIoHttpClient(HttpClient(engine) {
+                raiderIoHttpClientConfig(
+                    RetryConfig(1, 1),
+                    "test-key"
+                )
+            }).cutoff("season-tww-1")
 
             assertEquals(Either.Left(HttpError(503, "")), result)
             assertEquals(1, engine.requestHistory.size)
@@ -99,7 +124,12 @@ class RaiderIoHttpClientRetryTest {
     fun `sends the access key and accept header on every request`() {
         runBlocking {
             val engine = engineResponding(ok)
-            RaiderIoHttpClient(HttpClient(engine) { raiderIoHttpClientConfig(RetryConfig(0, 1), "test-key") }).getExpansionSeasons(10)
+            RaiderIoHttpClient(HttpClient(engine) {
+                raiderIoHttpClientConfig(
+                    RetryConfig(0, 1),
+                    "test-key"
+                )
+            }).getExpansionSeasons(10)
 
             val request = engine.requestHistory.single()
             assertEquals("test-key", request.url.parameters["access_key"])

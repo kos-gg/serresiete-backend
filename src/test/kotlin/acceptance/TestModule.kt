@@ -6,13 +6,12 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
+import com.kos.clients.blizzard.BlizzardHttpAuthClient
+import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.config.RetryConfig
 import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.clients.config.raiderIoHttpClientConfig
 import com.kos.clients.config.riotHttpClientConfig
-import io.ktor.client.*
-import com.kos.clients.blizzard.BlizzardHttpAuthClient
-import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
 import com.kos.clients.raiderio.RaiderIoHttpClient
 import com.kos.clients.riot.RiotHttpClient
@@ -39,11 +38,7 @@ import com.kos.eventsourcing.subscriptions.repository.SubscriptionsDatabaseRepos
 import com.kos.eventsourcing.subscriptions.sync.EntitiesEventProcessor
 import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
 import com.kos.eventsourcing.subscriptions.sync.ViewsEventProcessor
-import com.kos.plugins.configureAuthentication
-import com.kos.plugins.configureCors
-import com.kos.plugins.configureRouting
-import com.kos.plugins.configureSerialization
-import com.kos.plugins.configureStatusPages
+import com.kos.plugins.*
 import com.kos.roles.RolesController
 import com.kos.roles.RolesService
 import com.kos.roles.repository.RolesActivitiesDatabaseRepository
@@ -55,12 +50,14 @@ import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
+import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.sources.wowhc.staticdata.wowitems.WowItemsDatabaseRepository
 import com.kos.tasks.TaskType
@@ -73,10 +70,9 @@ import com.kos.views.ViewsController
 import com.kos.views.ViewsEventService
 import com.kos.views.ViewsService
 import com.kos.views.repository.ViewsDatabaseRepository
+import io.ktor.client.*
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
-import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wowhc.WowHardcoreGuildResolver
 
 data class TestSubscriptions(
     val views: EventSubscription,
@@ -89,10 +85,21 @@ data class TestSubscriptions(
 fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
 
     val retryConfig = RetryConfig(maxRetries = 1, delayTime = 0)
-    val raiderIoHttpClient = RaiderIoHttpClient(HttpClient(mockHttpClient.engine) { raiderIoHttpClientConfig(retryConfig, apiKey = "test-key") })
-    val riotHttpClient = RiotHttpClient(HttpClient(mockHttpClient.engine) { riotHttpClientConfig(retryConfig, "test-api-key") })
+    val raiderIoHttpClient = RaiderIoHttpClient(HttpClient(mockHttpClient.engine) {
+        raiderIoHttpClientConfig(
+            retryConfig,
+            apiKey = "test-key"
+        )
+    })
+    val riotHttpClient =
+        RiotHttpClient(HttpClient(mockHttpClient.engine) { riotHttpClientConfig(retryConfig, "test-api-key") })
     val blizzardAuthClient = BlizzardHttpAuthClient(mockHttpClient, BlizzardCredentials("id", "secret"))
-    val blizzardClient = BlizzardHttpClient(HttpClient(mockHttpClient.engine) { blizzardHttpClientConfig(retryConfig, blizzardAuthClient) })
+    val blizzardClient = BlizzardHttpClient(HttpClient(mockHttpClient.engine) {
+        blizzardHttpClientConfig(
+            retryConfig,
+            blizzardAuthClient
+        )
+    })
 
     val eventStore = EventStoreDatabase(db)
 
@@ -143,7 +150,8 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         blizzardClient,
         wowItemsDatabaseRepository
     )
-    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHttpClient, blizzardClient, seasonRepository)
+    val wowEntitySynchronizer =
+        WowEntitySynchronizer(dataCacheRepository, raiderIoHttpClient, blizzardClient, seasonRepository)
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
             wowSynchronizer = wowEntitySynchronizer,
@@ -154,7 +162,8 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHttpClient)
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)
 
-    val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+    val wowHardcoreGuildUpdater =
+        WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
     val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
     val entitiesService = EntitiesService(
         entitiesRepository,

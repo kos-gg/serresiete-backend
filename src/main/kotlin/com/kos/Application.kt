@@ -6,9 +6,9 @@ import com.kos.activities.repository.ActivitiesDatabaseRepository
 import com.kos.auth.AuthController
 import com.kos.auth.AuthService
 import com.kos.auth.repository.AuthDatabaseRepository
-import com.kos.clients.config.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
+import com.kos.clients.config.RetryConfig
 import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.clients.config.raiderIoHttpClientConfig
 import com.kos.clients.config.riotHttpClientConfig
