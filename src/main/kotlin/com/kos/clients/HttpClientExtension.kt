@@ -35,31 +35,8 @@ internal suspend inline fun Raise<ClientError>.send(crossinline request: suspend
     }
 
 suspend inline fun <reified A> fetchFromApi(
+    parseResponse: (String) -> A = { json.decodeFromString<A>(it) },
     crossinline request: suspend () -> HttpResponse
-): Either<ClientError, A> =
-    either {
-        val response = send(request)
-
-        ensure(response.status.isSuccess()) {
-            if (response.status == HttpStatusCode.NotFound) NotFound
-            else HttpError(
-                status = response.status.value,
-                body = response.bodyAsText()
-            )
-        }
-
-        val rawBody = response.body<String>()
-
-        try {
-            json.decodeFromString<A>(rawBody)
-        } catch (e: Exception) {
-            raise(JsonParseError(e.message ?: e::class.simpleName.orEmpty()))
-        }
-    }
-
-suspend inline fun <reified A> fetchFromApi(
-    crossinline request: suspend () -> HttpResponse,
-    parseResponse: (String) -> A
 ): Either<ClientError, A> =
     either {
         val response = send(request)
