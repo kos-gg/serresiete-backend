@@ -5,10 +5,14 @@ import com.kos.eventsourcing.events.EventError
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.OperationFailedEvent
 import com.kos.eventsourcing.events.EventWithVersion
+import com.kos.eventsourcing.events.ViewCreatedEvent
+import com.kos.eventsourcing.events.ViewEditedEvent
+import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
+import com.kos.views.Game
 import com.kos.views.ViewsTestHelper.basicSimpleWowView
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.runBlocking
@@ -250,6 +254,38 @@ class EventStoreDatabaseTest : EventStoreTest() {
             }
 
             assertEquals(OperationFailedEvent("op"), store.getEventsByOperationId("op").single().event.eventData)
+        }
+    }
+
+    @Test
+    fun `view events stored with their former class names can still be read`() {
+        runBlocking {
+            val legacyRows = listOf(
+                EventType.VIEW_CREATED to """{"type":"com.kos.eventsourcing.events.ViewCreatedEventEvent","id":"sanxei-view","name":"sanxei","owner":"sanxei","entities":[1],"published":true,"game":"WOW","featured":false,"extraArguments":null}""",
+                EventType.VIEW_EDITED to """{"type":"com.kos.eventsourcing.events.ViewEditedEventEvent","id":"sanxei-view","name":"sanxei","entities":[1],"published":true,"game":"WOW","featured":false}""",
+                EventType.VIEW_PATCHED to """{"type":"com.kos.eventsourcing.events.ViewPatchedEventEvent","id":"sanxei-view","name":"sanxei","entities":null,"published":null,"game":"WOW","featured":false}"""
+            )
+            newSuspendedTransaction(db = db) {
+                legacyRows.forEachIndexed { index, (type, json) ->
+                    EventStoreDatabase.Events.insert {
+                        it[version] = index + 1L
+                        it[aggregateRoot] = "/credentials/sanxei"
+                        it[operationId] = "op"
+                        it[eventType] = type.toString()
+                        it[data] = json
+                        it[timestamp] = OffsetDateTime.now().toString()
+                    }
+                }
+            }
+
+            assertEquals(
+                listOf(
+                    ViewCreatedEvent("sanxei-view", "sanxei", "sanxei", listOf(1), true, Game.WOW, false, null),
+                    ViewEditedEvent("sanxei-view", "sanxei", listOf(1), true, Game.WOW, false),
+                    ViewPatchedEvent("sanxei-view", "sanxei", null, null, Game.WOW, false)
+                ),
+                store.getEventsByOperationId("op").map { it.event.eventData }
+            )
         }
     }
 

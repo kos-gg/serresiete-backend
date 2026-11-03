@@ -63,7 +63,7 @@ class ViewsEventServiceTest {
                 )
 
                 assertEquals(
-                    ViewCreatedEventEvent(id, name, owner, listOf(), published, Game.LOL, false, null),
+                    ViewCreatedEvent(id, name, owner, listOf(), published, Game.LOL, false, null),
                     viewsEventService.createView(
                         ViewToBeCreatedEvent(id, name, published, listOf(), Game.LOL, owner, false, null)
                     )
@@ -95,7 +95,7 @@ class ViewsEventServiceTest {
                 )
 
                 assertEquals(
-                    ViewCreatedEventEvent(
+                    ViewCreatedEvent(
                         id, "Method roster copy", owner, listOf(basicWowEntity.id), published, Game.WOW, false, guildExtraArguments
                     ),
                     viewsEventService.createView(
@@ -125,7 +125,7 @@ class ViewsEventServiceTest {
 
                 val newName = "new-name"
                 assertEquals(
-                    ViewEditedEventEvent(id, newName, listOf(), published, Game.LOL, false),
+                    ViewEditedEvent(id, newName, listOf(), published, Game.LOL, false),
                     viewsEventService.editView(ViewToBeEditedEvent(id, newName, published, listOf(), Game.LOL, false))
                 )
             }
@@ -160,7 +160,7 @@ class ViewsEventServiceTest {
                 )
 
                 assertEquals(
-                    ViewEditedEventEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW, false),
+                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.WOW, false),
                     viewsEventService.editView(
                         ViewToBeEditedEvent(
                             id,
@@ -205,7 +205,7 @@ class ViewsEventServiceTest {
                 }
 
                 assertEquals(
-                    ViewEditedEventEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL, false),
+                    ViewEditedEvent(id, name, listOf(3, 4, 5, 6), published, Game.LOL, false),
                     viewsEventService.editView(
                         ViewToBeEditedEvent(id, name, published, charactersRequest, Game.LOL, false)
                     )
@@ -242,7 +242,7 @@ class ViewsEventServiceTest {
                 }
 
                 assertEquals(
-                    ViewPatchedEventEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL, false),
+                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.LOL, false),
                     viewsEventService.patchView(
                         ViewToBePatchedEvent(id, null, null, charactersRequest, Game.LOL, false)
                     )
@@ -278,7 +278,7 @@ class ViewsEventServiceTest {
                 val charactersRequest = listOf(request1, request2, request3, request4)
 
                 assertEquals(
-                    ViewPatchedEventEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW, false),
+                    ViewPatchedEvent(id, null, listOf(1, 2, 3, 4), null, Game.WOW, false),
                     viewsEventService.patchView(
                         ViewToBePatchedEvent(id, null, null, charactersRequest, Game.WOW, false)
                     )

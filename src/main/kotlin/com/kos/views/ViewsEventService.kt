@@ -12,7 +12,7 @@ class ViewsEventService(
     private val entitiesService: EntitiesService
 ) : WithLogger("ViewsEventService") {
 
-    suspend fun createView(viewToBeCreatedEvent: ViewToBeCreatedEvent): ViewCreatedEventEvent {
+    suspend fun createView(viewToBeCreatedEvent: ViewToBeCreatedEvent): ViewCreatedEvent {
         val resolved = resolveViewEntities(viewToBeCreatedEvent)
 
         val inserted = entitiesService
@@ -35,7 +35,7 @@ class ViewsEventService(
             entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
         }
 
-        return ViewCreatedEventEvent.fromSimpleView(view)
+        return ViewCreatedEvent.fromSimpleView(view)
     }
 
     private suspend fun resolveViewEntities(
@@ -71,7 +71,7 @@ class ViewsEventService(
         }
     }
 
-    suspend fun editView(viewToBeEditedEvent: ViewToBeEditedEvent): ViewEditedEventEvent {
+    suspend fun editView(viewToBeEditedEvent: ViewToBeEditedEvent): ViewEditedEvent {
         val resolved =
             entitiesService.resolveEntities(
                 viewToBeEditedEvent.entities,
@@ -91,10 +91,10 @@ class ViewsEventService(
             viewToBeEditedEvent.featured
         )
 
-        return ViewEditedEventEvent.fromViewModified(viewToBeEditedEvent.id, viewToBeEditedEvent.game, viewModified)
+        return ViewEditedEvent.fromViewModified(viewToBeEditedEvent.id, viewToBeEditedEvent.game, viewModified)
     }
 
-    suspend fun patchView(viewToBePatchedEvent: ViewToBePatchedEvent): ViewPatchedEventEvent {
+    suspend fun patchView(viewToBePatchedEvent: ViewToBePatchedEvent): ViewPatchedEvent {
         val entitiesToInsert = viewToBePatchedEvent.entities?.let { entitiesToInsert ->
             val resolved =
                 entitiesService.resolveEntities(
@@ -116,7 +116,7 @@ class ViewsEventService(
             viewToBePatchedEvent.featured
         )
 
-        return ViewPatchedEventEvent.fromViewPatched(viewToBePatchedEvent.id, viewToBePatchedEvent.game, patchedView)
+        return ViewPatchedEvent.fromViewPatched(viewToBePatchedEvent.id, viewToBePatchedEvent.game, patchedView)
     }
 
     suspend fun deleteView(event: ViewToBeDeletedEvent): ViewDeletedEvent {

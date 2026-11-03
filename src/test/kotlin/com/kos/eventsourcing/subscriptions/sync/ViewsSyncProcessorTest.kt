@@ -63,7 +63,7 @@ class ViewsSyncProcessorTest {
 
             assertEquals(
                 Processed(
-                    ViewCreatedEventEvent(
+                    ViewCreatedEvent(
                         ViewsTestHelper.id,
                         ViewsTestHelper.name,
                         ViewsTestHelper.owner, listOf(), true, Game.LOL, false, null
@@ -106,7 +106,7 @@ class ViewsSyncProcessorTest {
 
             assertEquals(
                 Processed(
-                    ViewEditedEventEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
+                    ViewEditedEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
                 ),
                 outcome
             )
@@ -144,7 +144,7 @@ class ViewsSyncProcessorTest {
 
             assertEquals(
                 Processed(
-                    ViewPatchedEventEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
+                    ViewPatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
                 ),
                 outcome
             )

@@ -90,9 +90,9 @@ abstract class SyncGameCharactersTestCommon {
 
     protected fun createEventWithVersion(eventType: EventData, game: Game): EventWithVersion {
         val payload = when (eventType) {
-            is ViewCreatedEventEvent -> eventType.copy(game = game)
-            is ViewEditedEventEvent -> eventType.copy(game = game)
-            is ViewPatchedEventEvent -> eventType.copy(game = game)
+            is ViewCreatedEvent -> eventType.copy(game = game)
+            is ViewEditedEvent -> eventType.copy(game = game)
+            is ViewPatchedEvent -> eventType.copy(game = game)
             else -> eventType
         }
         return EventWithVersion(1L, Event("/credentials/owner", ViewsTestHelper.id, payload))
