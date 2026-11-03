@@ -1,6 +1,7 @@
 package com.kos.clients.config
 
 import com.kos.clients.RetryConfig
+import com.kos.clients.redactAccessKey
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -36,17 +37,17 @@ fun HttpClientConfig<*>.riotHttpClientConfig(retryConfig: RetryConfig, apiKey: S
         }
     )
 
-    installRetry(retryConfig, logger)
-    install(createClientPlugin("RiotRateLimit") {
+    val RiotRateLimitPlugin = createClientPlugin("RiotRateLimit") {
         on(Send) { request ->
             perSecondRateLimiter.executeSuspendFunction {
                 perTwoMinuteRateLimiter.executeSuspendFunction { proceed(request) }
             }
         }
-    })
-    install(HttpTimeout) {
-        requestTimeoutMillis = 8_000
     }
+
+    install(HttpRequestRetry) { defaultRetry(retryConfig, logger, ::redactAccessKey) }
+    install(RiotRateLimitPlugin)
+    install(HttpTimeout) { requestTimeoutMillis = 8_000 }
     defaultRequest {
         header(X_RIOT_TOKEN, apiKey)
     }

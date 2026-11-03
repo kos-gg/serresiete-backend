@@ -24,14 +24,15 @@ fun HttpClientConfig<*>.raiderIoHttpClientConfig(retryConfig: RetryConfig, apiKe
         }
     )
 
-    installRetry(retryConfig, logger, ::redactAccessKey)
-    install(createClientPlugin("RaiderIoRateLimit") {
+    val RaiderIoRateLimitPlugin = createClientPlugin("RaiderIoRateLimit") {
         on(Send) { request -> rateLimiter.executeSuspendFunction { proceed(request) } }
-    })
-    install(HttpTimeout) {
-        requestTimeoutMillis = 8_000
     }
-    install(createClientPlugin("RaiderIoAccessKey") {
+    val RaiderIoAccessKeyPlugin = createClientPlugin("RaiderIoAccessKey") {
         onRequest { request, _ -> request.url.parameters.append("access_key", apiKey) }
-    })
+    }
+
+    install(HttpRequestRetry) { defaultRetry(retryConfig, logger, ::redactAccessKey) }
+    install(RaiderIoRateLimitPlugin)
+    install(HttpTimeout) { requestTimeoutMillis = 8_000 }
+    install(RaiderIoAccessKeyPlugin)
 }
