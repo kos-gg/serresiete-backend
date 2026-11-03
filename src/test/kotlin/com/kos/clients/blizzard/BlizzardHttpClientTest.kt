@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.JsonParseError
 import com.kos.clients.NotFound
-import com.kos.clients.RetryConfig
+import com.kos.clients.config.RetryConfig
 import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.datacache.BlizzardMockHelper

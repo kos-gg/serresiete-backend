@@ -3,7 +3,7 @@ package com.kos.clients.riot
 import arrow.core.Either
 import com.kos.assertTrue
 import com.kos.clients.NotFound
-import com.kos.clients.RetryConfig
+import com.kos.clients.config.RetryConfig
 import com.kos.clients.config.riotHttpClientConfig
 import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotHttpClientHelper.client

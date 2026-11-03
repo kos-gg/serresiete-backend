@@ -1,6 +1,5 @@
 package com.kos.clients.config
 
-import com.kos.clients.RetryConfig
 import io.ktor.client.plugins.*
 import io.ktor.client.utils.*
 import io.ktor.http.*

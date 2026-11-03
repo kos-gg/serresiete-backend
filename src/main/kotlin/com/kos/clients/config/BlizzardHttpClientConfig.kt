@@ -1,6 +1,5 @@
 package com.kos.clients.config
 
-import com.kos.clients.RetryConfig
 import com.kos.clients.redactAccessKey
 import com.kos.clients.blizzard.BlizzardAuthClient
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig

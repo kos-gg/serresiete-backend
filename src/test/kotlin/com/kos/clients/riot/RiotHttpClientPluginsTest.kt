@@ -1,6 +1,6 @@
 package com.kos.clients.riot
 
-import com.kos.clients.RetryConfig
+import com.kos.clients.config.RetryConfig
 import com.kos.clients.config.riotHttpClientConfig
 import com.kos.datacache.domain.QueueType
 import io.ktor.client.*

@@ -3,7 +3,7 @@ package com.kos.clients.blizzard
 import arrow.core.Either
 import com.kos.clients.HttpError
 import com.kos.clients.NetworkError
-import com.kos.clients.RetryConfig
+import com.kos.clients.config.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.json
 import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.clients.domain.TokenResponse
