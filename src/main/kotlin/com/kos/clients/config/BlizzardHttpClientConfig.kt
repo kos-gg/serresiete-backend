@@ -17,8 +17,8 @@ import java.time.Duration
 private val logger = LoggerFactory.getLogger("blizzardClient")
 
 fun HttpClientConfig<*>.blizzardHttpClientConfig(retryConfig: RetryConfig, blizzardAuthClient: BlizzardAuthClient) {
-    val perSecondRateLimiter = RateLimiter.of(
-        "perSecondLimiter",
+    val rateLimiter = RateLimiter.of(
+        "blizzardRateLimiter",
         RateLimiterConfig {
             this.limitForPeriod(100)
                 .limitRefreshPeriod(Duration.ofSeconds(1))
@@ -37,7 +37,7 @@ fun HttpClientConfig<*>.blizzardHttpClientConfig(retryConfig: RetryConfig, blizz
         )
 
     val BlizzardRateLimitPlugin = createClientPlugin("BlizzardRateLimit") {
-        on(Send) { request -> perSecondRateLimiter.executeSuspendFunction { proceed(request) } }
+        on(Send) { request -> rateLimiter.executeSuspendFunction { proceed(request) } }
     }
 
     install(HttpRequestRetry) { defaultRetry(retryConfig, logger, ::redactAccessKey) }
@@ -48,5 +48,5 @@ fun HttpClientConfig<*>.blizzardHttpClientConfig(retryConfig: RetryConfig, blizz
         }
     }
     install(BlizzardRateLimitPlugin)
-    install(HttpTimeout) { requestTimeoutMillis = 8_000 }
+    install(HttpTimeout) { requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS }
 }

@@ -12,7 +12,7 @@ fun HttpRequestRetry.Configuration.defaultRetry(
     logger: Logger,
     redact: (String) -> String
 ) {
-    maxRetries = retryConfig.maxAttempts
+    maxRetries = retryConfig.maxRetries
     retryIf { _, response ->
         response.status.value >= 500 || response.status == HttpStatusCode.TooManyRequests
     }

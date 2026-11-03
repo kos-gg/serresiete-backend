@@ -18,7 +18,7 @@ private val logger = LoggerFactory.getLogger("riotClient")
 
 fun HttpClientConfig<*>.riotHttpClientConfig(retryConfig: RetryConfig, apiKey: String) {
     val perSecondRateLimiter = RateLimiter.of(
-        "perSecondLimiter",
+        "riotPerSecondRateLimiter",
         RateLimiterConfig {
             this.limitForPeriod(20)
                 .limitRefreshPeriod(Duration.ofSeconds(1))
@@ -28,7 +28,7 @@ fun HttpClientConfig<*>.riotHttpClientConfig(retryConfig: RetryConfig, apiKey: S
     )
 
     val perTwoMinuteRateLimiter = RateLimiter.of(
-        "perTwoMinuteLimiter",
+        "riotPerTwoMinutesRateLimiter",
         RateLimiterConfig {
             this.limitForPeriod(100)
                 .limitRefreshPeriod(Duration.ofMinutes(2))
@@ -47,7 +47,7 @@ fun HttpClientConfig<*>.riotHttpClientConfig(retryConfig: RetryConfig, apiKey: S
 
     install(HttpRequestRetry) { defaultRetry(retryConfig, logger, ::redactAccessKey) }
     install(RiotRateLimitPlugin)
-    install(HttpTimeout) { requestTimeoutMillis = 8_000 }
+    install(HttpTimeout) { requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS }
     defaultRequest {
         header(X_RIOT_TOKEN, apiKey)
     }

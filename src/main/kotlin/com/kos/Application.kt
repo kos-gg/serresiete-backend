@@ -13,8 +13,8 @@ import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.clients.config.raiderIoHttpClientConfig
 import com.kos.clients.config.riotHttpClientConfig
 import com.kos.clients.domain.BlizzardCredentials
-import com.kos.clients.raiderio.RaiderIoHTTPClient
-import com.kos.clients.riot.RiotHTTPClient
+import com.kos.clients.raiderio.RaiderIoHttpClient
+import com.kos.clients.riot.RiotHttpClient
 import com.kos.common.DatabaseFactory
 import com.kos.common.JWTConfig
 import com.kos.common.launchSubscription
@@ -110,9 +110,9 @@ fun Application.module() {
     val db = DatabaseFactory.pooledDatabase()
 
     val defaultRetryConfig = RetryConfig(3, 1200)
-    val raiderIoHTTPClient =
-        RaiderIoHTTPClient(HttpClient(CIO) { raiderIoHttpClientConfig(defaultRetryConfig, raiderIoApiKey) })
-    val riotHTTPClient = RiotHTTPClient(HttpClient(CIO) { riotHttpClientConfig(defaultRetryConfig, riotApiKey) })
+    val raiderIoHttpClient =
+        RaiderIoHttpClient(HttpClient(CIO) { raiderIoHttpClientConfig(defaultRetryConfig, raiderIoApiKey) })
+    val riotHttpClient = RiotHttpClient(HttpClient(CIO) { riotHttpClientConfig(defaultRetryConfig, riotApiKey) })
     val blizzardAuthClient = BlizzardHttpAuthClient(HttpClient(CIO), blizzardCredentials)
     val blizzardClient =
         BlizzardHttpClient(HttpClient(CIO) { blizzardHttpClientConfig(defaultRetryConfig, blizzardAuthClient) })
@@ -144,7 +144,7 @@ fun Application.module() {
     val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
-    val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
+    val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
@@ -153,27 +153,27 @@ fun Application.module() {
         lolResolver = lolResolver
     )
 
-    val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
+    val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
 
     val viewsRepository = ViewsDatabaseRepository(db)
     val dataCacheRepository = DataCacheDatabaseRepository(db)
 
     val staticDataRepository = WowExpansionDatabaseRepository(db)
-    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
+    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHttpClient)
 
-    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient)
+    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHttpClient)
 
     val wowHardcoreEntitySynchronizer = WowHardcoreEntitySynchronizer(
         dataCacheRepository,
         entitiesRepository,
-        raiderIoHTTPClient,
+        raiderIoHttpClient,
         blizzardClient,
         WowItemsDatabaseRepository(db),
         System.getenv("WOW_HC_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )
     val wowEntitySynchronizer = WowEntitySynchronizer(
         dataCacheRepository,
-        raiderIoHTTPClient,
+        raiderIoHttpClient,
         blizzardClient,
         seasonRepository,
         System.getenv("WOW_SYNC_CONCURRENCY")?.toInt() ?: 10,

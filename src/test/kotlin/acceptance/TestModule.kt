@@ -14,8 +14,8 @@ import io.ktor.client.*
 import com.kos.clients.blizzard.BlizzardHttpAuthClient
 import com.kos.clients.blizzard.BlizzardHttpClient
 import com.kos.clients.domain.BlizzardCredentials
-import com.kos.clients.raiderio.RaiderIoHTTPClient
-import com.kos.clients.riot.RiotHTTPClient
+import com.kos.clients.raiderio.RaiderIoHttpClient
+import com.kos.clients.riot.RiotHttpClient
 import com.kos.common.JWTConfig
 import com.kos.credentials.CredentialsController
 import com.kos.credentials.CredentialsService
@@ -88,9 +88,9 @@ data class TestSubscriptions(
 
 fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscriptions {
 
-    val retryConfig = RetryConfig(maxAttempts = 1, delayTime = 0)
-    val raiderIoHTTPClient = RaiderIoHTTPClient(HttpClient(mockHttpClient.engine) { raiderIoHttpClientConfig(retryConfig, apiKey = "test-key") })
-    val riotHTTPClient = RiotHTTPClient(HttpClient(mockHttpClient.engine) { riotHttpClientConfig(retryConfig, "test-api-key") })
+    val retryConfig = RetryConfig(maxRetries = 1, delayTime = 0)
+    val raiderIoHttpClient = RaiderIoHttpClient(HttpClient(mockHttpClient.engine) { raiderIoHttpClientConfig(retryConfig, apiKey = "test-key") })
+    val riotHttpClient = RiotHttpClient(HttpClient(mockHttpClient.engine) { riotHttpClientConfig(retryConfig, "test-api-key") })
     val blizzardAuthClient = BlizzardHttpAuthClient(mockHttpClient, BlizzardCredentials("id", "secret"))
     val blizzardClient = BlizzardHttpClient(HttpClient(mockHttpClient.engine) { blizzardHttpClientConfig(retryConfig, blizzardAuthClient) })
 
@@ -125,7 +125,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
-    val lolResolver = LolEntityResolver(entitiesRepository, riotHTTPClient)
+    val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
@@ -134,16 +134,16 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         lolResolver = lolResolver
     )
 
-    val lolUpdater = LolEntityUpdater(riotHTTPClient, entitiesRepository)
-    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHTTPClient)
+    val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
+    val lolEntitySynchronizer = LolEntitySynchronizer(dataCacheRepository, riotHttpClient)
     val wowHardcoreEntitySynchronizer = WowHardcoreEntitySynchronizer(
         dataCacheRepository,
         entitiesRepository,
-        raiderIoHTTPClient,
+        raiderIoHttpClient,
         blizzardClient,
         wowItemsDatabaseRepository
     )
-    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHTTPClient, blizzardClient, seasonRepository)
+    val wowEntitySynchronizer = WowEntitySynchronizer(dataCacheRepository, raiderIoHttpClient, blizzardClient, seasonRepository)
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
             wowSynchronizer = wowEntitySynchronizer,
@@ -151,7 +151,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             lolSynchronizer = lolEntitySynchronizer
         )
 
-    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHTTPClient)
+    val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHttpClient)
     val dataCacheService = DataCacheService(dataCacheRepository, entitiesRepository, eventStore)
 
     val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)

@@ -6,19 +6,19 @@ import com.kos.clients.NotFound
 import com.kos.clients.RetryConfig
 import com.kos.clients.config.riotHttpClientConfig
 import com.kos.datacache.domain.QueueType
-import com.kos.clients.riot.RiotHTTPClientHelper.client
+import com.kos.clients.riot.RiotHttpClientHelper.client
 import io.ktor.client.*
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class RiotHTTPClientTest {
-    private val riotHTTPClient = RiotHTTPClient(HttpClient(client.engine) { riotHttpClientConfig(RetryConfig(0, 0), "fake-key") })
+class RiotHttpClientTest {
+    private val riotHttpClient = RiotHttpClient(HttpClient(client.engine) { riotHttpClientConfig(RetryConfig(0, 0), "fake-key") })
 
     @Test
     fun `get puuid by riot id works as expected`() {
         runBlocking {
-            val res = riotHTTPClient.getPUUIDByRiotId("GTP ZeroMVPs", "WOW")
+            val res = riotHttpClient.getPUUIDByRiotId("GTP ZeroMVPs", "WOW")
             assertTrue(res.isRight())
         }
     }
@@ -26,7 +26,7 @@ class RiotHTTPClientTest {
     @Test
     fun `get puuid by riot id returns not found when riot does not know the player`() {
         runBlocking {
-            assertEquals(Either.Left(NotFound), riotHTTPClient.getPUUIDByRiotId("unknown", "WOW"))
+            assertEquals(Either.Left(NotFound), riotHttpClient.getPUUIDByRiotId("unknown", "WOW"))
         }
     }
 
@@ -34,7 +34,7 @@ class RiotHTTPClientTest {
     fun `get summoner by puuid works as expected`() {
         runBlocking {
             val res =
-                riotHTTPClient.getSummonerByPuuid("vJre0esG5sIx3rvCAe-YVsDfqCIMV5b2P-61wrYZ4w-hs9u_Ek8dVlo-KLo-GNA4NumLV1YTNxeCmA")
+                riotHttpClient.getSummonerByPuuid("vJre0esG5sIx3rvCAe-YVsDfqCIMV5b2P-61wrYZ4w-hs9u_Ek8dVlo-KLo-GNA4NumLV1YTNxeCmA")
             assertTrue(res.isRight())
 
         }
@@ -43,7 +43,7 @@ class RiotHTTPClientTest {
     @Test
     fun `get matches by puuid works as expected`() {
         runBlocking {
-            val res = riotHTTPClient.getMatchesByPuuid(
+            val res = riotHttpClient.getMatchesByPuuid(
                 "vJre0esG5sIx3rvCAe-YVsDfqCIMV5b2P-61wrYZ4w-hs9u_Ek8dVlo-KLo-GNA4NumLV1YTNxeCmA",
                 QueueType.SOLO_Q
             )
@@ -55,7 +55,7 @@ class RiotHTTPClientTest {
     @Test
     fun `get match by id works as expected`() {
         runBlocking {
-            val res = riotHTTPClient.getMatchById("EUW1_7130322326")
+            val res = riotHttpClient.getMatchById("EUW1_7130322326")
 
             assertTrue(res.isRight())
         }
@@ -64,7 +64,7 @@ class RiotHTTPClientTest {
     @Test
     fun `get league entries by summoner id works as expected`() {
         runBlocking {
-            val res = riotHTTPClient.getLeagueEntriesByPUUID("XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E")
+            val res = riotHttpClient.getLeagueEntriesByPUUID("XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E")
 
             assertTrue(res.isRight())
         }
@@ -73,7 +73,7 @@ class RiotHTTPClientTest {
     @Test
     fun `get account by puuid works as expected`() {
         runBlocking {
-            val res = riotHTTPClient.getAccountByPUUID("XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E")
+            val res = riotHttpClient.getAccountByPUUID("XpUAakpMee4budbZ_KVchTTxwkN4OHgqjbYa0r4pXR_Ya6E")
 
             assertTrue(res.isRight())
         }

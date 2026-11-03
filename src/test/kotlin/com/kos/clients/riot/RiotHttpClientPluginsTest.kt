@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class RiotHTTPClientPluginsTest {
+class RiotHttpClientPluginsTest {
 
     private fun engineResponding(vararg handlers: MockRequestHandler) =
         MockEngine(MockEngineConfig().apply {
@@ -21,7 +21,7 @@ class RiotHTTPClientPluginsTest {
     private val ok: MockRequestHandler = { respond("""["EUW1_1"]""", HttpStatusCode.OK) }
 
     private fun riotClient(engine: MockEngine) =
-        RiotHTTPClient(HttpClient(engine) { riotHttpClientConfig(RetryConfig(0, 1), "riot-key") })
+        RiotHttpClient(HttpClient(engine) { riotHttpClientConfig(RetryConfig(0, 1), "riot-key") })
 
     @Test
     fun `sends the api key header on every request`() = runBlocking {

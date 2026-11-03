@@ -18,9 +18,9 @@ import kotlin.test.fail
 import com.kos.sources.wow.SeasonCutoff
 import com.kos.sources.wow.WowCharacterProfile
 
-class RaiderIoHTTPClientTest {
+class RaiderIoHttpClientTest {
 
-    private val raiderIoClient = RaiderIoHTTPClient(HttpClient(client.engine) { raiderIoHttpClientConfig(RetryConfig(0, 0), apiKey = "test-key") })
+    private val raiderIoClient = RaiderIoHttpClient(HttpClient(client.engine) { raiderIoHttpClientConfig(RetryConfig(0, 0), apiKey = "test-key") })
 
     @Test
     fun `test get() method with successful response`() {

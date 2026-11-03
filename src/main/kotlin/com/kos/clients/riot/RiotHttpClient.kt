@@ -17,7 +17,7 @@ import com.kos.sources.lol.LeagueEntry
 import com.kos.sources.lol.LolMatch
 
 
-data class RiotHTTPClient(
+class RiotHttpClient(
     val client: HttpClient
 ) : RiotClient, WithLogger("riotClient") {
 

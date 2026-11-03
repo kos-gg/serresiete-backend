@@ -11,7 +11,7 @@ import io.ktor.client.plugins.api.*
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-private val logger = LoggerFactory.getLogger("RaiderioClient")
+private val logger = LoggerFactory.getLogger("raiderIoClient")
 
 fun HttpClientConfig<*>.raiderIoHttpClientConfig(retryConfig: RetryConfig, apiKey: String) {
     val rateLimiter = RateLimiter.of(
@@ -33,6 +33,6 @@ fun HttpClientConfig<*>.raiderIoHttpClientConfig(retryConfig: RetryConfig, apiKe
 
     install(HttpRequestRetry) { defaultRetry(retryConfig, logger, ::redactAccessKey) }
     install(RaiderIoRateLimitPlugin)
-    install(HttpTimeout) { requestTimeoutMillis = 8_000 }
+    install(HttpTimeout) { requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS }
     install(RaiderIoAccessKeyPlugin)
 }

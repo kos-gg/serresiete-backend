@@ -21,7 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class BlizzardHTTPClientPluginsTest {
+class BlizzardHttpClientPluginsTest {
 
     private val blizzardAuthClient = mock<BlizzardAuthClient>()
 

@@ -24,7 +24,7 @@ import com.kos.sources.wow.KeystoneBestRun
 import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.entities.domain.WowCharacter
 
-class BlizzardHTTPClientTest {
+class BlizzardHttpClientTest {
 
     private val blizzardAuthClient = mock(BlizzardAuthClient::class.java)
     private val blizzardClient = BlizzardHttpClient(HttpClient(client.engine) { blizzardHttpClientConfig(RetryConfig(0, 0), blizzardAuthClient) })
