@@ -1,5 +1,26 @@
 # Changelog
 
+## [7.0.1] - 03-11-2026
+
+### Changed
+
+- **Third-party clients are configured with Ktor plugins**: each client (RaiderIO, Blizzard, Riot) gets its own
+  `HttpClient` with `HttpRequestRetry`, a rate-limit plugin and `HttpTimeout` (8s per attempt), plus Blizzard's bearer
+  `Auth` and RaiderIO's `access_key`. The custom `Retry` and the per-endpoint throttling and retry wrappers are gone.
+- **Retry policy is the same for every client**: server errors (5xx), 429, network errors and request timeouts are
+  retried (3 retries, 1.2s apart); other 4xx are not. RaiderIO `cutoff` is never retried. Each retry logs one INFO line
+  with the URL (`access_key` masked) and the cause.
+- **Blizzard token is refreshed on 401**: it is requested once and renewed when Blizzard answers 401, then the request is
+  repeated. Before, expiry was never detected under continuous traffic, and concurrent requests could each refresh it.
+  If the token can't be obtained the call fails as a 401 and logs a warning.
+- Rate limiters count every attempt, including retries, and are named after their provider (`blizzardRateLimiter`,
+  `riotPerSecondRateLimiter`, `riotPerTwoMinutesRateLimiter`, `raiderIoRateLimiter`), so a rate-limit timeout in the
+  logs says which one refused.
+
+### Deploy notes
+
+- Check the logs after ~24h of uptime for Blizzard's 401 → token refresh, and for Riot 429 retries.
+
 ## [7.0.0] - 22-10-2026
 
 ### Changed
