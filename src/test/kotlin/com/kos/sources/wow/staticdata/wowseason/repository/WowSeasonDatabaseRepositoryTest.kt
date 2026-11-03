@@ -46,6 +46,19 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
     }
 
     @Test
+    open fun `inserting a duplicate flagged as current does not unmark the actual current season`() {
+        runBlocking {
+            wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
+            val previousSeason = wowSeason.copy(isCurrentSeason = false)
+            val currentSeason = wowSeason.copy(id = 16)
+            repository.withState(WowSeasonsState(listOf(previousSeason, currentSeason)))
+
+            assertFalse(repository.insert(previousSeason.copy(isCurrentSeason = true)))
+            assertEquals(WowSeasonsState(listOf(previousSeason, currentSeason)), repository.state())
+        }
+    }
+
+    @Test
     open fun `given a repository with a season I can insert a wow season`() {
         runBlocking {
             wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
