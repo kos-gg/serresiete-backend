@@ -1,35 +1,24 @@
 package com.kos.tasks.runners
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
+import com.kos.tasks.TaskCompleted
+import com.kos.tasks.TaskFailed
 import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksRepository
-import java.time.OffsetDateTime
 
 class UpdateWowGuildsTaskRunner(
-    private val tasksRepository: TasksRepository,
     private val entitiesService: EntitiesService
 ) : TaskRunner, WithLogger("updateWowGuildsTaskRunner") {
 
     override val type = TaskType.UPDATE_WOW_GUILDS
 
-    override suspend fun run(id: String, arguments: Map<String, String>?) {
+    override suspend fun run(arguments: Map<String, String>?): Either<TaskFailed, TaskCompleted> = either {
         logger.info("Updating wow guild entities")
         val errors = entitiesService.updateWowGuilds()
-        if (errors.isEmpty()) {
-            tasksRepository.updateTask(Task(id, type, TaskStatus(Status.SUCCESSFUL, null), OffsetDateTime.now()))
-        } else {
-            tasksRepository.updateTask(
-                Task(
-                    id,
-                    type,
-                    TaskStatus(Status.ERROR, errors.joinToString(",\n") { it.toString() }),
-                    OffsetDateTime.now()
-                )
-            )
-        }
+        ensure(errors.isEmpty()) { TaskFailed(errors.joinToString(",\n") { it.error() }) }
+        TaskCompleted()
     }
 }

@@ -2,6 +2,7 @@ package com.kos.eventsourcing.events
 
 import com.kos.entities.domain.EntityRequest
 import com.kos.views.*
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class EventType {
@@ -112,7 +113,8 @@ data class ViewToBePatchedEvent(
 }
 
 @Serializable
-data class ViewCreatedEventEvent(
+@SerialName("com.kos.eventsourcing.events.ViewCreatedEventEvent")
+data class ViewCreatedEvent(
     override val id: String,
     val name: String,
     val owner: String,
@@ -125,7 +127,7 @@ data class ViewCreatedEventEvent(
     override val eventType: EventType = EventType.VIEW_CREATED
 
     companion object {
-        fun fromSimpleView(simpleView: SimpleView) = ViewCreatedEventEvent(
+        fun fromSimpleView(simpleView: SimpleView) = ViewCreatedEvent(
             simpleView.id,
             simpleView.name,
             simpleView.owner,
@@ -139,7 +141,8 @@ data class ViewCreatedEventEvent(
 }
 
 @Serializable
-data class ViewEditedEventEvent(
+@SerialName("com.kos.eventsourcing.events.ViewEditedEventEvent")
+data class ViewEditedEvent(
     override val id: String,
     val name: String,
     override val entities: List<Long>,
@@ -150,7 +153,7 @@ data class ViewEditedEventEvent(
     override val eventType: EventType = EventType.VIEW_EDITED
 
     companion object {
-        fun fromViewModified(id: String, game: Game, viewModified: ViewModified) = ViewEditedEventEvent(
+        fun fromViewModified(id: String, game: Game, viewModified: ViewModified) = ViewEditedEvent(
             id,
             viewModified.name,
             viewModified.entities,
@@ -162,7 +165,8 @@ data class ViewEditedEventEvent(
 }
 
 @Serializable
-data class ViewPatchedEventEvent(
+@SerialName("com.kos.eventsourcing.events.ViewPatchedEventEvent")
+data class ViewPatchedEvent(
     override val id: String,
     val name: String?,
     override val entities: List<Long>?,
@@ -173,7 +177,7 @@ data class ViewPatchedEventEvent(
     override val eventType: EventType = EventType.VIEW_PATCHED
 
     companion object {
-        fun fromViewPatched(id: String, game: Game, viewPatched: ViewPatched) = ViewPatchedEventEvent(
+        fun fromViewPatched(id: String, game: Game, viewPatched: ViewPatched) = ViewPatchedEvent(
             id,
             viewPatched.name,
             viewPatched.entities,
@@ -219,9 +223,17 @@ data class RequestToBeSynced(
 }
 
 @Serializable
+data class EventError(
+    val eventType: EventType,
+    val version: Long,
+    val payload: EventData,
+    val stackTrace: String
+)
+
+@Serializable
 data class OperationFailedEvent(
     val operationId: String,
-    val reason: String
+    val error: EventError? = null
 ) : EventData {
     override val eventType: EventType = EventType.OPERATION_FAILED
 }

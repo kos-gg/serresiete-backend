@@ -1,7 +1,7 @@
 package com.kos.sources.wow
 
 import arrow.core.Either
-import com.kos.clients.HttpError
+import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
@@ -31,8 +31,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(
                             WowEntityRequest(
@@ -55,14 +54,13 @@ class WowEntityResolverTest {
         runBlocking {
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Left(NotFound))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(listOf(), res.unchecked)
                 }
@@ -77,8 +75,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(basicWowEntity to null), res.existing)
                     assertEquals(listOf(), res.entities)
                 }
@@ -95,14 +92,13 @@ class WowEntityResolverTest {
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowEntity))
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest2.region, basicWowRequest2.realm, basicWowRequest2.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Left(NotFound))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest, basicWowRequest2))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(
                             WowEntityRequest(
@@ -130,11 +126,10 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(listOf(), res.entities)
                     assertEquals(1, res.unchecked.size)
-                    assertEquals(basicWowRequest, res.unchecked.single().first)
+                    assertEquals(basicWowRequest, res.unchecked.single())
                 }
         }
     }
@@ -150,7 +145,7 @@ class WowEntityResolverTest {
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowEntity))
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest2.region, basicWowRequest2.realm, basicWowRequest2.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Left(NotFound))
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest3.region, basicWowRequest3.realm, basicWowRequest3.name)
             ).thenReturn(Either.Left(timeoutError))
@@ -159,8 +154,7 @@ class WowEntityResolverTest {
             val resolver = WowEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest, basicWowRequest2, basicWowRequest3))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(
                         listOf(
                             WowEntityRequest(
@@ -172,7 +166,7 @@ class WowEntityResolverTest {
                         ),
                         res.entities
                     )
-                    assertEquals(listOf(basicWowRequest3), res.unchecked.map { it.first })
+                    assertEquals(listOf(basicWowRequest3), res.unchecked)
                 }
         }
     }

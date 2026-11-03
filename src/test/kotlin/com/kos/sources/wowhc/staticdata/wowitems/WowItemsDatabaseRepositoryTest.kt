@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
+import kotlin.test.assertNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WowItemsDatabaseRepositoryTest {
@@ -45,13 +45,7 @@ class WowItemsDatabaseRepositoryTest {
     fun `i can get item media from database`() = runBlocking {
         givenAWowClassicItemInDatabase()
 
-        repository.getItemMedia(1)
-            .fold(
-                { fail("Expected media but got error") },
-                {
-                    assertEquals("1.jpg", it)
-                }
-            )
+        assertEquals("1.jpg", repository.getItemMedia(1))
     }
 
 
@@ -59,12 +53,14 @@ class WowItemsDatabaseRepositoryTest {
     fun `i can get item from database`() {
         runBlocking {
             givenAWowClassicItemInDatabase()
-            repository.getItem(1)
-                .fold(
-                    { fail() },
-                    { assertEquals("Backwood Helm", it.name) }
-                )
+            assertEquals("Backwood Helm", repository.getItem(1)?.name)
         }
+    }
+
+    @Test
+    fun `an item that is not stored is not found`() = runBlocking {
+        assertNull(repository.getItem(1))
+        assertNull(repository.getItemMedia(1))
     }
 
     private suspend fun givenAWowClassicItemInDatabase() {

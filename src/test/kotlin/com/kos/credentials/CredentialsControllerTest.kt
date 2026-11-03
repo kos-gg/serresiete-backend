@@ -1,8 +1,10 @@
 package com.kos.credentials
 
+import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.common.error.CantDeleteYourself
 import com.kos.common.error.NotEnoughPermissions
+import com.kos.common.error.UserAlreadyExists
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRoles
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRolesInitialState
@@ -84,6 +86,22 @@ class CredentialsControllerTest {
                     setOf(Activities.createCredentials),
                     CreateCredentialRequest(user, password, setOf())
                 ).isRight()
+            )
+        }
+    }
+
+    @Test
+    fun `creating credentials for an existing user is rejected as already existing`() {
+        runBlocking {
+            val controller = createController(basicCredentialsWithRolesInitialState)
+
+            assertEquals(
+                Either.Left(UserAlreadyExists(user)),
+                controller.createCredential(
+                    "owner",
+                    setOf(Activities.createCredentials),
+                    CreateCredentialRequest(user, password, setOf(Role.ADMIN))
+                )
             )
         }
     }

@@ -1,10 +1,10 @@
 package com.kos.sources.wow
 
+import arrow.core.Either
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
-import com.kos.common.error.toEntityResolverError
-import com.kos.common.split
 import com.kos.entities.EntityUpdater
+import com.kos.entities.GuildUpdateFailed
+import com.kos.entities.PartialFailure
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
@@ -17,60 +17,42 @@ class WowGuildUpdater(
     private val viewsRepository: ViewsRepository
 ) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("WowGuildUpdater") {
 
-    private data class ResolvedGuild(
-        val guild: GuildPayload,
-        val viewIds: List<String>,
-        val roster: List<WowEntityRequest>
-    )
-
-    override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<ServiceError> {
-        val (resolutionErrors, resolvedGuilds) = resolveGuildRosters(entities)
-        val updateErrors = resolvedGuilds.flatMap { updateGuild(it) }
-        return resolutionErrors + updateErrors
-    }
-
-    private suspend fun resolveGuildRosters(
-        entities: List<Pair<GuildPayload, String>>
-    ): Pair<List<ServiceError>, List<ResolvedGuild>> =
+    override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<PartialFailure> =
         entities.groupBy { it.first.blizzardId }
             .values
-            .map { rows ->
+            .mapNotNull { rows ->
                 val guild = rows.first().first
-                val viewIds = rows.map { it.second }
-                guildResolver.resolveRoster(guild.region, guild.realm, guild.name)
-                    .map { (_, roster) -> ResolvedGuild(guild, viewIds, roster) }
+                Either.catch { updateGuild(guild, rows.map { it.second }) }
+                    .leftOrNull()
+                    ?.let { GuildUpdateFailed(guild, it) }
             }
-            .split()
 
-    private suspend fun updateGuild(resolvedGuild: ResolvedGuild): List<ServiceError> {
-        val (guild, viewIds, roster) = resolvedGuild
+    private suspend fun updateGuild(guild: GuildPayload, viewIds: List<String>) {
         logger.info("Updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region} (${viewIds.size} view(s))")
+        val (_, roster) = guildResolver.resolveRoster(guild.region, guild.realm, guild.name)
 
         val (current, newEntities) = entitiesRepository.getCurrentAndNewEntities(roster, Game.WOW)
-        val (updateMemberErrors, renamedEntities, newMembers) = updateAlreadyTrackedMembers(newEntities)
+        val (renamedEntities, newMembers) = updateAlreadyTrackedMembers(newEntities)
 
         val entityIdsStillInGuild = current.map { it.value.id }.toSet() + renamedEntities
-        val insertionErrors = resolveAndInsertNewMembers(guild, viewIds, newMembers, entityIdsStillInGuild)
-
-        return updateMemberErrors + insertionErrors
+        resolveAndInsertNewMembers(guild, viewIds, newMembers, entityIdsStillInGuild)
     }
 
     private suspend fun updateAlreadyTrackedMembers(
         newEntities: List<EntityRequest>
-    ): Triple<List<ServiceError>, List<Long>, List<WowEntityRequest>> {
+    ): Pair<List<Long>, List<WowEntityRequest>> {
         val (renamed, newMembers) = newEntities
             .map { it as WowEntityRequest }
             .map { request -> request to trackedMemberByBlizzardId(request) }
             .partition { (_, trackedEntity) -> trackedEntity != null }
 
-        val (errors, renamedMembers) = renamed.map { (request, trackedEntity) ->
+        val renamedMembers = renamed.map { (request, trackedEntity) ->
             trackedEntity!!
             entitiesRepository.update(trackedEntity.id, request, Game.WOW)
-                .mapLeft { it.toEntityResolverError(Game.WOW, it.message) }
-                .map { trackedEntity.id }
-        }.split()
+            trackedEntity.id
+        }
 
-        return Triple(errors, renamedMembers, newMembers.map { it.first })
+        return renamedMembers to newMembers.map { it.first }
     }
 
     private suspend fun trackedMemberByBlizzardId(request: WowEntityRequest): WowEntity? =
@@ -81,28 +63,21 @@ class WowGuildUpdater(
         viewIds: List<String>,
         newMembers: List<WowEntityRequest>,
         entityIdsStillInGuild: Set<Long>
-    ): List<ServiceError> {
+    ) {
         val newMembers = guildResolver.resolveMembers(newMembers)
 
-        return entitiesRepository.insert(newMembers.map { it.first }, Game.WOW).fold(
-            ifLeft = { insertError ->
-                listOf(insertError.toEntityResolverError(Game.WOW, insertError.message))
-            },
-            ifRight = { inserted ->
-                logger.info("Inserted new entities $inserted to EntityRepository")
-                val insertedWithAlias = inserted.zip(newMembers) { entity, member -> entity.id to member.second }
+        val inserted = entitiesRepository.insert(newMembers.map { it.first }, Game.WOW)
+        logger.info("Inserted new entities $inserted to EntityRepository")
+        val insertedWithAlias = inserted.zip(newMembers) { entity, member -> entity.id to member.second }
 
-                syncViewMembership(
-                    guild,
-                    viewIds,
-                    stillInGuild = entityIdsStillInGuild + insertedWithAlias.map { it.first },
-                    insertedWithAlias = insertedWithAlias
-                )
-
-                logger.info("Finished updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region}")
-                emptyList()
-            }
+        syncViewMembership(
+            guild,
+            viewIds,
+            stillInGuild = entityIdsStillInGuild + insertedWithAlias.map { it.first },
+            insertedWithAlias = insertedWithAlias
         )
+
+        logger.info("Finished updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region}")
     }
 
     private suspend fun syncViewMembership(

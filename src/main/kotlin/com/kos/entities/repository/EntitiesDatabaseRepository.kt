@@ -1,7 +1,5 @@
 package com.kos.entities.repository
 
-import arrow.core.Either
-import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.EntityRequest
@@ -17,20 +15,20 @@ import java.time.OffsetDateTime
 
 class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository {
 
-    private val wowRepository = WowEntityDatabaseRepository(db)
-    private val wowHardcoreRepository = WowHardcoreEntityDatabaseRepository(db)
-    private val lolRepository = LolEntityDatabaseRepository(db)
+    private val wowEntityRepository = WowEntityDatabaseRepository(db)
+    private val wowHardcoreEntityRepository = WowHardcoreEntityDatabaseRepository(db)
+    private val lolEntityRepository = LolEntityDatabaseRepository(db)
 
     private fun repositoryFor(game: Game): GameEntityRepository = when (game) {
-        Game.WOW -> wowRepository
-        Game.WOW_HC -> wowHardcoreRepository
-        Game.LOL -> lolRepository
+        Game.WOW -> wowEntityRepository
+        Game.WOW_HC -> wowHardcoreEntityRepository
+        Game.LOL -> lolEntityRepository
     }
 
     override suspend fun withState(initialState: EntitiesState): EntitiesDatabaseRepository {
-        wowRepository.withState(initialState.wowEntities)
-        wowHardcoreRepository.withState(initialState.wowHardcoreEntities)
-        lolRepository.withState(initialState.lolEntities)
+        wowEntityRepository.withState(initialState.wowEntities)
+        wowHardcoreEntityRepository.withState(initialState.wowHardcoreEntities)
+        lolEntityRepository.withState(initialState.lolEntities)
         return this
     }
 
@@ -43,13 +41,13 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     override suspend fun insert(
         entities: List<InsertEntityRequest>,
         game: Game
-    ): Either<RepositoryError, List<Entity>> = repositoryFor(game).insert(entities)
+    ): List<Entity> = repositoryFor(game).insert(entities)
 
     override suspend fun update(
         id: Long,
         entity: InsertEntityRequest,
         game: Game
-    ): Either<RepositoryError, Int> = repositoryFor(game).update(id, entity)
+    ): Int = repositoryFor(game).update(id, entity)
 
     override suspend fun get(id: Long, game: Game): Entity? = repositoryFor(game).get(id)
 
@@ -79,9 +77,9 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     }
 
     override suspend fun state(): EntitiesState = EntitiesState(
-        wowRepository.state(),
-        wowHardcoreRepository.state(),
-        lolRepository.state()
+        wowEntityRepository.state(),
+        wowHardcoreEntityRepository.state(),
+        lolEntityRepository.state()
     )
 }
 

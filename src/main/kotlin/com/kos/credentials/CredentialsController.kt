@@ -14,9 +14,7 @@ class CredentialsController(val credentialsService: CredentialsService) {
         return when (client) {
             null -> Either.Left(NotAuthorized)
             else -> {
-                if (activities.contains(Activities.createCredentials)) Either.Right(
-                    credentialsService.createCredentials(request)
-                )
+                if (activities.contains(Activities.createCredentials)) credentialsService.createCredentials(request)
                 else Either.Left(NotEnoughPermissions(client))
             }
         }

@@ -15,8 +15,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import kotlin.test.fail
+import kotlin.test.assertFailsWith
 
 class WowSeasonServiceTest {
     private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
@@ -32,12 +31,10 @@ class WowSeasonServiceTest {
             val wowExpansionState = WowExpansionState(listOf(WowExpansion(10, "TWW", true)))
             val wowSeasonsState = WowSeasonsState(listOf())
             val seasonService = createService(wowExpansionState, wowSeasonsState)
-            seasonService.addNewMythicPlusSeason()
-                .onLeft { fail() }
-                .onRight {
-                    assertEquals(expectedExpansionSeasons[0].blizzardSeasonId, it.id)
-                    assertEquals(expectedExpansionSeasons[0].name, it.name)
-                }
+            val season = seasonService.addNewMythicPlusSeason()
+
+            assertEquals(expectedExpansionSeasons[0].blizzardSeasonId, season.id)
+            assertEquals(expectedExpansionSeasons[0].name, season.name)
         }
     }
 
@@ -53,10 +50,9 @@ class WowSeasonServiceTest {
             val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
-            assertTrue(
-                seasonService.addNewMythicPlusSeason()
-                    .isLeft()
-            )
+            val error = assertFailsWith<IllegalStateException> { seasonService.addNewMythicPlusSeason() }
+
+            assertEquals("Season TWW Season 3 (15) already exists", error.message)
         }
     }
 
@@ -70,10 +66,9 @@ class WowSeasonServiceTest {
             val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
-            assertTrue(
-                seasonService.addNewMythicPlusSeason()
-                    .isLeft()
-            )
+            val error = assertFailsWith<IllegalStateException> { seasonService.addNewMythicPlusSeason() }
+
+            assertEquals("Third party call failed: HttpError(status=500, body=Internal server error)", error.message)
         }
     }
 
@@ -89,10 +84,9 @@ class WowSeasonServiceTest {
             val wowSeasonsState = WowSeasonsState(listOf(WowSeason(15, "TWW Season 3", "tww-season-3", 10, "", true)))
             val seasonService = createService(wowExpansionState, wowSeasonsState)
 
-            assertTrue(
-                seasonService.addNewMythicPlusSeason()
-                    .isLeft()
-            )
+            val error = assertFailsWith<IllegalStateException> { seasonService.addNewMythicPlusSeason() }
+
+            assertEquals("There is no current season for expansion 10 - TWW", error.message)
         }
     }
 

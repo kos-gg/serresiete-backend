@@ -1,6 +1,5 @@
 package com.kos.entities.repository.wowguilds
 
-import arrow.core.Either
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
@@ -52,12 +51,10 @@ class WowGuildsDatabaseRepositoryTest {
         runBlocking {
             val viewId = createView("sanxei", Game.WOW)
 
-            val first = repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
-            assertEquals(Either.Right(Unit), first)
+            repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
+            repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
 
-            // simulates redelivery of the same event after a prior attempt already inserted the guild
-            val second = repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
-            assertEquals(Either.Right(Unit), second)
+            assertEquals(listOf(viewId), repository.getGuilds(Game.WOW).map { it.second })
         }
     }
 
@@ -68,10 +65,10 @@ class WowGuildsDatabaseRepositoryTest {
             val viewB = createView("sanxei", Game.WOW)
 
             val first = repository.insertGuild(1L, "guild", "realm", "region", viewA, Game.WOW)
-            assertEquals(Either.Right(Unit), first)
+            assertEquals(Unit, first)
 
             val second = repository.insertGuild(1L, "guild", "realm", "region", viewB, Game.WOW)
-            assertEquals(Either.Right(Unit), second)
+            assertEquals(Unit, second)
 
             val trackedViewIds = repository.getGuilds(Game.WOW).map { it.second }.toSet()
             assertEquals(setOf(viewA, viewB), trackedViewIds)
@@ -121,8 +118,8 @@ class WowGuildsDatabaseRepositoryTest {
             val wowInsert = repository.insertGuild(1L, "guild", "realm", "region", wowView, Game.WOW)
             val wowHcInsert = repository.insertGuild(1L, "guild", "realm", "region", wowHcView, Game.WOW_HC)
 
-            assertEquals(Either.Right(Unit), wowInsert)
-            assertEquals(Either.Right(Unit), wowHcInsert)
+            assertEquals(Unit, wowInsert)
+            assertEquals(Unit, wowHcInsert)
         }
     }
 

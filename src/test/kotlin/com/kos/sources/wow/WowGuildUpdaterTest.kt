@@ -8,8 +8,8 @@ import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.domain.WowRosterMemberRealmResponse
+import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntity
@@ -17,6 +17,7 @@ import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
+import com.kos.views.repository.ViewsRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -26,13 +27,18 @@ import org.mockito.kotlin.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
+import org.mockito.kotlin.any
 
 class WowGuildUpdaterTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val season = WowSeason(16, "Midnight Season 1", "season-mn-1", 11, "{}", true)
+    private val seasonRepository = runBlocking { WowSeasonInMemoryRepository().withState(WowSeasonsState(listOf(season))) }
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
-    private val guildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+    private val guildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     private val updater = WowGuildUpdater(guildResolver, entitiesRepository, viewsRepository)
 
     private val region = "eu"
@@ -47,7 +53,7 @@ class WowGuildUpdaterTest {
 
     private suspend fun alreadyTracked(name: String, viewId: String): Long {
         val request = WowEntityRequest(name, region, realm)
-        val entity = entitiesRepository.insert(listOf(request), Game.WOW).fold({ error(it.toString()) }, { it }).first()
+        val entity = entitiesRepository.insert(listOf(request), Game.WOW).first()
         viewsRepository.associateEntitiesIdsToView(listOf(entity.id to null), viewId)
         return entity.id
     }
@@ -59,7 +65,7 @@ class WowGuildUpdaterTest {
         memberRealm: String = realm
     ): Long {
         val request = WowEntityRequest(name, region, memberRealm, memberBlizzardId)
-        val entity = entitiesRepository.insert(listOf(request), Game.WOW).fold({ error(it.toString()) }, { it }).first()
+        val entity = entitiesRepository.insert(listOf(request), Game.WOW).first()
         viewsRepository.associateEntitiesIdsToView(listOf(entity.id to null), viewId)
         return entity.id
     }
@@ -84,7 +90,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
 
@@ -121,7 +127,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(joining)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(
                 listOf(
@@ -132,7 +138,7 @@ class WowGuildUpdaterTest {
 
             assertEquals(emptyList(), errors)
             verify(blizzardClient, times(1)).getRetailGuildRoster(region, realm, guildName)
-            verify(raiderIoClient, times(1)).getScore(joining)
+            verify(blizzardClient, times(1)).getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)
 
             val joiningEntity = entitiesRepository.get(joining as EntityRequest, Game.WOW)!!
             val finalA = viewsRepository.get(viewIdA)!!.entitiesIds.toSet()
@@ -168,7 +174,7 @@ class WowGuildUpdaterTest {
             val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
-            verify(raiderIoClient, never()).getScore(org.mockito.kotlin.any())
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
 
             val updated = entitiesRepository.get(trackedId, Game.WOW) as WowEntity
             assertEquals("newname", updated.name)
@@ -205,8 +211,8 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(memberA.copy(blizzardId = 111))).thenReturn(Either.Right(1500.0))
-            `when`(raiderIoClient.getScore(memberB.copy(blizzardId = 222))).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(memberA.region, memberA.realm, memberA.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
+            `when`(blizzardClient.getMythicKeystoneProfile(memberB.region, memberB.realm, memberB.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(
                 listOf(
@@ -243,7 +249,7 @@ class WowGuildUpdaterTest {
                     ).toGuildRoster()
                 )
             )
-            `when`(raiderIoClient.getScore(healthyMember)).thenReturn(Either.Right(1500.0))
+            `when`(blizzardClient.getMythicKeystoneProfile(healthyMember.region, healthyMember.realm, healthyMember.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
             val errors = updater.update(
                 listOf(
@@ -253,6 +259,49 @@ class WowGuildUpdaterTest {
             )
 
             assertEquals(1, errors.size)
+
+            val healthyMemberEntity = entitiesRepository.get(healthyMember as EntityRequest, Game.WOW)!!
+            assertEquals(setOf(healthyMemberEntity.id), viewsRepository.get(healthyViewId)!!.entitiesIds.toSet())
+        }
+    }
+
+    @Test
+    fun `update reports a guild that fails while being stored without blocking the other guilds`() {
+        runBlocking {
+            val brokenViewId = createGuildView("broken-guild-view")
+            val healthyViewId = createGuildView("healthy-guild-view")
+            val failingViewsRepository = object : ViewsRepository by viewsRepository {
+                override suspend fun associateEntitiesIdsToView(entities: List<Pair<Long, String?>>, id: String) =
+                    if (id == brokenViewId) error("connection lost")
+                    else viewsRepository.associateEntitiesIdsToView(entities, id)
+            }
+            val updater = WowGuildUpdater(guildResolver, entitiesRepository, failingViewsRepository)
+
+            val brokenMember = WowEntityRequest("brokenmember", region, realm)
+            val healthyMember = WowEntityRequest("healthymember", region, realm)
+            listOf("BrokenGuild" to brokenMember, "HealthyGuild" to healthyMember).forEachIndexed { index, (guild, member) ->
+                `when`(blizzardClient.getRetailGuildRoster(region, realm, guild)).thenReturn(
+                    Either.Right(
+                        GetWowRosterResponse(
+                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90))),
+                            WowGuildResponse(index + 1L)
+                        ).toGuildRoster()
+                    )
+                )
+                `when`(blizzardClient.getMythicKeystoneProfile(member.region, member.realm, member.name, season.id))
+                    .thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
+            }
+
+            val errors = updater.update(
+                listOf(
+                    GuildPayload("BrokenGuild", realm, region, 1L) to brokenViewId,
+                    GuildPayload("HealthyGuild", realm, region, 2L) to healthyViewId
+                )
+            )
+
+            val failure = errors.single() as GuildUpdateFailed
+            assertEquals("BrokenGuild", failure.guild.name)
+            assertTrue(failure.error().contains("connection lost"))
 
             val healthyMemberEntity = entitiesRepository.get(healthyMember as EntityRequest, Game.WOW)!!
             assertEquals(setOf(healthyMemberEntity.id), viewsRepository.get(healthyViewId)!!.entitiesIds.toSet())

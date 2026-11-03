@@ -2,6 +2,8 @@ package com.kos.clients.blizzard
 
 import arrow.core.Either
 import com.kos.clients.ClientError
+import com.kos.clients.JsonParseError
+import com.kos.clients.NotFound
 import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
 import com.kos.datacache.BlizzardMockHelper
@@ -12,6 +14,12 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import com.kos.datacache.domain.ClassSpec
+import com.kos.datacache.domain.RunDetails
+import com.kos.datacache.domain.RunMember
+import com.kos.sources.wow.KeystoneBestRun
+import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.entities.domain.WowCharacter
 
 class BlizzardHTTPClientTest {
@@ -23,11 +31,32 @@ class BlizzardHTTPClientTest {
     fun `getCharacterProfile returns successful response`() {
         runBlocking {
             givenAValidToken()
-            val result: Either<ClientError, WowCharacter> = blizzardClient.getClassicProfile(
+            val result: Either<ClientError, WowCharacter?> = blizzardClient.getClassicProfile(
                 "region", "realm", "name"
             )
             assertEquals(Either.Right(getWowCharacterResponse.toWowCharacter()), result)
         }
+    }
+
+    @Test
+    fun `getClassicProfile returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getClassicProfile("region", "realm", "unknown"))
+    }
+
+    @Test
+    fun `getRetailProfile returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getRetailProfile("eu", "realm", "unknown"))
+    }
+
+    @Test
+    fun `getRetailGuildRoster returns not found when blizzard doesn't find the guild`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getRetailGuildRoster("us", "realm", "unknown"))
     }
 
     @Test
@@ -143,6 +172,58 @@ class BlizzardHTTPClientTest {
             blizzardClient.getRetailGuildRoster("us", "realm", "guild")
 
         assertEquals(Either.Right(BlizzardMockHelper.getWowRetailGuildRosterResponse.toGuildRoster()), result)
+    }
+
+    @Test
+    fun `getMythicKeystoneProfile returns the rating and the members of each best run`() = runBlocking {
+        givenAValidToken()
+
+        val sanxei = RunMember("Sanxei", "zuljin", "Mage", ClassSpec(62, "Arcane", "dps"), "Dwarf", 328)
+        val sanxeiTank = RunMember("Sanxeitank", "kazzak", "Paladin", ClassSpec(66, "Protection", "tank"), "Human", 330)
+
+        assertEquals(
+            Either.Right(
+                MythicKeystoneProfile(
+                    rating = 3521.2056,
+                    bestRuns = listOf(
+                        KeystoneBestRun(249, 11, false, RunDetails(listOf(sanxei.copy(itemLevel = 292)))),
+                        KeystoneBestRun(249, 20, true, RunDetails(listOf(sanxei, sanxeiTank)))
+                    )
+                )
+            ),
+            blizzardClient.getMythicKeystoneProfile("eu", "realm", "name", 16)
+        )
+    }
+
+    @Test
+    fun `getMythicKeystoneProfile returns no rating and no runs when the character has not played the season`() =
+        runBlocking {
+            givenAValidToken()
+
+            assertEquals(
+                Either.Right(MythicKeystoneProfile(0.0, emptyList())),
+                blizzardClient.getMythicKeystoneProfile("eu", "realm", "unrated", 16)
+            )
+        }
+
+    @Test
+    fun `getMythicKeystoneProfile returns not found when blizzard doesn't find the character`() =
+        runBlocking {
+            givenAValidToken()
+
+            assertEquals(
+                Either.Left(NotFound),
+                blizzardClient.getMythicKeystoneProfile("eu", "realm", "unknown", 16)
+            )
+        }
+
+    @Test
+    fun `getMythicKeystoneProfile fails when a member has a spec we don't know`() = runBlocking {
+        givenAValidToken()
+
+        val result = blizzardClient.getMythicKeystoneProfile("eu", "realm", "unknownspec", 16)
+
+        assertTrue(result.isLeft { it is JsonParseError })
     }
 
     private suspend fun givenAValidToken() {

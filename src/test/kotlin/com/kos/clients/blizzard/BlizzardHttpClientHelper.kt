@@ -24,6 +24,12 @@ object BlizzardHttpClientHelper {
         ignoreUnknownKeys = true
     }
 
+    private val mythicKeystoneProfileResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-mythic-keystone-profile-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
     val client = HttpClient(MockEngine) {
         install(ContentNegotiation) {
             json()
@@ -67,6 +73,25 @@ object BlizzardHttpClientHelper {
                             else ->
                                 respond(json.encodeToString(getWowGuildRosterResponse), HttpStatusCode.OK)
                         }
+
+                    "/profile/wow/character/realm/name/mythic-keystone-profile/season/16" ->
+                        respond(mythicKeystoneProfileResponse, HttpStatusCode.OK)
+
+                    "/profile/wow/character/realm/unknownspec/mythic-keystone-profile/season/16" ->
+                        respond(
+                            mythicKeystoneProfileResponse.replace("\"id\": 66", "\"id\": 9999"),
+                            HttpStatusCode.OK
+                        )
+
+                    "/profile/wow/character/realm/unrated/mythic-keystone-profile/season/16" ->
+                        respond("""{"season":{"id":16}}""", HttpStatusCode.OK)
+
+                    "/profile/wow/character/realm/unknown",
+                    "/data/wow/guild/realm/unknown/roster" ->
+                        respond("""{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}""", HttpStatusCode.NotFound)
+
+                    "/profile/wow/character/realm/unknown/mythic-keystone-profile/season/16" ->
+                        respond("""{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}""", HttpStatusCode.NotFound)
 
                     else ->
                         error("Unhandled ${request.url.encodedPath}")

@@ -2,12 +2,13 @@ package com.kos.sources.wowhc
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.HttpError
+import com.kos.clients.NotFound
+import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowCharacter
+import com.kos.clients.blizzard.toWowItemDetails
 import com.kos.datacache.domain.WowHardcoreData
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.BlizzardMockHelper.getCharacterEquipment
 import com.kos.datacache.BlizzardMockHelper.getCharacterMedia
 import com.kos.datacache.BlizzardMockHelper.getCharacterProfile
@@ -20,6 +21,8 @@ import com.kos.datacache.TestHelper.wowHardcoreDataCache
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
+import com.kos.entities.PartialFailure
+import com.kos.entities.ThirdPartyCallFailed
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
@@ -99,9 +102,7 @@ class WowHardcoreEntitySynchronizerTest {
                     basicWowHardcoreEntity.name
                 )
             ).thenReturn(
-                Either.Left(
-                    HttpError(404, "not found")
-                )
+                Either.Left(NotFound)
             )
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf())
@@ -139,7 +140,7 @@ class WowHardcoreEntitySynchronizerTest {
                 )
             )
 
-            cacheResult.any { it is SyncProcessingError }
+            assertTrue(cacheResult.isEmpty())
             assertNull(entitiesRepository.get(1, Game.WOW_HC))
         }
     }
@@ -155,9 +156,7 @@ class WowHardcoreEntitySynchronizerTest {
                     basicWowHardcoreEntity.name
                 )
             ).thenReturn(
-                Either.Left(
-                    HttpError(404, "not found")
-                )
+                Either.Left(NotFound)
             )
 
             val dataCacheRepository = DataCacheInMemoryRepository().withState(listOf(wowHardcoreDataCache))
@@ -247,6 +246,51 @@ class WowHardcoreEntitySynchronizerTest {
                 assertFalse(expectedHardcoreData.isDead)
             }
             assertEquals(1, dataCacheRepository.state().size)
+        }
+    }
+
+    @Test
+    fun `an item blizzard fails to return is taken from the local items database`() {
+        runBlocking {
+            stubSuccessfulBlizzardSync(basicWowHardcoreEntity)
+            `when`(blizzardClient.getItem(basicWowHardcoreEntity.region, 18421))
+                .thenReturn(Either.Left(TimeoutError("timeout")))
+            `when`(wowItemsDatabaseRepository.getItem(18421))
+                .thenReturn(getWowItemResponse.toWowItemDetails())
+            val dataCacheRepository = DataCacheInMemoryRepository()
+
+            val errors = WowHardcoreEntitySynchronizer(
+                dataCacheRepository,
+                EntitiesInMemoryRepository(),
+                raiderIoClient,
+                blizzardClient,
+                wowItemsDatabaseRepository
+            ).synchronize(listOf(basicWowHardcoreEntity))
+
+            assertEquals(emptyList<PartialFailure>(), errors)
+            assertEquals(1, dataCacheRepository.state().size)
+        }
+    }
+
+    @Test
+    fun `an item missing from both blizzard and the local items database fails the entity with blizzard's error`() {
+        runBlocking {
+            stubSuccessfulBlizzardSync(basicWowHardcoreEntity)
+            `when`(blizzardClient.getItem(basicWowHardcoreEntity.region, 18421))
+                .thenReturn(Either.Left(TimeoutError("timeout")))
+            `when`(wowItemsDatabaseRepository.getItem(18421)).thenReturn(null)
+            val dataCacheRepository = DataCacheInMemoryRepository()
+
+            val errors = WowHardcoreEntitySynchronizer(
+                dataCacheRepository,
+                EntitiesInMemoryRepository(),
+                raiderIoClient,
+                blizzardClient,
+                wowItemsDatabaseRepository
+            ).synchronize(listOf(basicWowHardcoreEntity))
+
+            assertEquals(listOf(ThirdPartyCallFailed(basicWowHardcoreEntity.id, TimeoutError("timeout"))), errors)
+            assertEquals(0, dataCacheRepository.state().size)
         }
     }
 

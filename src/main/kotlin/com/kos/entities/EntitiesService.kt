@@ -1,9 +1,11 @@
 package com.kos.entities
 
 import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.recover
+import com.kos.clients.NotFound
 import com.kos.common.WithLogger
-import com.kos.common.error.RepositoryError
-import com.kos.common.error.ServiceError
+import com.kos.common.error.ThirdPartyUnavailable
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
@@ -28,37 +30,41 @@ data class EntitiesService(
     suspend fun exists(
         requestedEntities: List<EntityRequest>,
         game: Game
-    ): Either<ServiceError, EntitiesExistResponse> {
-        return resolveEntities(requestedEntities, game)
-            .map { resolved ->
-                val exist =
-                    resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
-                val unchecked = resolved.unchecked.map { it.first }
-                val nonExisting = requestedEntities.filterNot { it in exist || it in unchecked }
+    ): EntitiesExistResponse {
+        val resolved = resolveEntities(requestedEntities, game)
+        val exist = resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
+        val nonExisting = requestedEntities.filterNot { it in exist || it in resolved.unchecked }
 
-                EntitiesExistResponse(
-                    exist = exist.map { it.toResponse() },
-                    nonExisting = nonExisting.map { it.toResponse() },
-                    unchecked = unchecked.map { it.toResponse() }
-                )
-            }
+        return EntitiesExistResponse(
+            exist = exist.map { it.toResponse() },
+            nonExisting = nonExisting.map { it.toResponse() },
+            unchecked = resolved.unchecked.map { it.toResponse() }
+        )
     }
 
-    suspend fun guildExists(name: String, region: String, realm: String): Either<ServiceError, GuildExistsResponse> =
+    suspend fun guildExists(name: String, region: String, realm: String): Either<ThirdPartyUnavailable, GuildExistsResponse> =
         findTrackedGuild(name, realm, region, Game.WOW)
             ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
-            ?: wowGuildResolver.exists(WowEntityRequest(name, region, realm)).map { GuildExistsResponse(it) }
+            ?: either {
+                recover({ GuildExistsResponse(wowGuildResolver.exists(WowEntityRequest(name, region, realm)).bind()) }) {
+                    if (it is NotFound) GuildExistsResponse(null)
+                    else {
+                        logger.warn("Couldn't check whether guild $name ($region/$realm) exists: $it")
+                        raise(ThirdPartyUnavailable)
+                    }
+                }
+            }
 
     suspend fun resolveEntities(
         requestedEntities: List<EntityRequest>,
         game: Game,
         extraArguments: ViewExtraArguments? = null
-    ): Either<ServiceError, ResolvedEntities> =
+    ): ResolvedEntities =
         entitiesResolverProvider.resolverFor(game, extraArguments).resolve(requestedEntities)
 
     suspend fun updateEntities(
         game: Game
-    ): List<ServiceError> {
+    ): List<PartialFailure> {
         @Suppress("UNCHECKED_CAST")
         return when (game) {
             Game.LOL -> lolUpdater.update(entitiesRepository.get(game) as List<LolEntity>)
@@ -67,12 +73,12 @@ data class EntitiesService(
         }
     }
 
-    suspend fun updateWowHardcoreGuilds(): List<ServiceError> {
+    suspend fun updateWowHardcoreGuilds(): List<PartialFailure> {
         val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW_HC)
         return wowHardcoreGuildUpdater.update(guildsWithViewId)
     }
 
-    suspend fun updateWowGuilds(): List<ServiceError> {
+    suspend fun updateWowGuilds(): List<PartialFailure> {
         val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW)
         return wowGuildUpdater.update(guildsWithViewId)
     }
@@ -81,7 +87,7 @@ data class EntitiesService(
     suspend fun get(game: Game): List<Entity> = entitiesRepository.get(game)
 
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game) = entitiesRepository.insert(entities, game)
-    suspend fun insertGuild(payload: GuildPayload, viewId: String, game: Game): Either<RepositoryError, Unit> =
+    suspend fun insertGuild(payload: GuildPayload, viewId: String, game: Game) =
         wowGuildsRepository.insertGuild(
             payload.blizzardId, payload.name, payload.realm, payload.region, viewId, game
         )

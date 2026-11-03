@@ -1,5 +1,7 @@
 package com.kos.credentials
 
+import arrow.core.Either
+import com.kos.common.error.UserAlreadyExists
 import com.kos.credentials.CredentialsTestHelper.basicCredentials
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsInitialState
 import com.kos.credentials.CredentialsTestHelper.basicCredentialsWithRoles
@@ -8,6 +10,7 @@ import com.kos.credentials.CredentialsTestHelper.encryptedCredentials
 import com.kos.credentials.CredentialsTestHelper.password
 import com.kos.credentials.CredentialsTestHelper.user
 import com.kos.credentials.repository.CredentialsInMemoryRepository
+import com.kos.credentials.repository.CredentialsRepositoryState
 import com.kos.roles.Role
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -35,6 +38,21 @@ class CredentialsServiceTest {
 
             credentialsService.createCredentials(CreateCredentialRequest(user, password, setOf()))
             assertEquals(credentialsInMemoryRepository.state().users.map { it.userName }, listOf(user))
+        }
+    }
+
+    @Test
+    fun `creating credentials for an existing user fails and does not touch its roles`() {
+        runBlocking {
+            val credentialsInMemoryRepository = CredentialsInMemoryRepository().withState(
+                CredentialsRepositoryState(listOf(Credentials("sanxei", "hash")), mapOf("sanxei" to listOf(Role.USER)))
+            )
+            val credentialsService = CredentialsService(credentialsInMemoryRepository)
+
+            val result = credentialsService.createCredentials(CreateCredentialRequest("sanxei", password, setOf(Role.ADMIN)))
+
+            assertEquals(Either.Left(UserAlreadyExists("sanxei")), result)
+            assertEquals(listOf(Role.USER), credentialsInMemoryRepository.getUserRoles("sanxei"))
         }
     }
 

@@ -3,6 +3,7 @@ package com.kos.views
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import com.kos.common.WithLogger
 import com.kos.common.error.*
 import com.kos.credentials.CredentialsService
@@ -62,7 +63,7 @@ class ViewsService(
     suspend fun updateLastSyncedAt(viewId: String, at: OffsetDateTime) =
         viewsRepository.updateLastSyncedAt(viewId, at)
 
-    suspend fun create(owner: String, request: ViewRequest): Either<ControllerError, Operation> {
+    suspend fun create(owner: String, request: ViewRequest): Either<CreateViewError, Operation> {
         return either {
             ensureMaxNumberOfViews(owner).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
@@ -86,11 +87,11 @@ class ViewsService(
                     request.extraArguments
                 )
             )
-            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind().copy(resourceId = viewId)
+            eventStore.save(event).copy(resourceId = viewId)
         }
     }
 
-    suspend fun edit(owner: String, id: String, request: ViewRequest): Either<ControllerError, Operation> {
+    suspend fun edit(owner: String, id: String, request: ViewRequest): Either<EditViewError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
@@ -109,11 +110,11 @@ class ViewsService(
                     request.featured
                 )
             )
-            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind()
+            eventStore.save(event)
         }
     }
 
-    suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<ControllerError, Operation> {
+    suspend fun patch(owner: String, id: String, request: ViewPatchRequest): Either<EditViewError, Operation> {
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
@@ -133,11 +134,11 @@ class ViewsService(
                 )
             )
 
-            eventStore.save(event).mapLeft { ViewDataError(it.message) }.bind()
+            eventStore.save(event)
         }
     }
 
-    suspend fun delete(owner: String, viewToDelete: SimpleView): Either<ControllerError, Operation> {
+    suspend fun delete(owner: String, viewToDelete: SimpleView): Operation {
         val operationId = UUID.randomUUID().toString()
         val aggregateRoot = "/credentials/$owner"
         val event = Event(
@@ -153,29 +154,25 @@ class ViewsService(
                 viewToDelete.featured
             )
         )
-        return eventStore.save(event).mapLeft { ViewDataError(it.message) }
+        return eventStore.save(event)
     }
 
-    suspend fun getData(view: View): Either<ServiceError, List<Data>> =
+    suspend fun getData(view: View): List<Data> =
         dataCacheService.getData(view.entities.map { it.value.id }, oldFirst = false)
 
     suspend fun getCachedData(simpleView: SimpleView) =
         dataCacheService.getData(simpleView.entitiesIds, oldFirst = true)
 
-    private suspend fun getMaxNumberOfViewsByRole(owner: String): Either<UserWithoutRoles, Int> =
-        when (val maxNumberOfViews = credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfViews }) {
-            null -> Either.Left(UserWithoutRoles)
-            else -> Either.Right(maxNumberOfViews)
-        }
+    private suspend fun getMaxNumberOfViewsByRole(owner: String): Either<UserWithoutRoles, Int> = either {
+        ensureNotNull(credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfViews }) { UserWithoutRoles }
+    }
 
-    private suspend fun getMaxNumberOfEntitiesByRole(owner: String): Either<UserWithoutRoles, Int> =
-        when (val maxNumberOfEntities =
-            credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) {
-            null -> Either.Left(UserWithoutRoles)
-            else -> Either.Right(maxNumberOfEntities)
-        }
+    private suspend fun getMaxNumberOfEntitiesByRole(owner: String): Either<UserWithoutRoles, Int> = either {
+        ensureNotNull(
+            credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) { UserWithoutRoles }
+    }
 
-    private suspend fun ensureMaxNumberOfViews(owner: String): Either<ControllerError, Unit> {
+    private suspend fun ensureMaxNumberOfViews(owner: String): Either<CreateViewError, Unit> {
         return either {
             val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
             val ownViewsCount =
@@ -187,7 +184,7 @@ class ViewsService(
     private suspend fun ensureMaxNumberOfEntities(
         owner: String,
         entities: List<EntityRequest>?
-    ): Either<ControllerError, Unit> {
+    ): Either<ViewEntitiesError, Unit> {
         return either {
             val ownerMaxNumberOfEntities = getMaxNumberOfEntitiesByRole(owner).bind()
             entities?.let { entitiesToInsert ->
@@ -199,18 +196,18 @@ class ViewsService(
     private fun ensureEntitiesMatchGame(
         entities: List<EntityRequest>?,
         game: Game
-    ): Either<ControllerError, Unit> = either {
+    ): Either<EntitiesDoNotMatchGame, Unit> = either {
         ensure(entities.orEmpty().all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
     }
 
     private fun ensureRequest(
         request: ViewRequest
-    ): Either<ControllerError, Unit> = either {
+    ): Either<CreateViewError, Unit> = either {
         request.extraArguments?.let { extra ->
             when (request.game) {
                 Game.WOW, Game.WOW_HC -> {
                     ensure(extra is WowExtraArguments) { ExtraArgumentsWrongType }
-                    if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanTwoEntities }
+                    if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanOneEntity }
                 }
 
                 Game.LOL -> Unit

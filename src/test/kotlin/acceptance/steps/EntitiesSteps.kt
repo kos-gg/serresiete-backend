@@ -37,7 +37,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
 
         val entity = runBlocking {
             entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
-        }.getOrNull()!!.first()
+        }.first()
 
         val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
             .bufferedReader()
@@ -118,7 +118,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
                     )
                 ), Game.LOL
             )
-        }.getOrNull()!!.first()
+        }.first()
 
         val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
             .bufferedReader()

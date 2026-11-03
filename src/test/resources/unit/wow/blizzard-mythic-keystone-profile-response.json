@@ -1,0 +1,46 @@
+{
+  "season": { "id": 16 },
+  "best_runs": [
+    {
+      "completed_timestamp": 1789461100000,
+      "duration": 2308875,
+      "keystone_level": 11,
+      "members": [
+        {
+          "character": { "name": "Sanxei", "id": 183468309, "realm": { "id": 1379, "slug": "zuljin" } },
+          "specialization": { "name": "Arcane", "id": 62 },
+          "race": { "name": "Dwarf", "id": 3 },
+          "equipped_item_level": 292
+        }
+      ],
+      "dungeon": { "name": "Kings' Rest", "id": 249 },
+      "is_completed_within_time": false,
+      "mythic_rating": { "rating": 298.7713 },
+      "map_rating": { "rating": 487.73468 }
+    },
+    {
+      "completed_timestamp": 1791793364000,
+      "duration": 1835609,
+      "keystone_level": 20,
+      "members": [
+        {
+          "character": { "name": "Sanxei", "id": 183468309, "realm": { "id": 1379, "slug": "zuljin" } },
+          "specialization": { "name": "Arcane", "id": 62 },
+          "race": { "name": "Dwarf", "id": 3 },
+          "equipped_item_level": 328
+        },
+        {
+          "character": { "name": "Sanxeitank", "id": 226134611, "realm": { "id": 1305, "slug": "kazzak" } },
+          "specialization": { "name": "Protection", "id": 66 },
+          "race": { "name": "Human", "id": 1 },
+          "equipped_item_level": 330
+        }
+      ],
+      "dungeon": { "name": "Kings' Rest", "id": 249 },
+      "is_completed_within_time": true,
+      "mythic_rating": { "rating": 487.73468 },
+      "map_rating": { "rating": 487.73468 }
+    }
+  ],
+  "mythic_rating": { "color": { "r": 255, "g": 128, "b": 0, "a": 1 }, "rating": 3521.2056 }
+}

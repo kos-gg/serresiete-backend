@@ -8,6 +8,7 @@ import com.kos.entities.domain.WowRealm
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
+import com.kos.sources.wow.MythicKeystoneProfile
 
 interface BlizzardClient {
     suspend fun getClassicProfile(
@@ -60,5 +61,12 @@ interface BlizzardClient {
         realm: String,
         guild: String
     ): Either<ClientError, GuildRoster>
+
+    suspend fun getMythicKeystoneProfile(
+        region: String,
+        realm: String,
+        character: String,
+        seasonId: Int
+    ): Either<ClientError, MythicKeystoneProfile>
 
 }

@@ -4,20 +4,18 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.riot.RiotClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.common._fold
-import com.kos.common.error.ServiceError
-import com.kos.common.error.SyncProcessingError
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
+import com.kos.entities.PartialFailure
+import com.kos.entities.ThirdPartyCallFailed
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.LolEntity
 import com.kos.entities.sync.EntitySynchronizer
 import com.kos.views.Game
-import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
@@ -26,6 +24,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -49,14 +48,14 @@ class LolEntitySynchronizer(
         encodeDefaults = false
     }
 
-    override suspend fun synchronize(entities: List<Entity>): List<ServiceError> =
+    override suspend fun synchronize(entities: List<Entity>): List<PartialFailure> =
         coroutineScope {
             val lolEntities = entities.filterIsInstance<LolEntity>()
 
             val dataChannel = Channel<DataCache>()
-            val errorsChannel = Channel<ServiceError>()
-            val errorsList = mutableListOf<ServiceError>()
-            val matchCache = DynamicCache<Either<ServiceError, LolMatch>>()
+            val errorsChannel = Channel<PartialFailure>()
+            val errorsList = mutableListOf<PartialFailure>()
+            val matchCache = DynamicCache<Either<ClientError, LolMatch>>()
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -78,7 +77,7 @@ class LolEntitySynchronizer(
             lolEntities.asFlow()
                 .buffer(10)
                 .collect { lolEntity ->
-                    val result = cacheLolEntity(lolEntity, matchCache)
+                    val result = cacheLolEntity(lolEntity, matchCache).mapLeft { ThirdPartyCallFailed(lolEntity.id, it) }
                     result.fold(
                         ifLeft = { error -> errorsChannel.send(error) },
                         ifRight = { (id, riotData) ->
@@ -100,28 +99,26 @@ class LolEntitySynchronizer(
             errorsCollector.join()
             dataCollector.join()
 
-            logger.info("Finished Caching Lol entities")
-            logger.debug(
-                "cached ${entities.size} entities in ${
-                    Duration.between(start, OffsetDateTime.now()).toMinutes()
-                } minutes"
+            logger.info(
+                "Finished caching Lol entities: ${lolEntities.size - errorsList.size} cached, " +
+                        "${errorsList.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s. " +
+                        "Match cache hit rate: ${"%.2f".format(matchCache.hitRate * 100)}%"
             )
-            logger.debug("dynamic match cache hit rate: ${"%.2f".format(matchCache.hitRate)}%")
             errorsList
         }
 
     private suspend fun cacheLolEntity(
         lolEntity: LolEntity,
-        matchCache: DynamicCache<Either<ServiceError, LolMatch>>
-    ): Either<ServiceError, Pair<Long, LolData>> =
+        matchCache: DynamicCache<Either<ClientError, LolMatch>>
+    ): Either<ClientError, Pair<Long, LolData>> =
         either {
 
             val newestDataCacheEntry: LolData? =
                 dataCacheRepository.get(lolEntity.id).maxByOrNull { it.inserted }?.let {
                     try {
                         json.decodeFromString<LolData>(it.data)
-                    } catch (e: Throwable) {
-                        logger.debug(
+                    } catch (e: SerializationException) {
+                        logger.warn(
                             "Couldn't deserialize entity ${lolEntity.id} " +
                                     "while trying to obtain newest cached record.\n${e.message}"
                         )
@@ -130,18 +127,14 @@ class LolEntitySynchronizer(
                 }
 
             val leagues: List<LeagueEntry> =
-                execute("getLeagueEntriesByPUUID") {
-                    riotClient.getLeagueEntriesByPUUID(lolEntity.puuid)
-                }.bind()
+                riotClient.getLeagueEntriesByPUUID(lolEntity.puuid).bind()
 
             val leagueWithMatches: List<LeagueMatchData> =
                 coroutineScope {
                     leagues.map { leagueEntry ->
                         async {
                             val lastMatchesForLeague: List<String> =
-                                execute("getMatchesByPuuid") {
-                                    riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType)
-                                }.bind()
+                                riotClient.getMatchesByPuuid(lolEntity.puuid, leagueEntry.queueType).bind()
 
                             val matchesToRequest = newestDataCacheEntry._fold(
                                 left = { lastMatchesForLeague },
@@ -155,11 +148,7 @@ class LolEntitySynchronizer(
                             )
 
                             val matches: List<LolMatch> = matchesToRequest.map { matchId ->
-                                matchCache.get(matchId) {
-                                    execute("getMatchById") {
-                                        riotClient.getMatchById(matchId)
-                                    }
-                                }.bind()
+                                matchCache.get(matchId) { riotClient.getMatchById(matchId) }.bind()
                             }
 
                             LeagueMatchData(
@@ -175,13 +164,4 @@ class LolEntitySynchronizer(
             Pair(lolEntity.id, leagueWithMatches.toLolData(lolEntity))
         }
 
-    private suspend fun <A> execute(
-        operation: String,
-        block: suspend () -> Either<ClientError, A>
-    ): Either<ServiceError, A> =
-        try {
-            block().mapLeft { it.toSyncProcessingError(operation) }
-        } catch (e: RequestNotPermitted) {
-            Either.Left(SyncProcessingError(operation, "Rate limiter timeout: ${e.message}"))
-        }
 }

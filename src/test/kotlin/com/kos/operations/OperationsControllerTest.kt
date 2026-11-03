@@ -93,13 +93,12 @@ class OperationsControllerTest {
     }
 
     @Test
-    fun `returns failed status with reason when operation failed`() {
+    fun `returns failed status when operation failed`() {
         runBlocking {
-            val reason = "external service unavailable"
-            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
+            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId)))
 
             assertEquals(
-                OperationStatus(operationId, OperationStatusType.FAILED, reason = reason),
+                OperationStatus(operationId, OperationStatusType.FAILED),
                 controller.getOperationStatus("sanxei", operationId, setOf(Activities.getOperationStatus)).getOrNull()
             )
         }

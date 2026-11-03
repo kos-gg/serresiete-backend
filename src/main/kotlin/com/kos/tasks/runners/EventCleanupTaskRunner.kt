@@ -1,18 +1,17 @@
 package com.kos.tasks.runners
 
+import arrow.core.Either
+import arrow.core.raise.either
 import com.kos.common.WithLogger
 import com.kos.common.fold
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
+import com.kos.tasks.TaskCompleted
+import com.kos.tasks.TaskFailed
 import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksRepository
 import java.time.OffsetDateTime
 
 class EventCleanupTaskRunner(
-    private val tasksRepository: TasksRepository,
     private val eventStore: EventStore,
     private val subscriptionsRepository: SubscriptionsRepository
 ) : TaskRunner, WithLogger("eventCleanupTaskRunner") {
@@ -20,7 +19,7 @@ class EventCleanupTaskRunner(
     override val type = TaskType.EVENT_CLEANUP_TASK
     private val olderThanDays: Long = 3
 
-    override suspend fun run(id: String, arguments: Map<String, String>?) {
+    override suspend fun run(arguments: Map<String, String>?): Either<TaskFailed, TaskCompleted> = either {
         logger.info("Running event cleanup task")
         val cutoff = OffsetDateTime.now().minusDays(olderThanDays)
         val message = subscriptionsRepository.getEventSubscriptions().values.minOfOrNull { it.version }
@@ -33,8 +32,6 @@ class EventCleanupTaskRunner(
             )
         logger.info(message)
 
-        tasksRepository.updateTask(
-            Task(id, type, TaskStatus(Status.SUCCESSFUL, message), OffsetDateTime.now())
-        )
+        TaskCompleted()
     }
 }

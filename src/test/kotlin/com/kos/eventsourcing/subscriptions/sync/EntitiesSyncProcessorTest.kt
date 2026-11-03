@@ -1,7 +1,6 @@
 package com.kos.eventsourcing.subscriptions.sync
 
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
@@ -24,14 +23,17 @@ import com.kos.views.ViewEntity
 import com.kos.views.ViewsTestHelper
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsState
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
 import kotlin.test.Test
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 class EntitiesSyncProcessorTest {
-    private val raiderIoClient = Mockito.mock(RaiderIoClient::class.java)
     private val riotClient = Mockito.mock(RiotClient::class.java)
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
 
@@ -68,7 +70,7 @@ class EntitiesSyncProcessorTest {
             val wowGuildsRepository = WowGuildsInMemoryRepository()
 
             val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-            val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+            val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
             val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
             val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
             val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
@@ -118,6 +120,20 @@ class EntitiesSyncProcessorTest {
                 expectedRemainingCharacters,
                 entitiesRepository.state().wowHardcoreEntities.map { it.id })
 
+        }
+    }
+
+    @Test
+    fun `a failure while cleaning up entities reaches the subscription instead of being swallowed`() {
+        runBlocking {
+            val service = mockk<EntitiesService>()
+            coEvery { service.getViewsFromEntity(1, Game.WOW_HC) } throws IllegalStateException("database is down")
+            val eventData = ViewDeletedEvent("deleted", "name", "owner", listOf(1), true, Game.WOW_HC, false)
+            val eventWithVersion = EventWithVersion(1L, Event(aggregateRoot, ViewsTestHelper.id, eventData))
+
+            assertThrows<IllegalStateException> {
+                EntitiesEventProcessor(eventWithVersion, service).process()
+            }
         }
     }
 }

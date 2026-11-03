@@ -1,8 +1,10 @@
 package com.kos.eventsourcing.subscriptions
 
-import arrow.core.Either
+import arrow.core.raise.catch
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.WithLogger
+import com.kos.eventsourcing.events.Event
+import com.kos.eventsourcing.events.EventData
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.repository.EventStore
 import com.kos.eventsourcing.subscriptions.repository.SubscriptionsRepository
@@ -15,9 +17,14 @@ enum class SubscriptionStatus {
     FAILED
 }
 
-enum class EventProcessOutcome {
-    Processed,
-    Skipped
+sealed interface EventProcessOutcome {
+    data class Processed(val emitted: EventData? = null) : EventProcessOutcome {
+        override fun toString() = "processed" + emitted?.let { ", emitted ${it.eventType}" }.orEmpty()
+    }
+
+    data object Skipped : EventProcessOutcome {
+        override fun toString() = "skipped"
+    }
 }
 
 @Serializable
@@ -47,27 +54,8 @@ class EventSubscription(
 
         val (finalVersion, lastError) = eventStore.getEvents(initialState.version)
             .fold(Pair(initialState.version, initialState.lastError)) { (_, currentLastError), event ->
-                val error = Either.catch { process(event) }
-                    .fold(
-                        { throwable ->
-                            logger.error(throwable.stackTraceToString())
-                            recordFailure(event, throwable.message ?: throwable.javaClass.simpleName)
-                        },
-                        { outcome ->
-                            when (outcome) {
-                                EventProcessOutcome.Processed ->
-                                    logger.info("Event ${event.event.eventData.eventType} - ${event.event.operationId} was processed successfully")
+                val error: String? = catch({ handle(event); null }) { saveFailedEvent(event, it) }
 
-                                EventProcessOutcome.Skipped ->
-                                    logger.debug(
-                                        "skipping event v{} ({})",
-                                        event.version,
-                                        event.event.eventData.eventType
-                                    )
-                            }
-                            null
-                        }
-                    )
                 subscriptionsRepository.setState(
                     subscriptionName,
                     SubscriptionState(
@@ -86,11 +74,18 @@ class EventSubscription(
         )
     }
 
-    private suspend fun recordFailure(event: EventWithVersion, reason: String): String {
-        logger.error("processing event ${event.version} has failed because $reason, skipping it")
-        eventStore.saveFailedEvent(event.event.operationId, event.event.aggregateRoot, reason)
-            .onLeft { logger.error("failed to store OperationFailedEvent: ${it.message}") }
-        return reason
+    private suspend fun handle(event: EventWithVersion) {
+        val outcome = process(event)
+        if (outcome is EventProcessOutcome.Processed) outcome.emitted?.let {
+            eventStore.save(Event(event.event.aggregateRoot, event.event.operationId, it))
+        }
+        logger.info("Event v{} ({}) {}", event.version, event.event.eventData.eventType, outcome)
+    }
+
+    private suspend fun saveFailedEvent(event: EventWithVersion, throwable: Throwable): String {
+        logger.error("processing event ${event.version} has failed, skipping it", throwable)
+        eventStore.saveFailedEvent(event, throwable.stackTraceToString())
+        return throwable.message ?: throwable.javaClass.simpleName
     }
 }
 

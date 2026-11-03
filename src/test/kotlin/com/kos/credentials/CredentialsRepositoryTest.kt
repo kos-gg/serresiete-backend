@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
 abstract class CredentialsRepositoryTest {
 
@@ -56,9 +55,7 @@ abstract class CredentialsRepositoryTest {
     open fun `given a repository with credentials i can not insert a credential with existing username`() {
         runBlocking {
             repository.withState(basicCredentialsInitialState)
-            repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password)
-                .onLeft { assertTrue(it.message.contains("Duplicated")) }
-                .onRight { fail() }
+            assertFalse(repository.insertCredentials(encryptedCredentials.userName, encryptedCredentials.password))
         }
     }
 
@@ -138,9 +135,7 @@ abstract class CredentialsRepositoryTest {
     open fun `given a repository with a credential i cant insert it again`() {
         runBlocking {
             repository.withState(basicCredentialsInitialState)
-            repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password)
-                .onRight { fail() }
-                .onLeft { assertEquals(it.message, "Duplicated user $user") }
+            assertFalse(repository.insertCredentials(CredentialsTestHelper.user, CredentialsTestHelper.password))
         }
     }
 

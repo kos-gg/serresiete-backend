@@ -73,7 +73,7 @@ class AuthServiceTest {
                     AuthService(authInMemoryRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
                 val loginResponse = authService.login(user)
 
-                loginResponse.onRight {
+                loginResponse.let {
                     val accessToken = it.accessToken
                     val refreshToken = it.refreshToken
 
@@ -81,8 +81,6 @@ class AuthServiceTest {
                     assertTrue(refreshToken != null)
                     validateToken(accessToken, TokenMode.ACCESS, expectedActivities, Role.USER)
                     validateToken(refreshToken, TokenMode.REFRESH, setOf(), Role.USER)
-                }.onLeft {
-                    fail(it.toString())
                 }
             }
         }
@@ -108,13 +106,11 @@ class AuthServiceTest {
                     AuthService(authInMemoryRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
                 val loginResponse = authService.login(user)
 
-                loginResponse.onRight {
+                loginResponse.let {
                     val accessToken = it.accessToken
                     assertTrue(accessToken != null)
                     assertFalse(it.refreshToken.isDefined())
                     validateToken(accessToken, TokenMode.ACCESS, expectedActivities, Role.SERVICE)
-                }.onLeft {
-                    fail(it.toString())
                 }
             }
         }
@@ -135,7 +131,7 @@ class AuthServiceTest {
                 AuthService(authInMemoryRepository, credentialsService, rolesService, JWTConfig("issuer", "secret"))
             val newToken = authService.refresh("refresh")
 
-            assertTrue(newToken.isRight { it.isDefined() })
+            assertTrue(newToken.isDefined())
         }
     }
 

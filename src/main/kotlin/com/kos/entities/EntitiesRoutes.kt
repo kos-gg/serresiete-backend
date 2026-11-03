@@ -20,38 +20,6 @@ fun Route.entitiesRouting(
     authenticate("auth-jwt") {
         route("/entities") {
             get {
-                fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
-                    return either {
-                        val name = parameters["name"]
-                        when (val game = parameters["game"]) {
-                            Game.WOW_HC.toString() -> {
-                                val region = parameters["region"]
-                                val realm = parameters["realm"]
-                                if (name == null || realm == null || region == null)
-                                    raise(BadRequest("Incorrect search parameters for wow hardcore entity: name: $name, realm: $realm, region: $region"))
-                                else Pair(WowEntityRequest(name, region, realm), Game.WOW_HC)
-                            }
-
-                            Game.WOW.toString() -> {
-                                val region = parameters["region"]
-                                val realm = parameters["realm"]
-                                if (name == null || realm == null || region == null)
-                                    raise(BadRequest("Incorrect search parameters for wow entity: name: $name, realm: $realm, region: $region"))
-                                else Pair(WowEntityRequest(name, region, realm), Game.WOW)
-                            }
-
-                            Game.LOL.toString() -> {
-                                val tag = parameters["tag"]
-                                if (name == null || tag == null)
-                                    raise(BadRequest("Incorrect search parameters for lol entity: name: $name, tag: $tag"))
-                                else Pair(LolEntityRequest(name, tag), Game.LOL)
-                            }
-
-                            else -> raise(BadRequest("Unknown Game: $game"))
-                        }
-                    }
-                }
-
                 parametersToEntityRequest(call.request.queryParameters).fold(
                     ifLeft = { call.respondWithHandledError(it) },
                     ifRight = { entityWithGame ->
@@ -101,6 +69,38 @@ fun Route.entitiesRouting(
                     call.respond(HttpStatusCode.OK, it)
                 })
             }
+        }
+    }
+}
+
+fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
+    return either {
+        val name = parameters["name"]
+        when (val game = parameters["game"]) {
+            Game.WOW_HC.toString() -> {
+                val region = parameters["region"]
+                val realm = parameters["realm"]
+                if (name == null || realm == null || region == null)
+                    raise(BadRequest("Incorrect search parameters for wow hardcore entity: name: $name, realm: $realm, region: $region"))
+                else Pair(WowEntityRequest(name, region, realm), Game.WOW_HC)
+            }
+
+            Game.WOW.toString() -> {
+                val region = parameters["region"]
+                val realm = parameters["realm"]
+                if (name == null || realm == null || region == null)
+                    raise(BadRequest("Incorrect search parameters for wow entity: name: $name, realm: $realm, region: $region"))
+                else Pair(WowEntityRequest(name, region, realm), Game.WOW)
+            }
+
+            Game.LOL.toString() -> {
+                val tag = parameters["tag"]
+                if (name == null || tag == null)
+                    raise(BadRequest("Incorrect search parameters for lol entity: name: $name, tag: $tag"))
+                else Pair(LolEntityRequest(name, tag), Game.LOL)
+            }
+
+            else -> raise(BadRequest("Unknown Game: $game"))
         }
     }
 }

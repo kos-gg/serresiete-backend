@@ -3,10 +3,8 @@ package com.kos.entities
 import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.common.error.EntitiesDoNotMatchGame
-import com.kos.common.error.EntityError
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
-import com.kos.common.error.ResolverNotFound
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.domain.EntitiesExistResponse
@@ -64,7 +62,7 @@ class EntitiesControllerTest {
                 unchecked = listOf()
             )
             `when`(entitiesService.exists(listOf(basicWowRequest), Game.WOW))
-                .thenReturn(Either.Right(response))
+                .thenReturn(response)
 
             val result = controller.exists(
                 "client",
@@ -74,23 +72,6 @@ class EntitiesControllerTest {
             )
 
             assertEquals(Either.Right(response), result)
-        }
-    }
-
-    @Test
-    fun `exists maps a service error into a controller error`() {
-        runBlocking {
-            `when`(entitiesService.exists(listOf(basicWowRequest), Game.WOW))
-                .thenReturn(Either.Left(ResolverNotFound(Game.WOW)))
-
-            val result = controller.exists(
-                "client",
-                setOf(Activities.checkEntitiesExist),
-                listOf(basicWowRequest),
-                Game.WOW
-            )
-
-            assertEquals(Either.Left(EntityError(ResolverNotFound(Game.WOW).error())), result)
         }
     }
 

@@ -1,8 +1,6 @@
 package com.kos.common
 
 import arrow.core.Either
-import arrow.core.getOrElse
-import com.kos.common.error.ServiceError
 
 fun <A, B> List<Either<A, B>>.split(): Pair<List<A>, List<B>> {
     val (lefts, rights) = this.partition { it.isLeft() }
@@ -23,5 +21,3 @@ fun <A : Throwable, B> Either<A, B>.getOrThrow(): B = when (this) {
     is Either.Right -> this.value
     is Either.Left -> throw this.value
 }
-
-fun <A> Either<ServiceError, A>.orFail(): A = getOrElse { error(it.error()) }

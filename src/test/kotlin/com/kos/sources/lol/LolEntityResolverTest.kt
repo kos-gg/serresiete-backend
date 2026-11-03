@@ -1,11 +1,13 @@
 package com.kos.sources.lol
 
 import arrow.core.Either
-import com.kos.clients.HttpError
+import com.kos.clients.NotFound
+import com.kos.clients.TimeoutError
 import com.kos.entities.domain.LolSummoner
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.lolEntityRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
@@ -30,8 +32,7 @@ class LolEntityResolverTest {
             val resolver = LolEntityResolver(repo, riotClient)
 
             resolver.resolve(listOf(lolEntityRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(1, res.entities.size)
                     assertEquals(lolEntityRequest.name, res.entities.first().first.name)
                 }
@@ -39,17 +40,36 @@ class LolEntityResolverTest {
     }
 
     @Test
-    fun `a character not found in riot is dropped instead of failing the whole batch`() {
+    fun `a character not found in riot is neither resolved nor unchecked`() {
         runBlocking {
             `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
-                .thenReturn(Either.Left(HttpError(404, "not found")))
+                .thenReturn(Either.Left(NotFound))
 
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = LolEntityResolver(repo, riotClient)
 
             resolver.resolve(listOf(lolEntityRequest))
-                .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(), res.entities) }
+                .let { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf(), res.unchecked)
+                }
+        }
+    }
+
+    @Test
+    fun `a character that riot could not check is reported as unchecked instead of failing the whole batch`() {
+        runBlocking {
+            `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
+                .thenReturn(Either.Left(TimeoutError("timeout")))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = LolEntityResolver(repo, riotClient)
+
+            resolver.resolve(listOf(lolEntityRequest))
+                .let { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf<EntityRequest>(lolEntityRequest), res.unchecked)
+                }
         }
     }
 
@@ -63,10 +83,25 @@ class LolEntityResolverTest {
             val request = LolEntityRequest(basicLolEntity.name, basicLolEntity.tag)
 
             resolver.resolve(listOf(request))
-                .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(basicLolEntity to null), res.existing) }
+                .let { res -> assertEquals(listOf(basicLolEntity to null), res.existing) }
 
             verifyNoInteractions(riotClient)
+        }
+    }
+
+    @Test
+    fun `a character whose summoner riot does not know is neither resolved nor unchecked`() {
+        runBlocking {
+            `when`(riotClient.getPUUIDByRiotId(lolEntityRequest.name, lolEntityRequest.tag))
+                .thenReturn(Either.Right("1"))
+            `when`(riotClient.getSummonerByPuuid("1"))
+                .thenReturn(Either.Left(NotFound))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val res = LolEntityResolver(repo, riotClient).resolve(listOf(lolEntityRequest))
+
+            assertEquals(listOf(), res.entities)
+            assertEquals(listOf(), res.unchecked)
         }
     }
 }

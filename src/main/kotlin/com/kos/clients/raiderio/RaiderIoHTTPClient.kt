@@ -2,7 +2,6 @@ package com.kos.clients.raiderio
 
 import arrow.core.Either
 import com.kos.clients.ClientError
-import com.kos.clients.HttpError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
@@ -11,12 +10,9 @@ import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.B
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CHARACTERS_PROFILE_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.CLASSIC_BASE_URI
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_CUTOFFS_PATH
-import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_RUN_DETAILS_PATH
 import com.kos.clients.raiderio.RaiderIoHTTPClient.RaiderIoHTTPClientConstants.MYTHIC_PLUS_STATIC_DATA_PATH
 import com.kos.common.WithLogger
-import com.kos.datacache.domain.RunDetails
 import com.kos.entities.domain.WowEntity
-import com.kos.entities.domain.WowEntityRequest
 import com.kos.sources.wow.staticdata.wowseason.Season
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
@@ -42,7 +38,6 @@ data class RaiderIoHTTPClient(
         const val CHARACTERS_PROFILE_PATH = "/characters/profile"
         const val MYTHIC_PLUS_STATIC_DATA_PATH = "/mythic-plus/static-data"
         const val MYTHIC_PLUS_CUTOFFS_PATH = "/mythic-plus/season-cutoffs"
-        const val MYTHIC_PLUS_RUN_DETAILS_PATH = "/mythic-plus/run-details"
     }
 
     override suspend fun getExpansionSeasons(expansionId: Int): Either<ClientError, List<Season>> {
@@ -60,25 +55,6 @@ data class RaiderIoHTTPClient(
                     }
                 }
             }.map { expansionSeasons -> expansionSeasons.seasons.map { it.toSeason() } }
-        }
-    }
-
-    override suspend fun getRunDetails(season: String, runId: String): Either<ClientError, RunDetails> {
-        return retryEitherWithFixedDelay(
-            retryConfig = retryConfig,
-            functionName = "getRunDetails",
-        ) {
-            fetchFromApi<RunDetailsResponse> {
-                apiGet(BASE_URI.toString() + MYTHIC_PLUS_RUN_DETAILS_PATH) {
-                    headers {
-                        append(HttpHeaders.Accept, "*/*")
-                    }
-                    url {
-                        parameters.append("season", season)
-                        parameters.append("id", runId)
-                    }
-                }
-            }.map { it.toRunDetails() }
         }
     }
 
@@ -114,26 +90,6 @@ data class RaiderIoHTTPClient(
                 })
         }
     }
-
-    override suspend fun getScore(wowEntityRequest: WowEntityRequest): Either<ClientError, Double> =
-        retryEitherWithFixedDelay(
-            retryConfig = retryConfig,
-            functionName = "raiderIoScore",
-        ) {
-            fetchFromApi<RaiderIoScoreResponse> {
-                apiGet(BASE_URI.toString() + CHARACTERS_PROFILE_PATH) {
-                    headers {
-                        append(HttpHeaders.Accept, "*/*")
-                    }
-                    url {
-                        parameters.append("region", wowEntityRequest.region)
-                        parameters.append("realm", wowEntityRequest.realm)
-                        parameters.append("name", wowEntityRequest.name)
-                        parameters.append("fields", "mythic_plus_scores_by_season:current")
-                    }
-                }
-            }.map { it.seasonScores.firstOrNull()?.scores?.all ?: 0.0 }.orCharacterNotFound(0.0)
-        }
 
     override suspend fun cutoff(seasonSlug: String): Either<ClientError, SeasonCutoff> {
         return fetchFromApi(
@@ -197,15 +153,4 @@ data class RaiderIoHTTPClient(
                 url { parameters.append("access_key", apiKey) }
             }
         }
-
-    private fun <T> Either<ClientError, T>.orCharacterNotFound(fallback: T): Either<ClientError, T> =
-        fold(
-            ifLeft = { error ->
-                if (error is HttpError && error.status == 400 &&
-                    error.body?.contains("Could not find requested character") == true
-                ) Either.Right(fallback)
-                else Either.Left(error)
-            },
-            ifRight = { Either.Right(it) }
-        )
 }

@@ -85,13 +85,12 @@ class OperationsServiceTest {
     }
 
     @Test
-    fun `returns failed with reason when an operation failed event exists`() {
+    fun `returns failed when an operation failed event exists`() {
         runBlocking {
-            val reason = "external service unavailable"
-            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
+            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId)))
 
             assertEquals(
-                OperationStatus(operationId, OperationStatusType.FAILED, reason = reason),
+                OperationStatus(operationId, OperationStatusType.FAILED),
                 service.getOperationStatus(operationId)
             )
         }
@@ -101,8 +100,7 @@ class OperationsServiceTest {
     fun `completion takes precedence over a failure recorded on an earlier attempt`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
-            val reason = "something went wrong on a prior attempt"
-            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
+            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId)))
             eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
 
             assertEquals(
@@ -116,9 +114,8 @@ class OperationsServiceTest {
     fun `completion takes precedence even when the failure was recorded after it`() {
         runBlocking {
             val viewId = UUID.randomUUID().toString()
-            val reason = "a redundant retry failed after completion already happened"
             eventStore.save(Event(aggregateRoot, operationId, ViewSyncCompletedEvent(viewId)))
-            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId, reason)))
+            eventStore.save(Event(aggregateRoot, operationId, OperationFailedEvent(operationId)))
 
             assertEquals(
                 OperationStatus(operationId, OperationStatusType.COMPLETED),

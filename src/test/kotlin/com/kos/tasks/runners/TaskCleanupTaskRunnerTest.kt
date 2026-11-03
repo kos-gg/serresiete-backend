@@ -1,14 +1,11 @@
 package com.kos.tasks.runners
 
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
-import com.kos.tasks.TaskType
+import com.kos.tasks.TaskCompleted
+import arrow.core.Either
 import com.kos.tasks.TasksTestHelper.task
 import com.kos.tasks.repository.TasksInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -23,15 +20,9 @@ class TaskCleanupTaskRunnerTest {
         val recent = task(now)
         tasksRepo.withState(listOf(recent, task(now.minusDays(8))))
 
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        val result = runner.run(null)
 
-        runner.run(id, null)
-
-        val inserted = tasksRepo.state().last()
-        assertEquals(listOf(recent, inserted), tasksRepo.state())
-        assertEquals(id, inserted.id)
-        assertEquals(TaskType.TASK_CLEANUP_TASK, inserted.type)
-        assertEquals(Status.SUCCESSFUL, inserted.taskStatus.status)
+        assertEquals(listOf(recent), tasksRepo.state())
+        assertEquals(Either.Right(TaskCompleted()), result)
     }
 }

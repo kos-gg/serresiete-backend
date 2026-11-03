@@ -2,9 +2,9 @@ package com.kos.sources.wow
 
 import com.kos.datacache.RaiderIoMockHelper
 import com.kos.entities.EntitiesTestHelper
-import com.kos.eventsourcing.events.ViewCreatedEventEvent
-import com.kos.eventsourcing.events.ViewEditedEventEvent
-import com.kos.eventsourcing.events.ViewPatchedEventEvent
+import com.kos.eventsourcing.events.ViewCreatedEvent
+import com.kos.eventsourcing.events.ViewEditedEvent
+import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.sources.SyncGameCharactersTestCommon
 import com.kos.sources.wow.staticdata.wowseason.WowSeason
@@ -35,7 +35,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewCreatedEventEvent(
+            ViewCreatedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 owner,
@@ -47,7 +47,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -69,7 +69,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewEditedEventEvent(
+            ViewEditedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 listOf(EntitiesTestHelper.basicWowEntity.id),
@@ -79,7 +79,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -101,7 +101,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewPatchedEventEvent(
+            ViewPatchedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 listOf(EntitiesTestHelper.basicWowEntity.id),
@@ -111,7 +111,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
             ), Game.WOW
         )
 
-        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+        val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
         val spied = spyk(service)
 
         assertWowCacheInvocation(
@@ -143,7 +143,7 @@ class WowSyncProcessorTest : SyncGameCharactersTestCommon() {
                 ), Game.WOW
             )
 
-            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, wowSeasonRepository())
+            val service = WowEntitySynchronizer(dataCacheRepository, raiderIoClient, blizzardClient, wowSeasonRepository())
             val spied = spyk(service)
 
             assertWowCacheInvocation(

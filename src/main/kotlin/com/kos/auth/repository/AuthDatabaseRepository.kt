@@ -1,14 +1,11 @@
 package com.kos.auth.repository
 
-import arrow.core.Either
 import com.kos.auth.Authorization
-import com.kos.common.error.RepositoryError
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.sql.SQLException
 import java.time.OffsetDateTime
 
 class AuthDatabaseRepository(private val db: Database) : AuthRepository {
@@ -53,24 +50,19 @@ class AuthDatabaseRepository(private val db: Database) : AuthRepository {
         userName: String,
         token: String,
         isAccess: Boolean
-    ): Either<RepositoryError, Authorization?> =
+    ) {
         newSuspendedTransaction(Dispatchers.IO, db) {
-            try {
-                val insertStatement = Authorizations.insert {
-                    it[Authorizations.userName] = userName
-                    it[this.token] = token
-                    it[lastUsed] = OffsetDateTime.now().toString()
-                    it[validUntil] = OffsetDateTime.now()
-                        .plusDays(if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires)
-                        .toString()
-                    it[Authorizations.isAccess] = isAccess
-                }
-
-                Either.Right(insertStatement.resultedValues?.singleOrNull()?.let { resultRowToAuthorization(it) })
-            } catch (e: SQLException) {
-                Either.Left(RepositoryError(e.message ?: e.stackTraceToString()))
+            Authorizations.insert {
+                it[Authorizations.userName] = userName
+                it[this.token] = token
+                it[lastUsed] = OffsetDateTime.now().toString()
+                it[validUntil] = OffsetDateTime.now()
+                    .plusDays(if (isAccess) daysBeforeAccessTokenExpires else daysBeforeRefreshTokenExpires)
+                    .toString()
+                it[Authorizations.isAccess] = isAccess
             }
         }
+    }
 
     override suspend fun deleteTokensFromUser(userName: String): Boolean { //TODO: Suspicious return type
         newSuspendedTransaction(Dispatchers.IO, db) {

@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.riot.RiotClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
 import com.kos.entities.EntityUpdater
+import com.kos.entities.PartialFailure
+import com.kos.entities.ThirdPartyCallFailed
 import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntity
 import com.kos.entities.repository.EntitiesRepository
@@ -24,11 +24,11 @@ data class LolEntityUpdater(
     private val repository: EntitiesRepository
 ) :
     EntityUpdater<LolEntity>, WithLogger("LolUpdater") {
-    override suspend fun update(entities: List<LolEntity>): List<ServiceError> =
+    override suspend fun update(entities: List<LolEntity>): List<PartialFailure> =
         coroutineScope {
             val dataChannel = Channel<Pair<LolEnrichedEntityRequest, Long>>()
-            val errorsChannel = Channel<ServiceError>()
-            val errorsList = mutableListOf<ServiceError>()
+            val errorsChannel = Channel<PartialFailure>()
+            val errorsList = mutableListOf<PartialFailure>()
 
             val errorsCollector = launch {
                 errorsChannel.consumeAsFlow().collect { error ->
@@ -50,7 +50,7 @@ data class LolEntityUpdater(
                 .buffer(40)
                 .collect { lolEntity ->
                     retrieveUpdatedLolEntity(lolEntity).fold(
-                        ifLeft = { error -> errorsChannel.send(error.toSyncProcessingError("Retrieve Updated Lol Entity")) },
+                        ifLeft = { errorsChannel.send(ThirdPartyCallFailed(lolEntity.id, it)) },
                         ifRight = { dataChannel.send(Pair(it, lolEntity.id)) }
                     )
                 }

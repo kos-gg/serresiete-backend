@@ -1,8 +1,6 @@
 package com.kos.views.repository
 
-import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.RepositoryError
 import com.kos.common.fold
 import com.kos.views.*
 import java.time.OffsetDateTime
@@ -25,11 +23,11 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         game: Game,
         featured: Boolean,
         extraArguments: ViewExtraArguments?
-    ): Either<RepositoryError, SimpleView> {
+    ): SimpleView {
         val simpleView = SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured, extraArguments)
         views.add(simpleView)
         entitiesIds.forEach { viewEntities.add(ViewEntity(it.first, id, it.second)) }
-        return Either.Right(simpleView)
+        return simpleView
     }
 
     override suspend fun edit(
@@ -38,7 +36,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         published: Boolean,
         entities: List<Pair<Long, String?>>,
         featured: Boolean
-    ): Either<RepositoryError, ViewModified> {
+    ): ViewModified {
         val index = views.indexOfFirst { it.id == id }
         val oldView = views[index]
         views.removeAt(index)
@@ -48,7 +46,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         )
         viewEntities.removeIf { it.viewId == id }
         viewEntities.addAll(entities.map { ViewEntity(it.first, id, it.second) })
-        return Either.Right(ViewModified(id, name, published, entities.map { it.first }, featured))
+        return ViewModified(id, name, published, entities.map { it.first }, featured)
     }
 
     override suspend fun patch(
@@ -57,7 +55,7 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
         published: Boolean?,
         entities: List<Pair<Long, String?>>?,
         featured: Boolean?
-    ): Either<RepositoryError, ViewPatched> {
+    ): ViewPatched {
         val index = views.indexOfFirst { it.id == id }
         val oldView = views[index]
         views.removeAt(index)
@@ -78,14 +76,13 @@ class ViewsInMemoryRepository : ViewsRepository, InMemoryRepository {
             viewEntities.removeIf { it.viewId == id }
             viewEntities.addAll(entities.map { ViewEntity(it.first, id, it.second) })
         }
-        return Either.Right(ViewPatched(id, name, published, entities?.map { it.first }, featured))
+        return ViewPatched(id, name, published, entities?.map { it.first }, featured)
     }
 
-    override suspend fun delete(id: String): Either<RepositoryError, Unit> {
+    override suspend fun delete(id: String) {
         val index = views.indexOfFirst { it.id == id }
         views.removeAt(index)
         viewEntities.removeIf { it.viewId == id }
-        return Either.Right(Unit)
     }
 
     override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =

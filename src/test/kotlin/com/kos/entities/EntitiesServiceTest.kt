@@ -1,7 +1,8 @@
 package com.kos.entities
 
+import com.kos.clients.NotFound
+import com.kos.common.error.ThirdPartyUnavailable
 import arrow.core.Either
-import com.kos.clients.HttpError
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -9,7 +10,6 @@ import com.kos.clients.blizzard.toWowRealm
 import com.kos.entities.domain.LolSummoner
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowGuildResponse
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
@@ -47,9 +47,9 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 class EntitiesServiceTest {
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
     private val riotClient = mock(RiotClient::class.java)
     private val blizzardClient = mock(BlizzardClient::class.java)
 
@@ -74,12 +74,10 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 entities = listOf(request1 to null, request2 to null),
                 existing = listOf(),
-                guild = null,
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -106,12 +104,10 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 entities = listOf(request1 to null, request2 to null),
                 existing = listOf(),
-                guild = null,
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -131,13 +127,11 @@ class EntitiesServiceTest {
             val request = listOf(request1)
             val expected = ResolvedEntities(
                 listOf(),
-                listOf(),
-                guild = null
+                listOf()
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -153,20 +147,18 @@ class EntitiesServiceTest {
             )
             `when`(
                 blizzardClient.getRetailProfile(request2.region, request2.realm, request2.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Left(NotFound))
 
             val entitiesService = createService(emptyEntitiesState)
 
             val request = listOf(request1, request2)
             val expected = ResolvedEntities(
                 listOf(request1 to null),
-                listOf(),
-                guild = null
+                listOf()
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -197,12 +189,10 @@ class EntitiesServiceTest {
 
             val expected = ResolvedEntities(
                 listOf(),
-                listOf(basicWowHardcoreEntity to null),
-                guild = null
+                listOf(basicWowHardcoreEntity to null)
             )
             entitiesService.resolveEntities(listOf(request), Game.WOW_HC)
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -334,13 +324,11 @@ class EntitiesServiceTest {
                         summonerIcon = 6,
                         summonerLevel = 400
                     ) to null
-                ),
-                guild = null
+                )
             )
 
             resolvedEntities
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -357,14 +345,12 @@ class EntitiesServiceTest {
             val entitiesService = createService(state)
             val expected = ResolvedEntities(
                 listOf(),
-                listOf(),
-                guild = null
+                listOf()
             )
 
             val resolvedEntities = entitiesService.resolveEntities(listOf(request), Game.LOL)
             resolvedEntities
-                .onLeft { fail() }
-                .onRight { res -> assertResolvedEntities(expected, res) }
+                .let { res -> assertResolvedEntities(expected, res) }
         }
     }
 
@@ -478,14 +464,12 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(insertRequest to alias2),
                 listOf(basicLolEntity to alias),
-                guild = null,
             )
             val result = entitiesService.resolveEntities(listOf(request, requestNotInState), Game.LOL)
 
 
             result
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertResolvedEntities(expected, res)
                     assertEquals(expected.entities.map { it.second }, res.entities.map { it.second })
                     assertEquals(expected.existing.map { it.second }, res.existing.map { it.second })
@@ -503,15 +487,13 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
 
-            val result = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
+            val res = entitiesService.exists(listOf(basicWowRequest, basicWowRequest2), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res ->
-                assertEquals(
-                    setOf(basicWowRequest.toResponse(), basicWowRequest2.toResponse()),
-                    res.exist.toSet()
-                )
-                assertEquals(listOf(), res.nonExisting)
-            }
+            assertEquals(
+                setOf(basicWowRequest.toResponse(), basicWowRequest2.toResponse()),
+                res.exist.toSet()
+            )
+            assertEquals(listOf(), res.nonExisting)
         }
     }
 
@@ -520,16 +502,14 @@ class EntitiesServiceTest {
         runBlocking {
             `when`(
                 blizzardClient.getRetailProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
-            ).thenReturn(Either.Left(HttpError(404, null)))
+            ).thenReturn(Either.Left(NotFound))
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+            val res = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res ->
-                assertEquals(listOf(), res.exist)
-                assertEquals(listOf(basicWowRequest.toResponse()), res.nonExisting)
-            }
+            assertEquals(listOf(), res.exist)
+            assertEquals(listOf(basicWowRequest.toResponse()), res.nonExisting)
         }
     }
 
@@ -542,13 +522,11 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
+            val res = entitiesService.exists(listOf(basicWowRequest), Game.WOW)
 
-            result.onLeft { fail() }.onRight { res ->
-                assertEquals(listOf(), res.exist)
-                assertEquals(listOf(), res.nonExisting)
-                assertEquals(listOf(basicWowRequest.toResponse()), res.unchecked)
-            }
+            assertEquals(listOf(), res.exist)
+            assertEquals(listOf(), res.nonExisting)
+            assertEquals(listOf(basicWowRequest.toResponse()), res.unchecked)
         }
     }
 
@@ -590,7 +568,7 @@ class EntitiesServiceTest {
     fun `guildExists returns a null guild when it doesn't exist`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster("eu", "twisting-nether", "Method"))
-                .thenReturn(Either.Left(HttpError(404, null)))
+                .thenReturn(Either.Left(NotFound))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -603,7 +581,7 @@ class EntitiesServiceTest {
     }
 
     @Test
-    fun `guildExists returns a Left when blizzard can't be reached`() {
+    fun `guildExists reports the third party as unavailable when blizzard can't be reached`() {
         runBlocking {
             `when`(blizzardClient.getRetailGuildRoster("eu", "twisting-nether", "Method"))
                 .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
@@ -612,7 +590,7 @@ class EntitiesServiceTest {
 
             val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
 
-            result.onRight { fail() }
+            assertEquals(Either.Left(ThirdPartyUnavailable), result)
         }
     }
 
@@ -622,7 +600,7 @@ class EntitiesServiceTest {
         val viewsRepository = ViewsInMemoryRepository()
 
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)

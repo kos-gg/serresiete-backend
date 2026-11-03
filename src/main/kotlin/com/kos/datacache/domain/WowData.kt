@@ -43,6 +43,7 @@ data class ClassSpec(
 @Serializable
 data class MythicPlusRun(
     val runId: Long,
+    val dungeonId: Int,
     val dungeon: String,
     val shortName: String,
     val keyLevel: Int,
@@ -58,58 +59,18 @@ data class MythicPlusRun(
 )
 
 @Serializable
-data class RunDetailsCharacterClass(val name: String)
-
-@Serializable
-data class RunDetailsCharacterSpec(val name: String)
-
-@Serializable
-data class RunDetailsCharacterRealm(
-    val id: Int,
+data class RunMember(
     val name: String,
-    val slug: String
+    val realm: String,
+    val `class`: String,
+    val spec: ClassSpec,
+    val race: String,
+    val itemLevel: Int
 )
-
-@Serializable
-data class RunDetailsCharacterRegion(
-    val name: String,
-    val shortName: String,
-    val slug: String
-)
-
-@Serializable
-data class RunDetailsRosterRanks(
-    val score: Double
-)
-
-@Serializable
-data class RunDetailsCharacter(
-    val name: String,
-    val `class`: RunDetailsCharacterClass,
-    val spec: RunDetailsCharacterSpec,
-    val realm: RunDetailsCharacterRealm,
-    val region: RunDetailsCharacterRegion
-)
-
-@Serializable
-data class RunDetailsRosterEntry(
-    val character: RunDetailsCharacter,
-    val role: String,
-    val ranks: RunDetailsRosterRanks
-)
-
-@Serializable
-data class RunDetailsDeath(
-    val approximateDiedAt: Int
-)
-
-@Serializable
-data class LoggedDetails(val deaths: List<RunDetailsDeath> = emptyList())
 
 @Serializable
 data class RunDetails(
-    val roster: List<RunDetailsRosterEntry>,
-    val loggedDetails: LoggedDetails? = null
+    val members: List<RunMember>
 )
 
 @Serializable

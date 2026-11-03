@@ -1,5 +1,7 @@
 package com.kos.tasks.runners
 
+import com.kos.tasks.TaskCompleted
+import com.kos.sources.wow.MythicKeystoneProfile
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
@@ -7,7 +9,6 @@ import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowCharacterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
-import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
@@ -18,31 +19,28 @@ import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowGuildUpdater
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
-import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import java.time.OffsetDateTime
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import com.kos.sources.wow.WowGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.WowSeason
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonsState
 
 class UpdateWowGuildsTaskRunnerTest {
 
     private val blizzardClient = mock(BlizzardClient::class.java)
-    private val raiderIoClient = mock(RaiderIoClient::class.java)
+    private val season = WowSeason(16, "Midnight Season 1", "season-mn-1", 11, "{}", true)
+    private val seasonRepository = runBlocking { WowSeasonInMemoryRepository().withState(WowSeasonsState(listOf(season))) }
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val wowGuildsRepository = WowGuildsInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
     private val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-    private val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+    private val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
@@ -52,8 +50,7 @@ class UpdateWowGuildsTaskRunnerTest {
         mock(),
         WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
     )
-    private val tasksRepo = TasksInMemoryRepository()
-    private val runner = UpdateWowGuildsTaskRunner(tasksRepo, entitiesService)
+    private val runner = UpdateWowGuildsTaskRunner(entitiesService)
 
     @Test
     fun `wow guilds are updated and task is recorded as successful`() = runBlocking {
@@ -78,18 +75,12 @@ class UpdateWowGuildsTaskRunnerTest {
                     ).toGuildRoster()
                 )
             )
-        `when`(raiderIoClient.getScore(WowEntityRequest(character, region, realm)))
-            .thenReturn(Either.Right(1500.0))
+        `when`(blizzardClient.getMythicKeystoneProfile(region, realm, character, season.id))
+            .thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        val result = runner.run(null)
 
-        runner.run(id, null)
-
-        val task = tasksRepo.state().first()
-        assertEquals(id, task.id)
-        assertEquals(TaskType.UPDATE_WOW_GUILDS, task.type)
-        assertEquals(Status.SUCCESSFUL, task.taskStatus.status)
+        assertEquals(Either.Right(TaskCompleted()), result)
 
         val updatedView = viewsRepository.get(viewId)!!
         val characterRequest: EntityRequest = WowEntityRequest(character, region, realm)

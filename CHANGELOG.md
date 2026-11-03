@@ -1,5 +1,66 @@
 # Changelog
 
+## [7.0.0] - 22-10-2026
+
+### Changed
+
+- **Breaking — WOW run details come from Blizzard**: each best run's `details` is now
+  `{ "members": [{ name, realm, class, spec: { id, name, role }, race, itemLevel }] }`, built from Blizzard's
+  `mythic-keystone-profile/season/{id}`. `realm` is the slug, `spec.name` is Blizzard's (e.g. "Holy", "Brewmaster", the
+  same style as RaiderIO and `run.spec`, so `class` + `spec.name` identifies the icon), `class` and `spec.role` come
+  from our spec table by Blizzard's spec id, and `itemLevel` is the item level the member had in that run. The RaiderIO roster (`roster`, member `region`,
+  `ranks.score`) and `loggedDetails` (deaths) are gone.
+- Each best run has a new `dungeonId` (RaiderIO's `map_challenge_mode_id`, the same id as Blizzard's dungeon). Runs are
+  matched to Blizzard's best runs by `dungeonId` + `keyLevel` + timed (Blizzard keeps a best timed and a best untimed run
+  per dungeon; a RaiderIO run is timed when `upgrades > 0`). A run with no match is stored with `details: null`.
+- One Blizzard call per character fetches the members of all its best runs, instead of one RaiderIO `run-details` call
+  per run. The call is skipped when every best run already has details from the previous sync (details are kept by
+  `runId`, so a new best run triggers it). RaiderIO's `run-details` client is gone.
+- `Spec` has a `role` (`tank` / `healer` / `dps`).
+- The WOW sync logs no longer print run details reused/fetched/failed (per entity or in the summary) nor a match cache
+  hit rate; the summary keeps entities cached/failed and the duration.
+- The WOW guild resolver logs which guild it starts resolving (name, region/realm).
+- **Scheduled WOW and WOW_HC data caching runs every 2h instead of every 30 min** (`CACHE_WOW_DATA_TASK`,
+  `CACHE_WOW_HC_DATA_TASK`). Data rarely changes much in 30 min, and a view can still be synced on demand. LOL stays at
+  30 min.
+- **WOW sync no longer waits for slow entities in order**: entities are processed with `parMapUnordered` instead of
+  `parMap`, so one entity stuck in RaiderIO retries (~22s) no longer holds back the ones after it. WOW_HC sync does the
+  same.
+- **Event subscriptions run on `Dispatchers.IO`**: in Ktor's development mode they inherited its
+  `ClassLoaderAwareContinuationInterceptor`, which made `parMapUnordered` fail with "Flow invariant is violated" when
+  syncing a new view. They now run like the scheduled tasks, without it.
+
+### Deploy notes
+
+- WOW `data_cache` must be wiped: old entries carry RaiderIO run details that the new model can't read.
+
+## [6.0.3] - 20-10-2026
+
+### Changed
+
+- **Guild members are filtered by Blizzard's mythic rating**: resolving a WOW guild (view creation and `UPDATE_WOW_GUILDS`)
+  checks each member's rating with Blizzard's `mythic-keystone-profile/season/{id}` instead of RaiderIO's profile, which
+  timed out often and made big guilds take minutes. The season id is the current season in `wow_seasons`. A character
+  Blizzard doesn't find, or with no rating that season, counts as 0. The 1000 cutoff doesn't change.
+- `RaiderIoClient.getScore` is gone.
+- **Run details are no longer retried**: `getRunDetails` makes a single attempt. RaiderIO fails
+  often lately and the retries blocked the whole WOW sync. A run whose details fail is stored without them and fetched
+  again on the next sync.
+- **HTTP requests to third parties time out after 5s** instead of 15s (`HttpTimeout` on the shared client). With retries,
+  a call that keeps timing out now gives up after ~24s instead of ~64s.
+- **Sync logs say what actually happened**: WOW logs one line per entity with run details reused/fetched/failed. WOW,
+  WOW_HC and LOL end with a summary of entities cached/failed (WOW_HC also skipped dead characters) and the duration in
+  seconds instead of minutes. WOW adds run detail totals, and WOW and LOL the match cache hit rate (it printed a
+  fraction as a percentage). RaiderIO's `access_key` is masked in timeout messages. The non-retryable
+  "Retry aborted" and Blizzard's "token in good state" logs moved to TRACE.
+- **Guild resolution logs one summary line** (kept / below minimum mythic+ score / failed) instead of a WARN per member.
+  Members below the score are logged at TRACE; members whose rating couldn't be fetched still log a WARN.
+
+### Deploy notes
+
+- `wow_seasons` needs a current season (run `updateMythicPlusSeason` if it doesn't). Without one, creating a WOW guild
+  view fails with "There is no current mythic+ season" and `UPDATE_WOW_GUILDS` skips new members.
+
 ## [6.0.2] - 20-10-2026
 
 ### Added

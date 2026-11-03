@@ -31,7 +31,7 @@ object Retry : WithLogger("retry") {
 
             is Either.Left -> {
                 if (shouldNotRetry(result.value)) {
-                    logger.info("Retry aborted for $functionName due to non-retryable error ${result.value}")
+                    logger.trace("Retry aborted for $functionName due to non-retryable error ${result.value}")
                     return result
                 }
 
@@ -52,6 +52,7 @@ object Retry : WithLogger("retry") {
         return when (error) {
             is HttpError -> error.status < 500 && error.status != 429
             is JsonParseError -> true
+            is NotFound -> true
             else -> false
         }
     }

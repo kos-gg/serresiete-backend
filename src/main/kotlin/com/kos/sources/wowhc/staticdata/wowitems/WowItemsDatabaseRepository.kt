@@ -1,14 +1,10 @@
 package com.kos.sources.wowhc.staticdata.wowitems
 
-import arrow.core.Either
-import com.kos.clients.ClientError
-import com.kos.clients.JsonParseError
 import com.kos.clients.blizzard.asset
 import com.kos.clients.blizzard.toWowItemDetails
 import com.kos.clients.domain.GetWowItemResponse
 import com.kos.clients.domain.GetWowMediaResponse
 import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Table
@@ -30,41 +26,17 @@ class WowItemsDatabaseRepository(private val db: Database) : WowItemsRepository 
         ignoreUnknownKeys = true
     }
 
-    override suspend fun getItemMedia(
-        id: Long
-    ): Either<ClientError, String?> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            val itemString = WowClassicStaticItems.selectAll().where { WowClassicStaticItems.id.eq(id) }
+    override suspend fun getItemMedia(id: Long): String? =
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            WowClassicStaticItems.selectAll().where { WowClassicStaticItems.id.eq(id) }
                 .map { it[WowClassicStaticItems.media] }.singleOrNull()
-            when (itemString) {
-                null -> Either.Left(JsonParseError("", "Not found item media"))
-                else ->
-                    try {
-                        Either.Right(json.decodeFromString<GetWowMediaResponse>(itemString).asset("icon"))
-                    } catch (e: SerializationException) {
-                        Either.Left(JsonParseError(itemString, e.stackTraceToString()))
-                    }
-            }
-        }
-    }
+        }?.let { json.decodeFromString<GetWowMediaResponse>(it).asset("icon") }
 
-    override suspend fun getItem(
-        id: Long
-    ): Either<ClientError, WowItemDetails> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            val itemString = WowClassicStaticItems.selectAll().where { WowClassicStaticItems.id.eq(id) }
+    override suspend fun getItem(id: Long): WowItemDetails? =
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            WowClassicStaticItems.selectAll().where { WowClassicStaticItems.id.eq(id) }
                 .map { it[WowClassicStaticItems.item] }.singleOrNull()
-            when (itemString) {
-                null -> Either.Left(JsonParseError("", "Not found item"))
-                else ->
-                    try {
-                        Either.Right(json.decodeFromString<GetWowItemResponse>(itemString).toWowItemDetails())
-                    } catch (e: SerializationException) {
-                        Either.Left(JsonParseError(itemString, e.stackTraceToString()))
-                    }
-            }
-        }
-    }
+        }?.let { json.decodeFromString<GetWowItemResponse>(it).toWowItemDetails() }
 
     override suspend fun state(): WowItemsState {
         return newSuspendedTransaction(Dispatchers.IO) {

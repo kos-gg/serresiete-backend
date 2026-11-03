@@ -1,7 +1,5 @@
 package com.kos.views.repository
 
-import arrow.core.Either
-import com.kos.common.error.RepositoryError
 import com.kos.common.fold
 import com.kos.common.getOrThrow
 import com.kos.entities.repository.EntitiesDatabaseRepository.Entities
@@ -117,7 +115,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         game: Game,
         featured: Boolean,
         extraArguments: ViewExtraArguments?,
-    ): Either<RepositoryError, SimpleView> = Either.catch {
+    ): SimpleView {
         newSuspendedTransaction(Dispatchers.IO, db) {
             if (Views.selectAll().where { Views.id eq id }.empty()) {
                 Views.insert {
@@ -133,8 +131,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             }
             associateEntitiesIdsToViewQuery(entitiesIds, id)
         }
-        SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured, extraArguments)
-    }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
+        return SimpleView(id, name, owner, true, entitiesIds.map { it.first }, game, featured, extraArguments)
+    }
 
     override suspend fun edit(
         id: String,
@@ -142,7 +140,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         published: Boolean,
         entities: List<entityIdWithAlias>,
         featured: Boolean
-    ): Either<RepositoryError, ViewModified> = Either.catch {
+    ): ViewModified {
         newSuspendedTransaction(Dispatchers.IO, db) {
             Views.update({ Views.id.eq(id) }) {
                 it[Views.name] = name
@@ -152,8 +150,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             ViewEntities.deleteWhere { viewId.eq(id) }
             associateEntitiesIdsToViewQuery(entities, id)
         }
-        ViewModified(id, name, published, entities.map { it.first }, featured)
-    }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
+        return ViewModified(id, name, published, entities.map { it.first }, featured)
+    }
 
     override suspend fun patch(
         id: String,
@@ -161,7 +159,7 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         published: Boolean?,
         entities: List<entityIdWithAlias>?,
         featured: Boolean?
-    ): Either<RepositoryError, ViewPatched> = Either.catch {
+    ): ViewPatched {
         newSuspendedTransaction(Dispatchers.IO, db) {
             name?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.name] = it } }
             published?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.published] = it } }
@@ -171,8 +169,8 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
             }
             featured?.let { Views.update({ Views.id.eq(id) }) { statement -> statement[Views.featured] = it } }
         }
-        ViewPatched(id, name, published, entities?.map { it.first }, featured)
-    }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
+        return ViewPatched(id, name, published, entities?.map { it.first }, featured)
+    }
 
     private fun associateEntitiesIdsToViewQuery(
         entitiesIds: List<entityIdWithAlias>,
@@ -199,10 +197,9 @@ class ViewsDatabaseRepository(private val db: Database) : ViewsRepository {
         }
     }
 
-    override suspend fun delete(id: String): Either<RepositoryError, Unit> = Either.catch {
+    override suspend fun delete(id: String) {
         newSuspendedTransaction(Dispatchers.IO, db) { Views.deleteWhere { Views.id.eq(id) } }
-        Unit
-    }.mapLeft { RepositoryError(it.message ?: it.stackTraceToString()) }
+    }
 
     override suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>> =
         queryViews(owner = null, query)

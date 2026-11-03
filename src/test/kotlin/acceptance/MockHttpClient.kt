@@ -82,6 +82,9 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
+                path.contains("/mythic-keystone-profile/") ->
+                    respond("""{"mythic_rating":{"rating":1500.0}}""", HttpStatusCode.OK, json)
+
                 path.contains("/profile/wow/character/") -> {
                     val status = MockConfig.blizzardProfileStatusOverride ?: HttpStatusCode.OK
                     val characterName = path.substringAfterLast("/")
@@ -140,13 +143,6 @@ val mockHttpClient = HttpClient(MockEngine) {
                     else
                         respond("", status, json)
                 }
-
-                path.contains("/run-details") ->
-                    respond(
-                        readResource("acceptance/files/responses/wow/raiderio-run-details-response.json"),
-                        HttpStatusCode.OK,
-                        json
-                    )
 
                 path.contains("/accounts/by-riot-id") ->
                     respond(

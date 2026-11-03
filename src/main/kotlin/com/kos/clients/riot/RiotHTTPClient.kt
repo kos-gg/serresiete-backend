@@ -7,6 +7,7 @@ import com.kos.clients.Retry.retryEitherWithFixedDelay
 import com.kos.clients.RetryConfig
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.clients.toClientError
 import com.kos.clients.riot.RiotHTTPClient.RiotHTTPClientConstants.X_RIOT_TOKEN
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.QueueType
@@ -15,6 +16,7 @@ import com.kos.entities.domain.RiotAccount
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -56,8 +58,7 @@ data class RiotHTTPClient(
                             }
                         }
                     }
-                }.bind().puuid
-
+                }.map { it.puuid }.bind()
             }
         }
     }
@@ -202,11 +203,15 @@ data class RiotHTTPClient(
         }
     )
 
-    private suspend fun <T> throttleRequest(request: suspend () -> T): T {
+    private suspend fun <T> throttleRequest(request: suspend () -> Either<ClientError, T>): Either<ClientError, T> {
         logger.debug("PerSecondThrottlerHashId ${System.identityHashCode(perSecondRateLimiter)}")
         logger.debug("PerTwoMinutesThrottlerHashId ${System.identityHashCode(perTwoMinuteRateLimiter)}")
-        return perSecondRateLimiter.executeSuspendFunction {
-            perTwoMinuteRateLimiter.executeSuspendFunction(request)
+        return try {
+            perSecondRateLimiter.executeSuspendFunction {
+                perTwoMinuteRateLimiter.executeSuspendFunction(request)
+            }
+        } catch (e: RequestNotPermitted) {
+            Either.Left(e.toClientError())
         }
     }
 

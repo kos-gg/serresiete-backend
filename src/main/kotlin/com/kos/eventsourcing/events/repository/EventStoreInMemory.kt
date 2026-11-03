@@ -1,8 +1,6 @@
 package com.kos.eventsourcing.events.repository
 
-import arrow.core.Either
 import com.kos.common.InMemoryRepository
-import com.kos.common.error.RepositoryError
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.Operation
@@ -13,11 +11,11 @@ class EventStoreInMemory : EventStore, InMemoryRepository {
     private val timestamps = mutableMapOf<Long, OffsetDateTime>()
     private var currentVersion = 1L // Assuming versions start from 1 and increment
 
-    override suspend fun save(event: Event): Either<RepositoryError, Operation> {
+    override suspend fun save(event: Event): Operation {
         val eventWithVersion = EventWithVersion(currentVersion++, event)
         events.add(eventWithVersion)
         timestamps[eventWithVersion.version] = OffsetDateTime.now()
-        return Either.Right(Operation(event.operationId, event.eventData.eventType))
+        return Operation(event.operationId, event.eventData.eventType)
     }
 
     override suspend fun getEvents(version: Long?): Sequence<EventWithVersion> {

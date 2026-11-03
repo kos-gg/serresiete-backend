@@ -17,7 +17,7 @@ import org.junit.jupiter.api.TestInstance
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
+import kotlin.test.assertFalse
 
 abstract class WowSeasonDatabaseRepositoryTestCommon {
     abstract val repository: WowSeasonRepository
@@ -29,12 +29,32 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
     open fun `given an empty repository I can insert a wow season`() {
         runBlocking {
             wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
-            val result = repository.insert(wowSeason)
-            result.onLeft { fail() }
-            result.onRight {
-                assertTrue(it)
-            }
+            assertTrue(repository.insert(wowSeason))
             assertEquals(WowSeasonsState(listOf(wowSeason)), repository.state())
+        }
+    }
+
+    @Test
+    open fun `inserting a season that already exists is not inserted and keeps the current one`() {
+        runBlocking {
+            wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
+            repository.withState(WowSeasonsState(listOf(wowSeason)))
+
+            assertFalse(repository.insert(wowSeason))
+            assertEquals(WowSeasonsState(listOf(wowSeason)), repository.state())
+        }
+    }
+
+    @Test
+    open fun `inserting a duplicate flagged as current does not unmark the actual current season`() {
+        runBlocking {
+            wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
+            val previousSeason = wowSeason.copy(isCurrentSeason = false)
+            val currentSeason = wowSeason.copy(id = 16)
+            repository.withState(WowSeasonsState(listOf(previousSeason, currentSeason)))
+
+            assertFalse(repository.insert(previousSeason.copy(isCurrentSeason = true)))
+            assertEquals(WowSeasonsState(listOf(previousSeason, currentSeason)), repository.state())
         }
     }
 
@@ -44,9 +64,7 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
             wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
             repository.withState(WowSeasonsState(listOf(wowSeason)))
             val newSeason = wowSeason.copy(id = 16)
-            val result = repository.insert(newSeason)
-            result.onLeft { fail() }
-            result.onRight { assertTrue(it) }
+            assertTrue(repository.insert(newSeason))
             assertEquals(
                 WowSeasonsState(listOf(wowSeason.copy(isCurrentSeason = false), newSeason)),
                 repository.state()
@@ -60,9 +78,7 @@ abstract class WowSeasonDatabaseRepositoryTestCommon {
             wowExpansionRepository.withState(WowExpansionState(listOf(WowExpansion(10, "TWW", true))))
             repository.withState(WowSeasonsState(listOf(wowSeason)))
             val newSeason = wowSeason.copy(id = 16, isCurrentSeason = false)
-            val result = repository.insert(newSeason)
-            result.onLeft { fail() }
-            result.onRight { assertTrue(it) }
+            assertTrue(repository.insert(newSeason))
             assertEquals(
                 WowSeasonsState(listOf(wowSeason, newSeason)),
                 repository.state()

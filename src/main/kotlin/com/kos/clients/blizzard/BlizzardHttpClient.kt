@@ -1,6 +1,7 @@
 package com.kos.clients.blizzard
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.raise.either
 import com.kos.clients.ClientError
 import com.kos.clients.Retry.retryEitherWithFixedDelay
@@ -12,6 +13,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.P
 import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.STATIC_CLASSIC_NAMESPACE
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
+import com.kos.clients.toClientError
 import com.kos.common.WithLogger
 import com.kos.datacache.domain.*
 import com.kos.entities.domain.GuildRoster
@@ -19,6 +21,7 @@ import com.kos.entities.domain.WowRealm
 import io.github.resilience4j.kotlin.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.kotlin.ratelimiter.executeSuspendFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -30,6 +33,7 @@ import java.time.OffsetDateTime
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
+import com.kos.sources.wow.MythicKeystoneProfile
 
 data class TokenState(val obtainedAt: OffsetDateTime, val tokenResponse: TokenResponse)
 
@@ -75,7 +79,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind().toWowCharacter()
+                }.map { it.toWowCharacter() }.bind()
             }
         }
     }
@@ -105,7 +109,7 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind().toWowCharacter()
+                }.map { it.toWowCharacter() }.bind()
             }
         }
     }
@@ -363,7 +367,38 @@ class BlizzardHttpClient(
                             }
                         }
                     }
-                }.bind().toGuildRoster()
+                }.map { it.toGuildRoster() }.bind()
+            }
+        }
+    }
+
+    override suspend fun getMythicKeystoneProfile(
+        region: String,
+        realm: String,
+        character: String,
+        seasonId: Int
+    ): Either<ClientError, MythicKeystoneProfile> {
+        return throttleRequest {
+            either {
+                val tokenResponse = getAndUpdateToken().bind()
+                val namespace = "profile-$region"
+                val partialURI =
+                    URI("/profile/wow/character/$realm/${encodedName(character)}/mythic-keystone-profile/season/$seasonId?namespace=$namespace&locale=en_US")
+
+                retryEitherWithFixedDelay(
+                    retryConfig = retryConfig,
+                    functionName = "getMythicKeystoneProfile",
+                ) {
+                    fetchFromApi<GetWowMythicKeystoneSeasonResponse> {
+                        client.get((baseURI(region).toString() + partialURI.toString()).lowercase()) {
+                            headers {
+                                append(HttpHeaders.Authorization, "Bearer ${tokenResponse.tokenResponse.accessToken}")
+                                append(HttpHeaders.Accept, "*/*")
+                                append(BATTLENET_NAMESPACE, namespace)
+                            }
+                        }
+                    }
+                }.flatMap { it.toMythicKeystoneProfile() }.bind()
             }
         }
     }
@@ -392,7 +427,7 @@ class BlizzardHttpClient(
                         )
                         blizzardAuthClient.getAccessToken()
                     } else {
-                        logger.debug("token in good state")
+                        logger.trace("token in good state")
                         Either.Right(it.tokenResponse)
                     }
                 }
@@ -414,9 +449,12 @@ class BlizzardHttpClient(
         }
     )
 
-    private suspend fun <T> throttleRequest(request: suspend () -> T): T {
-        return perSecondRateLimiter.executeSuspendFunction(request)
-    }
+    private suspend fun <T> throttleRequest(request: suspend () -> Either<ClientError, T>): Either<ClientError, T> =
+        try {
+            perSecondRateLimiter.executeSuspendFunction(request)
+        } catch (e: RequestNotPermitted) {
+            Either.Left(e.toClientError())
+        }
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 

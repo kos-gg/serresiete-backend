@@ -1,8 +1,8 @@
 package com.kos.views
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import com.kos.common.error.InvalidQueryParameter
 import com.kos.common.error.respondWithHandledError
 import com.kos.common.recoverToEither
@@ -14,20 +14,11 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun parsePositiveIntQueryParam(param: String, rawValue: String?): Either<InvalidQueryParameter, Int?> =
-    rawValue.recoverToEither(
-        { InvalidQueryParameter(param, it, listOf("a positive integer")) },
-        { value ->
-            Either.catch { value.toInt() }
-                .flatMap { parsed -> if (parsed >= 1) Either.Right(parsed) else Either.Left(IllegalArgumentException()) }
-        }
-    )
-
 fun Route.viewsRouting(
     viewsController: ViewsController
 ) {
-    route("/views") {
-        authenticate("auth-jwt") {
+    authenticate("auth-jwt") {
+        route("/views") {
             get {
                 val userWithActivities = call.principal<UserWithActivities>()
                 either {
@@ -61,8 +52,6 @@ fun Route.viewsRouting(
                     call.respond(OK, GetViewsResponse(it.first, it.second))
                 })
             }
-        }
-        authenticate("auth-jwt") {
             get("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.getView(
@@ -75,8 +64,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             get("/{id}/data") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.getViewData(
@@ -90,8 +77,6 @@ fun Route.viewsRouting(
                         call.respond(OK, it)
                     })
             }
-        }
-        authenticate("auth-jwt") {
             get("/{id}/cached-data") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.getViewCachedData(
@@ -104,8 +89,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             post {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.createView(
@@ -118,8 +101,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             put("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.editView(
@@ -133,8 +114,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             patch("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.patchView(
@@ -148,8 +127,6 @@ fun Route.viewsRouting(
                     call.respond(OK, it)
                 })
             }
-        }
-        authenticate("auth-jwt") {
             delete("/{id}") {
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.deleteView(
@@ -165,3 +142,12 @@ fun Route.viewsRouting(
         }
     }
 }
+
+internal fun parsePositiveIntQueryParam(param: String, value: String?): Either<InvalidQueryParameter, Int?> =
+    either {
+        value?.let { it ->
+            ensureNotNull(it.toIntOrNull()?.takeIf { it >= 1 }) {
+                InvalidQueryParameter(param, value, listOf("a positive integer"))
+            }
+        }
+    }

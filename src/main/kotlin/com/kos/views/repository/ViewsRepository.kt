@@ -1,8 +1,6 @@
 package com.kos.views.repository
 
-import arrow.core.Either
 import com.kos.common.WithState
-import com.kos.common.error.RepositoryError
 import com.kos.views.*
 import java.time.OffsetDateTime
 
@@ -22,7 +20,7 @@ interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
         game: Game,
         featured: Boolean,
         extraArguments: ViewExtraArguments? = null
-    ): Either<RepositoryError, SimpleView>
+    ): SimpleView
 
     suspend fun edit(
         id: String,
@@ -30,7 +28,7 @@ interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
         published: Boolean,
         entities: List<Pair<Long, String?>>,
         featured: Boolean
-    ): Either<RepositoryError, ViewModified>
+    ): ViewModified
 
     suspend fun patch(
         id: String,
@@ -38,9 +36,9 @@ interface ViewsRepository : WithState<ViewsState, ViewsRepository> {
         published: Boolean?,
         entities: List<Pair<Long, String?>>?,
         featured: Boolean?
-    ): Either<RepositoryError, ViewPatched>
+    ): ViewPatched
 
-    suspend fun delete(id: String): Either<RepositoryError, Unit>
+    suspend fun delete(id: String)
     suspend fun getViews(query: GetViewsQuery): Pair<ViewMetadata, List<SimpleView>>
 
     suspend fun getViewEntity(viewId: String, entityId: Long): ViewEntity?

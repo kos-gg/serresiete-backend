@@ -1,12 +1,12 @@
 package com.kos.tasks.runners
 
+import arrow.core.Either
+import arrow.core.raise.either
 import com.kos.common.WithLogger
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
+import com.kos.tasks.TaskCompleted
+import com.kos.tasks.TaskFailed
 import com.kos.tasks.TaskType
 import com.kos.tasks.repository.TasksRepository
-import java.time.OffsetDateTime
 
 class TaskCleanupTaskRunner(
     private val tasksRepository: TasksRepository
@@ -15,17 +15,10 @@ class TaskCleanupTaskRunner(
     override val type = TaskType.TASK_CLEANUP_TASK
     private val olderThanDays: Long = 7
 
-    override suspend fun run(id: String, arguments: Map<String, String>?) {
+    override suspend fun run(arguments: Map<String, String>?): Either<TaskFailed, TaskCompleted> = either {
         logger.info("Running task cleanup task")
         val deletedTasks = tasksRepository.deleteOldTasks(olderThanDays)
         logger.info("Deleted $deletedTasks old tasks")
-        tasksRepository.updateTask(
-            Task(
-                id,
-                type,
-                TaskStatus(Status.SUCCESSFUL, "Deleted $deletedTasks old tasks"),
-                OffsetDateTime.now()
-            )
-        )
+        TaskCompleted()
     }
 }

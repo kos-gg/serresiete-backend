@@ -1,12 +1,8 @@
 package com.kos.sources.wow.staticdata.wowseason
 
-import arrow.core.Either
-import arrow.core.raise.either
+import com.kos.clients.orThrow
 import com.kos.clients.raiderio.RaiderIoClient
-import com.kos.clients.toSyncProcessingError
 import com.kos.common.WithLogger
-import com.kos.common.error.ServiceError
-import com.kos.common.error.UnableToAddNewMythicPlusSeason
 import com.kos.sources.wow.staticdata.wowexpansion.WowExpansion
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
@@ -23,47 +19,27 @@ data class WowSeasonService(
         ignoreUnknownKeys = true
     }
 
-    suspend fun addNewMythicPlusSeason(): Either<ServiceError, WowSeason> =
-        either {
-            val currentExpansion = getCurrentExpansion()
+    suspend fun addNewMythicPlusSeason(): WowSeason {
+        val currentExpansion = checkNotNull(getCurrentExpansion()) { "Couldn't find current expansion from database" }
 
-            val expansionId = currentExpansion?.id
-                ?: raise(
-                    UnableToAddNewMythicPlusSeason(
-                        "Couldn't find current expansion from database"
-                    )
-                )
+        val currentSeason = raiderIoClient.getExpansionSeasons(currentExpansion.id)
+            .orThrow()
+            .firstOrNull { it.isCurrentSeason }
+            ?: error("There is no current season for expansion ${currentExpansion.id} - ${currentExpansion.name}")
 
-            val expansionSeasons =
-                raiderIoClient.getExpansionSeasons(expansionId)
-                    .mapLeft {
-                        logger.error("Failed to fetch expansion seasons: $it")
-                        it.toSyncProcessingError("GetWowExpansions")
-                    }.bind()
+        val wowSeason = WowSeason(
+            currentSeason.blizzardSeasonId,
+            currentSeason.name,
+            currentSeason.slug,
+            10,
+            json.encodeToString(currentSeason),
+            currentSeason.isCurrentSeason
+        )
 
-            val currentSeason = expansionSeasons
-                .firstOrNull { it.isCurrentSeason }
-                ?: raise(
-                    UnableToAddNewMythicPlusSeason(
-                        "There is no current season for expansion $expansionId - ${currentExpansion.name}"
-                    )
-                )
+        check(wowSeasonRepository.insert(wowSeason)) { "Season ${wowSeason.name} (${wowSeason.id}) already exists" }
 
-            val wowSeason = WowSeason(
-                currentSeason.blizzardSeasonId,
-                currentSeason.name,
-                currentSeason.slug,
-                10,
-                json.encodeToString(currentSeason),
-                currentSeason.isCurrentSeason
-            )
-
-            wowSeasonRepository.insert(wowSeason)
-                .mapLeft { UnableToAddNewMythicPlusSeason(it.message) }
-                .bind()
-
-            wowSeason
-        }
+        return wowSeason
+    }
 
     suspend fun getWowCurrentSeason(): Season? =
         wowSeasonRepository.getCurrentSeason()?.let { Json.decodeFromString<Season>(it.seasonData) }

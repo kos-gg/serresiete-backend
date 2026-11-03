@@ -1,6 +1,8 @@
 package com.kos.sources.wowhc
 
 import arrow.core.Either
+import com.kos.clients.NotFound
+import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toWowRealm
 import com.kos.datacache.BlizzardMockHelper
@@ -8,6 +10,7 @@ import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import kotlinx.coroutines.runBlocking
@@ -31,8 +34,7 @@ class WowHardcoreEntityResolverTest {
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res ->
+                .let { res ->
                     assertEquals(1, res.entities.size)
                     assertEquals(basicWowRequest.name, res.entities.first().first.name)
                 }
@@ -51,8 +53,62 @@ class WowHardcoreEntityResolverTest {
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(), res.entities) }
+                .let { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf(), res.unchecked)
+                }
+        }
+    }
+
+    @Test
+    fun `a character that blizzard could not check is reported as unchecked`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
+            ).thenReturn(Either.Left(TimeoutError("timeout")))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
+
+            resolver.resolve(listOf(basicWowRequest))
+                .let { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf<EntityRequest>(basicWowRequest), res.unchecked)
+                }
+        }
+    }
+
+    @Test
+    fun `a character whose realm could not be checked is reported as unchecked`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
+            ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
+            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Left(TimeoutError("timeout")))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
+
+            resolver.resolve(listOf(basicWowRequest))
+                .let { res -> assertEquals(listOf<EntityRequest>(basicWowRequest), res.unchecked) }
+        }
+    }
+
+    @Test
+    fun `a character not found in blizzard is neither resolved nor unchecked`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
+            ).thenReturn(Either.Left(NotFound))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
+
+            resolver.resolve(listOf(basicWowRequest))
+                .let { res ->
+                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf(), res.unchecked)
+                }
         }
     }
 
@@ -64,10 +120,25 @@ class WowHardcoreEntityResolverTest {
             val resolver = WowHardcoreEntityResolver(repo, blizzardClient)
 
             resolver.resolve(listOf(basicWowRequest))
-                .onLeft { fail() }
-                .onRight { res -> assertEquals(listOf(basicWowHardcoreEntity to null), res.existing) }
+                .let { res -> assertEquals(listOf(basicWowHardcoreEntity to null), res.existing) }
 
             verifyNoInteractions(blizzardClient)
+        }
+    }
+
+    @Test
+    fun `a character whose realm blizzard does not know is neither resolved nor unchecked`() {
+        runBlocking {
+            `when`(
+                blizzardClient.getClassicProfile(basicWowRequest.region, basicWowRequest.realm, basicWowRequest.name)
+            ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
+            `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Left(NotFound))
+
+            val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
+            val res = WowHardcoreEntityResolver(repo, blizzardClient).resolve(listOf(basicWowRequest))
+
+            assertEquals(listOf(), res.entities)
+            assertEquals(listOf(), res.unchecked)
         }
     }
 }

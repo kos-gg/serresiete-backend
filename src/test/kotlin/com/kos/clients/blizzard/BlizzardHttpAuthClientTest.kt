@@ -12,6 +12,7 @@ import com.kos.clients.domain.TokenResponse
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 
@@ -66,7 +67,7 @@ class BlizzardHttpAuthClientTest {
             result.fold(
                 { error ->
                     error as JsonParseError
-                    assertEquals("invalid token", error.raw)
+                    assertTrue(error.error.contains("invalid token"))
                 },
                 {
                     fail("Expected JsonParseError but got success")

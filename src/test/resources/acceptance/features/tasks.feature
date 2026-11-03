@@ -53,6 +53,7 @@ Feature: Tasks
     And WOW_HC entities exist for the guild members
 
   Scenario: UPDATE_WOW_GUILDS task refreshes the associated view's roster
+    And a current WOW season exists in the database
     And a WOW guild view exists in the repository with entities associated
     And the current roster is retrieved from the Blizzard API
     When the WOW guild updater is processed
@@ -60,6 +61,7 @@ Feature: Tasks
     And the task completes with status "SUCCESSFUL"
 
   Scenario: UPDATE_WOW_GUILDS task refreshes every view tracking the same guild
+    And a current WOW season exists in the database
     And two WOW guild views exist in the repository tracking the same guild
     And the current roster is retrieved from the Blizzard API
     When the WOW guild updater is processed

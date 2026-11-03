@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.kos.common.OffsetDateTimeSerializer
 import com.kos.common.error.InvalidTaskType
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.time.OffsetDateTime
 
 @Serializable
@@ -12,16 +13,27 @@ data class Task(
     val type: TaskType,
     val taskStatus: TaskStatus,
     @Serializable(with = OffsetDateTimeSerializer::class)
-    val inserted: OffsetDateTime
+    val inserted: OffsetDateTime,
+    @Transient
+    val error: TaskError? = null
 )
 
 @Serializable
 data class TaskStatus(
     val status: Status,
-    val message: String?,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val retryAfter: OffsetDateTime? = null
 )
+
+@Serializable
+data class TaskError(
+    val arguments: Map<String, String>?,
+    val detail: String
+)
+
+data class TaskCompleted(val retryAfter: OffsetDateTime? = null)
+
+data class TaskFailed(val detail: String, val retryAfter: OffsetDateTime? = null)
 
 @Serializable
 enum class Status {

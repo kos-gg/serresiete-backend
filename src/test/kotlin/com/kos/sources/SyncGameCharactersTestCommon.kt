@@ -14,7 +14,6 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
@@ -34,6 +33,7 @@ import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 abstract class SyncGameCharactersTestCommon {
     protected val raiderIoClient: RaiderIoClient = mock(RaiderIoClient::class.java)
@@ -54,7 +54,7 @@ abstract class SyncGameCharactersTestCommon {
         val viewsRepository = ViewsInMemoryRepository()
 
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
-        val wowGuildResolver = WowGuildResolver(entitiesRepository, raiderIoClient, blizzardClient)
+        val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
@@ -90,9 +90,9 @@ abstract class SyncGameCharactersTestCommon {
 
     protected fun createEventWithVersion(eventType: EventData, game: Game): EventWithVersion {
         val payload = when (eventType) {
-            is ViewCreatedEventEvent -> eventType.copy(game = game)
-            is ViewEditedEventEvent -> eventType.copy(game = game)
-            is ViewPatchedEventEvent -> eventType.copy(game = game)
+            is ViewCreatedEvent -> eventType.copy(game = game)
+            is ViewEditedEvent -> eventType.copy(game = game)
+            is ViewPatchedEvent -> eventType.copy(game = game)
             else -> eventType
         }
         return EventWithVersion(1L, Event("/credentials/owner", ViewsTestHelper.id, payload))
@@ -110,8 +110,7 @@ abstract class SyncGameCharactersTestCommon {
         GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
-            lolEntitySynchronizer,
-            EventStoreInMemory()
+            lolEntitySynchronizer
         ).process()
 
         if (shouldCache) {
@@ -138,8 +137,7 @@ abstract class SyncGameCharactersTestCommon {
         GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
-            wowEntityCacheService,
-            EventStoreInMemory()
+            wowEntityCacheService
         ).process()
 
         if (shouldCache) {
@@ -165,8 +163,7 @@ abstract class SyncGameCharactersTestCommon {
         GameSyncEventProcessor(
             eventWithVersion,
             entitiesService,
-            wowHardcoreEntityCacheService,
-            EventStoreInMemory()
+            wowHardcoreEntityCacheService
         ).process()
 
         if (shouldCache) {

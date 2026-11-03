@@ -1,9 +1,7 @@
 package com.kos.entities.repository
 
-import arrow.core.Either
 import com.kos.common.InMemoryRepository
 import com.kos.common.WithState
-import com.kos.common.error.RepositoryError
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.domain.*
 import java.time.OffsetDateTime
@@ -18,7 +16,7 @@ class LolEntityInMemoryRepository(
 
     private val entities: MutableList<LolEntity> = mutableListOf()
 
-    override suspend fun insert(entities: List<InsertEntityRequest>): Either<RepositoryError, List<Entity>> {
+    override suspend fun insert(entities: List<InsertEntityRequest>): List<Entity> {
         val initial = this.entities.toList()
         val inserted = entities.fold(listOf<Entity>()) { acc, it ->
             when (it) {
@@ -26,7 +24,7 @@ class LolEntityInMemoryRepository(
                     if (this.entities.any { entity -> it.same(entity) }) {
                         this.entities.clear()
                         this.entities.addAll(initial)
-                        return Either.Left(RepositoryError("Error inserting chracter $it"))
+                        throw IllegalStateException("Error inserting chracter $it")
                     }
                     val entity = it.toEntity(nextId())
                     this.entities.add(entity)
@@ -36,14 +34,14 @@ class LolEntityInMemoryRepository(
                 else -> {
                     this.entities.clear()
                     this.entities.addAll(initial)
-                    return Either.Left(RepositoryError("Error inserting chracter $it"))
+                    throw IllegalStateException("Error inserting chracter $it")
                 }
             }
         }
-        return Either.Right(inserted)
+        return inserted
     }
 
-    override suspend fun update(id: Long, entity: InsertEntityRequest): Either<RepositoryError, Int> =
+    override suspend fun update(id: Long, entity: InsertEntityRequest): Int =
         when (entity) {
             is LolEnrichedEntityRequest -> {
                 val index = entities.indexOfFirst { it.id == id }
@@ -52,10 +50,10 @@ class LolEntityInMemoryRepository(
                     index,
                     LolEntity(id, entity.name, entity.tag, entity.puuid, entity.summonerIconId, entity.summonerLevel)
                 )
-                Either.Right(1)
+                1
             }
 
-            else -> Either.Left(RepositoryError("error updating $id $entity for LOL"))
+            else -> throw IllegalArgumentException("error updating $id $entity for LOL")
         }
 
     override suspend fun get(id: Long): Entity? = entities.find { it.id == id }

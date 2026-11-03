@@ -33,6 +33,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Per-game persistence behavior (type validation, uniqueness, staleness budgeting, etc.) is covered by
@@ -50,15 +51,15 @@ abstract class EntitiesRepositoryTestCommon {
     fun `given an empty repository i can insert wow characters`() {
         runBlocking {
             val expected = listOf(basicWowEntity)
-            repository.insert(listOf(basicWowRequest), Game.WOW).fold({ fail() }) { assertEquals(expected, it) }
+            assertEquals(expected, repository.insert(listOf(basicWowRequest), Game.WOW))
         }
     }
 
     @Test
     fun `given an empty repository, I can't insert characters when game does not match`() {
         runBlocking {
-            assertTrue(repository.insert(listOf(basicLolEntityEnrichedRequest), Game.WOW).isLeft())
-            assertTrue(repository.insert(listOf(basicWowRequest), Game.LOL).isLeft())
+            assertThrows<Exception> { repository.insert(listOf(basicLolEntityEnrichedRequest), Game.WOW) }
+            assertThrows<Exception> { repository.insert(listOf(basicWowRequest), Game.LOL) }
             assertEquals(emptyEntitiesState, repository.state())
         }
     }
@@ -72,9 +73,7 @@ abstract class EntitiesRepositoryTestCommon {
             val updatedRealm = "stitches"
             val request = WowEntityRequest(updatedName, updatedRegion, updatedRealm)
             val update = repository.update(1, request, Game.WOW)
-            update
-                .onRight { assertEquals(1, it) }
-                .onLeft { fail(it.message) }
+            assertEquals(1, update)
             val updated = repository.state().wowEntities.first()
             assertEquals(updatedName, updated.name)
             assertEquals(updatedRegion, updated.region)

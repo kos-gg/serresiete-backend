@@ -1,9 +1,9 @@
 package com.kos.sources.wowhc
 
-import com.kos.common.error.ServiceError
-import com.kos.common.error.toEntityResolverError
-import com.kos.common.split
+import arrow.core.Either
 import com.kos.entities.EntityUpdater
+import com.kos.entities.GuildUpdateFailed
+import com.kos.entities.PartialFailure
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
@@ -15,49 +15,23 @@ class WowHardcoreGuildUpdater(
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
 ) : EntityUpdater<Pair<GuildPayload, String>> {
+
     override suspend fun update(
         entities: List<Pair<GuildPayload, String>>
-    ): List<ServiceError> {
-
-        val initialResults = entities
-            .map { (guild, viewId) ->
-                guildResolver
-                    .resolveRoster(guild.region, guild.realm, guild.name)
-                    .map { (_, roster) -> roster to viewId }
-            }
-
-        val (initialErrors, rostersWithViewIds) = initialResults.split()
-
-        val downstreamErrors = rostersWithViewIds.flatMap { (requests, viewId) ->
-
-            resolver.resolve(requests).fold(
-                ifLeft = { listOf(it) },
-
-                ifRight = { resolved ->
-                    entitiesRepository
-                        .insert(resolved.entities.map { it.first }, Game.WOW_HC)
-                        .fold(
-                            ifLeft = {
-                                listOf(it.toEntityResolverError(Game.WOW_HC, it.message))
-                            },
-                            ifRight = { inserted ->
-                                val entitiesToAssociate =
-                                    inserted.map { it.id to null } +
-                                            resolved.existing.map { it.first.id to it.second }
-
-                                viewsRepository.associateEntitiesIdsToView(
-                                    entitiesToAssociate,
-                                    viewId
-                                )
-
-                                emptyList()
-                            }
-                        )
-                }
-            )
+    ): List<PartialFailure> =
+        entities.mapNotNull { (guild, viewId) ->
+            Either.catch { updateGuild(guild, viewId) }
+                .leftOrNull()
+                ?.let { GuildUpdateFailed(guild, it) }
         }
 
-        return initialErrors + downstreamErrors
-    }
+    private suspend fun updateGuild(guild: GuildPayload, viewId: String) {
+        val (_, roster) = guildResolver.resolveRoster(guild.region, guild.realm, guild.name)
+        val resolved = resolver.resolve(roster)
+        val inserted = entitiesRepository.insert(resolved.entities.map { it.first }, Game.WOW_HC)
+        val entitiesToAssociate =
+            inserted.map { it.id to null } + resolved.existing.map { it.first.id to it.second }
 
+        viewsRepository.associateEntitiesIdsToView(entitiesToAssociate, viewId)
+    }
 }

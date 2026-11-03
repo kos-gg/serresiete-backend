@@ -4,9 +4,9 @@ import arrow.core.Either
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.eventsourcing.events.ViewCreatedEventEvent
-import com.kos.eventsourcing.events.ViewEditedEventEvent
-import com.kos.eventsourcing.events.ViewPatchedEventEvent
+import com.kos.eventsourcing.events.ViewCreatedEvent
+import com.kos.eventsourcing.events.ViewEditedEvent
+import com.kos.eventsourcing.events.ViewPatchedEvent
 import com.kos.eventsourcing.events.ViewToBeCreatedEvent
 import com.kos.sources.SyncGameCharactersTestCommon
 import com.kos.views.Game
@@ -26,7 +26,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewCreatedEventEvent(
+            ViewCreatedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 ViewsTestHelper.owner,
@@ -66,7 +66,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewEditedEventEvent(
+            ViewEditedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 listOf(EntitiesTestHelper.basicWowEntity.id),
@@ -105,7 +105,7 @@ class WowHardcoreSyncProcessorTest : SyncGameCharactersTestCommon() {
         val (charactersService, dataCacheRepository) = createService()
 
         val eventWithVersion = createEventWithVersion(
-            ViewPatchedEventEvent(
+            ViewPatchedEvent(
                 ViewsTestHelper.id,
                 ViewsTestHelper.name,
                 listOf(EntitiesTestHelper.basicWowEntity.id),

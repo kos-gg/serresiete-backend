@@ -1,15 +1,11 @@
 package com.kos.auth
 
-import arrow.core.Either
-import arrow.core.raise.either
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTCreator
 import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.exceptions.JWTCreationException
 import com.kos.activities.Activity
 import com.kos.auth.repository.AuthRepository
 import com.kos.common.JWTConfig
-import com.kos.common.error.*
 import com.kos.credentials.CredentialsService
 import com.kos.roles.Role
 import com.kos.roles.RolesService
@@ -22,41 +18,19 @@ class AuthService(
     private val jwtConfig: JWTConfig
 ) {
 
-    suspend fun login(userName: String): Either<ServiceError, LoginResponse> {
-
-        return if (credentialsService.getUserRoles(userName).contains(Role.SERVICE)) {
-            either {
-                LoginResponse(
-                    authCall { generateServiceToken(userName) }.bind(),
-                    null
-                )
-            }
+    suspend fun login(userName: String): LoginResponse =
+        if (credentialsService.getUserRoles(userName).contains(Role.SERVICE)) {
+            LoginResponse(generateServiceToken(userName), null)
         } else {
-            either {
-                val refreshToken =
-                    authCall { generateUserToken(userName, TokenMode.REFRESH) }.bind()
-                authRepository.insertToken(userName, refreshToken, isAccess = false)
-                    .mapLeft { it.toAuthTokenError(it.message) }
-                    .bind()
-                LoginResponse(
-                    authCall { generateUserToken(userName, TokenMode.ACCESS) }.bind(),
-                    refreshToken
-                )
-            }
+            val refreshToken = generateUserToken(userName, TokenMode.REFRESH)
+            authRepository.insertToken(userName, refreshToken, isAccess = false)
+            LoginResponse(generateUserToken(userName, TokenMode.ACCESS), refreshToken)
         }
-    }
 
     suspend fun logout(user: String) = authRepository.deleteTokensFromUser(user)
 
-    suspend fun refresh(userName: String): Either<ServiceError, LoginResponse?> {
-        return either {
-            LoginResponse(
-                authCall { generateToken(userName, TokenMode.ACCESS, expirationMinutes = 15) }.bind(),
-                null
-            )
-        }
-
-    }
+    suspend fun refresh(userName: String): LoginResponse =
+        LoginResponse(generateToken(userName, TokenMode.ACCESS, expirationMinutes = 15), null)
 
     suspend fun deleteExpiredTokens(): Int {
         return authRepository.deleteExpiredTokens()
@@ -66,47 +40,33 @@ class AuthService(
         userName: String,
         tokenMode: TokenMode,
         expirationMinutes: Long? = null
-    ): Either<JWTCreationError, String> {
-        return try {
-            val now = OffsetDateTime.now()
-            val jwtBuilder: JWTCreator.Builder = JWT.create()
-                .withClaim("username", userName)
-                .withClaim("mode", tokenMode.toString())
-                .withIssuer(jwtConfig.issuer)
-                .withIssuedAt(now.toInstant())
+    ): String {
+        val now = OffsetDateTime.now()
+        val jwtBuilder: JWTCreator.Builder = JWT.create()
+            .withClaim("username", userName)
+            .withClaim("mode", tokenMode.toString())
+            .withIssuer(jwtConfig.issuer)
+            .withIssuedAt(now.toInstant())
 
-            if (tokenMode == TokenMode.ACCESS) {
-                val userActivities: List<Activity> = credentialsService.getUserRoles(userName)
-                    .flatMap { rolesService.getRole(it).second }
-                jwtBuilder.withClaim("activities", userActivities)
-            }
-
-            if (expirationMinutes != null) jwtBuilder.withExpiresAt(now.plusMinutes(expirationMinutes).toInstant())
-
-            val token =
-                jwtBuilder.sign(Algorithm.HMAC256(jwtConfig.secret)) // TODO: Consider using a stronger encryption algorithm
-            Either.Right(token)
-
-        } catch (e: IllegalArgumentException) {
-            Either.Left(JWTCreationError(e.message ?: e.stackTraceToString()))
-        } catch (e: JWTCreationException) {
-            Either.Left(JWTCreationError(e.message ?: e.stackTraceToString()))
+        if (tokenMode == TokenMode.ACCESS) {
+            val userActivities: List<Activity> = credentialsService.getUserRoles(userName)
+                .flatMap { rolesService.getRole(it).second }
+            jwtBuilder.withClaim("activities", userActivities)
         }
+
+        if (expirationMinutes != null) jwtBuilder.withExpiresAt(now.plusMinutes(expirationMinutes).toInstant())
+
+        return jwtBuilder.sign(Algorithm.HMAC256(jwtConfig.secret)) // TODO: Consider using a stronger encryption algorithm
     }
 
-    private suspend fun generateUserToken(userName: String, tokenMode: TokenMode): Either<JWTCreationError, String> {
+    private suspend fun generateUserToken(userName: String, tokenMode: TokenMode): String {
         return when (tokenMode) {
             TokenMode.ACCESS -> generateToken(userName, tokenMode, expirationMinutes = 15)
             TokenMode.REFRESH -> generateToken(userName, tokenMode, expirationMinutes = 30 * 24 * 60)
         }
     }
 
-    private suspend fun generateServiceToken(userName: String): Either<JWTCreationError, String> {
+    private suspend fun generateServiceToken(userName: String): String {
         return generateToken(userName, TokenMode.ACCESS, expirationMinutes = null)
     }
-
-    private suspend fun <A> authCall(
-        block: suspend () -> Either<AuthError, A>
-    ): Either<ServiceError, A> =
-        block().mapLeft { it.toServiceError(it.message) }
 }

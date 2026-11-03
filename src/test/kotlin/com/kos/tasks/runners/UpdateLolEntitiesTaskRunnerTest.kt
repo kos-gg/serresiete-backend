@@ -1,26 +1,24 @@
 package com.kos.tasks.runners
 
+import com.kos.tasks.TaskFailed
+import com.kos.tasks.TaskCompleted
+import arrow.core.Either
+import com.kos.clients.TimeoutError
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntitiesTestHelper
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesInMemoryRepository
+import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskStatus
-import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import java.time.OffsetDateTime
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -43,8 +41,7 @@ class UpdateLolEntitiesTaskRunnerTest {
         WowHardcoreGuildUpdater(mock(), mock(), entitiesRepository, ViewsInMemoryRepository()),
         mock()
     )
-    private val tasksRepo = TasksInMemoryRepository()
-    private val runner = UpdateLolEntitiesTaskRunner(tasksRepo, entitiesService)
+    private val runner = UpdateLolEntitiesTaskRunner(entitiesService)
 
     @Test
     fun `lol entities are updated and task is recorded as successful`() = runBlocking {
@@ -53,14 +50,21 @@ class UpdateLolEntitiesTaskRunnerTest {
         `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid))
             .thenReturn(arrow.core.Either.Right(EntitiesTestHelper.basicRiotAccount))
 
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING, null), OffsetDateTime.now()))
+        val result = runner.run(null)
 
-        runner.run(id, null)
+        assertEquals(Either.Right(TaskCompleted()), result)
+    }
 
-        val task = tasksRepo.state().first()
-        assertEquals(id, task.id)
-        assertEquals(TaskType.UPDATE_LOL_ENTITIES_TASK, task.type)
-        assertEquals(Status.SUCCESSFUL, task.taskStatus.status)
+    @Test
+    fun `a lol entity that riot fails to return is reported with its id and riot's error`() = runBlocking {
+        entitiesRepository.withState(EntitiesState(listOf(), listOf(), listOf(basicLolEntity)))
+        `when`(riotClient.getSummonerByPuuid(basicLolEntity.puuid))
+            .thenReturn(arrow.core.Either.Right(EntitiesTestHelper.basicLolSummoner))
+        `when`(riotClient.getAccountByPUUID(basicLolEntity.puuid))
+            .thenReturn(arrow.core.Either.Left(TimeoutError("timeout")))
+
+        val result = runner.run(null)
+
+        assertEquals(Either.Left(TaskFailed("Entity ${basicLolEntity.id}: TimeoutError(message=timeout)")), result)
     }
 }

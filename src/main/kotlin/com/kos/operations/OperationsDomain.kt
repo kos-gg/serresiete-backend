@@ -8,6 +8,5 @@ enum class OperationStatusType { PENDING, COMPLETED, FAILED }
 data class OperationStatus(
     val id: String,
     val status: OperationStatusType,
-    val resourceId: String? = null,
-    val reason: String? = null
+    val resourceId: String? = null
 )
