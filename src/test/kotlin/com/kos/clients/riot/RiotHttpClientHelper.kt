@@ -7,7 +7,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import java.nio.charset.StandardCharsets
 
-object RiotHTTPClientHelper {
+object RiotHttpClientHelper {
     private fun responseFromResource(resource: String) = javaClass.classLoader
         .getResourceAsStream(resource)!!
         .bufferedReader(StandardCharsets.UTF_8)

@@ -4,28 +4,35 @@ import arrow.core.Either
 import com.kos.clients.ClientError
 import com.kos.clients.JsonParseError
 import com.kos.clients.NotFound
-import com.kos.clients.RetryConfig
 import com.kos.clients.blizzard.BlizzardHttpClientHelper.client
+import com.kos.clients.config.RetryConfig
+import com.kos.clients.config.blizzardHttpClientConfig
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
+import com.kos.datacache.domain.ClassSpec
+import com.kos.datacache.domain.RunDetails
+import com.kos.datacache.domain.RunMember
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.domain.WowCharacter
+import com.kos.sources.wow.KeystoneBestRun
+import com.kos.sources.wow.MythicKeystoneProfile
+import io.ktor.client.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import com.kos.datacache.domain.ClassSpec
-import com.kos.datacache.domain.RunDetails
-import com.kos.datacache.domain.RunMember
-import com.kos.sources.wow.KeystoneBestRun
-import com.kos.sources.wow.MythicKeystoneProfile
-import com.kos.entities.domain.WowCharacter
 
-class BlizzardHTTPClientTest {
+class BlizzardHttpClientTest {
 
     private val blizzardAuthClient = mock(BlizzardAuthClient::class.java)
-    private val blizzardClient = BlizzardHttpClient(client, RetryConfig(0, 0), blizzardAuthClient)
+    private val blizzardClient = BlizzardHttpClient(HttpClient(client.engine) {
+        blizzardHttpClientConfig(
+            RetryConfig(0, 0),
+            blizzardAuthClient
+        )
+    })
 
     @Test
     fun `getCharacterProfile returns successful response`() {
