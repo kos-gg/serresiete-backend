@@ -1,7 +1,7 @@
 package com.kos.common.error
 
 import com.kos.common._fold
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.*
 
 sealed interface ControllerError
@@ -32,7 +32,7 @@ sealed interface ViewEntitiesError : CreateViewError, EditViewError
 
 data object TooMuchViews : CreateViewError
 data object ExtraArgumentsWrongType : CreateViewError
-data object GuildViewMoreThanTwoEntities : CreateViewError
+data object GuildViewMoreThanOneEntity : CreateViewError
 data object TooMuchEntities : ViewEntitiesError
 data object UserWithoutRoles : ViewEntitiesError
 data object EntitiesDoNotMatchGame : ViewEntitiesError
@@ -46,22 +46,37 @@ fun ControllerError.toProblem(): Problem =
         is TooMuchViews -> Problem(HttpStatusCode.BadRequest, "TOO_MANY_VIEWS", "Too many views")
         is ExtraArgumentsWrongType ->
             Problem(HttpStatusCode.BadRequest, "EXTRA_ARGUMENTS_WRONG_TYPE", "Wrong extra arguments type")
+
         is TooMuchEntities -> Problem(HttpStatusCode.BadRequest, "TOO_MANY_ENTITIES", "Too many entities in a view")
         is BadRequest -> Problem(HttpStatusCode.BadRequest, "BAD_REQUEST", "Bad request", problem)
-        is GuildViewMoreThanTwoEntities ->
+        is GuildViewMoreThanOneEntity ->
             Problem(HttpStatusCode.BadRequest, "GUILD_VIEW_MORE_THAN_ONE_ENTITY", "Guild views must have only 1 entity")
+
         is EntitiesDoNotMatchGame ->
             Problem(HttpStatusCode.BadRequest, "ENTITIES_DO_NOT_MATCH_GAME", "Entities don't match the view's game")
+
         is InvalidQueryParameter ->
             Problem(HttpStatusCode.BadRequest, "INVALID_QUERY_PARAMETER", "Invalid query parameter", message)
+
         is CantDeleteYourself ->
             Problem(HttpStatusCode.BadRequest, "CANT_DELETE_YOURSELF", "Can't delete your own credentials")
+
         is CantFeatureView ->
             Problem(HttpStatusCode.Forbidden, "CANT_FEATURE_VIEW", "Not enough permissions to feature a view")
-        is UserWithoutRoles -> Problem(HttpStatusCode.Forbidden, "USER_WITHOUT_ROLES", "User does not have sufficient roles")
+
+        is UserWithoutRoles -> Problem(
+            HttpStatusCode.Forbidden,
+            "USER_WITHOUT_ROLES",
+            "User does not have sufficient roles"
+        )
+
         is UserAlreadyExists -> Problem(HttpStatusCode.Conflict, "USER_ALREADY_EXISTS", "User already exists")
         is ThirdPartyUnavailable ->
-            Problem(HttpStatusCode.ServiceUnavailable, "THIRD_PARTY_UNAVAILABLE", "A third party service is unavailable")
+            Problem(
+                HttpStatusCode.ServiceUnavailable,
+                "THIRD_PARTY_UNAVAILABLE",
+                "A third party service is unavailable"
+            )
     }
 
 suspend fun ApplicationCall.respondWithHandledError(error: ControllerError) =

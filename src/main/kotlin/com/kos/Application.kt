@@ -217,7 +217,7 @@ fun Application.module() {
             credentialsService,
             eventStore
         )
-    val viewsEventService = ViewsEventService(viewsRepository, entitiesService, eventStore)
+    val viewsEventService = ViewsEventService(viewsRepository, entitiesService)
     val viewsController = ViewsController(viewsService)
 
     val operationsService = OperationsService(eventStore)
@@ -245,37 +245,33 @@ fun Application.module() {
 
     val taskRunnerProvider = TaskRunnerProvider(
         listOf(
-            TokenCleanupTaskRunner(tasksRepository, authService),
+            TokenCleanupTaskRunner(authService),
             TaskCleanupTaskRunner(tasksRepository),
-            EventCleanupTaskRunner(tasksRepository, eventStore, subscriptionsRepository),
-            UpdateLolEntitiesTaskRunner(tasksRepository, entitiesService),
-            CacheClearTaskRunner(tasksRepository, dataCacheService),
-            UpdateWowHardcoreGuildsTaskRunner(tasksRepository, entitiesService),
-            UpdateWowGuildsTaskRunner(tasksRepository, entitiesService),
-            UpdateMythicPlusSeasonTaskRunner(tasksRepository, wowSeasonService),
+            EventCleanupTaskRunner(eventStore, subscriptionsRepository),
+            UpdateLolEntitiesTaskRunner(entitiesService),
+            CacheClearTaskRunner(dataCacheService),
+            UpdateWowHardcoreGuildsTaskRunner(entitiesService),
+            UpdateWowGuildsTaskRunner(entitiesService),
+            UpdateMythicPlusSeasonTaskRunner(wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,
                 TaskType.CACHE_LOL_DATA_TASK,
-                tasksRepository,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
             CacheGameDataTaskRunner(
                 Game.WOW,
                 TaskType.CACHE_WOW_DATA_TASK,
-                tasksRepository,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
             CacheGameDataTaskRunner(
                 Game.WOW_HC,
                 TaskType.CACHE_WOW_HC_DATA_TASK,
-                tasksRepository,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
             CacheGameViewDataTaskRunner(
-                tasksRepository,
                 viewsService,
                 entitiesService,
                 entitySynchronizerProvider,
@@ -310,19 +306,19 @@ fun Application.module() {
         "sync-lol",
         eventStore,
         subscriptionsRepository
-    ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer, eventStore).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, lolEntitySynchronizer).process() }
 
     val syncWowEventSubscription = EventSubscription(
         "sync-wow",
         eventStore,
         subscriptionsRepository
-    ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer, eventStore).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowEntitySynchronizer).process() }
 
     val syncWowHardcoreEventSubscription = EventSubscription(
         "sync-wow-hc",
         eventStore,
         subscriptionsRepository
-    ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer, eventStore).process() }
+    ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
 
     val entitiesEventSubscription = EventSubscription(
         "entities",

@@ -68,7 +68,7 @@ class LolEntityResolverTest {
             resolver.resolve(listOf(lolEntityRequest))
                 .let { res ->
                     assertEquals(listOf(), res.entities)
-                    assertEquals(listOf<EntityRequest>(lolEntityRequest), res.unchecked.map { it.first })
+                    assertEquals(listOf<EntityRequest>(lolEntityRequest), res.unchecked)
                 }
         }
     }

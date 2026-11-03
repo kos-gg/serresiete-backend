@@ -10,8 +10,7 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
-import com.kos.eventsourcing.events.repository.EventStore
-import com.kos.eventsourcing.events.repository.EventStoreInMemory
+import com.kos.eventsourcing.subscriptions.EventProcessOutcome.Processed
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
@@ -40,11 +39,12 @@ class ViewsSyncProcessorTest {
     private val blizzardClient = Mockito.mock(BlizzardClient::class.java)
 
     private val aggregateRoot = "/credentials/owner"
+    private val operationId = "operation-distinct-from-view-id"
 
     @Test
-    fun `viewsProcessor calls createView on VIEW_TO_BE_CREATED event, creates a view and stores an event`() {
+    fun `viewsProcessor calls createView on VIEW_TO_BE_CREATED event, creates a view and emits its completion event`() {
         runBlocking {
-            val (eventStore, viewsEventService, viewsRepository) = createService(
+            val (viewsEventService, viewsRepository) = createService(
                 ViewsState(listOf(), listOf()),
                 EntitiesTestHelper.emptyEntitiesState
             )
@@ -55,26 +55,21 @@ class ViewsSyncProcessorTest {
                 ViewToBeCreatedEvent(ViewsTestHelper.id, "name", true, listOf(), Game.LOL, "owner", false, null)
             val eventWithVersion = EventWithVersion(
                 1L,
-                Event(aggregateRoot, ViewsTestHelper.id, eventData)
+                Event(aggregateRoot, operationId, eventData)
             )
 
-            ViewsEventProcessor(eventWithVersion, spiedService).process()
-            coVerify {
-                spiedService.createView(
-                    eq(ViewsTestHelper.id),
-                    eq(aggregateRoot),
-                    eq(eventData)
-                )
-            }
+            val outcome = ViewsEventProcessor(eventWithVersion, spiedService).process()
+            coVerify { spiedService.createView(eq(eventData)) }
 
-
-            assertEventStoredCorrectly(
-                eventStore,
-                ViewCreatedEventEvent(
-                    ViewsTestHelper.id,
-                    ViewsTestHelper.name,
-                    ViewsTestHelper.owner, listOf(), true, Game.LOL, false, null
-                )
+            assertEquals(
+                Processed(
+                    ViewCreatedEvent(
+                        ViewsTestHelper.id,
+                        ViewsTestHelper.name,
+                        ViewsTestHelper.owner, listOf(), true, Game.LOL, false, null
+                    )
+                ),
+                outcome
             )
 
             assertView(viewsRepository, ViewsTestHelper.name)
@@ -82,9 +77,9 @@ class ViewsSyncProcessorTest {
     }
 
     @Test
-    fun `viewsProcessor calls edit view on VIEW_TO_BE_EDITED event, edits a view and stores an event`() {
+    fun `viewsProcessor calls edit view on VIEW_TO_BE_EDITED event, edits a view and emits its completion event`() {
         runBlocking {
-            val (eventStore, viewsEventService, viewsRepository) = createService(
+            val (viewsEventService, viewsRepository) = createService(
                 ViewsState(
                     listOf(ViewsTestHelper.basicSimpleLolView),
                     ViewsTestHelper.basicSimpleLolView.entitiesIds.map {
@@ -103,21 +98,17 @@ class ViewsSyncProcessorTest {
             val eventData = ViewToBeEditedEvent(ViewsTestHelper.id, newName, true, listOf(), Game.LOL, false)
             val eventWithVersion = EventWithVersion(
                 1L,
-                Event(aggregateRoot, ViewsTestHelper.id, eventData)
+                Event(aggregateRoot, operationId, eventData)
             )
 
-            ViewsEventProcessor(eventWithVersion, spiedService).process()
-            coVerify {
-                spiedService.editView(
-                    eq(ViewsTestHelper.id),
-                    eq(aggregateRoot),
-                    eq(eventData)
-                )
-            }
+            val outcome = ViewsEventProcessor(eventWithVersion, spiedService).process()
+            coVerify { spiedService.editView(eq(eventData)) }
 
-            assertEventStoredCorrectly(
-                eventStore,
-                ViewEditedEventEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
+            assertEquals(
+                Processed(
+                    ViewEditedEvent(ViewsTestHelper.id, newName, listOf(), true, Game.LOL, false)
+                ),
+                outcome
             )
 
             assertView(viewsRepository, newName)
@@ -125,9 +116,9 @@ class ViewsSyncProcessorTest {
     }
 
     @Test
-    fun `viewsProcessor calls patch view on VIEW_TO_BE_PATCHED event, patches a view and stores an event`() {
+    fun `viewsProcessor calls patch view on VIEW_TO_BE_PATCHED event, patches a view and emits its completion event`() {
         runBlocking {
-            val (eventStore, viewsEventService, viewsRepository) = createService(
+            val (viewsEventService, viewsRepository) = createService(
                 ViewsState(
                     listOf(ViewsTestHelper.basicSimpleLolView),
                     ViewsTestHelper.basicSimpleLolView.entitiesIds.map {
@@ -145,22 +136,17 @@ class ViewsSyncProcessorTest {
             val eventData = ViewToBePatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
             val eventWithVersion = EventWithVersion(
                 1L,
-                Event(aggregateRoot, ViewsTestHelper.id, eventData)
+                Event(aggregateRoot, operationId, eventData)
             )
 
-            ViewsEventProcessor(eventWithVersion, spiedService).process()
-            coVerify {
-                spiedService.patchView(
-                    eq(ViewsTestHelper.id),
-                    eq(aggregateRoot),
-                    eq(eventData)
-                )
-            }
+            val outcome = ViewsEventProcessor(eventWithVersion, spiedService).process()
+            coVerify { spiedService.patchView(eq(eventData)) }
 
-
-            assertEventStoredCorrectly(
-                eventStore,
-                ViewPatchedEventEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
+            assertEquals(
+                Processed(
+                    ViewPatchedEvent(ViewsTestHelper.id, newName, null, null, Game.LOL, false)
+                ),
+                outcome
             )
 
             assertView(viewsRepository, newName)
@@ -170,12 +156,11 @@ class ViewsSyncProcessorTest {
     private suspend fun createService(
         viewsState: ViewsState,
         entitiesState: EntitiesState,
-    ): Triple<EventStore, ViewsEventService, ViewsRepository> {
+    ): Pair<ViewsEventService, ViewsRepository> {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)
         val entitiesRepository = EntitiesInMemoryRepository()
             .withState(entitiesState)
-        val eventStore = EventStoreInMemory()
         val wowGuildsRepository = WowGuildsInMemoryRepository()
 
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
@@ -206,22 +191,7 @@ class ViewsSyncProcessorTest {
             wowHardcoreGuildUpdater,
             wowGuildUpdater
         )
-        val service = ViewsEventService(viewsRepository, entitiesService, eventStore)
-
-        return Triple(eventStore, service, viewsRepository)
-    }
-
-    private suspend fun assertEventStoredCorrectly(eventStore: EventStore, eventData: EventData) {
-        val events = eventStore.getEvents(null).toList()
-
-        val expectedEvent = Event(
-            aggregateRoot,
-            ViewsTestHelper.id,
-            eventData
-        )
-
-        assertEquals(1, events.size)
-        assertEquals(EventWithVersion(1, expectedEvent), events.first())
+        return Pair(ViewsEventService(viewsRepository, entitiesService), viewsRepository)
     }
 
     private suspend fun assertView(viewsRepository: ViewsRepository, name: String) {

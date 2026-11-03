@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import arrow.fx.coroutines.parMapUnordered
-import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
@@ -18,12 +17,11 @@ import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.toList
 
-@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+@OptIn(FlowPreview::class)
 class WowEntityResolver(
     private val repo: EntitiesRepository,
     private val blizzardClient: BlizzardClient
@@ -35,14 +33,13 @@ class WowEntityResolver(
         return ResolvedEntities(
             entities = entities,
             existing = existing.map { it.value to it.alias },
-            unchecked = unchecked,
-            guild = null
+            unchecked = unchecked
         )
     }
 
     private suspend fun resolveCharacters(
         newRequests: List<EntityRequest>
-    ): Pair<List<Pair<InsertEntityRequest, String?>>, List<Pair<EntityRequest, ClientError>>> {
+    ): Pair<List<Pair<InsertEntityRequest, String?>>, List<EntityRequest>> {
         val (unchecked, checked) = newRequests.asFlow()
             .parMapUnordered(10) { req -> resolveCharacter(req as WowEntityRequest) }
             .toList()
@@ -58,10 +55,14 @@ class WowEntityResolver(
 
     private suspend fun resolveCharacter(
         req: WowEntityRequest
-    ): Either<Pair<EntityRequest, ClientError>, Pair<WowEntityRequest, Long?>> =
+    ): Either<EntityRequest, Pair<WowEntityRequest, Long?>> =
         either {
             recover({ req to blizzardClient.getRetailProfile(req.region, req.realm, req.name).bind().id }) { error ->
-                if (error is NotFound) req to null else raise(req to error)
+                if (error is NotFound) req to null
+                else {
+                    logger.warn("Couldn't check whether $req exists: $error")
+                    raise(req)
+                }
             }
         }
 }

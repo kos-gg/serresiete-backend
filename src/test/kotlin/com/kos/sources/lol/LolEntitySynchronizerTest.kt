@@ -75,7 +75,7 @@ class LolEntitySynchronizerTest {
     fun `caching lol data returns an error when retrieving match data fails`() {
         runBlocking {
 
-            val jsonParseError = Either.Left(com.kos.clients.JsonParseError("{}", ""))
+            val jsonParseError = Either.Left(com.kos.clients.JsonParseError(""))
             `when`(riotClient.getLeagueEntriesByPUUID(basicLolEntity.puuid))
                 .thenReturn(jsonParseError)
 
@@ -84,7 +84,7 @@ class LolEntitySynchronizerTest {
                 .synchronize(listOf(basicLolEntity))
 
             assertEquals(
-                listOf(ThirdPartyCallFailed(basicLolEntity.id, com.kos.clients.JsonParseError("{}", ""))),
+                listOf(ThirdPartyCallFailed(basicLolEntity.id, com.kos.clients.JsonParseError(""))),
                 errors
             )
         }

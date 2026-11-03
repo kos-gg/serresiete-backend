@@ -113,7 +113,7 @@ class WowHardcoreEntitySynchronizer(
 
             logger.info(
                 "Finished caching Wow HC entities: $cached cached, " +
-                        "${wowEntities.size - cached - errors.size} skipped (dead), " +
+                        "${wowEntities.size - cached - errors.size} skipped (dead or removed), " +
                         "${errors.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s"
             )
 

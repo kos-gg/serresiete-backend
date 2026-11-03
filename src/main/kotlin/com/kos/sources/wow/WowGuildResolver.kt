@@ -16,12 +16,11 @@ import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.toList
 
-@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+@OptIn(FlowPreview::class)
 class WowGuildResolver(
     private val repo: EntitiesRepository,
     private val blizzardClient: BlizzardClient,
@@ -68,9 +67,14 @@ class WowGuildResolver(
         return competitive.map { (req, _) -> req to req.alias }
     }
 
-    private suspend fun scoreOf(req: WowEntityRequest, seasonId: Int): Either<ClientError, Pair<WowEntityRequest, Double>> =
+    private suspend fun scoreOf(
+        req: WowEntityRequest,
+        seasonId: Int
+    ): Either<ClientError, Pair<WowEntityRequest, Double>> =
         either {
-            recover({ req to blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId).bind().rating }) {
+            recover({
+                req to blizzardClient.getMythicKeystoneProfile(req.region, req.realm, req.name, seasonId).bind().rating
+            }) {
                 if (it is NotFound) req to 0.0 else raise(it)
             }
         }

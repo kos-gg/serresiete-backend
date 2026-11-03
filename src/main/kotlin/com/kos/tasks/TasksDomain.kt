@@ -31,6 +31,10 @@ data class TaskError(
     val detail: String
 )
 
+data class TaskCompleted(val retryAfter: OffsetDateTime? = null)
+
+data class TaskFailed(val detail: String, val retryAfter: OffsetDateTime? = null)
+
 @Serializable
 enum class Status {
     PENDING {

@@ -74,7 +74,6 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 entities = listOf(request1 to null, request2 to null),
                 existing = listOf(),
-                guild = null,
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
@@ -105,7 +104,6 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 entities = listOf(request1 to null, request2 to null),
                 existing = listOf(),
-                guild = null,
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
@@ -129,8 +127,7 @@ class EntitiesServiceTest {
             val request = listOf(request1)
             val expected = ResolvedEntities(
                 listOf(),
-                listOf(),
-                guild = null
+                listOf()
             )
 
             entitiesService.resolveEntities(request, Game.WOW_HC)
@@ -157,8 +154,7 @@ class EntitiesServiceTest {
             val request = listOf(request1, request2)
             val expected = ResolvedEntities(
                 listOf(request1 to null),
-                listOf(),
-                guild = null
+                listOf()
             )
 
             entitiesService.resolveEntities(request, Game.WOW)
@@ -193,8 +189,7 @@ class EntitiesServiceTest {
 
             val expected = ResolvedEntities(
                 listOf(),
-                listOf(basicWowHardcoreEntity to null),
-                guild = null
+                listOf(basicWowHardcoreEntity to null)
             )
             entitiesService.resolveEntities(listOf(request), Game.WOW_HC)
                 .let { res -> assertResolvedEntities(expected, res) }
@@ -329,8 +324,7 @@ class EntitiesServiceTest {
                         summonerIcon = 6,
                         summonerLevel = 400
                     ) to null
-                ),
-                guild = null
+                )
             )
 
             resolvedEntities
@@ -351,8 +345,7 @@ class EntitiesServiceTest {
             val entitiesService = createService(state)
             val expected = ResolvedEntities(
                 listOf(),
-                listOf(),
-                guild = null
+                listOf()
             )
 
             val resolvedEntities = entitiesService.resolveEntities(listOf(request), Game.LOL)
@@ -471,7 +464,6 @@ class EntitiesServiceTest {
             val expected = ResolvedEntities(
                 listOf(insertRequest to alias2),
                 listOf(basicLolEntity to alias),
-                guild = null,
             )
             val result = entitiesService.resolveEntities(listOf(request, requestNotInState), Game.LOL)
 

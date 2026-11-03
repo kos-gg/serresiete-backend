@@ -7,7 +7,7 @@ import arrow.core.getOrElse
 sealed class ClientError
 
 data class HttpError(val status: Int, val body: String?) : ClientError()
-data class JsonParseError(val raw: String, val error: String) : ClientError()
+data class JsonParseError(val error: String) : ClientError()
 data class TimeoutError(val message: String) : ClientError()
 data class NetworkError(val message: String) : ClientError()
 data object NotFound : ClientError()

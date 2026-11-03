@@ -1,5 +1,7 @@
 package com.kos.tasks.runners
 
+import com.kos.tasks.TaskFailed
+import com.kos.tasks.TaskCompleted
 import arrow.core.Either
 import com.kos.datacache.domain.QueueType
 import com.kos.clients.riot.RiotClient
@@ -17,18 +19,11 @@ import com.kos.entities.sync.SyncBudget
 import com.kos.entities.sync.SyncEntitySelector
 import com.kos.entities.sync.rules.StalenessSyncRule
 import com.kos.sources.lol.LolEntitySynchronizer
-import com.kos.tasks.Status
-import com.kos.tasks.Task
-import com.kos.tasks.TaskError
-import com.kos.tasks.TaskStatus
 import com.kos.tasks.TaskType
-import com.kos.tasks.repository.TasksInMemoryRepository
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import java.time.OffsetDateTime
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -37,7 +32,6 @@ class CacheGameDataTaskRunnerTest {
     private val riotClient = mock(RiotClient::class.java)
     private val dataCacheRepo = DataCacheInMemoryRepository()
     private val entitiesRepository = EntitiesInMemoryRepository()
-    private val tasksRepo = TasksInMemoryRepository()
     private fun syncEntitySelector(entitiesRepository: EntitiesRepository) = SyncEntitySelector(
         StalenessSyncRule(
             entitiesRepository,
@@ -52,7 +46,6 @@ class CacheGameDataTaskRunnerTest {
         val runner = CacheGameDataTaskRunner(
             Game.LOL,
             TaskType.CACHE_LOL_DATA_TASK,
-            tasksRepo,
             syncEntitySelector(entitiesRepository),
             EntitySynchronizerProvider(
                 wowSynchronizer = mock(),
@@ -76,16 +69,10 @@ class CacheGameDataTaskRunnerTest {
         ).thenReturn(RiotMockHelper.matches)
         `when`(riotClient.getMatchById(RiotMockHelper.matchId)).thenReturn(Either.Right(RiotMockHelper.match))
 
-        val id = UUID.randomUUID().toString()
-        tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
+        val result = runner.run(null)
 
-        runner.run(id, null)
-
-        val task = tasksRepo.state().first()
         assertEquals(1, dataCacheRepo.state().size)
-        assertEquals(id, task.id)
-        assertEquals(TaskType.CACHE_LOL_DATA_TASK, task.type)
-        assertEquals(Status.SUCCESSFUL, task.taskStatus.status)
+        assertEquals(Either.Right(TaskCompleted()), result)
     }
 
     @Test
@@ -98,7 +85,6 @@ class CacheGameDataTaskRunnerTest {
             val runner = CacheGameDataTaskRunner(
                 Game.LOL,
                 TaskType.CACHE_LOL_DATA_TASK,
-                tasksRepo,
                 syncEntitySelector(entitiesRepository),
                 EntitySynchronizerProvider(
                     wowSynchronizer = mock(),
@@ -107,13 +93,8 @@ class CacheGameDataTaskRunnerTest {
                 )
             )
 
-            val id = UUID.randomUUID().toString()
-            tasksRepo.insertTask(Task(id, runner.type, TaskStatus(Status.PENDING), OffsetDateTime.now()))
+            val result = runner.run(null)
 
-            runner.run(id, null)
-
-            val task = tasksRepo.state().first()
-            assertEquals(Status.ERROR, task.taskStatus.status)
-            assertEquals(TaskError(null, "Entity 1: TimeoutError(message=boom)"), task.error)
+            assertEquals(Either.Left(TaskFailed("Entity 1: TimeoutError(message=boom)")), result)
         }
 }

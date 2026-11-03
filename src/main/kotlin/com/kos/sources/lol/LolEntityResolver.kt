@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import arrow.fx.coroutines.parMapUnordered
-import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.riot.RiotClient
 import com.kos.common.WithLogger
@@ -18,12 +17,11 @@ import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewEntities
 import com.kos.views.Game
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.toList
 
-@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+@OptIn(FlowPreview::class)
 class LolEntityResolver(
     private val repo: EntitiesRepository,
     private val riotClient: RiotClient
@@ -44,14 +42,13 @@ class LolEntityResolver(
         return ResolvedEntities(
             entities = validated,
             existing = existing.map { it.value to it.alias },
-            unchecked = unchecked,
-            guild = null
+            unchecked = unchecked
         )
     }
 
     private suspend fun resolveCharacter(
         req: LolEntityRequest
-    ): Either<Pair<EntityRequest, ClientError>, Pair<LolEnrichedEntityRequest, String?>?> =
+    ): Either<EntityRequest, Pair<LolEnrichedEntityRequest, String?>?> =
         either {
             recover({
                 val puuid = riotClient.getPUUIDByRiotId(req.name, req.tag).bind()
@@ -63,6 +60,12 @@ class LolEntityResolver(
                     summoner.profileIconId,
                     summoner.summonerLevel
                 ) to req.alias
-            }) { error -> if (error is NotFound) null else raise(req to error) }
+            }) { error ->
+                if (error is NotFound) null
+                else {
+                    logger.warn("Couldn't check whether $req exists: $error")
+                    raise(req)
+                }
+            }
         }
 }
