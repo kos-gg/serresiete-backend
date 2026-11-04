@@ -92,5 +92,9 @@ data class WowData(
     val quantile: Double?,
     val mythicPlusRanks: MythicPlusRanksWithSpecs,
     val mythicPlusBestRuns: List<EnrichedMythicPlusRun>,
-    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList()
+    val mythicPlusRecentRuns: List<MythicPlusRun> = emptyList(),
+    val race: String? = null,
+    val faction: String? = null,
+    val equippedItemLevel: Double? = null,
+    val guild: String? = null
 ) : Data

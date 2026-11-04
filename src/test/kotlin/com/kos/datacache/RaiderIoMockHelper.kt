@@ -16,6 +16,8 @@ object RaiderIoMockHelper {
                 wowCharacter.name,
                 wowCharacter.realm,
                 wowCharacter.region,
+                "race",
+                "faction",
                 "class",
                 "spec",
                 0.0,
@@ -23,7 +25,9 @@ object RaiderIoMockHelper {
                 MythicPlusRank(1, 1, 1),
                 listOf(),
                 listOf(),
-                listOf()
+                listOf(),
+                0.0,
+                null
             )
         )
     }

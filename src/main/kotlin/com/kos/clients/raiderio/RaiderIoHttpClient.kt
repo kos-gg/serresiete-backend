@@ -49,7 +49,7 @@ class RaiderIoHttpClient(
                 parameter("name", wowEntity.name)
                 parameter(
                     "fields",
-                    "mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks,mythic_plus_recent_runs"
+                    "gear,guild,mythic_plus_scores_by_season:current,mythic_plus_best_runs:all,mythic_plus_ranks,mythic_plus_recent_runs"
                 )
             }
         }.bind()

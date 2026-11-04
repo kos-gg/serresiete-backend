@@ -55,10 +55,12 @@ class WowEntitySynchronizerTest {
         bestRuns: List<MythicPlusRun> = listOf(),
         recentRuns: List<MythicPlusRun> = listOf()
     ) = WowCharacterProfile(
-        entity.name, entity.realm, entity.region, "class", "spec", 0.0,
+        entity.name, entity.realm, entity.region, "race", "faction", "class", "spec", 0.0,
         MythicPlusRank(1, 1, 1), MythicPlusRank(1, 1, 1), listOf(),
         bestRuns,
-        recentRuns
+        recentRuns,
+        0.0,
+        null
     )
 
     private suspend fun getCachedData(dataCacheRepository: DataCacheRepository, entityId: Long): WowData =
