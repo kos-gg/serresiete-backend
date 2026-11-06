@@ -52,7 +52,10 @@ object RaiderIoMockHelper {
                 specs = listOf()
             ),
             mythicPlusBestRuns = listOf(),
-            mythicPlusRecentRuns = listOf()
+            mythicPlusRecentRuns = listOf(),
+            race = "Night Elf",
+            faction = "alliance",
+            equippedItemLevel = 335.0
         )
     )
 
@@ -84,7 +87,10 @@ object RaiderIoMockHelper {
           },
           "mythicPlusBestRuns": [
             
-          ]
+          ],
+          "race": "Night Elf",
+          "faction": "alliance",
+          "equippedItemLevel": 335.0
         }
     """.trimIndent()
 
@@ -103,7 +109,10 @@ object RaiderIoMockHelper {
             specs = listOf()
         ),
         mythicPlusBestRuns = listOf(),
-        mythicPlusRecentRuns = listOf()
+        mythicPlusRecentRuns = listOf(),
+        race = "Night Elf",
+        faction = "alliance",
+        equippedItemLevel = 335.0
     )
 
 

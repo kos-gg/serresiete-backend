@@ -29,6 +29,9 @@ object TestHelper {
      },                           
      "mythicPlusBestRuns": [],
      "mythicPlusRecentRuns": [],
+     "race": "Night Elf",
+     "faction": "alliance",
+     "equippedItemLevel": 335.0,
      "type": "wow"
    }"""
 
