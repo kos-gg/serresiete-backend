@@ -16,6 +16,8 @@ object RaiderIoMockHelper {
                 wowCharacter.name,
                 wowCharacter.realm,
                 wowCharacter.region,
+                "race",
+                "faction",
                 "class",
                 "spec",
                 0.0,
@@ -23,7 +25,9 @@ object RaiderIoMockHelper {
                 MythicPlusRank(1, 1, 1),
                 listOf(),
                 listOf(),
-                listOf()
+                listOf(),
+                0.0,
+                null
             )
         )
     }
@@ -48,7 +52,10 @@ object RaiderIoMockHelper {
                 specs = listOf()
             ),
             mythicPlusBestRuns = listOf(),
-            mythicPlusRecentRuns = listOf()
+            mythicPlusRecentRuns = listOf(),
+            race = "Night Elf",
+            faction = "alliance",
+            equippedItemLevel = 335.0
         )
     )
 
@@ -80,7 +87,10 @@ object RaiderIoMockHelper {
           },
           "mythicPlusBestRuns": [
             
-          ]
+          ],
+          "race": "Night Elf",
+          "faction": "alliance",
+          "equippedItemLevel": 335.0
         }
     """.trimIndent()
 
@@ -99,7 +109,10 @@ object RaiderIoMockHelper {
             specs = listOf()
         ),
         mythicPlusBestRuns = listOf(),
-        mythicPlusRecentRuns = listOf()
+        mythicPlusRecentRuns = listOf(),
+        race = "Night Elf",
+        faction = "alliance",
+        equippedItemLevel = 335.0
     )
 
 

@@ -18,6 +18,8 @@ data class WowCharacterProfile(
     val name: String,
     val realm: String,
     val region: String,
+    val race: String,
+    val faction: String,
     val `class`: String,
     val spec: String,
     val score: Double,
@@ -25,7 +27,9 @@ data class WowCharacterProfile(
     val classRank: MythicPlusRank,
     val specRanks: List<MythicPlusRankWithSpecName>,
     val bestRuns: List<MythicPlusRun>,
-    val recentRuns: List<MythicPlusRun>
+    val recentRuns: List<MythicPlusRun>,
+    val equippedItemLevel: Double,
+    val guild: String?
 ) {
     fun toWowData(
         characterId: Long,
@@ -42,6 +46,10 @@ data class WowCharacterProfile(
         quantile,
         MythicPlusRanksWithSpecs(overallRank, classRank, specRanks),
         bestRuns,
-        recentRuns
+        recentRuns,
+        race,
+        faction,
+        equippedItemLevel,
+        guild
     )
 }

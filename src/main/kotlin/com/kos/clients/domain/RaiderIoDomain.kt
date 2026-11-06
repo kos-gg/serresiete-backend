@@ -165,10 +165,23 @@ data class MythicPlusRunResponse(
 )
 
 @Serializable
+data class GearResponse(
+    @SerialName("item_level_equipped")
+    val itemLevelEquipped: Double
+)
+
+@Serializable
+data class GuildResponse(
+    val name: String
+)
+
+@Serializable
 data class RaiderIoProfile(
     val name: String,
     val realm: String,
     val region: String,
+    val race: String,
+    val faction: String,
     val `class`: String,
     @SerialName("active_spec_name")
     val spec: String,
@@ -179,7 +192,9 @@ data class RaiderIoProfile(
     @SerialName("mythic_plus_best_runs")
     val mythicPlusBestRuns: List<MythicPlusRunResponse>,
     @SerialName("mythic_plus_recent_runs")
-    val mythicPlusRecentRuns: List<MythicPlusRunResponse> = emptyList()
+    val mythicPlusRecentRuns: List<MythicPlusRunResponse> = emptyList(),
+    val gear: GearResponse,
+    val guild: GuildResponse? = null
 )
 
 object CodeExtractorSerializer : KSerializer<String> {

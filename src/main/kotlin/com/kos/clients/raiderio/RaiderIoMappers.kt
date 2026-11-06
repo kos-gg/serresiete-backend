@@ -10,6 +10,8 @@ fun RaiderIoProfile.toWowCharacterProfile(specRanks: List<MythicPlusRankWithSpec
     name = name,
     realm = realm,
     region = region,
+    race = race,
+    faction = faction,
     `class` = `class`,
     spec = spec,
     score = seasonScores[0].scores.all,
@@ -17,7 +19,9 @@ fun RaiderIoProfile.toWowCharacterProfile(specRanks: List<MythicPlusRankWithSpec
     classRank = mythicPlusRanks.`class`.toMythicPlusRank(),
     specRanks = specRanks,
     bestRuns = mythicPlusBestRuns.map { it.toMythicPlusRun() },
-    recentRuns = mythicPlusRecentRuns.map { it.toMythicPlusRun() }
+    recentRuns = mythicPlusRecentRuns.map { it.toMythicPlusRun() },
+    equippedItemLevel = gear.itemLevelEquipped,
+    guild = guild?.name
 )
 
 fun MythicPlusRankResponse.toMythicPlusRank() = MythicPlusRank(world, region, realm)

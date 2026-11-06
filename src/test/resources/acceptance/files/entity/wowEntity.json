@@ -22,5 +22,8 @@
     "specs": []
   },
   "mythicPlusBestRuns": [],
-  "mythicPlusRecentRuns": []
+  "mythicPlusRecentRuns": [],
+  "race": "Human",
+  "faction": "alliance",
+  "equippedItemLevel": 335.0
 }
