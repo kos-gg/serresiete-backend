@@ -8,6 +8,7 @@ import com.kos.activities.Activities
 import com.kos.activities.Activity
 import com.kos.common.error.ControllerError
 import com.kos.common.error.EntitiesDoNotMatchGame
+import com.kos.common.error.InvalidRegion
 import com.kos.common.error.NotAuthorized
 import com.kos.common.error.NotEnoughPermissions
 import com.kos.datacache.DataCacheService
@@ -16,6 +17,8 @@ import com.kos.entities.domain.EntityDataResponse
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildExistsResponse
 import com.kos.entities.domain.belongsTo
+import com.kos.entities.domain.hasValidRegion
+import com.kos.entities.domain.isBlizzardRegion
 import com.kos.views.Game
 
 class EntitiesController(
@@ -46,6 +49,7 @@ class EntitiesController(
         ensureNotNull(client) { NotAuthorized }
         ensure(activities.contains(Activities.checkEntitiesExist)) { NotEnoughPermissions(client) }
         ensure(entities.all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
+        ensure(entities.all { it.hasValidRegion() }) { InvalidRegion }
         entitiesService.exists(entities, game)
     }
 
@@ -55,14 +59,10 @@ class EntitiesController(
         name: String,
         region: String,
         realm: String,
-    ): Either<ControllerError, GuildExistsResponse> {
-        return when (client) {
-            null -> Either.Left(NotAuthorized)
-            else -> {
-                if (activities.contains(Activities.checkEntitiesExist))
-                    entitiesService.guildExists(name, region, realm)
-                else Either.Left(NotEnoughPermissions(client))
-            }
-        }
+    ): Either<ControllerError, GuildExistsResponse> = either {
+        ensureNotNull(client) { NotAuthorized }
+        ensure(activities.contains(Activities.checkEntitiesExist)) { NotEnoughPermissions(client) }
+        ensure(isBlizzardRegion(region)) { InvalidRegion }
+        entitiesService.guildExists(name, region, realm).bind()
     }
 }

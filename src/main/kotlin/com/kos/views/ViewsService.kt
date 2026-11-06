@@ -11,6 +11,7 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.domain.Data
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.hasValidRegion
 import com.kos.entities.domain.EntityWithAlias
 import com.kos.entities.domain.belongsTo
 import com.kos.eventsourcing.events.*
@@ -68,6 +69,7 @@ class ViewsService(
             ensureMaxNumberOfViews(owner).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
+            ensureValidRegions(request.entities).bind()
             ensureRequest(request).bind()
 
             val operationId = UUID.randomUUID().toString()
@@ -95,6 +97,7 @@ class ViewsService(
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
+            ensureValidRegions(request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -118,6 +121,7 @@ class ViewsService(
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
+            ensureValidRegions(request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -198,6 +202,10 @@ class ViewsService(
         game: Game
     ): Either<EntitiesDoNotMatchGame, Unit> = either {
         ensure(entities.orEmpty().all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
+    }
+
+    private fun ensureValidRegions(entities: List<EntityRequest>?): Either<InvalidRegion, Unit> = either {
+        ensure(entities.orEmpty().all { it.hasValidRegion() }) { InvalidRegion }
     }
 
     private fun ensureRequest(

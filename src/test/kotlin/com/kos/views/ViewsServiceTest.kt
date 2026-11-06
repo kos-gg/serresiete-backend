@@ -3,6 +3,8 @@ package com.kos.views
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.EntitiesDoNotMatchGame
+import com.kos.common.error.InvalidRegion
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.common.error.TooMuchEntities
 import com.kos.common.error.TooMuchViews
 import com.kos.common.error.UserWithoutRoles
@@ -382,6 +384,35 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `creating a wow forever view with an entity outside the blizzard regions does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(WowForeverEntityRequest("sanxei", "tarde", "attacker.com#")),
+                        Game.WOW_FOREVER,
+                        false
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(InvalidRegion, it)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
         fun `creating a lol view with a wow entity does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
@@ -582,10 +613,10 @@ class ViewsServiceTest {
         fun `editing a wow view with more than one character stores an event`() {
             runBlocking {
 
-                val request1 = WowEntityRequest("a", "r", "r")
-                val request2 = WowEntityRequest("b", "r", "r")
-                val request3 = WowEntityRequest("c", "r", "r")
-                val request4 = WowEntityRequest("d", "r", "r")
+                val request1 = WowEntityRequest("a", "eu", "r")
+                val request2 = WowEntityRequest("b", "eu", "r")
+                val request3 = WowEntityRequest("c", "eu", "r")
+                val request4 = WowEntityRequest("d", "eu", "r")
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(
@@ -741,10 +772,10 @@ class ViewsServiceTest {
         fun `patching a view patching more than one character stores an event`() {
             runBlocking {
 
-                val request1 = WowEntityRequest("a", "r", "r")
-                val request2 = WowEntityRequest("b", "r", "r")
-                val request3 = WowEntityRequest("c", "r", "r")
-                val request4 = WowEntityRequest("d", "r", "r")
+                val request1 = WowEntityRequest("a", "eu", "r")
+                val request2 = WowEntityRequest("b", "eu", "r")
+                val request3 = WowEntityRequest("c", "eu", "r")
+                val request4 = WowEntityRequest("d", "eu", "r")
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(

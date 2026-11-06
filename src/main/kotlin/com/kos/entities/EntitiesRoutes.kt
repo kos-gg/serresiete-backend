@@ -2,6 +2,7 @@ package com.kos.entities
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
 import com.kos.entities.domain.*
@@ -73,7 +74,14 @@ fun Route.entitiesRouting(
     }
 }
 
-fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
+fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> =
+    either {
+        val (request, game) = parametersToAnyRegionEntityRequest(parameters).bind()
+        ensure(request.hasValidRegion()) { BadRequest("Invalid region for $game entity, must be one of eu, us, kr, tw") }
+        request to game
+    }
+
+private fun parametersToAnyRegionEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
     return either {
         val name = parameters["name"]
         when (val game = parameters["game"]) {

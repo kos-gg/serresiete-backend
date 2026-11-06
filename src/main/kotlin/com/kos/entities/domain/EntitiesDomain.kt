@@ -41,6 +41,16 @@ fun EntityRequest.belongsTo(game: Game): Boolean = when (game) {
     Game.WOW_FOREVER -> this is WowForeverEntityRequest
 }
 
+private val blizzardRegions = setOf("eu", "us", "kr", "tw")
+
+fun isBlizzardRegion(region: String): Boolean = region.lowercase() in blizzardRegions
+
+fun EntityRequest.hasValidRegion(): Boolean = when (this) {
+    is WowEntityRequest -> isBlizzardRegion(region)
+    is WowForeverEntityRequest -> isBlizzardRegion(region)
+    is LolEntityRequest -> true
+}
+
 @Serializable(with = EntityResponseSerializer::class)
 sealed interface EntityResponse {
     val name: String
