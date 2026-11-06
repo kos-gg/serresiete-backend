@@ -3,6 +3,7 @@ package com.kos.plugins
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntityRequest
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -16,6 +17,7 @@ fun Application.configureSerialization() {
         polymorphic(EntityRequest::class) {
             subclass(LolEntityRequest::class, LolEntityRequest.serializer())
             subclass(WowEntityRequest::class, WowEntityRequest.serializer())
+            subclass(WowForeverEntityRequest::class, WowForeverEntityRequest.serializer())
         }
     }
 

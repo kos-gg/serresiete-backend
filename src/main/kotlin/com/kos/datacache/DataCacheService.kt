@@ -4,6 +4,7 @@ import com.kos.common.WithLogger
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.LolData
 import com.kos.datacache.domain.WowData
+import com.kos.datacache.domain.WowForeverData
 import com.kos.datacache.domain.WowHardcoreData
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.domain.EntityDataResponse
@@ -32,6 +33,7 @@ data class DataCacheService(
                 subclass(WowData::class, WowData.serializer())
                 subclass(LolData::class, LolData.serializer())
                 subclass(WowHardcoreData::class, WowHardcoreData.serializer())
+                subclass(WowForeverData::class, WowForeverData.serializer())
             }
         }
         ignoreUnknownKeys = true

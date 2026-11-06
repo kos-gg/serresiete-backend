@@ -14,6 +14,10 @@ import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.RunMember
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.WowCharacter
+import com.kos.entities.domain.WowForeverCharacter
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import com.kos.sources.wow.KeystoneBestRun
 import com.kos.sources.wow.MythicKeystoneProfile
 import io.ktor.client.*
@@ -231,6 +235,37 @@ class BlizzardHttpClientTest {
         val result = blizzardClient.getMythicKeystoneProfile("eu", "realm", "unknownspec", 16)
 
         assertTrue(result.isLeft { it is JsonParseError })
+    }
+
+    @Test
+    fun `getForeverProfile fetches the character by name and surname from the forever namespace`() = runBlocking {
+        givenAValidToken()
+
+        val expected = WowForeverCharacter(
+            id = 6880137,
+            name = "Siempre",
+            surname = "Tarde",
+            level = 14,
+            averageItemLevel = 8,
+            equippedItemLevel = 8,
+            characterClass = "Warrior",
+            faction = "Horde",
+            race = "Orc",
+            gender = "Female",
+            guild = "TSALAB",
+            experience = 11355,
+            ruleset = "PvP",
+            lastLogin = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1793926086000), ZoneId.systemDefault())
+        )
+
+        assertEquals(Either.Right(expected), blizzardClient.getForeverProfile("eu", "Siempre", "Tarde"))
+    }
+
+    @Test
+    fun `getForeverProfile returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverProfile("eu", "unknown", "tarde"))
     }
 
     private suspend fun givenAValidToken() {

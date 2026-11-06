@@ -610,7 +610,8 @@ class EntitiesServiceTest {
             wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-            lolResolver = lolResolver
+            lolResolver = lolResolver,
+            wowForeverResolver = mock()
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)

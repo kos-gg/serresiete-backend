@@ -50,7 +50,8 @@ class CacheGameDataTaskRunnerTest {
             EntitySynchronizerProvider(
                 wowSynchronizer = mock(),
                 wowHardcoreSynchronizer = mock(),
-                lolSynchronizer = LolEntitySynchronizer(dataCacheRepo, riotClient)
+                lolSynchronizer = LolEntitySynchronizer(dataCacheRepo, riotClient),
+                wowForeverSynchronizer = mock()
             )
         )
 
@@ -89,7 +90,8 @@ class CacheGameDataTaskRunnerTest {
                 EntitySynchronizerProvider(
                     wowSynchronizer = mock(),
                     wowHardcoreSynchronizer = mock(),
-                    lolSynchronizer = failingSynchronizer
+                    lolSynchronizer = failingSynchronizer,
+                    wowForeverSynchronizer = mock()
                 )
             )
 

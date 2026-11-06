@@ -3,6 +3,7 @@ package acceptance
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.views.Game
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -13,19 +14,25 @@ fun String.toGame(): Game = Game.valueOf(uppercase())
 fun wowEntityRequest(name: String, realm: String, region: String): WowEntityRequest =
     WowEntityRequest(name, region, realm)
 
+fun wowForeverEntityRequest(name: String, surname: String, region: String): WowForeverEntityRequest =
+    WowForeverEntityRequest(name, surname, region)
+
 fun existingEntityRow(game: Game): Map<String, String> = when (game) {
     Game.WOW, Game.WOW_HC -> mapOf("name" to "Sanxei", "region" to "eu", "realm" to "Silvermoon")
     Game.LOL -> mapOf("name" to "GTP ZeroMVPs", "tag" to "EUW")
+    Game.WOW_FOREVER -> mapOf("name" to "Sanxei", "surname" to "Tarde", "region" to "eu")
 }
 
 fun newEntityRow(game: Game): Map<String, String> = when (game) {
     Game.WOW, Game.WOW_HC -> mapOf("name" to "Threndil", "region" to "eu", "realm" to "Silvermoon")
     Game.LOL -> mapOf("name" to "Faker", "tag" to "T1")
+    Game.WOW_FOREVER -> mapOf("name" to "Threndil", "surname" to "Pronto", "region" to "eu")
 }
 
 fun Game.entityRequest(row: Map<String, String>): EntityRequest = when (this) {
     Game.WOW, Game.WOW_HC -> WowEntityRequest(row.getValue("name"), row.getValue("region"), row.getValue("realm"))
     Game.LOL -> LolEntityRequest(row.getValue("name"), row.getValue("tag"))
+    Game.WOW_FOREVER -> wowForeverEntityRequest(row.getValue("name"), row.getValue("surname"), row.getValue("region"))
 }
 
 fun Game.entityRequestJson(row: Map<String, String>): JsonObject = when (this) {
@@ -40,5 +47,12 @@ fun Game.entityRequestJson(row: Map<String, String>): JsonObject = when (this) {
         put("type", "lol")
         put("name", row["name"])
         put("tag", row["tag"])
+    }
+
+    Game.WOW_FOREVER -> buildJsonObject {
+        put("type", "wow_forever")
+        put("name", row["name"])
+        put("surname", row["surname"])
+        put("region", row["region"])
     }
 }

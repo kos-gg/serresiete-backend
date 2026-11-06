@@ -70,6 +70,7 @@ data class EntitiesService(
             Game.LOL -> lolUpdater.update(entitiesRepository.get(game) as List<LolEntity>)
             Game.WOW -> listOf()
             Game.WOW_HC -> listOf()
+            Game.WOW_FOREVER -> listOf()
         }
     }
 

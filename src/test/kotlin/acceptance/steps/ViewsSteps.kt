@@ -188,6 +188,7 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
                 Game.LOL -> SharedInfrastructure.subscriptions.syncLol.processPendingEvents()
                 Game.WOW -> SharedInfrastructure.subscriptions.syncWow.processPendingEvents()
                 Game.WOW_HC -> SharedInfrastructure.subscriptions.syncWowHc.processPendingEvents()
+                Game.WOW_FOREVER -> SharedInfrastructure.subscriptions.syncWowForever.processPendingEvents()
                 null -> error("No game set in scenario variables")
             }
         }

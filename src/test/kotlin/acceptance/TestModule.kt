@@ -56,6 +56,8 @@ import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDataba
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowforever.WowForeverEntityResolver
+import com.kos.sources.wowforever.WowForeverEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -79,6 +81,7 @@ data class TestSubscriptions(
     val syncLol: EventSubscription,
     val syncWow: EventSubscription,
     val syncWowHc: EventSubscription,
+    val syncWowForever: EventSubscription,
     val entities: EventSubscription,
 )
 
@@ -133,12 +136,14 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
+    val wowForeverResolver = WowForeverEntityResolver(entitiesRepository, blizzardClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
         wowHardcoreResolver = wowHardcoreResolver,
         wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-        lolResolver = lolResolver
+        lolResolver = lolResolver,
+        wowForeverResolver = wowForeverResolver
     )
 
     val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
@@ -152,11 +157,13 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     )
     val wowEntitySynchronizer =
         WowEntitySynchronizer(dataCacheRepository, raiderIoHttpClient, blizzardClient, seasonRepository)
+    val wowForeverEntitySynchronizer = WowForeverEntitySynchronizer(dataCacheRepository, blizzardClient)
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
             wowSynchronizer = wowEntitySynchronizer,
             wowHardcoreSynchronizer = wowHardcoreEntitySynchronizer,
-            lolSynchronizer = lolEntitySynchronizer
+            lolSynchronizer = lolEntitySynchronizer,
+            wowForeverSynchronizer = wowForeverEntitySynchronizer
         )
 
     val wowSeasonService = WowSeasonService(staticDataRepository, seasonRepository, raiderIoHttpClient)
@@ -186,7 +193,14 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val stalenessRule = StalenessSyncRule(
         entitiesRepository,
         30,
-        SyncBudget(mapOf(Game.LOL to Int.MAX_VALUE, Game.WOW to Int.MAX_VALUE, Game.WOW_HC to Int.MAX_VALUE))
+        SyncBudget(
+            mapOf(
+                Game.LOL to Int.MAX_VALUE,
+                Game.WOW to Int.MAX_VALUE,
+                Game.WOW_HC to Int.MAX_VALUE,
+                Game.WOW_FOREVER to Int.MAX_VALUE
+            )
+        )
     )
     val syncEntitySelector = SyncEntitySelector(stalenessRule)
 
@@ -215,6 +229,12 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheGameDataTaskRunner(
                 Game.WOW_HC,
                 TaskType.CACHE_WOW_HC_DATA_TASK,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameDataTaskRunner(
+                Game.WOW_FOREVER,
+                TaskType.CACHE_WOW_FOREVER_DATA_TASK,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
@@ -265,6 +285,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         },
         syncWowHc = EventSubscription("sync-wow-hc", eventStore, subscriptionsRepository) {
             GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process()
+        },
+        syncWowForever = EventSubscription("sync-wow-forever", eventStore, subscriptionsRepository) {
+            GameSyncEventProcessor(it, entitiesService, wowForeverEntitySynchronizer).process()
         },
         entities = EventSubscription("entities", eventStore, subscriptionsRepository) {
             EntitiesEventProcessor(it, entitiesService).process()

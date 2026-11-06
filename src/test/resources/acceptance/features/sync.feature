@@ -43,3 +43,16 @@ Feature: Sync
     And the raiderIo profile API returns an error
     When the WOW sync subscription processes pending events
     Then a completed event is saved for the operation
+
+  Scenario: WOW Forever sync caches entity data
+    Given a "WOW_FOREVER" sync event is posted for "Sanxei" "Tarde" "eu"
+    When the WOW_FOREVER sync subscription processes pending events
+    Then the data cache contains a "WOW_FOREVER" entry for "Sanxei" "Tarde" "eu"
+    And a completed event is saved for the operation
+
+  Scenario: WOW Forever sync tolerates a Blizzard profile failure and still completes the operation
+    Given a WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu" exists in the database
+    And a "WOW_FOREVER" sync event is posted for "Sanxei" "Tarde" "eu"
+    And the Blizzard profile API returns an error
+    When the WOW_FOREVER sync subscription processes pending events
+    Then a completed event is saved for the operation

@@ -38,6 +38,17 @@ sealed interface EntityRequest {
 fun EntityRequest.belongsTo(game: Game): Boolean = when (game) {
     Game.WOW, Game.WOW_HC -> this is WowEntityRequest
     Game.LOL -> this is LolEntityRequest
+    Game.WOW_FOREVER -> this is WowForeverEntityRequest
+}
+
+private val blizzardRegions = setOf("eu", "us", "kr", "tw")
+
+fun isBlizzardRegion(region: String): Boolean = region.lowercase() in blizzardRegions
+
+fun EntityRequest.hasValidRegion(): Boolean = when (this) {
+    is WowEntityRequest -> isBlizzardRegion(region)
+    is WowForeverEntityRequest -> isBlizzardRegion(region)
+    is LolEntityRequest -> true
 }
 
 @Serializable(with = EntityResponseSerializer::class)
@@ -134,6 +145,7 @@ object EntityResponseSerializer : KSerializer<EntityResponse> {
         when (value) {
             is WowEntityResponse -> encoder.encodeSerializableValue(WowEntityResponse.serializer(), value)
             is LolEntityResponse -> encoder.encodeSerializableValue(LolEntityResponse.serializer(), value)
+            is WowForeverEntityResponse -> encoder.encodeSerializableValue(WowForeverEntityResponse.serializer(), value)
         }
     }
 
@@ -142,6 +154,7 @@ object EntityResponseSerializer : KSerializer<EntityResponse> {
         val jsonObject = jsonDecoder.decodeJsonElement().jsonObject
 
         return when {
+            "surname" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(WowForeverEntityResponse.serializer(), jsonObject)
             "region" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(WowEntityResponse.serializer(), jsonObject)
             "tag" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(LolEntityResponse.serializer(), jsonObject)
             else -> throw SerializationException("Cannot determine EntityResponse subtype from $jsonObject")

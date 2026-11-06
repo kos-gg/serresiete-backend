@@ -1,0 +1,27 @@
+package com.kos.datacache.domain
+
+import com.kos.common.OffsetDateTimeSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
+
+@Serializable
+@SerialName("wow_forever")
+data class WowForeverData(
+    val id: Long,
+    val name: String,
+    val surname: String,
+    val region: String,
+    val level: Int,
+    val averageItemLevel: Int,
+    val equippedItemLevel: Int,
+    val characterClass: String,
+    val race: String,
+    val gender: String,
+    val faction: String,
+    val guild: String?,
+    val experience: Int,
+    val ruleset: String,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val lastLogin: OffsetDateTime
+) : Data

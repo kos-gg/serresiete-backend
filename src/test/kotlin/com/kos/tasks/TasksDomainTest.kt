@@ -10,6 +10,7 @@ class TasksDomainTest {
         val expected = listOf(
             "cacheWowDataTask",
             "cacheWowHcDataTask",
+            "cacheWowForeverDataTask",
             "cacheLolDataTask",
             "tokenCleanupTask",
             "taskCleanupTask",

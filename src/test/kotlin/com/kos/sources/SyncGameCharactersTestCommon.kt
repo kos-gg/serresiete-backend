@@ -69,7 +69,8 @@ abstract class SyncGameCharactersTestCommon {
             wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-            lolResolver = lolResolver
+            lolResolver = lolResolver,
+            wowForeverResolver = mock()
         )
 
 

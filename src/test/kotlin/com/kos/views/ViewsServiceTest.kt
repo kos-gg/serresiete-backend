@@ -3,6 +3,8 @@ package com.kos.views
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.EntitiesDoNotMatchGame
+import com.kos.common.error.InvalidRegion
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.common.error.TooMuchEntities
 import com.kos.common.error.TooMuchViews
 import com.kos.common.error.UserWithoutRoles
@@ -337,10 +339,33 @@ class ViewsServiceTest {
         }
 
         @Test
-        fun `trying to exceed the maximum number of views allowed does not store an event`() {
+        fun `trying to exceed the maximum number of views allowed for a game does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView), listOf()),
+                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView.copy(id = "2")), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(name, published, listOf(), Game.LOL, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is TooMuchViews)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `reaching the maximum number of views for one game still allows creating a view of another game`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView.copy(id = "2")), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -350,12 +375,12 @@ class ViewsServiceTest {
                     owner,
                     ViewRequest(name, published, listOf(), Game.WOW, false)
                 ).onRight {
-                    fail()
+                    assertOperation(it, EventType.VIEW_TO_BE_CREATED)
                 }.onLeft {
-                    assertTrue(it is TooMuchViews)
+                    fail(it.toStr())
                 }
 
-                assertNoEventsStored(eventStore)
+                assertEventStoredCorrectly(eventStore, aggregateRoot, name, published, listOf(), Game.WOW, false)
             }
         }
 
@@ -375,6 +400,35 @@ class ViewsServiceTest {
                     fail()
                 }.onLeft {
                     assertTrue(it is TooMuchEntities)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `creating a wow forever view with an entity outside the blizzard regions does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(WowForeverEntityRequest("sanxei", "tarde", "attacker.com#")),
+                        Game.WOW_FOREVER,
+                        false
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(InvalidRegion, it)
                 }
 
                 assertNoEventsStored(eventStore)
@@ -582,10 +636,10 @@ class ViewsServiceTest {
         fun `editing a wow view with more than one character stores an event`() {
             runBlocking {
 
-                val request1 = WowEntityRequest("a", "r", "r")
-                val request2 = WowEntityRequest("b", "r", "r")
-                val request3 = WowEntityRequest("c", "r", "r")
-                val request4 = WowEntityRequest("d", "r", "r")
+                val request1 = WowEntityRequest("a", "eu", "r")
+                val request2 = WowEntityRequest("b", "eu", "r")
+                val request3 = WowEntityRequest("c", "eu", "r")
+                val request4 = WowEntityRequest("d", "eu", "r")
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(
@@ -741,10 +795,10 @@ class ViewsServiceTest {
         fun `patching a view patching more than one character stores an event`() {
             runBlocking {
 
-                val request1 = WowEntityRequest("a", "r", "r")
-                val request2 = WowEntityRequest("b", "r", "r")
-                val request3 = WowEntityRequest("c", "r", "r")
-                val request4 = WowEntityRequest("d", "r", "r")
+                val request1 = WowEntityRequest("a", "eu", "r")
+                val request2 = WowEntityRequest("b", "eu", "r")
+                val request3 = WowEntityRequest("c", "eu", "r")
+                val request4 = WowEntityRequest("d", "eu", "r")
 
                 val (eventStore, viewsService) = createService(
                     ViewsState(
@@ -843,7 +897,8 @@ class ViewsServiceTest {
             wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-            lolResolver = lolResolver
+            lolResolver = lolResolver,
+            wowForeverResolver = mock()
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)

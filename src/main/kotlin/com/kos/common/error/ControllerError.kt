@@ -36,6 +36,7 @@ data object GuildViewMoreThanOneEntity : CreateViewError
 data object TooMuchEntities : ViewEntitiesError
 data object UserWithoutRoles : ViewEntitiesError
 data object EntitiesDoNotMatchGame : ViewEntitiesError
+data object InvalidRegion : ViewEntitiesError
 
 fun ControllerError.toProblem(): Problem =
     when (this) {
@@ -54,6 +55,9 @@ fun ControllerError.toProblem(): Problem =
 
         is EntitiesDoNotMatchGame ->
             Problem(HttpStatusCode.BadRequest, "ENTITIES_DO_NOT_MATCH_GAME", "Entities don't match the view's game")
+
+        is InvalidRegion ->
+            Problem(HttpStatusCode.BadRequest, "INVALID_REGION", "Region must be one of eu, us, kr, tw")
 
         is InvalidQueryParameter ->
             Problem(HttpStatusCode.BadRequest, "INVALID_QUERY_PARAMETER", "Invalid query parameter", message)

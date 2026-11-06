@@ -7,7 +7,8 @@ import com.kos.views.Game
 data class EntitiesState(
     val wowEntities: List<WowEntity>,
     val wowHardcoreEntities: List<WowEntity>,
-    val lolEntities: List<LolEntity>
+    val lolEntities: List<LolEntity>,
+    val wowForeverEntities: List<WowForeverEntity> = emptyList()
 )
 
 interface EntitiesRepository : WithState<EntitiesState, EntitiesRepository> {

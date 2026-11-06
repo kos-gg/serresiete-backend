@@ -2,6 +2,7 @@ package com.kos.entities
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
 import com.kos.entities.domain.*
@@ -73,7 +74,14 @@ fun Route.entitiesRouting(
     }
 }
 
-fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
+fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> =
+    either {
+        val (request, game) = parametersToAnyRegionEntityRequest(parameters).bind()
+        ensure(request.hasValidRegion()) { BadRequest("Invalid region for $game entity, must be one of eu, us, kr, tw") }
+        request to game
+    }
+
+private fun parametersToAnyRegionEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {
     return either {
         val name = parameters["name"]
         when (val game = parameters["game"]) {
@@ -91,6 +99,14 @@ fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<E
                 if (name == null || realm == null || region == null)
                     raise(BadRequest("Incorrect search parameters for wow entity: name: $name, realm: $realm, region: $region"))
                 else Pair(WowEntityRequest(name, region, realm), Game.WOW)
+            }
+
+            Game.WOW_FOREVER.toString() -> {
+                val region = parameters["region"]
+                val surname = parameters["surname"]
+                if (name == null || surname == null || region == null)
+                    raise(BadRequest("Incorrect search parameters for wow forever entity: name: $name, surname: $surname, region: $region"))
+                else Pair(WowForeverEntityRequest(name, surname, region), Game.WOW_FOREVER)
             }
 
             Game.LOL.toString() -> {

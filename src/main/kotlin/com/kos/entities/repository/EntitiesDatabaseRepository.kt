@@ -18,17 +18,20 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     private val wowEntityRepository = WowEntityDatabaseRepository(db)
     private val wowHardcoreEntityRepository = WowHardcoreEntityDatabaseRepository(db)
     private val lolEntityRepository = LolEntityDatabaseRepository(db)
+    private val wowForeverEntityRepository = WowForeverEntityDatabaseRepository(db)
 
     private fun repositoryFor(game: Game): GameEntityRepository = when (game) {
         Game.WOW -> wowEntityRepository
         Game.WOW_HC -> wowHardcoreEntityRepository
         Game.LOL -> lolEntityRepository
+        Game.WOW_FOREVER -> wowForeverEntityRepository
     }
 
     override suspend fun withState(initialState: EntitiesState): EntitiesDatabaseRepository {
         wowEntityRepository.withState(initialState.wowEntities)
         wowHardcoreEntityRepository.withState(initialState.wowHardcoreEntities)
         lolEntityRepository.withState(initialState.lolEntities)
+        wowForeverEntityRepository.withState(initialState.wowForeverEntities)
         return this
     }
 
@@ -79,7 +82,8 @@ class EntitiesDatabaseRepository(private val db: Database) : EntitiesRepository 
     override suspend fun state(): EntitiesState = EntitiesState(
         wowEntityRepository.state(),
         wowHardcoreEntityRepository.state(),
-        lolEntityRepository.state()
+        lolEntityRepository.state(),
+        wowForeverEntityRepository.state()
     )
 }
 

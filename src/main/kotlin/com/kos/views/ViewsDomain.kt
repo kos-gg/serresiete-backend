@@ -20,6 +20,9 @@ enum class Game {
     },
     WOW_HC {
         override fun toString(): String = "wow_hc"
+    },
+    WOW_FOREVER {
+        override fun toString(): String = "wow_forever"
     };
 
     companion object {
@@ -27,6 +30,7 @@ enum class Game {
             "wow" -> Either.Right(WOW)
             "lol" -> Either.Right(LOL)
             "wow_hc" -> Either.Right(WOW_HC)
+            "wow_forever" -> Either.Right(WOW_FOREVER)
             else -> Either.Left(InvalidGameType(value))
         }
     }

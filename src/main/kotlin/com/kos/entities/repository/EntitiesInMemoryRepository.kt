@@ -20,17 +20,20 @@ class EntitiesInMemoryRepository(
     private val wowRepository = WowEntityInMemoryRepository(dataCacheRepository, ::nextId)
     private val wowHardcoreRepository = WowHardcoreEntityInMemoryRepository(dataCacheRepository, ::nextId)
     private val lolRepository = LolEntityInMemoryRepository(dataCacheRepository, ::nextId)
+    private val wowForeverRepository = WowForeverEntityInMemoryRepository(dataCacheRepository, ::nextId)
 
     private fun repositoryFor(game: Game): GameEntityRepository = when (game) {
         Game.WOW -> wowRepository
         Game.WOW_HC -> wowHardcoreRepository
         Game.LOL -> lolRepository
+        Game.WOW_FOREVER -> wowForeverRepository
     }
 
     private suspend fun nextId(): Long {
         val allIds = wowRepository.state().map { it.id } +
                 lolRepository.state().map { it.id } +
-                wowHardcoreRepository.state().map { it.id }
+                wowHardcoreRepository.state().map { it.id } +
+                wowForeverRepository.state().map { it.id }
         return if (allIds.isEmpty()) 1
         else allIds.maxBy { it } + 1
     }
@@ -68,16 +71,23 @@ class EntitiesInMemoryRepository(
         wowRepository.deleteIfPresent(id)
         lolRepository.deleteIfPresent(id)
         wowHardcoreRepository.deleteIfPresent(id)
+        wowForeverRepository.deleteIfPresent(id)
     }
 
     override suspend fun state(): EntitiesState {
-        return EntitiesState(wowRepository.state(), wowHardcoreRepository.state(), lolRepository.state())
+        return EntitiesState(
+            wowRepository.state(),
+            wowHardcoreRepository.state(),
+            lolRepository.state(),
+            wowForeverRepository.state()
+        )
     }
 
     override suspend fun withState(initialState: EntitiesState): EntitiesInMemoryRepository {
         wowRepository.withState(initialState.wowEntities)
         wowHardcoreRepository.withState(initialState.wowHardcoreEntities)
         lolRepository.withState(initialState.lolEntities)
+        wowForeverRepository.withState(initialState.wowForeverEntities)
         return this
     }
 
@@ -85,6 +95,7 @@ class EntitiesInMemoryRepository(
         wowRepository.clear()
         wowHardcoreRepository.clear()
         lolRepository.clear()
+        wowForeverRepository.clear()
         dataCacheRepository.clear()
     }
 }

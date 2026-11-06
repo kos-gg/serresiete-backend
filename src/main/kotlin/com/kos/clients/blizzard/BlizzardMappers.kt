@@ -15,6 +15,7 @@ import java.time.ZoneId
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
+import com.kos.entities.domain.WowForeverCharacter
 import com.kos.entities.domain.findClassAndSpec
 import com.kos.sources.wow.KeystoneBestRun
 import com.kos.sources.wow.MythicKeystoneProfile
@@ -35,6 +36,23 @@ fun GetWowCharacterResponse.toWowCharacter() = WowCharacter(
     realm = realm.name,
     guild = guild,
     experience = experience,
+    lastLogin = OffsetDateTime.ofInstant(Instant.ofEpochMilli(lastLogin), ZoneId.systemDefault())
+)
+
+fun GetWowForeverCharacterResponse.toWowForeverCharacter() = WowForeverCharacter(
+    id = id,
+    name = name,
+    surname = surname,
+    level = level,
+    averageItemLevel = averageItemLevel,
+    equippedItemLevel = equippedItemLevel,
+    characterClass = characterClass,
+    faction = faction,
+    race = race,
+    gender = gender,
+    guild = guild,
+    experience = experience,
+    ruleset = ruleset,
     lastLogin = OffsetDateTime.ofInstant(Instant.ofEpochMilli(lastLogin), ZoneId.systemDefault())
 )
 

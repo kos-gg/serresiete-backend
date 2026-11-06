@@ -1,5 +1,32 @@
 # Changelog
 
+## [7.1.0] - 06-11-2026
+
+### Added
+
+- **New game: WoW Forever** (`WOW_FOREVER`, `"wow_forever"` in requests). A character is identified by `name` +
+  `surname` + `region` (no realm), e.g. `{ "type": "wow_forever", "name": "Daxan", "surname": "Windfury",
+  "region": "eu" }`. Views, `POST /entities/exists` and entity search accept it.
+- Forever characters are resolved and synced from Blizzard's profile API (`/profile/wow/character/{name}-{surname}`,
+  namespace `profile-forever-{region}`). The cached data has the profile only: level, item levels, class, race, gender,
+  faction, guild, experience, ruleset and last login. No avatar and no guilds yet.
+- New task `cacheWowForeverDataTask`, every 2 hours, and a new event subscription `sync-wow-forever`.
+
+### Changed
+
+- **Region is validated at the API boundary**: WOW, WOW_HC and WOW_FOREVER entities must have region `eu`, `us`, `kr`
+  or `tw` (case-insensitive). Creating, editing or patching a view with any other region answers `400 INVALID_REGION`.
+  `POST /entities/exists`, guild checks and entity search reject it too. Before, the region went straight into the
+  Blizzard host name.
+- **The view limit is per game**: an owner can have `maxNumberOfViews` views (2 for `USER`) of *each* game, instead of
+  that many in total. `TOO_MANY_VIEWS` now means too many views of the requested game. As before, the limit is only
+  checked on creation.
+
+### Deploy notes
+
+- Migration `V1793960000` creates `wow_forever_entities` and the `sync-wow-forever` subscription.
+- Optional env vars: `WOW_FOREVER_SYNC_CONCURRENCY` (default 10) and `WOW_FOREVER_SYNC_BUDGET` (default 2000).
+
 ## [7.0.1] - 03-11-2026
 
 ### Changed

@@ -30,6 +30,14 @@ object BlizzardHttpClientHelper {
             .bufferedReader(Charsets.UTF_8)
             .use { it.readText() }
 
+    private val foreverCharacterResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-character-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
+    private const val NOT_FOUND = """{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}"""
+
     val client = HttpClient(MockEngine) {
         install(ContentNegotiation) {
             json()
@@ -37,6 +45,19 @@ object BlizzardHttpClientHelper {
         engine {
             addHandler { request ->
                 when (request.url.encodedPath) {
+
+                    "/profile/wow/character/siempre-tarde" ->
+                        if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
+                            respond(foreverCharacterResponse, HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/profile/wow/character/siempre-tarde/character-media" ->
+                        if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
+                            respond(json.encodeToString(getWowCharacterMediaResponse), HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/profile/wow/character/unknown-tarde" ->
+                        respond(NOT_FOUND, HttpStatusCode.NotFound)
 
                     "/profile/wow/character/realm/name" ->
                         respond(getWowCharacterResponseString, HttpStatusCode.OK)

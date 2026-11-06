@@ -11,6 +11,7 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.domain.Data
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.hasValidRegion
 import com.kos.entities.domain.EntityWithAlias
 import com.kos.entities.domain.belongsTo
 import com.kos.eventsourcing.events.*
@@ -65,9 +66,10 @@ class ViewsService(
 
     suspend fun create(owner: String, request: ViewRequest): Either<CreateViewError, Operation> {
         return either {
-            ensureMaxNumberOfViews(owner).bind()
+            ensureMaxNumberOfViews(owner, request.game).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
+            ensureValidRegions(request.entities).bind()
             ensureRequest(request).bind()
 
             val operationId = UUID.randomUUID().toString()
@@ -95,6 +97,7 @@ class ViewsService(
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
+            ensureValidRegions(request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -118,6 +121,7 @@ class ViewsService(
         return either {
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
+            ensureValidRegions(request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -172,11 +176,11 @@ class ViewsService(
             credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) { UserWithoutRoles }
     }
 
-    private suspend fun ensureMaxNumberOfViews(owner: String): Either<CreateViewError, Unit> {
+    private suspend fun ensureMaxNumberOfViews(owner: String, game: Game): Either<CreateViewError, Unit> {
         return either {
             val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
             val ownViewsCount =
-                viewsRepository.getOwnViews(owner, GetViewsQuery(null, false, null, null, false)).second.size
+                viewsRepository.getOwnViews(owner, GetViewsQuery(game, false, null, null, false)).second.size
             ensure(ownViewsCount < ownerMaxViews) { TooMuchViews }
         }
     }
@@ -200,6 +204,10 @@ class ViewsService(
         ensure(entities.orEmpty().all { it.belongsTo(game) }) { EntitiesDoNotMatchGame }
     }
 
+    private fun ensureValidRegions(entities: List<EntityRequest>?): Either<InvalidRegion, Unit> = either {
+        ensure(entities.orEmpty().all { it.hasValidRegion() }) { InvalidRegion }
+    }
+
     private fun ensureRequest(
         request: ViewRequest
     ): Either<CreateViewError, Unit> = either {
@@ -210,7 +218,7 @@ class ViewsService(
                     if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanOneEntity }
                 }
 
-                Game.LOL -> Unit
+                Game.LOL, Game.WOW_FOREVER -> Unit
             }
         }
     }

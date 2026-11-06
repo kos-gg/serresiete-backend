@@ -1,5 +1,6 @@
 package com.kos.eventsourcing.subscriptions.sync
 
+import org.mockito.Mockito.mock
 import com.kos.assertTrue
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
@@ -179,7 +180,8 @@ class ViewsSyncProcessorTest {
             wowGuildResolver = wowGuildResolver,
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-            lolResolver = lolResolver
+            lolResolver = lolResolver,
+            wowForeverResolver = mock()
         )
 
         val entitiesService = EntitiesService(
