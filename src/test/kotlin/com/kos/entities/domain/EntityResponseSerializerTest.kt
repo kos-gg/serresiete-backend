@@ -43,6 +43,13 @@ class EntityResponseSerializerTest {
     }
 
     @Test
+    fun `decodes a wow forever-shaped object by the presence of surname even though it also has region`() {
+        val decoded = json.decodeFromString<EntityResponse>("""{"name":"sanxei","surname":"tarde","region":"eu"}""")
+
+        assertEquals(WowForeverEntityResponse("sanxei", "tarde", "eu"), decoded)
+    }
+
+    @Test
     fun `round trips a mixed list inside EntitiesExistResponse`() {
         val response = EntitiesExistResponse(
             exist = listOf(WowEntityResponse("kakarona", "eu", "zuljin")),

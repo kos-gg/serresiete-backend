@@ -47,3 +47,28 @@ Feature: Entities
     When they check existence of guild "Method" on realm "twisting-nether" region "eu"
     Then the response status is 200
     And the guild exists in the response
+
+  Scenario: Searching for an unknown WOW_FOREVER entity queues it for sync
+    When they search for a WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu"
+    Then the response status is 200
+    And the response data is null
+    And the response contains an operation
+    And a sync event exists for WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu"
+
+  Scenario: Searching for a WOW_FOREVER entity with cached data returns the data
+    Given a WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu" exists with cached data "wowForeverEntity"
+    When they search for a WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu"
+    Then the response status is 200
+    And the response data is a valid WOW_FOREVER entity
+    And the operation is null
+
+  Scenario: Checking existence of a batch of WOW_FOREVER entities splits them into exist, nonExisting and unchecked
+    When they check existence of "WOW_FOREVER" entities:
+      | name              | surname | region |
+      | Sanxei            | Tarde   | eu     |
+      | NonExistentEntity | Tarde   | eu     |
+      | UncheckedEntity   | Tarde   | eu     |
+    Then the response status is 200
+    And "Sanxei" is in the "exist" bucket
+    And "NonExistentEntity" is in the "nonExisting" bucket
+    And "UncheckedEntity" is in the "unchecked" bucket

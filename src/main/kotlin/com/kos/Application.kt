@@ -59,6 +59,8 @@ import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
+import com.kos.sources.wowforever.WowForeverEntityResolver
+import com.kos.sources.wowforever.WowForeverEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
@@ -145,12 +147,14 @@ fun Application.module() {
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
+    val wowForeverResolver = WowForeverEntityResolver(entitiesRepository, blizzardClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
         wowHardcoreResolver = wowHardcoreResolver,
         wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-        lolResolver = lolResolver
+        lolResolver = lolResolver,
+        wowForeverResolver = wowForeverResolver
     )
 
     val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
@@ -179,11 +183,18 @@ fun Application.module() {
         System.getenv("WOW_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )
 
+    val wowForeverEntitySynchronizer = WowForeverEntitySynchronizer(
+        dataCacheRepository,
+        blizzardClient,
+        System.getenv("WOW_FOREVER_SYNC_CONCURRENCY")?.toInt() ?: 10,
+    )
+
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
             wowSynchronizer = wowEntitySynchronizer,
             wowHardcoreSynchronizer = wowHardcoreEntitySynchronizer,
-            lolSynchronizer = lolEntitySynchronizer
+            lolSynchronizer = lolEntitySynchronizer,
+            wowForeverSynchronizer = wowForeverEntitySynchronizer
         )
 
     val dataCacheService =
@@ -233,7 +244,8 @@ fun Application.module() {
             mapOf(
                 Game.LOL to (System.getenv("LOL_SYNC_BUDGET")?.toInt() ?: 65),
                 Game.WOW to (System.getenv("WOW_SYNC_BUDGET")?.toInt() ?: 3300),
-                Game.WOW_HC to (System.getenv("WOW_HC_SYNC_BUDGET")?.toInt() ?: 4860)
+                Game.WOW_HC to (System.getenv("WOW_HC_SYNC_BUDGET")?.toInt() ?: 4860),
+                Game.WOW_FOREVER to (System.getenv("WOW_FOREVER_SYNC_BUDGET")?.toInt() ?: 2000)
             )
         )
     )
@@ -268,6 +280,12 @@ fun Application.module() {
             CacheGameDataTaskRunner(
                 Game.WOW_HC,
                 TaskType.CACHE_WOW_HC_DATA_TASK,
+                syncEntitySelector,
+                entitySynchronizerProvider
+            ),
+            CacheGameDataTaskRunner(
+                Game.WOW_FOREVER,
+                TaskType.CACHE_WOW_FOREVER_DATA_TASK,
                 syncEntitySelector,
                 entitySynchronizerProvider
             ),
@@ -320,6 +338,12 @@ fun Application.module() {
         subscriptionsRepository
     ) { GameSyncEventProcessor(it, entitiesService, wowHardcoreEntitySynchronizer).process() }
 
+    val syncWowForeverEventSubscription = EventSubscription(
+        "sync-wow-forever",
+        eventStore,
+        subscriptionsRepository
+    ) { GameSyncEventProcessor(it, entitiesService, wowForeverEntitySynchronizer).process() }
+
     val entitiesEventSubscription = EventSubscription(
         "entities",
         eventStore,
@@ -330,6 +354,7 @@ fun Application.module() {
     launchSubscription(syncLolEventSubscription)
     launchSubscription(syncWowEventSubscription)
     launchSubscription(syncWowHardcoreEventSubscription)
+    launchSubscription(syncWowForeverEventSubscription)
     launchSubscription(entitiesEventSubscription)
 
     configureAuthentication(credentialsService, jwtConfig)

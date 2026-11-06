@@ -65,6 +65,9 @@ enum class TaskType {
     CACHE_WOW_HC_DATA_TASK {
         override fun toString(): String = "cacheWowHcDataTask"
     },
+    CACHE_WOW_FOREVER_DATA_TASK {
+        override fun toString(): String = "cacheWowForeverDataTask"
+    },
     CACHE_LOL_DATA_TASK {
         override fun toString(): String = "cacheLolDataTask"
     },
@@ -100,6 +103,7 @@ enum class TaskType {
         fun fromString(value: String): Either<InvalidTaskType, TaskType> = when (value) {
             "cacheWowDataTask" -> Either.Right(CACHE_WOW_DATA_TASK)
             "cacheWowHcDataTask" -> Either.Right(CACHE_WOW_HC_DATA_TASK)
+            "cacheWowForeverDataTask" -> Either.Right(CACHE_WOW_FOREVER_DATA_TASK)
             "cacheLolDataTask" -> Either.Right(CACHE_LOL_DATA_TASK)
             "tokenCleanupTask" -> Either.Right(TOKEN_CLEANUP_TASK)
             "taskCleanupTask" -> Either.Right(TASK_CLEANUP_TASK)

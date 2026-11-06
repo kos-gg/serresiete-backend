@@ -40,6 +40,8 @@ data class TasksLauncher(
         val cacheWowDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_WOW_DATA_TASK, twoHoursDelay)
         val cacheWowHcDataTaskInitDelay: Long =
             getTaskInitialDelay(now, TaskType.CACHE_WOW_HC_DATA_TASK, twoHoursDelay)
+        val cacheWowForeverDataTaskInitDelay: Long =
+            getTaskInitialDelay(now, TaskType.CACHE_WOW_FOREVER_DATA_TASK, twoHoursDelay)
         val cacheLolDataTaskInitDelay: Long = getTaskInitialDelay(now, TaskType.CACHE_LOL_DATA_TASK, thirtyMinutesDelay)
         val tokenCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TOKEN_CLEANUP_TASK, fifteenMinutesDelay)
         val tasksCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.TASK_CLEANUP_TASK, oneWeekDelay)
@@ -51,6 +53,7 @@ data class TasksLauncher(
         logger.info("Setting $cacheWowDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_WOW_DATA_TASK}")
         logger.info("Setting $cacheLolDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_LOL_DATA_TASK}")
         logger.info("Setting $cacheWowHcDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_WOW_HC_DATA_TASK}")
+        logger.info("Setting $cacheWowForeverDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_WOW_FOREVER_DATA_TASK}")
         logger.info("Setting $tokenCleanupInitDelay minutes of delay before launching ${TaskType.TOKEN_CLEANUP_TASK}")
         logger.info("Setting $tasksCleanupInitDelay minutes of delay before launching ${TaskType.TASK_CLEANUP_TASK}")
         logger.info("Setting $updateLolEntitiesInitDelay minutes of delay before launching ${TaskType.UPDATE_LOL_ENTITIES_TASK}")
@@ -94,6 +97,17 @@ data class TasksLauncher(
                 TaskType.CACHE_WOW_HC_DATA_TASK
             ),
             cacheWowHcDataTaskInitDelay, twoHoursDelay.toLong(), TimeUnit.MINUTES
+        )
+
+        executorService.scheduleAtFixedRate(
+            CacheGameDataRunnable(
+                tasksService,
+                dataCacheService,
+                coroutineScope,
+                Game.WOW_FOREVER,
+                TaskType.CACHE_WOW_FOREVER_DATA_TASK
+            ),
+            cacheWowForeverDataTaskInitDelay, twoHoursDelay.toLong(), TimeUnit.MINUTES
         )
 
         executorService.scheduleAtFixedRate(

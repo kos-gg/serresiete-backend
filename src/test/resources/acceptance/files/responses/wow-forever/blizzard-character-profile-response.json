@@ -1,0 +1,65 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde?namespace=profile-forever-eu"
+    }
+  },
+  "id": 6880137,
+  "name": "Siempre",
+  "gender": {
+    "type": "FEMALE",
+    "name": "Female"
+  },
+  "faction": {
+    "type": "HORDE",
+    "name": "Horde"
+  },
+  "race": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-1.60.1_70399-forever-eu"
+    },
+    "name": "Orc",
+    "id": 2
+  },
+  "character_class": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/playable-class/1?namespace=static-1.60.1_70399-forever-eu"
+    },
+    "name": "Warrior",
+    "id": 1
+  },
+  "guild": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/guild/tsalab?namespace=profile-forever-eu"
+    },
+    "name": "TSALAB",
+    "id": 104078,
+    "faction": {
+      "type": "HORDE",
+      "name": "Horde"
+    },
+    "slug": "tsalab"
+  },
+  "level": 14,
+  "experience": 11355,
+  "achievement_points": 0,
+  "achievements": {
+    "href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde/achievements?namespace=profile-forever-eu"
+  },
+  "media": {
+    "href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde/character-media?namespace=profile-forever-eu"
+  },
+  "last_login_timestamp": 1793926086000,
+  "average_item_level": 8,
+  "equipped_item_level": 8,
+  "is_remix": false,
+  "surname": "Tarde",
+  "ruleset": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/ruleset/1?namespace=dynamic-forever-eu"
+    },
+    "name": "PvP",
+    "id": 1
+  },
+  "name_search": "Siempre Tarde"
+}

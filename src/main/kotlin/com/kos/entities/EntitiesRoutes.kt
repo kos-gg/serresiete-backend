@@ -93,6 +93,14 @@ fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<E
                 else Pair(WowEntityRequest(name, region, realm), Game.WOW)
             }
 
+            Game.WOW_FOREVER.toString() -> {
+                val region = parameters["region"]
+                val surname = parameters["surname"]
+                if (name == null || surname == null || region == null)
+                    raise(BadRequest("Incorrect search parameters for wow forever entity: name: $name, surname: $surname, region: $region"))
+                else Pair(WowForeverEntityRequest(name, surname, region), Game.WOW_FOREVER)
+            }
+
             Game.LOL.toString() -> {
                 val tag = parameters["tag"]
                 if (name == null || tag == null)

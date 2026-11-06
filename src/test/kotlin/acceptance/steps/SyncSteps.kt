@@ -4,6 +4,7 @@ import acceptance.MockConfig
 import acceptance.SharedInfrastructure
 import acceptance.toGame
 import acceptance.wowEntityRequest
+import acceptance.wowForeverEntityRequest
 import com.kos.datacache.domain.WowHardcoreData
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.EntityRequest
@@ -62,6 +63,11 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         runBlocking { SharedInfrastructure.subscriptions.syncWowHc.processPendingEvents() }
     }
 
+    @When("the WOW_FOREVER sync subscription processes pending events")
+    fun syncWowForeverProcessesPendingEvents() {
+        runBlocking { SharedInfrastructure.subscriptions.syncWowForever.processPendingEvents() }
+    }
+
     @When("the LOL sync subscription processes pending events")
     fun syncLolProcessesPendingEvents() {
         runBlocking { SharedInfrastructure.subscriptions.syncLol.processPendingEvents() }
@@ -81,6 +87,11 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
     @And("the Blizzard profile API returns 404")
     fun blizzardProfileReturns404() {
         MockConfig.blizzardProfileStatusOverride = HttpStatusCode.NotFound
+    }
+
+    @And("the Blizzard profile API returns an error")
+    fun blizzardProfileReturnsError() {
+        MockConfig.blizzardProfileStatusOverride = HttpStatusCode.InternalServerError
     }
 
     @Then("the WOW_HC data cache for {string} {string} {string} has not been updated")
@@ -151,6 +162,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         val resolvedGame = game.toGame()
         val request: EntityRequest = when (resolvedGame) {
             Game.WOW, Game.WOW_HC -> wowEntityRequest(name, realmOrTag, region)
+            Game.WOW_FOREVER -> wowForeverEntityRequest(name, realmOrTag, region)
             else -> throw IllegalArgumentException("Unknown game $resolvedGame")
         }
         return Pair(resolvedGame, request)

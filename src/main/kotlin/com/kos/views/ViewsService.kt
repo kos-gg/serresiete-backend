@@ -210,7 +210,7 @@ class ViewsService(
                     if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanOneEntity }
                 }
 
-                Game.LOL -> Unit
+                Game.LOL, Game.WOW_FOREVER -> Unit
             }
         }
     }

@@ -40,6 +40,12 @@ Feature: Tasks
     Then the task completes with status "SUCCESSFUL"
     And the data cache contains a "WOW_HC" entry for "Sanxei" "Silvermoon" "eu"
 
+  Scenario: CACHE_WOW_FOREVER_DATA_TASK caches WOW Forever entity data
+    And a WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu" exists in the database
+    When they run the "cacheWowForeverDataTask" task
+    Then the task completes with status "SUCCESSFUL"
+    And the data cache contains a "WOW_FOREVER" entry for "Sanxei" "Tarde" "eu"
+
   Scenario: UPDATE_LOL_ENTITIES_TASK updates LOL entity names
     And a LOL entity "GTP ZeroMVPs" with tag "EUW" exists in the database
     When they run the "updateLolEntitiesTask" task

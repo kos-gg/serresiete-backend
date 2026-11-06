@@ -20,6 +20,9 @@ object EntitiesTestHelper {
     val basicWowEntity = basicWowRequest.toEntity(1)
     val basicWowHardcoreEntity = basicWowEntity.copy(blizzardId = 12345)
     val basicWowEntity2 = basicWowRequest2.toEntity(2)
+    val basicWowForeverRequest = WowForeverEntityRequest("sanxei", "tarde", "eu")
+    val basicWowForeverRequestWithBlizzardId = basicWowForeverRequest.copy(blizzardId = 6880137)
+    val basicWowForeverEntity = basicWowForeverRequestWithBlizzardId.toEntity(1)
     val basicLolSummoner = LolSummoner("1", 2, 29)
     val basicRiotAccount = RiotAccount(
         "Marcnute",

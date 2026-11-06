@@ -14,10 +14,11 @@ Feature: Views
     And the resolved entities for the "<game>" view are persisted in the database
 
     Examples:
-      | game   |
-      | LOL    |
-      | WOW    |
-      | WOW_HC |
+      | game        |
+      | LOL         |
+      | WOW         |
+      | WOW_HC      |
+      | WOW_FOREVER |
 
   Scenario: Creating a second view for an already-tracked guild reuses its members
     Given a current WOW season exists in the database

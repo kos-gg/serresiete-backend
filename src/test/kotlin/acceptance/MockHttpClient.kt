@@ -85,6 +85,26 @@ val mockHttpClient = HttpClient(MockEngine) {
                 path.contains("/mythic-keystone-profile/") ->
                     respond("""{"mythic_rating":{"rating":1500.0}}""", HttpStatusCode.OK, json)
 
+                path.contains("/profile/wow/character/") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true -> {
+                    val status = MockConfig.blizzardProfileStatusOverride ?: HttpStatusCode.OK
+                    val characterSlug = path.substringAfterLast("/")
+                    when {
+                        status != HttpStatusCode.OK -> respond("", status, json)
+                        characterSlug.startsWith("nonexistententity-") ->
+                            respond("", HttpStatusCode.NotFound, json)
+
+                        characterSlug.startsWith("uncheckedentity-") ->
+                            respond("", HttpStatusCode.InternalServerError, json)
+
+                        else -> respond(
+                            readResource("acceptance/files/responses/wow-forever/blizzard-character-profile-response.json"),
+                            HttpStatusCode.OK,
+                            json
+                        )
+                    }
+                }
+
                 path.contains("/profile/wow/character/") -> {
                     val status = MockConfig.blizzardProfileStatusOverride ?: HttpStatusCode.OK
                     val characterName = path.substringAfterLast("/")

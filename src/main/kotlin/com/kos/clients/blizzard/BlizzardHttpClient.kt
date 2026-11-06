@@ -15,6 +15,7 @@ import com.kos.datacache.domain.WowSpecialization
 import com.kos.datacache.domain.WowStats
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.WowCharacter
+import com.kos.entities.domain.WowForeverCharacter
 import com.kos.entities.domain.WowRealm
 import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.sources.wowhc.WowEquippedItemRef
@@ -63,6 +64,34 @@ class BlizzardHttpClient(
                 header(BATTLENET_NAMESPACE, "profile-$region")
             }
         }.map { it.toWowCharacter() }
+    }
+
+    override suspend fun getForeverProfile(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowForeverCharacter> {
+        logger.debug("getForeverProfile for $region $name $surname")
+        return fetchFromApi<GetWowForeverCharacterResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowForeverCharacter() }
+    }
+
+    override suspend fun getForeverCharacterMedia(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, String?> {
+        logger.debug("getForeverCharacterMedia for $region $name $surname")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(
+                url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/character-media?locale=en_US")
+            ) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.asset("avatar") }
     }
 
     override suspend fun getCharacterMedia(
@@ -209,6 +238,10 @@ class BlizzardHttpClient(
     }
 
     private fun url(region: String, path: String) = (baseURI(region).toString() + URI(path).toString()).lowercase()
+
+    private fun foreverCharacterSlug(name: String, surname: String) = "${encodedName(name)}-${encodedName(surname)}"
+
+    private fun foreverProfileNamespace(region: String) = "profile-forever-$region"
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 

@@ -52,7 +52,8 @@ class CacheGameViewDataTaskRunnerTest {
             wowGuildResolver = mock(),
             wowHardcoreResolver = mock(),
             wowHardcoreGuildResolver = mock(),
-            lolResolver = LolEntityResolver(entitiesRepo, riotClient)
+            lolResolver = LolEntityResolver(entitiesRepo, riotClient),
+            wowForeverResolver = mock()
         ),
         mock(),
         mock(),
@@ -68,7 +69,8 @@ class CacheGameViewDataTaskRunnerTest {
             blizzardClient,
             wowItemsDatabaseRepository
         ),
-        lolSynchronizer = LolEntitySynchronizer(dataCacheRepo, riotClient)
+        lolSynchronizer = LolEntitySynchronizer(dataCacheRepo, riotClient),
+        wowForeverSynchronizer = mock()
     )
     private val viewsService = ViewsService(
         viewsRepo,

@@ -146,6 +146,34 @@ data class GetWowCharacterResponse(
 )
 
 @Serializable
+data class GetWowForeverCharacterResponse(
+    val id: Long,
+    val name: String,
+    val surname: String,
+    val level: Int,
+    @SerialName("average_item_level")
+    val averageItemLevel: Int,
+    @SerialName("equipped_item_level")
+    val equippedItemLevel: Int,
+    @Serializable(with = NameExtractorSerializer::class)
+    @SerialName("character_class")
+    val characterClass: String,
+    @Serializable(with = NameExtractorSerializer::class)
+    val faction: String,
+    @Serializable(with = NameExtractorSerializer::class)
+    val race: String,
+    @Serializable(with = NameExtractorSerializer::class)
+    val gender: String,
+    @Serializable(with = NameExtractorSerializer::class)
+    val guild: String? = null,
+    val experience: Int,
+    @Serializable(with = NameExtractorSerializer::class)
+    val ruleset: String,
+    @SerialName("last_login_timestamp")
+    val lastLogin: Long
+)
+
+@Serializable
 data class GetWowCharacterStatsResponse(
     val health: Int,
     val power: Int,

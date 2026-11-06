@@ -1,5 +1,6 @@
 package com.kos.eventsourcing.subscriptions.sync
 
+import org.mockito.Mockito.mock
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
 import com.kos.entities.EntitiesService
@@ -85,7 +86,8 @@ class EntitiesSyncProcessorTest {
                 wowGuildResolver = wowGuildResolver,
                 wowHardcoreResolver = wowHardcoreResolver,
                 wowHardcoreGuildResolver = wowHardcoreGuildResolver,
-                lolResolver = lolResolver
+                lolResolver = lolResolver,
+                wowForeverResolver = mock()
             )
 
 

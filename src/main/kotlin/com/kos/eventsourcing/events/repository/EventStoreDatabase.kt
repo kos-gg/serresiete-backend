@@ -4,6 +4,7 @@ import com.kos.common._fold
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.eventsourcing.events.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.encodeToString
@@ -40,6 +41,7 @@ class EventStoreDatabase(private val db: Database) : EventStore {
             //TODO: This is repeated code. We could do it better
             polymorphic(EntityRequest::class) {
                 subclass(WowEntityRequest::class, WowEntityRequest.serializer())
+                subclass(WowForeverEntityRequest::class, WowForeverEntityRequest.serializer())
                 subclass(LolEntityRequest::class, LolEntityRequest.serializer())
             }
         }

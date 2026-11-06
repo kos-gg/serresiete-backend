@@ -4,7 +4,9 @@ import acceptance.*
 import com.kos.datacache.DataCache
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.LolEnrichedEntityRequest
+import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.eventsourcing.events.RequestToBeSynced
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
@@ -75,6 +77,32 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         }
     }
 
+    @Given("a WOW_FOREVER entity {string} with surname {string} region {string} exists in the database")
+    fun wowForeverEntityExists(name: String, surname: String, region: String) {
+        insertWowForeverEntity(name, surname, region)
+    }
+
+    @Given("a WOW_FOREVER entity {string} with surname {string} region {string} exists with cached data {string}")
+    fun wowForeverEntityExistsWithCachedData(name: String, surname: String, region: String, jsonFile: String) {
+        val entity = insertWowForeverEntity(name, surname, region)
+        val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
+            .bufferedReader()
+            .readText()
+
+        runBlocking {
+            DataCacheDatabaseRepository(db)
+                .insert(listOf(DataCache(entity.id, data, OffsetDateTime.now(), Game.WOW_FOREVER)))
+        }
+    }
+
+    private fun insertWowForeverEntity(name: String, surname: String, region: String): Entity =
+        runBlocking {
+            EntitiesDatabaseRepository(db).insert(
+                listOf(WowForeverEntityRequest(name, surname, region, blizzardId = 1)),
+                Game.WOW_FOREVER
+            )
+        }.first()
+
     @Given("a {string} entity already exists in the database")
     fun anEntityAlreadyExistsInTheDatabase(game: String) {
         val resolvedGame = game.toGame()
@@ -85,6 +113,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
             )
 
             Game.LOL -> lolEntityExists(row.getValue("name"), row.getValue("tag"))
+            Game.WOW_FOREVER -> wowForeverEntityExists(row.getValue("name"), row.getValue("surname"), row.getValue("region"))
         }
     }
 
@@ -137,6 +166,19 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
                 parameter("game", game.lowercase())
                 parameter("name", name)
                 parameter("realm", realm)
+                parameter("region", region)
+            }
+        }
+    }
+
+    @When("they search for a WOW_FOREVER entity {string} with surname {string} region {string}")
+    fun searchWowForeverEntity(name: String, surname: String, region: String) {
+        scenarioVariables.response = runBlocking {
+            client.get("/api/entities") {
+                scenarioVariables.token?.let { bearerAuth(it) }
+                parameter("game", Game.WOW_FOREVER.toString())
+                parameter("name", name)
+                parameter("surname", surname)
                 parameter("region", region)
             }
         }
@@ -223,6 +265,18 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         assertNotNull(data["mythicPlusRanks"])
     }
 
+    @And("the response data is a valid WOW_FOREVER entity")
+    fun responseDataIsValidWowForeverEntity() {
+        val body = runBlocking { scenarioVariables.response.bodyAsText() }
+        val dataElement = Json.parseToJsonElement(body).jsonObject["data"]
+        assertNotNull(dataElement?.takeIf { it.toString() != "null" }, "Expected response data to be present")
+        val data = dataElement!!.jsonObject
+        assertEquals("wow_forever", data["type"]!!.jsonPrimitive.content)
+        assertNotNull(data["name"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
+        assertNotNull(data["surname"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
+        assertNotNull(data["level"])
+    }
+
     @And("the response data is a valid LOL entity")
     fun responseDataIsValidLolEntity() {
         val body = runBlocking { scenarioVariables.response.bodyAsText() }
@@ -247,6 +301,22 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val body = runBlocking { scenarioVariables.response.bodyAsText() }
         val operation = Json.parseToJsonElement(body).jsonObject["operation"]
         assertNull(operation?.takeIf { it.toString() != "null" })
+    }
+
+    @And("a sync event exists for WOW_FOREVER entity {string} with surname {string} region {string}")
+    fun syncEventExistsForWowForeverEntity(name: String, surname: String, region: String) {
+        runBlocking {
+            val events = EventStoreDatabase(db).state()
+            assertTrue(
+                events.any { eventWithVersion ->
+                    val data = eventWithVersion.event.eventData
+                    data is RequestToBeSynced &&
+                            data.game == Game.WOW_FOREVER &&
+                            data.request == WowForeverEntityRequest(name, surname, region)
+                },
+                "Expected a sync event for WOW_FOREVER entity $name $surname on $region but none found"
+            )
+        }
     }
 
     @And("a sync event exists for {string} entity {string} on realm {string} region {string}")

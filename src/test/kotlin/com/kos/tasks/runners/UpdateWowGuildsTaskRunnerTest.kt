@@ -44,7 +44,7 @@ class UpdateWowGuildsTaskRunnerTest {
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
-        EntityResolverProvider(wowResolver = wowResolver, wowGuildResolver = wowGuildResolver, wowHardcoreResolver = mock(), wowHardcoreGuildResolver = mock(), lolResolver = mock()),
+        EntityResolverProvider(wowResolver = wowResolver, wowGuildResolver = wowGuildResolver, wowHardcoreResolver = mock(), wowHardcoreGuildResolver = mock(), lolResolver = mock(), wowForeverResolver = mock()),
         wowGuildResolver,
         mock(),
         mock(),
