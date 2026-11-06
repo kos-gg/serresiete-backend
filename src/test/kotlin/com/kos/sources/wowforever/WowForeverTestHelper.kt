@@ -40,7 +40,6 @@ object WowForeverTestHelper {
         guild = "TSALAB",
         experience = 11355,
         ruleset = "PvP",
-        avatar = "avatar.jpg",
         lastLogin = lastLogin
     )
 }

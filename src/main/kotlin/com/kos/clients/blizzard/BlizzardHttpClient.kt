@@ -79,21 +79,6 @@ class BlizzardHttpClient(
         }.map { it.toWowForeverCharacter() }
     }
 
-    override suspend fun getForeverCharacterMedia(
-        region: String,
-        name: String,
-        surname: String
-    ): Either<ClientError, String?> {
-        logger.debug("getForeverCharacterMedia for $region $name $surname")
-        return fetchFromApi<GetWowMediaResponse> {
-            client.get(
-                url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/character-media?locale=en_US")
-            ) {
-                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
-            }
-        }.map { it.asset("avatar") }
-    }
-
     override suspend fun getCharacterMedia(
         region: String,
         realm: String,

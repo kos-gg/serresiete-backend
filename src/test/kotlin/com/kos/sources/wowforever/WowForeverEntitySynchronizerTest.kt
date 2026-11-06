@@ -18,17 +18,8 @@ import kotlin.test.assertEquals
 class WowForeverEntitySynchronizerTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
 
-    private suspend fun givenMedia() =
-        `when`(
-            blizzardClient.getForeverCharacterMedia(
-                basicWowForeverEntity.region,
-                basicWowForeverEntity.name,
-                basicWowForeverEntity.surname
-            )
-        ).thenReturn(Either.Right("avatar.jpg"))
-
     @Test
-    fun `caches the profile and avatar of a wow forever character`() {
+    fun `caches the profile of a wow forever character`() {
         runBlocking {
             `when`(
                 blizzardClient.getForeverProfile(
@@ -37,7 +28,6 @@ class WowForeverEntitySynchronizerTest {
                     basicWowForeverEntity.surname
                 )
             ).thenReturn(Either.Right(foreverCharacter))
-            givenMedia()
 
             val dataCacheRepository = DataCacheInMemoryRepository()
             val synchronizer = WowForeverEntitySynchronizer(dataCacheRepository, blizzardClient)

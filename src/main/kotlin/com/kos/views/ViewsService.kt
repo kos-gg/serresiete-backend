@@ -66,7 +66,7 @@ class ViewsService(
 
     suspend fun create(owner: String, request: ViewRequest): Either<CreateViewError, Operation> {
         return either {
-            ensureMaxNumberOfViews(owner).bind()
+            ensureMaxNumberOfViews(owner, request.game).bind()
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
             ensureValidRegions(request.entities).bind()
@@ -176,11 +176,11 @@ class ViewsService(
             credentialsService.getUserRoles(owner).maxOfOrNull { it.maxNumberOfEntities }) { UserWithoutRoles }
     }
 
-    private suspend fun ensureMaxNumberOfViews(owner: String): Either<CreateViewError, Unit> {
+    private suspend fun ensureMaxNumberOfViews(owner: String, game: Game): Either<CreateViewError, Unit> {
         return either {
             val ownerMaxViews = getMaxNumberOfViewsByRole(owner).bind()
             val ownViewsCount =
-                viewsRepository.getOwnViews(owner, GetViewsQuery(null, false, null, null, false)).second.size
+                viewsRepository.getOwnViews(owner, GetViewsQuery(game, false, null, null, false)).second.size
             ensure(ownViewsCount < ownerMaxViews) { TooMuchViews }
         }
     }

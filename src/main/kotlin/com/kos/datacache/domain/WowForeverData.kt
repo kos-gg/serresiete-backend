@@ -22,7 +22,6 @@ data class WowForeverData(
     val guild: String?,
     val experience: Int,
     val ruleset: String,
-    val avatar: String?,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val lastLogin: OffsetDateTime
 ) : Data

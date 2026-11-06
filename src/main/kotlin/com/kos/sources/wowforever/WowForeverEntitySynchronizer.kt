@@ -70,17 +70,16 @@ class WowForeverEntitySynchronizer(
 
     private suspend fun synchronizeEntity(entity: WowForeverEntity): Either<ClientError, DataCache> = either {
         val character = blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname).bind()
-        val avatar = blizzardClient.getForeverCharacterMedia(entity.region, entity.name, entity.surname).bind()
 
         DataCache(
             entity.id,
-            json.encodeToString<Data>(character.toWowForeverData(entity.region, avatar)),
+            json.encodeToString<Data>(character.toWowForeverData(entity.region)),
             OffsetDateTime.now(),
             Game.WOW_FOREVER
         )
     }
 
-    private fun WowForeverCharacter.toWowForeverData(region: String, avatar: String?) = WowForeverData(
+    private fun WowForeverCharacter.toWowForeverData(region: String) = WowForeverData(
         id = id,
         name = name,
         surname = surname,
@@ -95,7 +94,6 @@ class WowForeverEntitySynchronizer(
         guild = guild,
         experience = experience,
         ruleset = ruleset,
-        avatar = avatar,
         lastLogin = lastLogin
     )
 }

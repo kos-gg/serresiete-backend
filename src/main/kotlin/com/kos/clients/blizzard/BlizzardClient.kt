@@ -30,12 +30,6 @@ interface BlizzardClient {
         surname: String
     ): Either<ClientError, WowForeverCharacter>
 
-    suspend fun getForeverCharacterMedia(
-        region: String,
-        name: String,
-        surname: String
-    ): Either<ClientError, String?>
-
     suspend fun getCharacterMedia(
         region: String,
         realm: String,

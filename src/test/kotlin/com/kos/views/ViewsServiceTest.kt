@@ -339,10 +339,33 @@ class ViewsServiceTest {
         }
 
         @Test
-        fun `trying to exceed the maximum number of views allowed does not store an event`() {
+        fun `trying to exceed the maximum number of views allowed for a game does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
-                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView), listOf()),
+                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView.copy(id = "2")), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(name, published, listOf(), Game.LOL, false)
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertTrue(it is TooMuchViews)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `reaching the maximum number of views for one game still allows creating a view of another game`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(basicSimpleLolView, basicSimpleLolView.copy(id = "2")), listOf()),
                     emptyEntitiesState,
                     listOf(),
                     defaultCredentialsState
@@ -352,12 +375,12 @@ class ViewsServiceTest {
                     owner,
                     ViewRequest(name, published, listOf(), Game.WOW, false)
                 ).onRight {
-                    fail()
+                    assertOperation(it, EventType.VIEW_TO_BE_CREATED)
                 }.onLeft {
-                    assertTrue(it is TooMuchViews)
+                    fail(it.toStr())
                 }
 
-                assertNoEventsStored(eventStore)
+                assertEventStoredCorrectly(eventStore, aggregateRoot, name, published, listOf(), Game.WOW, false)
             }
         }
 

@@ -268,13 +268,6 @@ class BlizzardHttpClientTest {
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverProfile("eu", "unknown", "tarde"))
     }
 
-    @Test
-    fun `getForeverCharacterMedia returns the avatar from the forever namespace`() = runBlocking {
-        givenAValidToken()
-
-        assertEquals(Either.Right("1"), blizzardClient.getForeverCharacterMedia("eu", "Siempre", "Tarde"))
-    }
-
     private suspend fun givenAValidToken() {
         `when`(blizzardAuthClient.getAccessToken())
             .thenReturn(BlizzardMockHelper.getToken())
