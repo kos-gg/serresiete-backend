@@ -1,7 +1,10 @@
 package com.kos.sources.wowforever
 
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowPrice
 import com.kos.entities.domain.WowForeverCharacter
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -42,4 +45,28 @@ object WowForeverTestHelper {
         ruleset = "PvP",
         lastLogin = lastLogin
     )
+
+    private fun equippedItem(id: Long, slot: String, name: String) = WowForeverEquippedItem(
+        WowEquippedItemRef(id, slot, listOf()),
+        WowItemDetails(
+            id = id,
+            quality = "Uncommon",
+            name = name,
+            level = 18,
+            binding = "Binds when equipped",
+            requiredLevel = 13,
+            itemSubclass = "Mail",
+            armor = "100 Armor",
+            stats = listOf("+2 Strength"),
+            spells = listOf(),
+            sellPrice = WowPrice("Sell Price:", "0", "2", "95"),
+            durability = null,
+            weaponStats = null
+        )
+    )
+
+    val boots = equippedItem(6350, "Feet", "Rough Bronze Boots")
+    val belt = equippedItem(2857, "Waist", "Runed Copper Belt")
+
+    const val bootsIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/boots.jpg"
 }

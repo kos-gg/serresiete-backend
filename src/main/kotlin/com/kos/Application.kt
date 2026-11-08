@@ -61,6 +61,7 @@ import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowforever.WowForeverEntityResolver
 import com.kos.sources.wowforever.WowForeverEntitySynchronizer
+import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
@@ -186,6 +187,7 @@ fun Application.module() {
     val wowForeverEntitySynchronizer = WowForeverEntitySynchronizer(
         dataCacheRepository,
         blizzardClient,
+        WowForeverMediaDatabaseRepository(db),
         System.getenv("WOW_FOREVER_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )
 

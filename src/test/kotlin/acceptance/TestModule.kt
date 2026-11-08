@@ -58,6 +58,7 @@ import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepo
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowforever.WowForeverEntityResolver
 import com.kos.sources.wowforever.WowForeverEntitySynchronizer
+import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -157,7 +158,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     )
     val wowEntitySynchronizer =
         WowEntitySynchronizer(dataCacheRepository, raiderIoHttpClient, blizzardClient, seasonRepository)
-    val wowForeverEntitySynchronizer = WowForeverEntitySynchronizer(dataCacheRepository, blizzardClient)
+    val wowForeverEntitySynchronizer = WowForeverEntitySynchronizer(dataCacheRepository, blizzardClient, WowForeverMediaDatabaseRepository(db))
     val entitySynchronizerProvider =
         EntitySynchronizerProvider(
             wowSynchronizer = wowEntitySynchronizer,
