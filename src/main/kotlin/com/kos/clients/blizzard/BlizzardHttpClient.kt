@@ -18,6 +18,7 @@ import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
 import com.kos.entities.domain.WowRealm
 import com.kos.sources.wow.MythicKeystoneProfile
+import com.kos.sources.wowforever.WowForeverEquippedItem
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import io.ktor.client.*
@@ -77,6 +78,28 @@ class BlizzardHttpClient(
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.toWowForeverCharacter() }
+    }
+
+    override suspend fun getForeverEquipment(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, List<WowForeverEquippedItem>> {
+        logger.debug("getForeverEquipment for $region $name $surname")
+        return fetchFromApi<GetWowForeverEquipmentResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/equipment?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowForeverEquippedItems() }
+    }
+
+    override suspend fun getForeverItemMedia(region: String, id: Long): Either<ClientError, String?> {
+        logger.debug("getForeverItemMedia for $id")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/data/wow/media/item/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverStaticNamespace(region))
+            }
+        }.map { it.asset("icon") }
     }
 
     override suspend fun getCharacterMedia(
@@ -227,6 +250,8 @@ class BlizzardHttpClient(
     private fun foreverCharacterSlug(name: String, surname: String) = "${encodedName(name)}-${encodedName(surname)}"
 
     private fun foreverProfileNamespace(region: String) = "profile-forever-$region"
+
+    private fun foreverStaticNamespace(region: String) = "static-forever-$region"
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 

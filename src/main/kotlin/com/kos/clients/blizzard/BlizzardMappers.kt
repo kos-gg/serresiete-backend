@@ -19,6 +19,7 @@ import com.kos.entities.domain.WowForeverCharacter
 import com.kos.entities.domain.findClassAndSpec
 import com.kos.sources.wow.KeystoneBestRun
 import com.kos.sources.wow.MythicKeystoneProfile
+import com.kos.sources.wowforever.WowForeverEquippedItem
 
 fun GetWowCharacterResponse.toWowCharacter() = WowCharacter(
     id = id,
@@ -60,6 +61,28 @@ fun GetWowMediaResponse.asset(key: String): String? = assets.find { it.key == ke
 
 fun GetWowEquipmentResponse.toEquippedItemRefs() =
     equippedItems.map { WowEquippedItemRef(it.item.id, it.slot.name, it.enchantments) }
+
+fun GetWowForeverEquipmentResponse.toWowForeverEquippedItems() =
+    equippedItems.map { equipped ->
+        WowForeverEquippedItem(
+            WowEquippedItemRef(equipped.item.id, equipped.slot.name, equipped.enchantments),
+            WowItemDetails(
+                equipped.item.id,
+                equipped.quality,
+                equipped.name,
+                equipped.level.value,
+                equipped.binding,
+                equipped.requirements?.level?.value ?: 0,
+                equipped.itemSubclass,
+                equipped.armor,
+                equipped.stats,
+                equipped.spells,
+                equipped.sellPrice?.let { WowPrice(it.header, it.gold, it.silver, it.copper) },
+                equipped.durability,
+                equipped.weapon?.let { WowWeaponDisplayableStats(it.damage, it.dps, it.attackSpeed) }
+            )
+        )
+    }
 
 fun GetWowSpecializationsResponse.toActiveSpecializations() =
     specializationGroups.firstOrNull { it.isActive }?.specializations?.map { specialization ->

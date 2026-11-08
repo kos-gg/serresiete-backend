@@ -10,6 +10,7 @@ import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
 import com.kos.sources.wow.MythicKeystoneProfile
+import com.kos.sources.wowforever.WowForeverEquippedItem
 
 interface BlizzardClient {
     suspend fun getClassicProfile(
@@ -29,6 +30,14 @@ interface BlizzardClient {
         name: String,
         surname: String
     ): Either<ClientError, WowForeverCharacter>
+
+    suspend fun getForeverEquipment(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, List<WowForeverEquippedItem>>
+
+    suspend fun getForeverItemMedia(region: String, id: Long): Either<ClientError, String?>
 
     suspend fun getCharacterMedia(
         region: String,

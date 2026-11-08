@@ -336,6 +336,47 @@ data class GetWowEquipmentResponse(
 )
 
 @Serializable
+data class WowItemLevelValue(val value: Int)
+
+@Serializable
+data class WowItemRequirements(val level: WowItemLevelValue? = null)
+
+@Serializable
+data class WowForeverEquippedItemResponse(
+    val item: WowItemId,
+    val slot: WowItemSlot,
+    @Serializable(with = DisplayStringListSerializer::class)
+    val enchantments: List<String> = listOf(),
+    @Serializable(with = NameExtractorSerializer::class)
+    val quality: String,
+    val name: String,
+    val level: WowItemLevelValue,
+    val requirements: WowItemRequirements? = null,
+    @SerialName("item_subclass")
+    @Serializable(with = NameExtractorSerializer::class)
+    val itemSubclass: String,
+    @Serializable(with = NameExtractorSerializer::class)
+    val binding: String? = null,
+    @Serializable(with = NestedDisplayableStringExtractorSerializer::class)
+    val armor: String? = null,
+    @Serializable(with = NestedDisplayableStringListSerializer::class)
+    val stats: List<String> = listOf(),
+    @Serializable(with = DescriptionListSerializer::class)
+    val spells: List<String> = listOf(),
+    @SerialName("sell_price")
+    val sellPrice: WowPriceResponse? = null,
+    @Serializable(with = DisplayableStringExtractorSerializer::class)
+    val durability: String? = null,
+    val weapon: WowWeaponStatsResponse? = null
+)
+
+@Serializable
+data class GetWowForeverEquipmentResponse(
+    @SerialName("equipped_items")
+    val equippedItems: List<WowForeverEquippedItemResponse>
+)
+
+@Serializable
 data class GetWowSpecializationsResponse(
     @SerialName("specialization_groups")
     val specializationGroups: List<SpecializationGroup>

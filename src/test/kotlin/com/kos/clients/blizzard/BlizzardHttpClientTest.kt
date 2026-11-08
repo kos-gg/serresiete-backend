@@ -12,6 +12,8 @@ import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.domain.ClassSpec
 import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.RunMember
+import com.kos.datacache.domain.WowPrice
+import com.kos.datacache.domain.WowWeaponDisplayableStats
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
@@ -20,6 +22,9 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import com.kos.sources.wow.KeystoneBestRun
 import com.kos.sources.wow.MythicKeystoneProfile
+import com.kos.sources.wowforever.WowForeverEquippedItem
+import com.kos.sources.wowhc.WowEquippedItemRef
+import com.kos.sources.wowhc.WowItemDetails
 import io.ktor.client.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
@@ -266,6 +271,102 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverProfile("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverEquipment maps every equipped item with its details from the forever namespace`() = runBlocking {
+        givenAValidToken()
+
+        val expected = listOf(
+            WowForeverEquippedItem(
+                WowEquippedItemRef(6125, "Shirt", listOf()),
+                WowItemDetails(
+                    id = 6125,
+                    quality = "Common",
+                    name = "Brawler's Harness",
+                    level = 1,
+                    binding = null,
+                    requiredLevel = 0,
+                    itemSubclass = "Miscellaneous",
+                    armor = null,
+                    stats = listOf(),
+                    spells = listOf(),
+                    sellPrice = WowPrice("Sell Price:", "0", "0", "1"),
+                    durability = null,
+                    weaponStats = null
+                )
+            ),
+            WowForeverEquippedItem(
+                WowEquippedItemRef(15487, "Chest", listOf()),
+                WowItemDetails(
+                    id = 15487,
+                    quality = "Uncommon",
+                    name = "War Torn Tunic of Stamina",
+                    level = 16,
+                    binding = "Binds when equipped",
+                    requiredLevel = 11,
+                    itemSubclass = "Mail",
+                    armor = "151 Armor",
+                    stats = listOf("+4 Stamina"),
+                    spells = listOf(),
+                    sellPrice = WowPrice("Sell Price:", "0", "4", "79"),
+                    durability = "Durability 50 / 75",
+                    weaponStats = null
+                )
+            ),
+            WowForeverEquippedItem(
+                WowEquippedItemRef(6350, "Feet", listOf("Enchanted: Stamina +1 and Armor +8")),
+                WowItemDetails(
+                    id = 6350,
+                    quality = "Uncommon",
+                    name = "Rough Bronze Boots",
+                    level = 18,
+                    binding = "Binds when equipped",
+                    requiredLevel = 13,
+                    itemSubclass = "Mail",
+                    armor = "111 Armor",
+                    stats = listOf("+2 Strength", "+3 Stamina"),
+                    spells = listOf(),
+                    sellPrice = WowPrice("Sell Price:", "0", "2", "95"),
+                    durability = "Durability 30 / 40",
+                    weaponStats = null
+                )
+            ),
+            WowForeverEquippedItem(
+                WowEquippedItemRef(15424, "Main Hand", listOf()),
+                WowItemDetails(
+                    id = 15424,
+                    quality = "Rare",
+                    name = "Axe of Orgrimmar",
+                    level = 18,
+                    binding = "Binds when picked up",
+                    requiredLevel = 0,
+                    itemSubclass = "Axe",
+                    armor = null,
+                    stats = listOf("+6 Stamina", "+6 Spirit"),
+                    spells = listOf(),
+                    sellPrice = WowPrice("Sell Price:", "0", "16", "14"),
+                    durability = "Durability 54 / 70",
+                    weaponStats = WowWeaponDisplayableStats("42 - 64 Damage", "(16.1 damage per second)", "Speed 3.30")
+                )
+            )
+        )
+
+        assertEquals(Either.Right(expected), blizzardClient.getForeverEquipment("eu", "Siempre", "Tarde"))
+    }
+
+    @Test
+    fun `getForeverEquipment returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverEquipment("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverItemMedia fetches the icon from the forever static namespace`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right("1.jpg"), blizzardClient.getForeverItemMedia("eu", 6125))
     }
 
     private suspend fun givenAValidToken() {
