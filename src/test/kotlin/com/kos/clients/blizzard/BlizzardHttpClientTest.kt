@@ -446,6 +446,23 @@ class BlizzardHttpClientTest {
     }
 
     @Test
+    fun `getForeverAvatar returns the sd avatar`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(
+            Either.Right("https://render.worldofwarcraft.com/forever-eu/character/137/6880137-avatar-sd.jpg"),
+            blizzardClient.getForeverAvatar("eu", "Siempre", "Tarde")
+        )
+    }
+
+    @Test
+    fun `getForeverAvatar returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverAvatar("eu", "unknown", "tarde"))
+    }
+
+    @Test
     fun `getForeverSpellMedia fetches the icon from the forever static namespace`() = runBlocking {
         givenAValidToken()
 

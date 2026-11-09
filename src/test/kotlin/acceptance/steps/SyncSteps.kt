@@ -99,9 +99,11 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         assertTrue(talents.all { it.icon != null }, "Expected every talent to have an icon: $talents")
     }
 
-    @And("the WOW_FOREVER data cache for {string} {string} {string} has statistics")
-    fun wowForeverCacheHasStatistics(name: String, surname: String, region: String) {
-        assertNotNull(newestWowForeverData(name, surname, region).stats, "Expected statistics in data cache of $name")
+    @And("the WOW_FOREVER data cache for {string} {string} {string} has statistics and avatar")
+    fun wowForeverCacheHasStatisticsAndAvatar(name: String, surname: String, region: String) {
+        val data = newestWowForeverData(name, surname, region)
+        assertNotNull(data.stats, "Expected statistics in data cache of $name")
+        assertNotNull(data.avatar, "Expected avatar in data cache of $name")
     }
 
     @And("the WOW_FOREVER media table stores the icons of {string} {string} {string}")

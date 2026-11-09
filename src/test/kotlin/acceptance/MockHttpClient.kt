@@ -27,6 +27,14 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
+                path.endsWith("/character-media") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
+                    respond(
+                        readResource("acceptance/files/responses/wow-forever/blizzard-character-media-response.json"),
+                        HttpStatusCode.OK,
+                        json
+                    )
+
                 path.contains("/character-media") ->
                     respond(
                         readResource("acceptance/files/responses/wow-hc/blizzard-character-media-response.json"),

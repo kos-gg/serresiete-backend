@@ -8,11 +8,7 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCache
-import com.kos.datacache.domain.Data
-import com.kos.datacache.domain.WowForeverData
-import com.kos.datacache.domain.WowForeverSpecialization
-import com.kos.datacache.domain.WowItem
-import com.kos.datacache.domain.WowStats
+import com.kos.datacache.domain.*
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.PartialFailure
 import com.kos.entities.ThirdPartyCallFailed
@@ -111,26 +107,25 @@ class WowForeverEntitySynchronizer(
         entity: WowForeverEntity,
         iconCache: DynamicCache<Either<ClientError, String?>>
     ): Either<ClientError, DataCache> = either {
-        val character = blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname).bind()
-        val equipment = blizzardClient.getForeverEquipment(entity.region, entity.name, entity.surname)
-            .onLeft { logger.warn("Couldn't fetch equipment of wow forever entity ${entity.id}: $it") }
-            .getOrNull()
-        val specializations = blizzardClient.getForeverSpecializations(entity.region, entity.name, entity.surname)
-            .onLeft { logger.warn("Couldn't fetch specializations of wow forever entity ${entity.id}: $it") }
-            .getOrNull()
-        val stats = blizzardClient.getForeverStatistics(entity.region, entity.name, entity.surname)
-            .onLeft { logger.warn("Couldn't fetch statistics of wow forever entity ${entity.id}: $it") }
-            .getOrNull()
+        val profile = blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname).bind()
 
-        val cachedData =
-            if (equipment == null || specializations == null || stats == null) getCachedData(entity.id) else null
-
-        val items = withItemIcons(entity.region, equipment?.map { it.toWowItem(null) } ?: cachedData?.items, iconCache)
-        val talents = withTalentIcons(entity.region, specializations ?: cachedData?.talents, iconCache)
+        val foreverData = profile.toWowForeverData(
+            entity.region,
+            items = getEquipment(entity)?.map { it.toWowItem(null) },
+            talents = getSpecializations(entity),
+            stats = getStats(entity),
+            avatar = getAvatar(entity)
+        )
+        val dataCache = if (foreverData.isComplete()) foreverData else foreverData.orElse(getCachedData(entity.id))
 
         DataCache(
             entity.id,
-            json.encodeToString<Data>(character.toWowForeverData(entity.region, items, talents, stats ?: cachedData?.stats)),
+            json.encodeToString<Data>(
+                dataCache.copy(
+                    items = withItemIcons(entity.region, dataCache.items, iconCache),
+                    talents = withTalentIcons(entity.region, dataCache.talents, iconCache)
+                )
+            ),
             OffsetDateTime.now(),
             Game.WOW_FOREVER
         )
@@ -225,7 +220,8 @@ class WowForeverEntitySynchronizer(
         region: String,
         items: List<WowItem>?,
         talents: List<WowForeverSpecialization>?,
-        stats: WowStats?
+        stats: WowStats?,
+        avatar: String?
     ) = WowForeverData(
         id = id,
         name = name,
@@ -244,6 +240,27 @@ class WowForeverEntitySynchronizer(
         lastLogin = lastLogin,
         items = items,
         talents = talents,
-        stats = stats
+        stats = stats,
+        avatar = avatar
     )
+
+    private suspend fun getEquipment(entity: WowForeverEntity): List<WowForeverEquippedItem>? =
+        blizzardClient.getForeverEquipment(entity.region, entity.name, entity.surname)
+            .onLeft { logger.warn("Couldn't fetch equipment of wow forever entity ${entity.id}: $it") }
+            .getOrNull()
+
+    private suspend fun getSpecializations(entity: WowForeverEntity): List<WowForeverSpecialization>? =
+        blizzardClient.getForeverSpecializations(entity.region, entity.name, entity.surname)
+            .onLeft { logger.warn("Couldn't fetch specializations of wow forever entity ${entity.id}: $it") }
+            .getOrNull()
+
+    private suspend fun getStats(entity: WowForeverEntity): WowStats? =
+        blizzardClient.getForeverStatistics(entity.region, entity.name, entity.surname)
+            .onLeft { logger.warn("Couldn't fetch statistics of wow forever entity ${entity.id}: $it") }
+            .getOrNull()
+
+    private suspend fun getAvatar(entity: WowForeverEntity): String? =
+        blizzardClient.getForeverAvatar(entity.region, entity.name, entity.surname)
+            .onLeft { logger.warn("Couldn't fetch avatar of wow forever entity ${entity.id}: $it") }
+            .getOrNull()
 }

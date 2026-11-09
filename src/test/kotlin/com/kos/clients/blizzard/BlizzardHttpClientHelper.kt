@@ -48,6 +48,12 @@ object BlizzardHttpClientHelper {
             .bufferedReader(Charsets.UTF_8)
             .use { it.readText() }
 
+    private val foreverCharacterMediaResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-character-media-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
     private val foreverStatisticsResponse: String =
         object {}.javaClass.classLoader
             .getResourceAsStream("unit/wow/blizzard-forever-statistics-response.json")!!
@@ -71,7 +77,7 @@ object BlizzardHttpClientHelper {
 
                     "/profile/wow/character/siempre-tarde/character-media" ->
                         if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
-                            respond(json.encodeToString(getWowCharacterMediaResponse), HttpStatusCode.OK)
+                            respond(foreverCharacterMediaResponse, HttpStatusCode.OK)
                         else respond(NOT_FOUND, HttpStatusCode.NotFound)
 
                     "/profile/wow/character/siempre-tarde/equipment" ->
@@ -102,7 +108,8 @@ object BlizzardHttpClientHelper {
                     "/profile/wow/character/unknown-tarde",
                     "/profile/wow/character/unknown-tarde/equipment",
                     "/profile/wow/character/unknown-tarde/specializations",
-                    "/profile/wow/character/unknown-tarde/statistics" ->
+                    "/profile/wow/character/unknown-tarde/statistics",
+                    "/profile/wow/character/unknown-tarde/character-media" ->
                         respond(NOT_FOUND, HttpStatusCode.NotFound)
 
                     "/profile/wow/character/realm/name" ->

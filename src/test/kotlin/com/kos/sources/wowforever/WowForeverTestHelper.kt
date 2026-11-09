@@ -34,6 +34,8 @@ object WowForeverTestHelper {
         lastLogin = lastLogin
     )
 
+    const val foreverAvatar = "https://render.worldofwarcraft.com/forever-eu/character/137/6880137-avatar-sd.jpg"
+
     val foreverStats = WowStats(
         health = 794,
         resource = WowResource("Rage", 100),
@@ -76,7 +78,8 @@ object WowForeverTestHelper {
         experience = 11355,
         ruleset = "PvP",
         lastLogin = lastLogin,
-        stats = foreverStats
+        stats = foreverStats,
+        avatar = foreverAvatar
     )
 
     private fun equippedItem(id: Long, slot: String, name: String) = WowForeverEquippedItem(

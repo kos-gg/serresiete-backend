@@ -17,6 +17,7 @@ import com.kos.sources.wowforever.WowForeverTestHelper.belt
 import com.kos.sources.wowforever.WowForeverTestHelper.boots
 import com.kos.sources.wowforever.WowForeverTestHelper.bootsIcon
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverCharacter
+import com.kos.sources.wowforever.WowForeverTestHelper.foreverAvatar
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverData
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverStats
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrike
@@ -51,6 +52,14 @@ class WowForeverEntitySynchronizerTest {
         givenEquipment(Either.Right(listOf()), entity)
         givenSpecializations(Either.Right(listOf()), entity)
         givenStatistics(Either.Right(foreverStats), entity)
+        givenAvatar(Either.Right(foreverAvatar), entity)
+    }
+
+    private suspend fun givenAvatar(
+        result: Either<TimeoutError, String?>,
+        entity: WowForeverEntity = basicWowForeverEntity
+    ) {
+        `when`(blizzardClient.getForeverAvatar(entity.region, entity.name, entity.surname)).thenReturn(result)
     }
 
     private suspend fun givenStatistics(
@@ -287,6 +296,21 @@ class WowForeverEntitySynchronizerTest {
 
             assertEquals(listOf(), errors)
             assertEquals(null, cachedData().stats)
+        }
+    }
+
+    @Test
+    fun `when the avatar could not be fetched the previous avatar is kept`() {
+        runBlocking {
+            val previousAvatar = "https://render.worldofwarcraft.com/forever-eu/character/137/previous-avatar-sd.jpg"
+            givenPreviousData(foreverData.copy(avatar = previousAvatar))
+            givenProfile()
+            givenAvatar(Either.Left(TimeoutError("timeout")))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(previousAvatar, cachedData().avatar)
         }
     }
 

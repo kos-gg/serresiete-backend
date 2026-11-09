@@ -49,7 +49,7 @@ Feature: Sync
     When the WOW_FOREVER sync subscription processes pending events
     Then the data cache contains a "WOW_FOREVER" entry for "Sanxei" "Tarde" "eu"
     And the WOW_FOREVER data cache for "Sanxei" "Tarde" "eu" has items and talents with icons
-    And the WOW_FOREVER data cache for "Sanxei" "Tarde" "eu" has statistics
+    And the WOW_FOREVER data cache for "Sanxei" "Tarde" "eu" has statistics and avatar
     And the WOW_FOREVER media table stores the icons of "Sanxei" "Tarde" "eu"
     And a completed event is saved for the operation
 
