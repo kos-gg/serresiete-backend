@@ -1,5 +1,30 @@
 # Changelog
 
+## [7.2.0] - 09-11-2026
+
+### Added
+
+- **WoW Forever cached data has equipment, talents, statistics and avatar**: new fields `items` (same shape as WOW_HC
+  items, with `icon`), `talents` (active specialization group: `[{ name, points, talents: [{ name, spellId, rank,
+  description, icon }] }]`), `stats` (same shape as WOW_HC stats) and `avatar` (Blizzard's `avatar-sd`).
+- Only the profile is required. If equipment, specializations, statistics or avatar fail, the character is still
+  cached, keeping that part from its previous cached data (or `null` if there is none).
+- Item and talent icons are stored in a new global table `wow_forever_media` and only requested from Blizzard
+  (`/data/wow/media/item|spell/{id}`, namespace `static-forever-{region}`) the first time an id is seen. Within a sync,
+  characters sharing an icon wait for a single request. An icon that can't be fetched stays `null` and is retried in
+  the next sync.
+
+### Changed
+
+- `stats.resistances.holy` is now optional and `stats.resistances.frost` was added: WOW_HC returns `holy` and no
+  `frost`, WoW Forever returns `frost` and no `holy`. The WOW_HC JSON is unchanged.
+
+### Deploy notes
+
+- Migration `V1794000000` creates `wow_forever_media`.
+- Each Forever character now makes 5 Blizzard calls per sync (profile, equipment, specializations, statistics,
+  avatar) plus icons not yet in the table.
+
 ## [7.1.0] - 06-11-2026
 
 ### Added
