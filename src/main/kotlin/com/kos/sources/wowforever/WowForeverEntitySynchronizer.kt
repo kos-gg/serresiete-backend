@@ -140,7 +140,7 @@ class WowForeverEntitySynchronizer(
             val icons = resolveIcons(
                 WowForeverMediaKind.ITEM,
                 region,
-                it.filter { item -> item.icon == null }.map { item -> item.id }.toSet(),
+                it.map { item -> item.id }.toSet(),
                 iconCache
             )
             it.map { item -> item.copy(icon = item.icon ?: icons[item.id]) }
@@ -156,7 +156,6 @@ class WowForeverEntitySynchronizer(
                 WowForeverMediaKind.SPELL,
                 region,
                 it.flatMap { specialization -> specialization.talents }
-                    .filter { talent -> talent.icon == null }
                     .map { talent -> talent.spellId }
                     .toSet(),
                 iconCache
