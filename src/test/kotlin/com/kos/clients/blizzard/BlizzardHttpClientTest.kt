@@ -15,6 +15,10 @@ import com.kos.datacache.domain.RunMember
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
+import com.kos.datacache.domain.WowResistances
+import com.kos.datacache.domain.WowResource
+import com.kos.datacache.domain.WowStats
+import com.kos.datacache.domain.WowWeaponStats
 import com.kos.datacache.domain.WowWeaponDisplayableStats
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.WowCharacter
@@ -399,6 +403,46 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverSpecializations("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverStatistics maps the statistics`() = runBlocking {
+        givenAValidToken()
+
+        val expected = WowStats(
+            health = 794,
+            resource = WowResource("Rage", 100),
+            strength = 91,
+            agility = 36,
+            intellect = 20,
+            stamina = 75,
+            meleeCrit = 4.5,
+            attackPower = 228,
+            mainHandStats = WowWeaponStats(97.85715, 122.85715, 3.0, 36.785717),
+            offHandStats = WowWeaponStats(16.785715, 16.785715, 2.0, 8.392858),
+            spellPower = 0.0,
+            spellPenetration = 0.0,
+            spellCrit = 0.0,
+            manaRegen = 0.0,
+            manaRegenCombat = 0.0,
+            armor = 835,
+            dodge = 4.5,
+            parry = 5.0,
+            block = 5.0,
+            rangedCrit = 1.9399998,
+            spirit = 30,
+            defense = 110,
+            resistances = WowResistances(fire = 0, shadow = 5, nature = 0, arcane = 0, frost = 0)
+        )
+
+        assertEquals(Either.Right(expected), blizzardClient.getForeverStatistics("eu", "Siempre", "Tarde"))
+    }
+
+    @Test
+    fun `getForeverStatistics returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverStatistics("eu", "unknown", "tarde"))
     }
 
     @Test

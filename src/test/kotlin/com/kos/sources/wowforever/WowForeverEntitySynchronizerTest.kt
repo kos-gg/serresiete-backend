@@ -7,6 +7,7 @@ import com.kos.datacache.DataCache
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.WowForeverData
 import com.kos.datacache.domain.WowForeverSpecialization
+import com.kos.datacache.domain.WowStats
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicWowForeverEntity
 import com.kos.entities.ThirdPartyCallFailed
@@ -17,6 +18,7 @@ import com.kos.sources.wowforever.WowForeverTestHelper.boots
 import com.kos.sources.wowforever.WowForeverTestHelper.bootsIcon
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverCharacter
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverData
+import com.kos.sources.wowforever.WowForeverTestHelper.foreverStats
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrike
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrikeIcon
 import com.kos.sources.wowforever.WowForeverTestHelper.rend
@@ -48,6 +50,14 @@ class WowForeverEntitySynchronizerTest {
             .thenReturn(Either.Right(foreverCharacter))
         givenEquipment(Either.Right(listOf()), entity)
         givenSpecializations(Either.Right(listOf()), entity)
+        givenStatistics(Either.Right(foreverStats), entity)
+    }
+
+    private suspend fun givenStatistics(
+        result: Either<TimeoutError, WowStats>,
+        entity: WowForeverEntity = basicWowForeverEntity
+    ) {
+        `when`(blizzardClient.getForeverStatistics(entity.region, entity.name, entity.surname)).thenReturn(result)
     }
 
     private suspend fun givenSpecializations(
@@ -249,6 +259,34 @@ class WowForeverEntitySynchronizerTest {
 
             assertEquals(listOf(), errors)
             assertEquals(null, cachedData().talents)
+        }
+    }
+
+    @Test
+    fun `when the statistics could not be fetched the previous statistics are kept`() {
+        runBlocking {
+            val previousStats = foreverStats.copy(health = 500)
+            givenPreviousData(foreverData.copy(stats = previousStats))
+            givenProfile()
+            givenStatistics(Either.Left(TimeoutError("timeout")))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(previousStats, cachedData().stats)
+        }
+    }
+
+    @Test
+    fun `when the statistics could not be fetched and there are no previous statistics, statistics are unknown`() {
+        runBlocking {
+            givenProfile()
+            givenStatistics(Either.Left(TimeoutError("timeout")))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(null, cachedData().stats)
         }
     }
 

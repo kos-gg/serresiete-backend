@@ -12,6 +12,7 @@ import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.WowForeverData
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowItem
+import com.kos.datacache.domain.WowStats
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.PartialFailure
 import com.kos.entities.ThirdPartyCallFailed
@@ -117,15 +118,19 @@ class WowForeverEntitySynchronizer(
         val specializations = blizzardClient.getForeverSpecializations(entity.region, entity.name, entity.surname)
             .onLeft { logger.warn("Couldn't fetch specializations of wow forever entity ${entity.id}: $it") }
             .getOrNull()
+        val stats = blizzardClient.getForeverStatistics(entity.region, entity.name, entity.surname)
+            .onLeft { logger.warn("Couldn't fetch statistics of wow forever entity ${entity.id}: $it") }
+            .getOrNull()
 
-        val cachedData = if (equipment == null || specializations == null) getCachedData(entity.id) else null
+        val cachedData =
+            if (equipment == null || specializations == null || stats == null) getCachedData(entity.id) else null
 
         val items = withItemIcons(entity.region, equipment?.map { it.toWowItem(null) } ?: cachedData?.items, iconCache)
         val talents = withTalentIcons(entity.region, specializations ?: cachedData?.talents, iconCache)
 
         DataCache(
             entity.id,
-            json.encodeToString<Data>(character.toWowForeverData(entity.region, items, talents)),
+            json.encodeToString<Data>(character.toWowForeverData(entity.region, items, talents, stats ?: cachedData?.stats)),
             OffsetDateTime.now(),
             Game.WOW_FOREVER
         )
@@ -219,7 +224,8 @@ class WowForeverEntitySynchronizer(
     private fun WowForeverCharacter.toWowForeverData(
         region: String,
         items: List<WowItem>?,
-        talents: List<WowForeverSpecialization>?
+        talents: List<WowForeverSpecialization>?,
+        stats: WowStats?
     ) = WowForeverData(
         id = id,
         name = name,
@@ -237,6 +243,7 @@ class WowForeverEntitySynchronizer(
         ruleset = ruleset,
         lastLogin = lastLogin,
         items = items,
-        talents = talents
+        talents = talents,
+        stats = stats
     )
 }

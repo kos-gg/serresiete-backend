@@ -133,7 +133,7 @@ fun GetWowCharacterStatsResponse.toWowStats() = WowStats(
     rangedCrit,
     spirit,
     defense,
-    WowResistances(fireResistance, holyResistance, shadowResistance, natureResistance, arcaneResistance)
+    WowResistances(fireResistance, holyResistance, shadowResistance, natureResistance, arcaneResistance, frostResistance)
 )
 
 fun GetWowItemResponse.toWowItemDetails() = WowItemDetails(

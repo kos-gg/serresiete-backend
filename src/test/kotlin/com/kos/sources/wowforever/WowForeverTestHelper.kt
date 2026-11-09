@@ -4,6 +4,10 @@ import com.kos.datacache.domain.WowForeverData
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
+import com.kos.datacache.domain.WowResistances
+import com.kos.datacache.domain.WowResource
+import com.kos.datacache.domain.WowStats
+import com.kos.datacache.domain.WowWeaponStats
 import com.kos.entities.domain.WowForeverCharacter
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
@@ -30,6 +34,32 @@ object WowForeverTestHelper {
         lastLogin = lastLogin
     )
 
+    val foreverStats = WowStats(
+        health = 794,
+        resource = WowResource("Rage", 100),
+        strength = 91,
+        agility = 36,
+        intellect = 20,
+        stamina = 75,
+        meleeCrit = 4.5,
+        attackPower = 228,
+        mainHandStats = WowWeaponStats(97.85715, 122.85715, 3.0, 36.785717),
+        offHandStats = WowWeaponStats(16.785715, 16.785715, 2.0, 8.392858),
+        spellPower = 0.0,
+        spellPenetration = 0.0,
+        spellCrit = 0.0,
+        manaRegen = 0.0,
+        manaRegenCombat = 0.0,
+        armor = 835,
+        dodge = 4.5,
+        parry = 5.0,
+        block = 5.0,
+        rangedCrit = 1.9399998,
+        spirit = 30,
+        defense = 110,
+        resistances = WowResistances(fire = 0, shadow = 5, nature = 0, arcane = 0, frost = 0)
+    )
+
     val foreverData = WowForeverData(
         id = 6880137,
         name = "Sanxei",
@@ -45,7 +75,8 @@ object WowForeverTestHelper {
         guild = "TSALAB",
         experience = 11355,
         ruleset = "PvP",
-        lastLogin = lastLogin
+        lastLogin = lastLogin,
+        stats = foreverStats
     )
 
     private fun equippedItem(id: Long, slot: String, name: String) = WowForeverEquippedItem(

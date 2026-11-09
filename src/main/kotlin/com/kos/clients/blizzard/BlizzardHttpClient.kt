@@ -127,6 +127,19 @@ class BlizzardHttpClient(
         }.map { it.asset("icon") }
     }
 
+    override suspend fun getForeverStatistics(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowStats> {
+        logger.debug("getForeverStatistics for $region $name $surname")
+        return fetchFromApi<GetWowCharacterStatsResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/statistics?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowStats() }
+    }
+
     override suspend fun getCharacterMedia(
         region: String,
         realm: String,

@@ -240,7 +240,7 @@ data class GetWowCharacterStatsResponse(
     val fireResistance: Int,
     @SerialName("holy_resistance")
     @Serializable(with = EffectiveExtractorSerializer::class)
-    val holyResistance: Int,
+    val holyResistance: Int? = null,
     @SerialName("shadow_resistance")
     @Serializable(with = EffectiveExtractorSerializer::class)
     val shadowResistance: Int,
@@ -249,7 +249,10 @@ data class GetWowCharacterStatsResponse(
     val natureResistance: Int,
     @Serializable(with = EffectiveExtractorSerializer::class)
     @SerialName("arcane_resistance")
-    val arcaneResistance: Int
+    val arcaneResistance: Int,
+    @Serializable(with = EffectiveExtractorSerializer::class)
+    @SerialName("frost_resistance")
+    val frostResistance: Int? = null
 )
 
 @Serializable

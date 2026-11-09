@@ -47,6 +47,12 @@ interface BlizzardClient {
 
     suspend fun getForeverSpellMedia(region: String, id: Long): Either<ClientError, String?>
 
+    suspend fun getForeverStatistics(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowStats>
+
     suspend fun getCharacterMedia(
         region: String,
         realm: String,

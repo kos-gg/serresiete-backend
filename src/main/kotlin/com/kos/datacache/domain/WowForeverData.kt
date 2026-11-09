@@ -41,5 +41,6 @@ data class WowForeverData(
     @Serializable(with = OffsetDateTimeSerializer::class)
     val lastLogin: OffsetDateTime,
     val items: List<WowItem>? = null,
-    val talents: List<WowForeverSpecialization>? = null
+    val talents: List<WowForeverSpecialization>? = null,
+    val stats: WowStats? = null
 ) : Data
