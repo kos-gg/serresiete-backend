@@ -1,0 +1,38 @@
+{
+  "_links": {"self": {"href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde/specializations?namespace=profile-forever-eu"}},
+  "character": {"name": "Siempre", "id": 6880137, "surname": "Tarde", "slug": "siempre-tarde"},
+  "specialization_groups": [
+    {
+      "is_active": true,
+      "specializations": [
+        {
+          "specialization": {"key": {"href": "https://eu.api.blizzard.com/data/wow/playable-specialization/26?namespace=static-1.60.1_70399-forever-eu"}, "name": "Arms", "id": 26},
+          "talents": [
+            {
+              "talent": {"name": "Improved Heroic Strike", "id": 135489},
+              "spell_tooltip": {
+                "spell": {"name": "Improved Heroic Strike", "id": 12282},
+                "description": "Reduces the cost of your Heroic Strike ability by 2 Rage.",
+                "cast_time": "Passive",
+                "power_cost": {}
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {"name": "Improved Rend", "id": 135487},
+              "spell_tooltip": {
+                "spell": {"name": "Improved Rend", "id": 12286},
+                "description": "Increases the Bleed damage done by your Rend ability by 35%.",
+                "cast_time": "Passive",
+                "power_cost": {}
+              },
+              "talent_rank": 3
+            }
+          ],
+          "specialization_name": "Arms",
+          "spent_points": 5
+        }
+      ]
+    }
+  ]
+}

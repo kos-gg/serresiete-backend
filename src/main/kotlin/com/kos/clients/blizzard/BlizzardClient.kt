@@ -39,6 +39,14 @@ interface BlizzardClient {
 
     suspend fun getForeverItemMedia(region: String, id: Long): Either<ClientError, String?>
 
+    suspend fun getForeverSpecializations(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, List<WowForeverSpecialization>>
+
+    suspend fun getForeverSpellMedia(region: String, id: Long): Either<ClientError, String?>
+
     suspend fun getCharacterMedia(
         region: String,
         realm: String,

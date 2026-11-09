@@ -6,6 +6,22 @@ import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 
 @Serializable
+data class WowForeverTalent(
+    val name: String,
+    val spellId: Long,
+    val rank: Int,
+    val description: String,
+    val icon: String?
+)
+
+@Serializable
+data class WowForeverSpecialization(
+    val name: String,
+    val points: Int,
+    val talents: List<WowForeverTalent>
+)
+
+@Serializable
 @SerialName("wow_forever")
 data class WowForeverData(
     val id: Long,

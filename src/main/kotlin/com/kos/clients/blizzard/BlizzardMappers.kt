@@ -84,6 +84,23 @@ fun GetWowForeverEquipmentResponse.toWowForeverEquippedItems() =
         )
     }
 
+fun GetWowForeverSpecializationsResponse.toActiveForeverSpecializations() =
+    specializationGroups.firstOrNull { it.isActive }?.specializations.orEmpty().map { specialization ->
+        WowForeverSpecialization(
+            specialization.specializationName,
+            specialization.spentPoints,
+            specialization.talents.map {
+                WowForeverTalent(
+                    name = it.talent,
+                    spellId = it.spellTooltip.spell.id,
+                    rank = it.talentRank,
+                    description = it.spellTooltip.description,
+                    icon = null
+                )
+            }
+        )
+    }
+
 fun GetWowSpecializationsResponse.toActiveSpecializations() =
     specializationGroups.firstOrNull { it.isActive }?.specializations?.map { specialization ->
         WowSpecialization(

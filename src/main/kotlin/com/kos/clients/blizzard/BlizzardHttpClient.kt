@@ -11,6 +11,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.S
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
+import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowSpecialization
 import com.kos.datacache.domain.WowStats
 import com.kos.entities.domain.GuildRoster
@@ -97,6 +98,30 @@ class BlizzardHttpClient(
         logger.debug("getForeverItemMedia for $id")
         return fetchFromApi<GetWowMediaResponse> {
             client.get(url(region, "/data/wow/media/item/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverStaticNamespace(region))
+            }
+        }.map { it.asset("icon") }
+    }
+
+    override suspend fun getForeverSpecializations(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, List<WowForeverSpecialization>> {
+        logger.debug("getForeverSpecializations for $region $name $surname")
+        return fetchFromApi<GetWowForeverSpecializationsResponse> {
+            client.get(
+                url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/specializations?locale=en_US")
+            ) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toActiveForeverSpecializations() }
+    }
+
+    override suspend fun getForeverSpellMedia(region: String, id: Long): Either<ClientError, String?> {
+        logger.debug("getForeverSpellMedia for $id")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/data/wow/media/spell/$id?locale=en_US")) {
                 header(BATTLENET_NAMESPACE, foreverStaticNamespace(region))
             }
         }.map { it.asset("icon") }

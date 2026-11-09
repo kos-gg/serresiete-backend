@@ -377,6 +377,47 @@ data class GetWowForeverEquipmentResponse(
 )
 
 @Serializable
+data class WowForeverSpellResponse(val id: Long)
+
+@Serializable
+data class WowForeverSpellTooltipResponse(
+    val spell: WowForeverSpellResponse,
+    val description: String
+)
+
+@Serializable
+data class WowForeverTalentResponse(
+    @Serializable(with = NameExtractorSerializer::class)
+    val talent: String,
+    @SerialName("spell_tooltip")
+    val spellTooltip: WowForeverSpellTooltipResponse,
+    @SerialName("talent_rank")
+    val talentRank: Int
+)
+
+@Serializable
+data class WowForeverSpecializationResponse(
+    @SerialName("specialization_name")
+    val specializationName: String,
+    @SerialName("spent_points")
+    val spentPoints: Int,
+    val talents: List<WowForeverTalentResponse> = listOf()
+)
+
+@Serializable
+data class WowForeverSpecializationGroupResponse(
+    @SerialName("is_active")
+    val isActive: Boolean,
+    val specializations: List<WowForeverSpecializationResponse> = listOf()
+)
+
+@Serializable
+data class GetWowForeverSpecializationsResponse(
+    @SerialName("specialization_groups")
+    val specializationGroups: List<WowForeverSpecializationGroupResponse>
+)
+
+@Serializable
 data class GetWowSpecializationsResponse(
     @SerialName("specialization_groups")
     val specializationGroups: List<SpecializationGroup>

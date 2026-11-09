@@ -12,6 +12,8 @@ import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.domain.ClassSpec
 import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.RunMember
+import com.kos.datacache.domain.WowForeverSpecialization
+import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
 import com.kos.datacache.domain.WowWeaponDisplayableStats
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
@@ -360,6 +362,50 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverEquipment("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverSpecializations maps the talents of the active specialization group`() = runBlocking {
+        givenAValidToken()
+
+        val expected = listOf(
+            WowForeverSpecialization(
+                name = "Arms",
+                points = 5,
+                talents = listOf(
+                    WowForeverTalent(
+                        name = "Improved Heroic Strike",
+                        spellId = 12282,
+                        rank = 2,
+                        description = "Reduces the cost of your Heroic Strike ability by 2 Rage.",
+                        icon = null
+                    ),
+                    WowForeverTalent(
+                        name = "Improved Rend",
+                        spellId = 12286,
+                        rank = 3,
+                        description = "Increases the Bleed damage done by your Rend ability by 35%.",
+                        icon = null
+                    )
+                )
+            )
+        )
+
+        assertEquals(Either.Right(expected), blizzardClient.getForeverSpecializations("eu", "Siempre", "Tarde"))
+    }
+
+    @Test
+    fun `getForeverSpecializations returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverSpecializations("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverSpellMedia fetches the icon from the forever static namespace`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Right("1.jpg"), blizzardClient.getForeverSpellMedia("eu", 12282))
     }
 
     @Test
