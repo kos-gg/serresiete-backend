@@ -1,0 +1,97 @@
+{
+  "_links": {"self": {"href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde/equipment?namespace=profile-forever-eu"}},
+  "character": {"name": "Siempre", "id": 6880137, "surname": "Tarde", "slug": "siempre-tarde"},
+  "equipped_items": [
+    {
+      "item": {"key": {"href": "https://eu.api.blizzard.com/data/wow/item/6125?namespace=static-1.60.1_70399-forever-eu"}, "id": 6125},
+      "slot": {"type": "SHIRT", "name": "Shirt"},
+      "quantity": 1,
+      "context": 75,
+      "quality": {"type": "COMMON", "name": "Common"},
+      "name": "Brawler's Harness",
+      "media": {"key": {"href": "https://eu.api.blizzard.com/data/wow/media/item/6125?namespace=static-1.60.1_70399-forever-eu"}, "id": 6125},
+      "item_class": {"name": "Armor", "id": 4},
+      "item_subclass": {"name": "Miscellaneous", "id": 0},
+      "inventory_type": {"type": "BODY", "name": "Shirt"},
+      "sell_price": {"value": 1, "display_strings": {"header": "Sell Price:", "gold": "0", "silver": "0", "copper": "1"}},
+      "level": {"value": 1, "display_string": "Item Level 1"},
+      "is_subclass_hidden": true
+    },
+    {
+      "item": {"key": {"href": "https://eu.api.blizzard.com/data/wow/item/15487?namespace=static-1.60.1_70399-forever-eu"}, "id": 15487},
+      "slot": {"type": "CHEST", "name": "Chest"},
+      "quantity": 1,
+      "context": 1,
+      "bonus_list": [12731],
+      "quality": {"type": "UNCOMMON", "name": "Uncommon"},
+      "name": "War Torn Tunic of Stamina",
+      "media": {"key": {"href": "https://eu.api.blizzard.com/data/wow/media/item/15487?namespace=static-1.60.1_70399-forever-eu"}, "id": 15487},
+      "item_class": {"name": "Armor", "id": 4},
+      "item_subclass": {"name": "Mail", "id": 3},
+      "inventory_type": {"type": "CHEST", "name": "Chest"},
+      "binding": {"type": "ON_EQUIP", "name": "Binds when equipped"},
+      "armor": {"value": 151, "display": {"display_string": "151 Armor", "color": {"r": 255, "g": 255, "b": 255, "a": 1.0}}},
+      "stats": [
+        {"type": {"type": "STAMINA", "name": "Stamina"}, "value": 4, "display": {"display_string": "+4 Stamina", "color": {"r": 255, "g": 255, "b": 255, "a": 1.0}}}
+      ],
+      "sell_price": {"value": 479, "display_strings": {"header": "Sell Price:", "gold": "0", "silver": "4", "copper": "79"}},
+      "requirements": {"level": {"value": 11, "display_string": "Requires Level 11"}},
+      "level": {"value": 16, "display_string": "Item Level 16"},
+      "durability": {"value": 50, "display_string": "Durability 50 / 75"}
+    },
+    {
+      "item": {"key": {"href": "https://eu.api.blizzard.com/data/wow/item/6350?namespace=static-1.60.1_70399-forever-eu"}, "id": 6350},
+      "enchantments": [
+        {
+          "display_string": "Enchanted: Stamina +1 and Armor +8",
+          "source_item": {"name": "Light Armor Kit", "id": 2304},
+          "enchantment_id": 15,
+          "enchantment_slot": {"id": 0, "type": "PERMANENT"}
+        }
+      ],
+      "slot": {"type": "FEET", "name": "Feet"},
+      "quantity": 1,
+      "quality": {"type": "UNCOMMON", "name": "Uncommon"},
+      "name": "Rough Bronze Boots",
+      "media": {"key": {"href": "https://eu.api.blizzard.com/data/wow/media/item/6350?namespace=static-1.60.1_70399-forever-eu"}, "id": 6350},
+      "item_class": {"name": "Armor", "id": 4},
+      "item_subclass": {"name": "Mail", "id": 3},
+      "inventory_type": {"type": "FEET", "name": "Feet"},
+      "binding": {"type": "ON_EQUIP", "name": "Binds when equipped"},
+      "armor": {"value": 111, "display": {"display_string": "111 Armor", "color": {"r": 255, "g": 255, "b": 255, "a": 1.0}}},
+      "stats": [
+        {"type": {"type": "STRENGTH", "name": "Strength"}, "value": 2, "display": {"display_string": "+2 Strength", "color": {"r": 255, "g": 255, "b": 255, "a": 1.0}}},
+        {"type": {"type": "STAMINA", "name": "Stamina"}, "value": 3, "display": {"display_string": "+3 Stamina", "color": {"r": 255, "g": 255, "b": 255, "a": 1.0}}}
+      ],
+      "sell_price": {"value": 295, "display_strings": {"header": "Sell Price:", "gold": "0", "silver": "2", "copper": "95"}},
+      "requirements": {"level": {"value": 13, "display_string": "Requires Level 13"}},
+      "level": {"value": 18, "display_string": "Item Level 18"},
+      "durability": {"value": 30, "display_string": "Durability 30 / 40"}
+    },
+    {
+      "item": {"key": {"href": "https://eu.api.blizzard.com/data/wow/item/15424?namespace=static-1.60.1_70399-forever-eu"}, "id": 15424},
+      "slot": {"type": "MAIN_HAND", "name": "Main Hand"},
+      "quantity": 1,
+      "context": 11,
+      "quality": {"type": "RARE", "name": "Rare"},
+      "name": "Axe of Orgrimmar",
+      "media": {"key": {"href": "https://eu.api.blizzard.com/data/wow/media/item/15424?namespace=static-1.60.1_70399-forever-eu"}, "id": 15424},
+      "item_class": {"name": "Weapon", "id": 2},
+      "item_subclass": {"name": "Axe", "id": 1},
+      "inventory_type": {"type": "TWOHWEAPON", "name": "Two-Hand"},
+      "binding": {"type": "ON_ACQUIRE", "name": "Binds when picked up"},
+      "weapon": {
+        "damage": {"min_value": 42, "max_value": 64, "display_string": "42 - 64 Damage", "damage_class": {"type": "PHYSICAL", "name": "Physical"}},
+        "attack_speed": {"value": 3300, "display_string": "Speed 3.30"},
+        "dps": {"value": 16.060606, "display_string": "(16.1 damage per second)"}
+      },
+      "stats": [
+        {"type": {"type": "STAMINA", "name": "Stamina"}, "value": 6, "display": {"display_string": "+6 Stamina", "color": {"r": 255, "g": 255, "b": 255, "a": 1.0}}},
+        {"type": {"type": "SPIRIT", "name": "Spirit"}, "value": 6, "is_equip_bonus": true, "display": {"display_string": "+6 Spirit", "color": {"r": 0, "g": 255, "b": 0, "a": 1.0}}}
+      ],
+      "sell_price": {"value": 1614, "display_strings": {"header": "Sell Price:", "gold": "0", "silver": "16", "copper": "14"}},
+      "level": {"value": 18, "display_string": "Item Level 18"},
+      "durability": {"value": 54, "display_string": "Durability 54 / 70"}
+    }
+  ]
+}

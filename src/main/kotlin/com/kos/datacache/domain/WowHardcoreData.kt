@@ -49,10 +49,11 @@ data class WowWeaponStats(
 @Serializable
 data class WowResistances(
     val fire: Int,
-    val holy: Int,
+    val holy: Int? = null,
     val shadow: Int,
     val nature: Int,
-    val arcane: Int
+    val arcane: Int,
+    val frost: Int? = null
 )
 
 @Serializable

@@ -11,6 +11,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.S
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
+import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowSpecialization
 import com.kos.datacache.domain.WowStats
 import com.kos.entities.domain.GuildRoster
@@ -18,6 +19,7 @@ import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
 import com.kos.entities.domain.WowRealm
 import com.kos.sources.wow.MythicKeystoneProfile
+import com.kos.sources.wowforever.WowForeverEquippedItem
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import io.ktor.client.*
@@ -77,6 +79,78 @@ class BlizzardHttpClient(
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.toWowForeverCharacter() }
+    }
+
+    override suspend fun getForeverEquipment(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, List<WowForeverEquippedItem>> {
+        logger.debug("getForeverEquipment for $region $name $surname")
+        return fetchFromApi<GetWowForeverEquipmentResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/equipment?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowForeverEquippedItems() }
+    }
+
+    override suspend fun getForeverItemMedia(region: String, id: Long): Either<ClientError, String?> {
+        logger.debug("getForeverItemMedia for $id")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/data/wow/media/item/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverStaticNamespace(region))
+            }
+        }.map { it.asset("icon") }
+    }
+
+    override suspend fun getForeverSpecializations(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, List<WowForeverSpecialization>> {
+        logger.debug("getForeverSpecializations for $region $name $surname")
+        return fetchFromApi<GetWowForeverSpecializationsResponse> {
+            client.get(
+                url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/specializations?locale=en_US")
+            ) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toActiveForeverSpecializations() }
+    }
+
+    override suspend fun getForeverSpellMedia(region: String, id: Long): Either<ClientError, String?> {
+        logger.debug("getForeverSpellMedia for $id")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/data/wow/media/spell/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverStaticNamespace(region))
+            }
+        }.map { it.asset("icon") }
+    }
+
+    override suspend fun getForeverStatistics(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowStats> {
+        logger.debug("getForeverStatistics for $region $name $surname")
+        return fetchFromApi<GetWowCharacterStatsResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/statistics?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowStats() }
+    }
+
+    override suspend fun getForeverAvatar(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, String?> {
+        logger.debug("getForeverAvatar for $region $name $surname")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/character-media?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.asset("avatar-sd") }
     }
 
     override suspend fun getCharacterMedia(
@@ -227,6 +301,8 @@ class BlizzardHttpClient(
     private fun foreverCharacterSlug(name: String, surname: String) = "${encodedName(name)}-${encodedName(surname)}"
 
     private fun foreverProfileNamespace(region: String) = "profile-forever-$region"
+
+    private fun foreverStaticNamespace(region: String) = "static-forever-$region"
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 

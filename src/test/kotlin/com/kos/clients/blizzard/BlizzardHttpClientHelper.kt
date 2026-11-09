@@ -36,6 +36,30 @@ object BlizzardHttpClientHelper {
             .bufferedReader(Charsets.UTF_8)
             .use { it.readText() }
 
+    private val foreverEquipmentResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-equipment-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
+    private val foreverSpecializationsResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-specializations-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
+    private val foreverCharacterMediaResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-character-media-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
+    private val foreverStatisticsResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-statistics-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
     private const val NOT_FOUND = """{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}"""
 
     val client = HttpClient(MockEngine) {
@@ -53,10 +77,39 @@ object BlizzardHttpClientHelper {
 
                     "/profile/wow/character/siempre-tarde/character-media" ->
                         if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
-                            respond(json.encodeToString(getWowCharacterMediaResponse), HttpStatusCode.OK)
+                            respond(foreverCharacterMediaResponse, HttpStatusCode.OK)
                         else respond(NOT_FOUND, HttpStatusCode.NotFound)
 
-                    "/profile/wow/character/unknown-tarde" ->
+                    "/profile/wow/character/siempre-tarde/equipment" ->
+                        if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
+                            respond(foreverEquipmentResponse, HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/profile/wow/character/siempre-tarde/specializations" ->
+                        if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
+                            respond(foreverSpecializationsResponse, HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/profile/wow/character/siempre-tarde/statistics" ->
+                        if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
+                            respond(foreverStatisticsResponse, HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/data/wow/media/spell/12282" ->
+                        if (request.headers["Battlenet-Namespace"] == "static-forever-eu")
+                            respond(json.encodeToString(getWowItemMediaResponse), HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/data/wow/media/item/6125" ->
+                        if (request.headers["Battlenet-Namespace"] == "static-forever-eu")
+                            respond(json.encodeToString(getWowItemMediaResponse), HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
+                    "/profile/wow/character/unknown-tarde",
+                    "/profile/wow/character/unknown-tarde/equipment",
+                    "/profile/wow/character/unknown-tarde/specializations",
+                    "/profile/wow/character/unknown-tarde/statistics",
+                    "/profile/wow/character/unknown-tarde/character-media" ->
                         respond(NOT_FOUND, HttpStatusCode.NotFound)
 
                     "/profile/wow/character/realm/name" ->

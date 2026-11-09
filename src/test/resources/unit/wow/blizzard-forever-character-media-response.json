@@ -1,0 +1,10 @@
+{
+  "_links": {"self": {"href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde/character-media?namespace=profile-forever-eu"}},
+  "character": {"key": {"href": "https://eu.api.blizzard.com/profile/wow/character/siempre-tarde?namespace=profile-forever-eu"}, "name": "Siempre", "id": 6880137, "surname": "Tarde", "slug": "siempre-tarde"},
+  "assets": [
+    {"key": "main-raw", "value": "https://render.worldofwarcraft.com/forever-eu/character/137/6880137-main-raw.png"},
+    {"key": "main-sd-raw", "value": "https://render.worldofwarcraft.com/forever-eu/character/137/6880137-main-sd-raw.png"},
+    {"key": "avatar", "value": "https://render.worldofwarcraft.com/forever-eu/character/137/6880137-avatar.jpg"},
+    {"key": "avatar-sd", "value": "https://render.worldofwarcraft.com/forever-eu/character/137/6880137-avatar-sd.jpg"}
+  ]
+}

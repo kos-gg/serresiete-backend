@@ -5,6 +5,7 @@ import acceptance.SharedInfrastructure
 import acceptance.toGame
 import acceptance.wowEntityRequest
 import acceptance.wowForeverEntityRequest
+import com.kos.datacache.domain.WowForeverData
 import com.kos.datacache.domain.WowHardcoreData
 import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.EntityRequest
@@ -14,6 +15,8 @@ import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventType
 import com.kos.eventsourcing.events.RequestToBeSynced
 import com.kos.eventsourcing.events.repository.EventStoreDatabase
+import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
+import com.kos.sources.wowforever.media.WowForeverMediaKind
 import com.kos.views.Game
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
@@ -23,6 +26,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -32,6 +36,7 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
     private val eventStore = EventStoreDatabase(db)
     private val entitiesRepo = EntitiesDatabaseRepository(db)
     private val dataCacheRepo = DataCacheDatabaseRepository(db)
+    private val mediaRepo = WowForeverMediaDatabaseRepository(db)
 
     @Given("a {string} sync event is posted for {string} {string} {string}")
     fun syncEventPosted(game: String, name: String, realm: String, region: String) {
@@ -83,6 +88,49 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
             assertNotNull(cached.firstOrNull(), "No data cache entry found for entity $name after sync")
         }
     }
+
+    @Then("the WOW_FOREVER data cache for {string} {string} {string} has items and talents with icons")
+    fun wowForeverCacheHasItemsAndTalentsWithIcons(name: String, surname: String, region: String) {
+        val data = newestWowForeverData(name, surname, region)
+        val talents = data.talents.orEmpty().flatMap { it.talents }
+        assertTrue(data.items.orEmpty().isNotEmpty(), "Expected items in data cache of $name")
+        assertTrue(talents.isNotEmpty(), "Expected talents in data cache of $name")
+        assertTrue(data.items.orEmpty().all { it.icon != null }, "Expected every item to have an icon: ${data.items}")
+        assertTrue(talents.all { it.icon != null }, "Expected every talent to have an icon: $talents")
+    }
+
+    @And("the WOW_FOREVER data cache for {string} {string} {string} has statistics and avatar")
+    fun wowForeverCacheHasStatisticsAndAvatar(name: String, surname: String, region: String) {
+        val data = newestWowForeverData(name, surname, region)
+        assertNotNull(data.stats, "Expected statistics in data cache of $name")
+        assertNotNull(data.avatar, "Expected avatar in data cache of $name")
+    }
+
+    @And("the WOW_FOREVER media table stores the icons of {string} {string} {string}")
+    fun wowForeverMediaStoresIcons(name: String, surname: String, region: String) {
+        val data = newestWowForeverData(name, surname, region)
+        val items = data.items.orEmpty()
+        val talents = data.talents.orEmpty().flatMap { it.talents }
+        runBlocking {
+            assertEquals(
+                items.associate { it.id to it.icon },
+                mediaRepo.getIcons(WowForeverMediaKind.ITEM, items.map { it.id }.toSet())
+            )
+            assertEquals(
+                talents.associate { it.spellId to it.icon },
+                mediaRepo.getIcons(WowForeverMediaKind.SPELL, talents.map { it.spellId }.toSet())
+            )
+        }
+    }
+
+    private fun newestWowForeverData(name: String, surname: String, region: String): WowForeverData =
+        runBlocking {
+            val entity = entitiesRepo.get(wowForeverEntityRequest(name, surname, region) as EntityRequest, Game.WOW_FOREVER)
+            assertNotNull(entity, "Entity $name not found in database")
+            val cached = dataCacheRepo.get(entity.id).maxByOrNull { it.inserted }
+            assertNotNull(cached, "No data cache entry found for entity $name")
+            Json { ignoreUnknownKeys = true }.decodeFromString<WowForeverData>(cached.data)
+        }
 
     @And("the Blizzard profile API returns 404")
     fun blizzardProfileReturns404() {

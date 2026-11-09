@@ -240,7 +240,7 @@ data class GetWowCharacterStatsResponse(
     val fireResistance: Int,
     @SerialName("holy_resistance")
     @Serializable(with = EffectiveExtractorSerializer::class)
-    val holyResistance: Int,
+    val holyResistance: Int? = null,
     @SerialName("shadow_resistance")
     @Serializable(with = EffectiveExtractorSerializer::class)
     val shadowResistance: Int,
@@ -249,7 +249,10 @@ data class GetWowCharacterStatsResponse(
     val natureResistance: Int,
     @Serializable(with = EffectiveExtractorSerializer::class)
     @SerialName("arcane_resistance")
-    val arcaneResistance: Int
+    val arcaneResistance: Int,
+    @Serializable(with = EffectiveExtractorSerializer::class)
+    @SerialName("frost_resistance")
+    val frostResistance: Int? = null
 )
 
 @Serializable
@@ -333,6 +336,88 @@ data class WowEquippedItemResponse(
 data class GetWowEquipmentResponse(
     @SerialName("equipped_items")
     val equippedItems: List<WowEquippedItemResponse>
+)
+
+@Serializable
+data class WowItemLevelValue(val value: Int)
+
+@Serializable
+data class WowItemRequirements(val level: WowItemLevelValue? = null)
+
+@Serializable
+data class WowForeverEquippedItemResponse(
+    val item: WowItemId,
+    val slot: WowItemSlot,
+    @Serializable(with = DisplayStringListSerializer::class)
+    val enchantments: List<String> = listOf(),
+    @Serializable(with = NameExtractorSerializer::class)
+    val quality: String,
+    val name: String,
+    val level: WowItemLevelValue,
+    val requirements: WowItemRequirements? = null,
+    @SerialName("item_subclass")
+    @Serializable(with = NameExtractorSerializer::class)
+    val itemSubclass: String,
+    @Serializable(with = NameExtractorSerializer::class)
+    val binding: String? = null,
+    @Serializable(with = NestedDisplayableStringExtractorSerializer::class)
+    val armor: String? = null,
+    @Serializable(with = NestedDisplayableStringListSerializer::class)
+    val stats: List<String> = listOf(),
+    @Serializable(with = DescriptionListSerializer::class)
+    val spells: List<String> = listOf(),
+    @SerialName("sell_price")
+    val sellPrice: WowPriceResponse? = null,
+    @Serializable(with = DisplayableStringExtractorSerializer::class)
+    val durability: String? = null,
+    val weapon: WowWeaponStatsResponse? = null
+)
+
+@Serializable
+data class GetWowForeverEquipmentResponse(
+    @SerialName("equipped_items")
+    val equippedItems: List<WowForeverEquippedItemResponse>
+)
+
+@Serializable
+data class WowForeverSpellResponse(val id: Long)
+
+@Serializable
+data class WowForeverSpellTooltipResponse(
+    val spell: WowForeverSpellResponse,
+    val description: String
+)
+
+@Serializable
+data class WowForeverTalentResponse(
+    @Serializable(with = NameExtractorSerializer::class)
+    val talent: String,
+    @SerialName("spell_tooltip")
+    val spellTooltip: WowForeverSpellTooltipResponse,
+    @SerialName("talent_rank")
+    val talentRank: Int
+)
+
+@Serializable
+data class WowForeverSpecializationResponse(
+    @SerialName("specialization_name")
+    val specializationName: String,
+    @SerialName("spent_points")
+    val spentPoints: Int,
+    val talents: List<WowForeverTalentResponse> = listOf()
+)
+
+@Serializable
+data class WowForeverSpecializationGroupResponse(
+    @SerialName("is_active")
+    val isActive: Boolean,
+    val specializations: List<WowForeverSpecializationResponse> = listOf()
+)
+
+@Serializable
+data class GetWowForeverSpecializationsResponse(
+    @SerialName("specialization_groups")
+    val specializationGroups: List<WowForeverSpecializationGroupResponse>
 )
 
 @Serializable
