@@ -10,6 +10,7 @@ import com.kos.common.WithLogger
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowItem
 import com.kos.datacache.repository.DataCacheRepository
 import com.kos.entities.PartialFailure
@@ -107,68 +108,114 @@ class WowForeverEntitySynchronizer(
 
     private suspend fun synchronizeEntity(
         entity: WowForeverEntity,
-        itemIconCache: DynamicCache<Either<ClientError, String?>>
+        iconCache: DynamicCache<Either<ClientError, String?>>
     ): Either<ClientError, DataCache> = either {
         val character = blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname).bind()
         val equipment = blizzardClient.getForeverEquipment(entity.region, entity.name, entity.surname)
             .onLeft { logger.warn("Couldn't fetch equipment of wow forever entity ${entity.id}: $it") }
             .getOrNull()
+        val specializations = blizzardClient.getForeverSpecializations(entity.region, entity.name, entity.surname)
+            .onLeft { logger.warn("Couldn't fetch specializations of wow forever entity ${entity.id}: $it") }
+            .getOrNull()
 
-        val items =
-            getItemIcons(
-                entity.region,
-                equipment?.map { it.toWowItem(null) } ?: previousItems(entity.id),
-                itemIconCache)
+        val previous = if (equipment == null || specializations == null) previousData(entity.id) else null
+
+        val items = withItemIcons(entity.region, equipment?.map { it.toWowItem(null) } ?: previous?.items, iconCache)
+        val talents = withTalentIcons(entity.region, specializations ?: previous?.talents, iconCache)
 
         DataCache(
             entity.id,
-            json.encodeToString<Data>(character.toWowForeverData(entity.region, items)),
+            json.encodeToString<Data>(character.toWowForeverData(entity.region, items, talents)),
             OffsetDateTime.now(),
             Game.WOW_FOREVER
         )
     }
 
-    private suspend fun getItemIcons(
+    private suspend fun withItemIcons(
         region: String,
         items: List<WowItem>?,
-        itemIconCache: DynamicCache<Either<ClientError, String?>>
+        iconCache: DynamicCache<Either<ClientError, String?>>
     ): List<WowItem>? =
         items?.let {
-            val storedIcons = mediaRepository.getIcons(
+            val icons = resolveIcons(
                 WowForeverMediaKind.ITEM,
-                it.filter { item -> item.icon == null }.map { item -> item.id }.toSet()
+                region,
+                it.filter { item -> item.icon == null }.map { item -> item.id }.toSet(),
+                iconCache
             )
-            it.map { item ->
-                item.copy(icon = item.icon ?: storedIcons[item.id] ?: fetchIcon(region, item.id, itemIconCache))
+            it.map { item -> item.copy(icon = item.icon ?: icons[item.id]) }
+        }
+
+    private suspend fun withTalentIcons(
+        region: String,
+        specializations: List<WowForeverSpecialization>?,
+        iconCache: DynamicCache<Either<ClientError, String?>>
+    ): List<WowForeverSpecialization>? =
+        specializations?.let {
+            val icons = resolveIcons(
+                WowForeverMediaKind.SPELL,
+                region,
+                it.flatMap { specialization -> specialization.talents }
+                    .filter { talent -> talent.icon == null }
+                    .map { talent -> talent.spellId }
+                    .toSet(),
+                iconCache
+            )
+            it.map { specialization ->
+                specialization.copy(
+                    talents = specialization.talents.map { talent -> talent.copy(icon = talent.icon ?: icons[talent.spellId]) }
+                )
             }
         }
 
-    private suspend fun fetchIcon(
+    private suspend fun resolveIcons(
+        kind: WowForeverMediaKind,
         region: String,
-        itemId: Long,
+        ids: Set<Long>,
+        iconCache: DynamicCache<Either<ClientError, String?>>
+    ): Map<Long, String> {
+        val storedIcons = mediaRepository.getIcons(kind, ids)
+        val fetchedIcons = (ids - storedIcons.keys).mapNotNull { id ->
+            fetchIcon(kind, region, id, iconCache)?.let { id to it }
+        }
+        return storedIcons + fetchedIcons
+    }
+
+    private suspend fun fetchIcon(
+        kind: WowForeverMediaKind,
+        region: String,
+        id: Long,
         iconCache: DynamicCache<Either<ClientError, String?>>
     ): String? =
-        iconCache.get(itemId.toString()) {
-            blizzardClient.getForeverItemMedia(region, itemId)
-                .onLeft { logger.warn("Couldn't fetch icon of wow forever item $itemId: $it") }
-                .onRight { icon ->
-                    icon?.let { mediaRepository.insert(listOf(WowForeverMedia(WowForeverMediaKind.ITEM, itemId, it))) }
-                }
+        iconCache.get("$kind:$id") {
+            fetchMedia(kind, region, id)
+                .onLeft { logger.warn("Couldn't fetch icon of wow forever $kind $id: $it") }
+                .onRight { icon -> icon?.let { mediaRepository.insert(listOf(WowForeverMedia(kind, id, it))) } }
         }.getOrNull()
 
-    private suspend fun previousItems(entityId: Long): List<WowItem>? =
+    private suspend fun fetchMedia(kind: WowForeverMediaKind, region: String, id: Long): Either<ClientError, String?> =
+        when (kind) {
+            WowForeverMediaKind.ITEM -> blizzardClient.getForeverItemMedia(region, id)
+            WowForeverMediaKind.SPELL -> blizzardClient.getForeverSpellMedia(region, id)
+        }
+
+    private suspend fun previousData(entityId: Long): WowForeverData? =
         dataCacheRepository.get(entityId)
             .maxByOrNull { it.inserted }
             ?.let {
                 try {
-                    (json.decodeFromString<Data>(it.data) as? WowForeverData)?.items
+                    json.decodeFromString<Data>(it.data) as? WowForeverData
                 } catch (e: SerializationException) {
                     logger.warn("Couldn't deserialize newest cached record of wow forever entity $entityId: ${e.message}")
                     null
                 }
             }
 
-    private fun WowForeverCharacter.toWowForeverData(region: String, items: List<WowItem>?) = WowForeverData(
+    private fun WowForeverCharacter.toWowForeverData(
+        region: String,
+        items: List<WowItem>?,
+        talents: List<WowForeverSpecialization>?
+    ) = WowForeverData(
         id = id,
         name = name,
         surname = surname,
@@ -184,6 +231,7 @@ class WowForeverEntitySynchronizer(
         experience = experience,
         ruleset = ruleset,
         lastLogin = lastLogin,
-        items = items
+        items = items,
+        talents = talents
     )
 }

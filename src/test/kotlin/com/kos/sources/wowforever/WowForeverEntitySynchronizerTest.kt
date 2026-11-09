@@ -6,18 +6,24 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.repository.DataCacheInMemoryRepository
 import com.kos.entities.EntitiesTestHelper.basicWowForeverEntity
 import com.kos.entities.ThirdPartyCallFailed
 import com.kos.entities.domain.WowForeverEntity
+import com.kos.sources.wowforever.WowForeverTestHelper.arms
 import com.kos.sources.wowforever.WowForeverTestHelper.belt
 import com.kos.sources.wowforever.WowForeverTestHelper.boots
 import com.kos.sources.wowforever.WowForeverTestHelper.bootsIcon
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverCharacter
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverData
+import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrike
+import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrikeIcon
+import com.kos.sources.wowforever.WowForeverTestHelper.rend
 import com.kos.sources.wowforever.media.WowForeverMedia
 import com.kos.sources.wowforever.media.WowForeverMediaInMemoryRepository
 import com.kos.sources.wowforever.media.WowForeverMediaKind.ITEM
+import com.kos.sources.wowforever.media.WowForeverMediaKind.SPELL
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
@@ -33,12 +39,22 @@ class WowForeverEntitySynchronizerTest {
     private val synchronizer = WowForeverEntitySynchronizer(dataCacheRepository, blizzardClient, mediaRepository)
 
     private val beltIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/belt.jpg"
+    private val rendIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/rend.jpg"
     private val storedBoots = WowForeverMedia(ITEM, boots.details.id, bootsIcon)
     private val otherEntity = basicWowForeverEntity.copy(id = 2, name = "otro", blizzardId = 2)
 
     private suspend fun givenProfile(entity: WowForeverEntity = basicWowForeverEntity) {
         `when`(blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname))
             .thenReturn(Either.Right(foreverCharacter))
+        givenEquipment(Either.Right(listOf()), entity)
+        givenSpecializations(Either.Right(listOf()), entity)
+    }
+
+    private suspend fun givenSpecializations(
+        result: Either<TimeoutError, List<WowForeverSpecialization>>,
+        entity: WowForeverEntity = basicWowForeverEntity
+    ) {
+        `when`(blizzardClient.getForeverSpecializations(entity.region, entity.name, entity.surname)).thenReturn(result)
     }
 
     private suspend fun givenEquipment(
@@ -79,7 +95,10 @@ class WowForeverEntitySynchronizerTest {
             assertEquals(listOf(), errors)
             assertEquals(Game.WOW_FOREVER, dataCacheRepository.get(basicWowForeverEntity.id).single().game)
             assertEquals(
-                foreverData.copy(items = listOf(boots.toWowItem(bootsIcon), belt.toWowItem(beltIcon))),
+                foreverData.copy(
+                    items = listOf(boots.toWowItem(bootsIcon), belt.toWowItem(beltIcon)),
+                    talents = listOf()
+                ),
                 cachedData()
             )
             verify(blizzardClient, never()).getForeverItemMedia("eu", boots.details.id)
@@ -146,7 +165,90 @@ class WowForeverEntitySynchronizerTest {
             val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
 
             assertEquals(listOf(), errors)
-            assertEquals(foreverData, cachedData())
+            assertEquals(foreverData.copy(talents = listOf()), cachedData())
+        }
+    }
+
+    @Test
+    fun `caches the talents using stored icons and fetching and storing the missing ones`() {
+        runBlocking {
+            val storedHeroicStrike = WowForeverMedia(SPELL, heroicStrike.spellId, heroicStrikeIcon)
+            mediaRepository.withState(listOf(storedHeroicStrike))
+            givenProfile()
+            givenSpecializations(Either.Right(listOf(arms(heroicStrike, rend))))
+            `when`(blizzardClient.getForeverSpellMedia("eu", rend.spellId)).thenReturn(Either.Right(rendIcon))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(
+                listOf(arms(heroicStrike.copy(icon = heroicStrikeIcon), rend.copy(icon = rendIcon))),
+                cachedData().talents
+            )
+            verify(blizzardClient, never()).getForeverSpellMedia("eu", heroicStrike.spellId)
+            assertEquals(listOf(storedHeroicStrike, WowForeverMedia(SPELL, rend.spellId, rendIcon)), mediaRepository.state())
+        }
+    }
+
+    @Test
+    fun `a talent shared by several characters of the same sync is fetched only once`() {
+        runBlocking {
+            givenProfile()
+            givenProfile(otherEntity)
+            givenSpecializations(Either.Right(listOf(arms(rend))))
+            givenSpecializations(Either.Right(listOf(arms(rend))), otherEntity)
+            `when`(blizzardClient.getForeverSpellMedia("eu", rend.spellId)).thenReturn(Either.Right(rendIcon))
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity, otherEntity))
+
+            verify(blizzardClient, times(1)).getForeverSpellMedia("eu", rend.spellId)
+            assertEquals(listOf(arms(rend.copy(icon = rendIcon))), cachedData().talents)
+            assertEquals(listOf(arms(rend.copy(icon = rendIcon))), cachedData(otherEntity.id).talents)
+        }
+    }
+
+    @Test
+    fun `an item and a spell with the same id are different icons`() {
+        runBlocking {
+            val sameIdSpell = rend.copy(spellId = belt.details.id)
+            givenProfile()
+            givenEquipment(Either.Right(listOf(belt)))
+            givenSpecializations(Either.Right(listOf(arms(sameIdSpell))))
+            `when`(blizzardClient.getForeverItemMedia("eu", belt.details.id)).thenReturn(Either.Right(beltIcon))
+            `when`(blizzardClient.getForeverSpellMedia("eu", belt.details.id)).thenReturn(Either.Right(rendIcon))
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(belt.toWowItem(beltIcon)), cachedData().items)
+            assertEquals(listOf(arms(sameIdSpell.copy(icon = rendIcon))), cachedData().talents)
+        }
+    }
+
+    @Test
+    fun `when the specializations could not be fetched the previous talents are kept and their missing icons filled`() {
+        runBlocking {
+            givenPreviousData(foreverData.copy(talents = listOf(arms(rend))))
+            givenProfile()
+            givenSpecializations(Either.Left(TimeoutError("timeout")))
+            `when`(blizzardClient.getForeverSpellMedia("eu", rend.spellId)).thenReturn(Either.Right(rendIcon))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(listOf(arms(rend.copy(icon = rendIcon))), cachedData().talents)
+        }
+    }
+
+    @Test
+    fun `when the specializations could not be fetched and there are no previous talents, talents are unknown`() {
+        runBlocking {
+            givenProfile()
+            givenSpecializations(Either.Left(TimeoutError("timeout")))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(null, cachedData().talents)
         }
     }
 

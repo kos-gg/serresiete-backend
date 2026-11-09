@@ -1,6 +1,8 @@
 package com.kos.sources.wowforever
 
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverSpecialization
+import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
 import com.kos.entities.domain.WowForeverCharacter
 import com.kos.sources.wowhc.WowEquippedItemRef
@@ -69,4 +71,23 @@ object WowForeverTestHelper {
     val belt = equippedItem(2857, "Waist", "Runed Copper Belt")
 
     const val bootsIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/boots.jpg"
+
+    val heroicStrike = WowForeverTalent(
+        name = "Improved Heroic Strike",
+        spellId = 12282,
+        rank = 2,
+        description = "Reduces the cost of your Heroic Strike ability by 2 Rage.",
+        icon = null
+    )
+    val rend = WowForeverTalent(
+        name = "Improved Rend",
+        spellId = 12286,
+        rank = 3,
+        description = "Increases the Bleed damage done by your Rend ability by 35%.",
+        icon = null
+    )
+
+    fun arms(vararg talents: WowForeverTalent) = WowForeverSpecialization("Arms", talents.sumOf { it.rank }, talents.toList())
+
+    const val heroicStrikeIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/132282.jpg"
 }
