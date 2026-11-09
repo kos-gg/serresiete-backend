@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.fx.coroutines.parMapUnordered
 import com.kos.clients.ClientError
 import com.kos.clients.blizzard.BlizzardClient
+import com.kos.common.DynamicCache
 import com.kos.common.WithLogger
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.Data
@@ -17,12 +18,16 @@ import com.kos.entities.domain.Entity
 import com.kos.entities.domain.WowForeverCharacter
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.sync.EntitySynchronizer
+import com.kos.sources.wowforever.media.WowForeverMedia
 import com.kos.sources.wowforever.media.WowForeverMediaKind
 import com.kos.sources.wowforever.media.WowForeverMediaRepository
 import com.kos.views.Game
-import kotlinx.coroutines.*
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -49,12 +54,13 @@ class WowForeverEntitySynchronizer(
         encodeDefaults = false
     }
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    @OptIn(FlowPreview::class)
     override suspend fun synchronize(entities: List<Entity>): List<PartialFailure> =
         coroutineScope {
             val wowForeverEntities = entities.filterIsInstance<WowForeverEntity>()
 
             val dataChannel = Channel<DataCache>()
+            val iconCache = DynamicCache<Either<ClientError, String?>>()
             val errorChannel = Channel<PartialFailure>()
 
             val errorsCollector = async {
@@ -75,7 +81,7 @@ class WowForeverEntitySynchronizer(
             val start = OffsetDateTime.now()
             wowForeverEntities.asFlow()
                 .parMapUnordered(concurrency) { entity ->
-                    synchronizeEntity(entity).mapLeft { ThirdPartyCallFailed(entity.id, it) }
+                    synchronizeEntity(entity, iconCache).mapLeft { ThirdPartyCallFailed(entity.id, it) }
                 }
                 .collect { result ->
                     result.fold(
@@ -92,25 +98,27 @@ class WowForeverEntitySynchronizer(
 
             logger.info(
                 "Finished caching Wow Forever entities: ${wowForeverEntities.size - errors.size} cached, " +
-                        "${errors.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s"
+                        "${errors.size} failed in ${Duration.between(start, OffsetDateTime.now()).toSeconds()}s. " +
+                        "Icon cache hit rate: ${"%.2f".format(iconCache.hitRate * 100)}%"
             )
 
             errors
         }
 
-    private suspend fun synchronizeEntity(entity: WowForeverEntity): Either<ClientError, DataCache> = either {
+    private suspend fun synchronizeEntity(
+        entity: WowForeverEntity,
+        itemIconCache: DynamicCache<Either<ClientError, String?>>
+    ): Either<ClientError, DataCache> = either {
         val character = blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname).bind()
         val equipment = blizzardClient.getForeverEquipment(entity.region, entity.name, entity.surname)
             .onLeft { logger.warn("Couldn't fetch equipment of wow forever entity ${entity.id}: $it") }
             .getOrNull()
 
-        val items = withStoredIcons(equipment?.map { it.toWowItem(null) } ?: previousItems(entity.id))
-
-        mediaRepository.registerPending(
-            WowForeverMediaKind.ITEM,
-            entity.region,
-            items.orEmpty().filter { it.icon == null }.map { it.id }.toSet()
-        )
+        val items =
+            getItemIcons(
+                entity.region,
+                equipment?.map { it.toWowItem(null) } ?: previousItems(entity.id),
+                itemIconCache)
 
         DataCache(
             entity.id,
@@ -120,14 +128,33 @@ class WowForeverEntitySynchronizer(
         )
     }
 
-    private suspend fun withStoredIcons(items: List<WowItem>?): List<WowItem>? =
+    private suspend fun getItemIcons(
+        region: String,
+        items: List<WowItem>?,
+        itemIconCache: DynamicCache<Either<ClientError, String?>>
+    ): List<WowItem>? =
         items?.let {
-            val icons = mediaRepository.getIcons(
+            val storedIcons = mediaRepository.getIcons(
                 WowForeverMediaKind.ITEM,
-                it.map { item -> item.id }.toSet()
+                it.filter { item -> item.icon == null }.map { item -> item.id }.toSet()
             )
-            it.map { item -> item.copy(icon = icons[item.id] ?: item.icon) }
+            it.map { item ->
+                item.copy(icon = item.icon ?: storedIcons[item.id] ?: fetchIcon(region, item.id, itemIconCache))
+            }
         }
+
+    private suspend fun fetchIcon(
+        region: String,
+        itemId: Long,
+        iconCache: DynamicCache<Either<ClientError, String?>>
+    ): String? =
+        iconCache.get(itemId.toString()) {
+            blizzardClient.getForeverItemMedia(region, itemId)
+                .onLeft { logger.warn("Couldn't fetch icon of wow forever item $itemId: $it") }
+                .onRight { icon ->
+                    icon?.let { mediaRepository.insert(listOf(WowForeverMedia(WowForeverMediaKind.ITEM, itemId, it))) }
+                }
+        }.getOrNull()
 
     private suspend fun previousItems(entityId: Long): List<WowItem>? =
         dataCacheRepository.get(entityId)

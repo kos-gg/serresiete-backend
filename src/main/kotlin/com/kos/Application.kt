@@ -184,10 +184,11 @@ fun Application.module() {
         System.getenv("WOW_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )
 
+    val wowForeverMediaRepository = WowForeverMediaDatabaseRepository(db)
     val wowForeverEntitySynchronizer = WowForeverEntitySynchronizer(
         dataCacheRepository,
         blizzardClient,
-        WowForeverMediaDatabaseRepository(db),
+        wowForeverMediaRepository,
         System.getenv("WOW_FOREVER_SYNC_CONCURRENCY")?.toInt() ?: 10,
     )
 
