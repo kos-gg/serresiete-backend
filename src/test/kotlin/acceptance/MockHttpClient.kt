@@ -34,6 +34,32 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
+                path.endsWith("/equipment") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
+                    respond(
+                        readResource("acceptance/files/responses/wow-forever/blizzard-equipment-response.json"),
+                        HttpStatusCode.OK,
+                        json
+                    )
+
+                path.endsWith("/specializations") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
+                    respond(
+                        readResource("acceptance/files/responses/wow-forever/blizzard-specializations-response.json"),
+                        HttpStatusCode.OK,
+                        json
+                    )
+
+                path.contains("/data/wow/media/") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("static-forever-") == true ->
+                    respond(
+                        """{"assets":[{"key":"icon","value":"https://render.worldofwarcraft.com/forever-eu/icons/56/${
+                            path.substringAfter("/data/wow/media/").replace("/", "-")
+                        }.jpg"}]}""",
+                        HttpStatusCode.OK,
+                        json
+                    )
+
                 path.contains("/equipment") ->
                     respond(
                         readResource("acceptance/files/responses/wow-hc/blizzard-equipment-response.json"),
