@@ -118,10 +118,10 @@ class WowForeverEntitySynchronizer(
             .onLeft { logger.warn("Couldn't fetch specializations of wow forever entity ${entity.id}: $it") }
             .getOrNull()
 
-        val previous = if (equipment == null || specializations == null) previousData(entity.id) else null
+        val cachedData = if (equipment == null || specializations == null) getCachedData(entity.id) else null
 
-        val items = withItemIcons(entity.region, equipment?.map { it.toWowItem(null) } ?: previous?.items, iconCache)
-        val talents = withTalentIcons(entity.region, specializations ?: previous?.talents, iconCache)
+        val items = withItemIcons(entity.region, equipment?.map { it.toWowItem(null) } ?: cachedData?.items, iconCache)
+        val talents = withTalentIcons(entity.region, specializations ?: cachedData?.talents, iconCache)
 
         DataCache(
             entity.id,
@@ -163,7 +163,11 @@ class WowForeverEntitySynchronizer(
             )
             it.map { specialization ->
                 specialization.copy(
-                    talents = specialization.talents.map { talent -> talent.copy(icon = talent.icon ?: icons[talent.spellId]) }
+                    talents = specialization.talents.map { talent ->
+                        talent.copy(
+                            icon = talent.icon ?: icons[talent.spellId]
+                        )
+                    }
                 )
             }
         }
@@ -201,7 +205,7 @@ class WowForeverEntitySynchronizer(
             WowForeverMediaKind.SPELL -> blizzardClient.getForeverSpellMedia(region, id)
         }
 
-    private suspend fun previousData(entityId: Long): WowForeverData? =
+    private suspend fun getCachedData(entityId: Long): WowForeverData? =
         dataCacheRepository.get(entityId)
             .maxByOrNull { it.inserted }
             ?.let {
