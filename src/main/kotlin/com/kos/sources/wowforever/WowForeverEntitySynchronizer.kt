@@ -173,13 +173,15 @@ class WowForeverEntitySynchronizer(
         region: String,
         ids: Set<Long>,
         iconCache: DynamicCache<Either<ClientError, String?>>
-    ): Map<Long, String> {
-        val storedIcons = mediaRepository.getIcons(kind, ids)
-        val fetchedIcons = (ids - storedIcons.keys).mapNotNull { id ->
-            fetchIcon(kind, region, id, iconCache)?.let { id to it }
+    ): Map<Long, String> =
+        if (ids.isEmpty()) emptyMap()
+        else {
+            val storedIcons = mediaRepository.getIcons(kind, ids)
+            val fetchedIcons = (ids - storedIcons.keys).mapNotNull { id ->
+                fetchIcon(kind, region, id, iconCache)?.let { id to it }
+            }
+            storedIcons + fetchedIcons
         }
-        return storedIcons + fetchedIcons
-    }
 
     private suspend fun fetchIcon(
         kind: WowForeverMediaKind,
