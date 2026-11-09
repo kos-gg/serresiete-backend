@@ -271,10 +271,10 @@ data class WowWeaponStatsResponse(
     @Serializable(with = DisplayableStringExtractorSerializer::class)
     val damage: String,
     @Serializable(with = DisplayableStringExtractorSerializer::class)
-    val dps: String,
+    val dps: String? = null,
     @SerialName("attack_speed")
     @Serializable(with = DisplayableStringExtractorSerializer::class)
-    val attackSpeed: String
+    val attackSpeed: String? = null
 )
 
 @Serializable
