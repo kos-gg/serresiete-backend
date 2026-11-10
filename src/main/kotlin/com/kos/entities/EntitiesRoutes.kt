@@ -39,7 +39,7 @@ fun Route.entitiesRouting(
             }
 
             post("/exists") {
-                val request = call.receive<EntitiesExistRequest>()
+                val request = call.receive<EntitiesExistRequest>().normalized()
                 val userWithActivities = call.principal<UserWithActivities>()
 
                 entitiesController.exists(
@@ -55,7 +55,7 @@ fun Route.entitiesRouting(
             }
 
             post("/exists/guild") {
-                val request = call.receive<GuildExistsRequest>()
+                val request = call.receive<GuildExistsRequest>().normalized()
                 val userWithActivities = call.principal<UserWithActivities>()
 
                 entitiesController.guildExists(
@@ -78,7 +78,7 @@ fun parametersToEntityRequest(parameters: Parameters): Either<BadRequest, Pair<E
     either {
         val (request, game) = parametersToAnyRegionEntityRequest(parameters).bind()
         ensure(request.hasValidRegion()) { BadRequest("Invalid region for $game entity, must be one of eu, us, kr, tw") }
-        request to game
+        request.normalized() to game
     }
 
 private fun parametersToAnyRegionEntityRequest(parameters: Parameters): Either<BadRequest, Pair<EntityRequest, Game>> {

@@ -11,8 +11,8 @@ data class WowPrice(val header: String, val gold: String, val silver: String, va
 @Serializable
 data class WowWeaponDisplayableStats(
     val damage: String,
-    val dps: String,
-    val attackSpeed: String
+    val dps: String?,
+    val attackSpeed: String?
 )
 
 @Serializable

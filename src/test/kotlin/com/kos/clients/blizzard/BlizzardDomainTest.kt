@@ -56,4 +56,14 @@ class BlizzardDomainTest {
     fun `i can deserialize an item response`() {
         assertEquals(getWowItemResponse, json.decodeFromString<GetWowItemResponse>(getWowItemResponseString))
     }
+
+    @Test
+    fun `i can deserialize a weapon without dps nor attack speed`() {
+        val weapon = """{"damage": {"min_value": 1, "max_value": 2, "display_string": "1 - 2 Damage"}}"""
+
+        assertEquals(
+            WowWeaponStatsResponse(damage = "1 - 2 Damage"),
+            json.decodeFromString<WowWeaponStatsResponse>(weapon)
+        )
+    }
 }

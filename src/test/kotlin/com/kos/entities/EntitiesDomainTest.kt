@@ -3,7 +3,13 @@ package com.kos.entities
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntityEnrichedRequest
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
+import com.kos.entities.domain.EntitiesExistRequest
+import com.kos.entities.domain.GuildExistsRequest
+import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntityRequest
+import com.kos.entities.domain.normalized
+import com.kos.views.Game
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -184,4 +190,43 @@ class EntitiesDomainTest {
         realm: String = "DefaultRealm",
         blizzardId: Long? = 12345L
     ) = WowEntityRequest(name, region, realm, blizzardId)
+
+    @Test
+    fun `a wow request is normalized to a lowercase name keeping its alias`() {
+        assertEquals(
+            WowEntityRequest("sanxei", "eu", "zuljin", alias = "Sanxei"),
+            WowEntityRequest("Sanxei", "eu", "zuljin", alias = "Sanxei").normalized()
+        )
+    }
+
+    @Test
+    fun `a wow forever request is normalized to a lowercase name and surname`() {
+        assertEquals(
+            WowForeverEntityRequest("siempre", "tarde", "eu"),
+            WowForeverEntityRequest("SIEMPRE", "tardE", "eu").normalized()
+        )
+    }
+
+    @Test
+    fun `a lol request is not normalized`() {
+        val request = LolEntityRequest("Sanxei", "EUW")
+
+        assertEquals(request, request.normalized())
+    }
+
+    @Test
+    fun `an exists request normalizes every entity`() {
+        assertEquals(
+            EntitiesExistRequest(listOf(WowForeverEntityRequest("siempre", "tarde", "eu")), Game.WOW_FOREVER),
+            EntitiesExistRequest(listOf(WowForeverEntityRequest("SIEMPRE", "tardE", "eu")), Game.WOW_FOREVER).normalized()
+        )
+    }
+
+    @Test
+    fun `a guild exists request is normalized to a lowercase name`() {
+        assertEquals(
+            GuildExistsRequest("siempre tarde", "eu", "twisting-nether"),
+            GuildExistsRequest("Siempre Tarde", "eu", "twisting-nether").normalized()
+        )
+    }
 }
