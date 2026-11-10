@@ -51,6 +51,12 @@ fun EntityRequest.hasValidRegion(): Boolean = when (this) {
     is LolEntityRequest -> true
 }
 
+fun EntityRequest.normalized(): EntityRequest = when (this) {
+    is WowEntityRequest -> copy(name = name.lowercase())
+    is WowForeverEntityRequest -> copy(name = name.lowercase(), surname = surname.lowercase())
+    is LolEntityRequest -> this
+}
+
 @Serializable(with = EntityResponseSerializer::class)
 sealed interface EntityResponse {
     val name: String
@@ -77,6 +83,8 @@ data class EntitiesExistRequest(
     val game: Game
 )
 
+fun EntitiesExistRequest.normalized(): EntitiesExistRequest = copy(entities = entities.map { it.normalized() })
+
 @Serializable
 data class EntitiesExistResponse(
     val exist: List<EntityResponse>,
@@ -98,6 +106,8 @@ data class GuildExistsRequest(
     val region: String,
     val realm: String
 )
+
+fun GuildExistsRequest.normalized(): GuildExistsRequest = copy(name = name.lowercase())
 
 @Serializable
 data class GuildExistsResponse(

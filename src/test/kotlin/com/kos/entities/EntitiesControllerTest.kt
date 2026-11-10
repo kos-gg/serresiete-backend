@@ -12,6 +12,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.entities.domain.GuildExistsResponse
 import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.views.Game
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -100,6 +101,20 @@ class EntitiesControllerTest {
         )
 
         assertTrue(result.isLeft { it is BadRequest })
+    }
+
+    @Test
+    fun `searching an entity normalizes its name to lowercase`() {
+        val result = parametersToEntityRequest(
+            parametersOf(
+                "game" to listOf("wow_forever"),
+                "name" to listOf("SIEMPRE"),
+                "surname" to listOf("tardE"),
+                "region" to listOf("eu")
+            )
+        )
+
+        assertEquals(Either.Right(WowForeverEntityRequest("siempre", "tarde", "eu") to Game.WOW_FOREVER), result)
     }
 
     @Test

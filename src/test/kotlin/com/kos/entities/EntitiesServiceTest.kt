@@ -1,24 +1,23 @@
 package com.kos.entities
 
-import com.kos.clients.NotFound
-import com.kos.common.error.ThirdPartyUnavailable
 import arrow.core.Either
+import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.blizzard.toGuildRoster
 import com.kos.clients.blizzard.toWowRealm
-import com.kos.entities.domain.LolSummoner
 import com.kos.clients.domain.GetWowRosterResponse
 import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.riot.RiotClient
+import com.kos.common.error.ThirdPartyUnavailable
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.datacache.BlizzardMockHelper.notHardcoreRealm
-import com.kos.entities.EntitiesTestHelper.basicRiotAccount
-import com.kos.entities.EntitiesTestHelper.basicPuuid
-import com.kos.entities.EntitiesTestHelper.basicLolSummoner
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntity2
+import com.kos.entities.EntitiesTestHelper.basicLolSummoner
+import com.kos.entities.EntitiesTestHelper.basicPuuid
+import com.kos.entities.EntitiesTestHelper.basicRiotAccount
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
@@ -33,21 +32,21 @@ import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
+import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wow.WowGuildUpdater
+import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
+import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.*
-import java.util.*
 import org.mockito.kotlin.verifyNoInteractions
+import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
-import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wowhc.WowHardcoreGuildResolver
-import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 
 class EntitiesServiceTest {
     private val riotClient = mock(RiotClient::class.java)
@@ -120,7 +119,12 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getClassicProfile(request1.region, request1.realm, request1.name)).thenReturn(
                 BlizzardMockHelper.getCharacterProfile(request1)
             )
-            `when`(blizzardClient.getRealm(request1.region, 5220)).thenReturn(Either.Right(notHardcoreRealm.toWowRealm()))
+            `when`(
+                blizzardClient.getRealm(
+                    request1.region,
+                    5220
+                )
+            ).thenReturn(Either.Right(notHardcoreRealm.toWowRealm()))
 
             val entitiesService = createService(emptyEntitiesState)
 
@@ -498,6 +502,19 @@ class EntitiesServiceTest {
     }
 
     @Test
+    fun `exists recognises a stored wow character requested with an alias`() {
+        runBlocking {
+            val entitiesService = createService(EntitiesState(listOf(basicWowEntity), listOf(), listOf()))
+
+            val res = entitiesService.exists(listOf(basicWowRequest.copy(alias = "kaka")), Game.WOW)
+
+            assertEquals(listOf(basicWowRequest.toResponse()), res.exist)
+            assertEquals(listOf(), res.nonExisting)
+            verifyNoInteractions(blizzardClient)
+        }
+    }
+
+    @Test
     fun `exists reports characters that don't exist anywhere as nonExisting`() {
         runBlocking {
             `when`(
@@ -615,7 +632,8 @@ class EntitiesServiceTest {
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
-        val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
+        val wowHardcoreGuildUpdater =
+            WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
         val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         return EntitiesService(

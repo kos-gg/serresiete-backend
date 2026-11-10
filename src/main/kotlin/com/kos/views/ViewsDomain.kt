@@ -6,6 +6,7 @@ import com.kos.common.error.InvalidGameType
 import com.kos.datacache.domain.Data
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
+import com.kos.entities.domain.normalized
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
@@ -107,6 +108,10 @@ data class ViewPatchRequest(
     val game: Game,
     val featured: Boolean? = null
 )
+
+fun ViewRequest.normalized(): ViewRequest = copy(entities = entities.map { it.normalized() })
+
+fun ViewPatchRequest.normalized(): ViewPatchRequest = copy(entities = entities?.map { it.normalized() })
 
 @Serializable
 sealed interface ViewResult {

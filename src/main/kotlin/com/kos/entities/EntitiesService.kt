@@ -25,28 +25,38 @@ data class EntitiesService(
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
     private val wowGuildUpdater: WowGuildUpdater,
 
-    ) : WithLogger("EntitiesService") {
+) : WithLogger("EntitiesService") {
 
     suspend fun exists(
         requestedEntities: List<EntityRequest>,
         game: Game
     ): EntitiesExistResponse {
         val resolved = resolveEntities(requestedEntities, game)
-        val exist = resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() }
-        val nonExisting = requestedEntities.filterNot { it in exist || it in resolved.unchecked }
+        val exist = (resolved.entities.map { it.first.toRequest() } + resolved.existing.map { it.first.toRequest() })
+            .map { it.toResponse() }
+        val unchecked = resolved.unchecked.map { it.toResponse() }
+        val nonExisting = requestedEntities.map { it.toResponse() }.filterNot { it in exist || it in unchecked }
 
         return EntitiesExistResponse(
-            exist = exist.map { it.toResponse() },
-            nonExisting = nonExisting.map { it.toResponse() },
-            unchecked = resolved.unchecked.map { it.toResponse() }
+            exist = exist,
+            nonExisting = nonExisting,
+            unchecked = unchecked
         )
     }
 
-    suspend fun guildExists(name: String, region: String, realm: String): Either<ThirdPartyUnavailable, GuildExistsResponse> =
+    suspend fun guildExists(
+        name: String,
+        region: String,
+        realm: String
+    ): Either<ThirdPartyUnavailable, GuildExistsResponse> =
         findTrackedGuild(name, realm, region, Game.WOW)
             ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
             ?: either {
-                recover({ GuildExistsResponse(wowGuildResolver.exists(WowEntityRequest(name, region, realm)).bind()) }) {
+                recover({
+                    GuildExistsResponse(
+                        wowGuildResolver.exists(WowEntityRequest(name, region, realm)).bind()
+                    )
+                }) {
                     if (it is NotFound) GuildExistsResponse(null)
                     else {
                         logger.warn("Couldn't check whether guild $name ($region/$realm) exists: $it")

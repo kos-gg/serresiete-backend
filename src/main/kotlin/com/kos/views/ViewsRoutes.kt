@@ -93,7 +93,7 @@ fun Route.viewsRouting(
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.createView(
                     userWithActivities?.name,
-                    call.receive(),
+                    call.receive<ViewRequest>().normalized(),
                     userWithActivities?.activities.orEmpty()
                 ).fold({
                     call.respondWithHandledError(it)
@@ -105,7 +105,7 @@ fun Route.viewsRouting(
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.editView(
                     userWithActivities?.name,
-                    call.receive(),
+                    call.receive<ViewRequest>().normalized(),
                     call.parameters["id"].orEmpty(),
                     userWithActivities?.activities.orEmpty()
                 ).fold({
@@ -118,7 +118,7 @@ fun Route.viewsRouting(
                 val userWithActivities = call.principal<UserWithActivities>()
                 viewsController.patchView(
                     userWithActivities?.name,
-                    call.receive(),
+                    call.receive<ViewPatchRequest>().normalized(),
                     call.parameters["id"].orEmpty(),
                     userWithActivities?.activities.orEmpty()
                 ).fold({
