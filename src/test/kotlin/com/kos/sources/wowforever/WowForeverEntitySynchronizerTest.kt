@@ -1,6 +1,8 @@
 package com.kos.sources.wowforever
 
 import arrow.core.Either
+import com.kos.clients.ClientError
+import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.DataCache
@@ -16,8 +18,8 @@ import com.kos.sources.wowforever.WowForeverTestHelper.arms
 import com.kos.sources.wowforever.WowForeverTestHelper.belt
 import com.kos.sources.wowforever.WowForeverTestHelper.boots
 import com.kos.sources.wowforever.WowForeverTestHelper.bootsIcon
-import com.kos.sources.wowforever.WowForeverTestHelper.foreverCharacter
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverAvatar
+import com.kos.sources.wowforever.WowForeverTestHelper.foreverCharacter
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverData
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverStats
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrike
@@ -45,6 +47,7 @@ class WowForeverEntitySynchronizerTest {
     private val rendIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/rend.jpg"
     private val storedBoots = WowForeverMedia(ITEM, boots.details.id, bootsIcon)
     private val otherEntity = basicWowForeverEntity.copy(id = 2, name = "otro", blizzardId = 2)
+    private val previousData = foreverData.copy(lastLogin = foreverData.lastLogin.minusDays(1))
 
     private suspend fun givenProfile(entity: WowForeverEntity = basicWowForeverEntity) {
         `when`(blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname))
@@ -56,7 +59,7 @@ class WowForeverEntitySynchronizerTest {
     }
 
     private suspend fun givenAvatar(
-        result: Either<TimeoutError, String?>,
+        result: Either<ClientError, String?>,
         entity: WowForeverEntity = basicWowForeverEntity
     ) {
         `when`(blizzardClient.getForeverAvatar(entity.region, entity.name, entity.surname)).thenReturn(result)
@@ -162,7 +165,7 @@ class WowForeverEntitySynchronizerTest {
     fun `when the equipment could not be fetched the previous items are kept and their missing icons filled`() {
         runBlocking {
             mediaRepository.withState(listOf(storedBoots))
-            givenPreviousData(foreverData.copy(items = listOf(boots.toWowItem(null), belt.toWowItem(null))))
+            givenPreviousData(previousData.copy(items = listOf(boots.toWowItem(null), belt.toWowItem(null))))
             givenProfile()
             givenEquipment(Either.Left(TimeoutError("timeout")))
             `when`(blizzardClient.getForeverItemMedia("eu", belt.details.id)).thenReturn(Either.Right(beltIcon))
@@ -205,7 +208,10 @@ class WowForeverEntitySynchronizerTest {
                 cachedData().talents
             )
             verify(blizzardClient, never()).getForeverSpellMedia("eu", heroicStrike.spellId)
-            assertEquals(listOf(storedHeroicStrike, WowForeverMedia(SPELL, rend.spellId, rendIcon)), mediaRepository.state())
+            assertEquals(
+                listOf(storedHeroicStrike, WowForeverMedia(SPELL, rend.spellId, rendIcon)),
+                mediaRepository.state()
+            )
         }
     }
 
@@ -246,7 +252,7 @@ class WowForeverEntitySynchronizerTest {
     @Test
     fun `when the specializations could not be fetched the previous talents are kept and their missing icons filled`() {
         runBlocking {
-            givenPreviousData(foreverData.copy(talents = listOf(arms(rend))))
+            givenPreviousData(previousData.copy(talents = listOf(arms(rend))))
             givenProfile()
             givenSpecializations(Either.Left(TimeoutError("timeout")))
             `when`(blizzardClient.getForeverSpellMedia("eu", rend.spellId)).thenReturn(Either.Right(rendIcon))
@@ -275,7 +281,7 @@ class WowForeverEntitySynchronizerTest {
     fun `when the statistics could not be fetched the previous statistics are kept`() {
         runBlocking {
             val previousStats = foreverStats.copy(health = 500)
-            givenPreviousData(foreverData.copy(stats = previousStats))
+            givenPreviousData(previousData.copy(stats = previousStats))
             givenProfile()
             givenStatistics(Either.Left(TimeoutError("timeout")))
 
@@ -303,7 +309,7 @@ class WowForeverEntitySynchronizerTest {
     fun `when the avatar could not be fetched the previous avatar is kept`() {
         runBlocking {
             val previousAvatar = "https://render.worldofwarcraft.com/forever-eu/character/137/previous-avatar-sd.jpg"
-            givenPreviousData(foreverData.copy(avatar = previousAvatar))
+            givenPreviousData(previousData.copy(avatar = previousAvatar))
             givenProfile()
             givenAvatar(Either.Left(TimeoutError("timeout")))
 
@@ -311,6 +317,86 @@ class WowForeverEntitySynchronizerTest {
 
             assertEquals(listOf(), errors)
             assertEquals(previousAvatar, cachedData().avatar)
+        }
+    }
+
+    @Test
+    fun `a character that has not logged out since the last sync reuses its cached details`() {
+        runBlocking {
+            val cachedItems = listOf(boots.toWowItem(bootsIcon))
+            mediaRepository.withState(listOf(storedBoots))
+            givenPreviousData(foreverData.copy(items = cachedItems, talents = listOf(), avatar = null))
+            givenProfile()
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(2, dataCacheRepository.get(basicWowForeverEntity.id).size)
+            assertEquals(foreverData.copy(items = cachedItems, talents = listOf(), avatar = null), cachedData())
+            verify(blizzardClient, never()).getForeverEquipment(
+                basicWowForeverEntity.region,
+                basicWowForeverEntity.name,
+                basicWowForeverEntity.surname
+            )
+            verify(blizzardClient, never()).getForeverSpecializations(
+                basicWowForeverEntity.region,
+                basicWowForeverEntity.name,
+                basicWowForeverEntity.surname
+            )
+            verify(blizzardClient, never()).getForeverStatistics(
+                basicWowForeverEntity.region,
+                basicWowForeverEntity.name,
+                basicWowForeverEntity.surname
+            )
+            verify(blizzardClient, never()).getForeverAvatar(
+                basicWowForeverEntity.region,
+                basicWowForeverEntity.name,
+                basicWowForeverEntity.surname
+            )
+        }
+    }
+
+    @Test
+    fun `a character that logged out since the last sync fetches its details`() {
+        runBlocking {
+            givenPreviousData(previousData.copy(items = listOf(boots.toWowItem(bootsIcon))))
+            givenProfile()
+            givenEquipment(Either.Right(listOf(belt)))
+            `when`(blizzardClient.getForeverItemMedia("eu", belt.details.id)).thenReturn(Either.Right(beltIcon))
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(foreverData.copy(items = listOf(belt.toWowItem(beltIcon)), talents = listOf()), cachedData())
+        }
+    }
+
+    @Test
+    fun `when a detail could not be fetched the previous login is kept so the next sync fetches the details again`() {
+        runBlocking {
+            givenPreviousData(previousData)
+            givenProfile()
+            givenStatistics(Either.Left(TimeoutError("timeout")))
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+            assertEquals(previousData.lastLogin, cachedData().lastLogin)
+
+            givenStatistics(Either.Right(foreverStats))
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(foreverData.copy(items = listOf(), talents = listOf()), cachedData())
+        }
+    }
+
+    @Test
+    fun `a character without avatar is not a failure`() {
+        runBlocking {
+            givenPreviousData(previousData.copy(avatar = null))
+            givenProfile()
+            givenAvatar(Either.Left(NotFound))
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(foreverData.copy(items = listOf(), talents = listOf(), avatar = null), cachedData())
         }
     }
 

@@ -58,6 +58,16 @@ class DataCacheDatabaseRepository(private val db: Database) : DataCacheRepositor
             DataCaches.selectAll().where { DataCaches.entityId.eq(entityId) }.map { resultRowToDataCache(it) }
         }
 
+    override suspend fun getLatest(entityId: Long, game: Game): DataCache? =
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            DataCaches.selectAll()
+                .where { DataCaches.game.eq(game.toString()) and DataCaches.entityId.eq(entityId) }
+                .orderBy(DataCaches.inserted, SortOrder.DESC)
+                .limit(1)
+                .singleOrNull()
+                ?.let { resultRowToDataCache(it) }
+        }
+
     override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
         val gameCondition = game?.let { DataCaches.game eq it.toString() }
         val expiredCondition = DataCaches.inserted.less(OffsetDateTime.now().minusHours(ttl).toString())

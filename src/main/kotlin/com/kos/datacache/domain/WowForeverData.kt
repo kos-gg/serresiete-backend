@@ -45,8 +45,6 @@ data class WowForeverData(
     val stats: WowStats? = null,
     val avatar: String? = null
 ) : Data {
-    fun isComplete(): Boolean = listOf(items, talents, stats, avatar).all { it != null }
-
     fun orElse(cached: WowForeverData?): WowForeverData = copy(
         items = items ?: cached?.items,
         talents = talents ?: cached?.talents,

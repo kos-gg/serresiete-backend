@@ -48,6 +48,19 @@ abstract class DataCacheRepositoryTestCommon {
     }
 
     @Test
+    open fun `given a repository with several cached data i can retrieve the latest one of an entity for a game`() {
+        runBlocking {
+            val latest = wowDataCache.copy(inserted = wowDataCache.inserted.plusMinutes(30))
+            val otherGame = wowDataCache.copy(inserted = wowDataCache.inserted.plusHours(1), game = Game.WOW_HC)
+            val otherEntity = wowDataCache.copy(entityId = 2, inserted = wowDataCache.inserted.plusHours(1))
+            val repositoryWithState = repository.withState(listOf(wowDataCache, latest, otherGame, otherEntity))
+
+            assertEquals(latest, repositoryWithState.getLatest(1, Game.WOW))
+            assertEquals(null, repositoryWithState.getLatest(3, Game.WOW))
+        }
+    }
+
+    @Test
     open fun `giver a repository with an expired record i can clear it`() {
         runBlocking {
             val repositoryWithState = repository.withState(listOf(wowDataCache, outdatedDataCache))
