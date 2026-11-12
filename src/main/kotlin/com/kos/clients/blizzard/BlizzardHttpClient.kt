@@ -17,6 +17,7 @@ import com.kos.datacache.domain.WowStats
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
+import com.kos.entities.domain.WowForeverGuildRoster
 import com.kos.entities.domain.WowRealm
 import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.sources.wowforever.WowForeverEquippedItem
@@ -79,6 +80,18 @@ class BlizzardHttpClient(
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.toWowForeverCharacter() }
+    }
+
+    override suspend fun getForeverGuildRoster(
+        region: String,
+        guild: String
+    ): Either<ClientError, WowForeverGuildRoster> {
+        logger.debug("getForeverGuildRoster for $region $guild")
+        return fetchFromApi<GetWowForeverRosterResponse> {
+            client.get(url(region, "/data/wow/guild/${slugify(guild)}/roster?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowForeverGuildRoster() }
     }
 
     override suspend fun getForeverEquipment(

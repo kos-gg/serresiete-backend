@@ -16,6 +16,8 @@ import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
+import com.kos.entities.domain.WowForeverGuildMember
+import com.kos.entities.domain.WowForeverGuildRoster
 import com.kos.entities.domain.findClassAndSpec
 import com.kos.sources.wow.KeystoneBestRun
 import com.kos.sources.wow.MythicKeystoneProfile
@@ -159,6 +161,11 @@ fun GetWowRealmResponse.toWowRealm() = WowRealm(category in hardcoreRealmCategor
 fun GetWowRosterResponse.toGuildRoster() = GuildRoster(
     guild.id,
     members.map { GuildRosterMember(it.character.name, it.character.level, it.character.id, it.character.realm?.slug) }
+)
+
+fun GetWowForeverRosterResponse.toWowForeverGuildRoster() = WowForeverGuildRoster(
+    guild.id,
+    members.map { WowForeverGuildMember(it.character.id, it.character.name, it.character.surname) }
 )
 
 fun GetWowMythicKeystoneSeasonResponse.toMythicKeystoneProfile(): Either<JsonParseError, MythicKeystoneProfile> =

@@ -61,3 +61,14 @@ data class WowForeverCharacter(
     val ruleset: String,
     val lastLogin: OffsetDateTime
 )
+
+data class WowForeverGuildRoster(
+    val guildId: Long,
+    val members: List<WowForeverGuildMember>
+)
+
+data class WowForeverGuildMember(
+    val id: Long,
+    val name: String,
+    val surname: String
+)

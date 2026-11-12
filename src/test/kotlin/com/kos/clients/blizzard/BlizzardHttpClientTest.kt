@@ -23,6 +23,7 @@ import com.kos.datacache.domain.WowWeaponDisplayableStats
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
+import com.kos.entities.domain.WowForeverGuildMember
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -270,6 +271,35 @@ class BlizzardHttpClientTest {
         )
 
         assertEquals(Either.Right(expected), blizzardClient.getForeverProfile("eu", "Siempre", "Tarde"))
+    }
+
+    @Test
+    fun `getForeverGuildRoster fetches every member of the guild from the forever namespace`() = runBlocking {
+        givenAValidToken()
+
+        val result = blizzardClient.getForeverGuildRoster("eu", "TSALAB")
+
+        assertEquals(Either.Right(104078L), result.map { it.guildId })
+        assertEquals(Either.Right(32), result.map { it.members.size })
+        assertEquals(
+            Either.Right(true),
+            result.map {
+                it.members.containsAll(
+                    listOf(
+                        WowForeverGuildMember(10613158, "Sanxei", "Zugzug"),
+                        WowForeverGuildMember(11318652, "Eredeth", "Why"),
+                        WowForeverGuildMember(18285263, "Smårips", "Balast")
+                    )
+                )
+            }
+        )
+    }
+
+    @Test
+    fun `getForeverGuildRoster returns not found when blizzard doesn't find the guild`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverGuildRoster("eu", "unknown"))
     }
 
     @Test

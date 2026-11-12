@@ -487,6 +487,24 @@ data class GetWowRosterResponse(
 )
 
 @Serializable
+data class WowForeverRosterCharacterResponse(
+    val id: Long,
+    val name: String,
+    val surname: String
+)
+
+@Serializable
+data class WowForeverMemberResponse(
+    val character: WowForeverRosterCharacterResponse
+)
+
+@Serializable
+data class GetWowForeverRosterResponse(
+    val members: List<WowForeverMemberResponse>,
+    val guild: WowGuildResponse
+)
+
+@Serializable
 data class MythicRatingResponse(
     val rating: Double
 )

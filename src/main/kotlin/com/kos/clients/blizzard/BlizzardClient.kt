@@ -9,6 +9,7 @@ import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
+import com.kos.entities.domain.WowForeverGuildRoster
 import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.sources.wowforever.WowForeverEquippedItem
 
@@ -30,6 +31,8 @@ interface BlizzardClient {
         name: String,
         surname: String
     ): Either<ClientError, WowForeverCharacter>
+
+    suspend fun getForeverGuildRoster(region: String, guild: String): Either<ClientError, WowForeverGuildRoster>
 
     suspend fun getForeverEquipment(
         region: String,
