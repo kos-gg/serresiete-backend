@@ -106,6 +106,12 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         assertNotNull(data.avatar, "Expected avatar in data cache of $name")
     }
 
+    @And("the WOW_FOREVER data cache for {string} {string} {string} has the pvp summary")
+    fun wowForeverCacheHasPvpSummary(name: String, surname: String, region: String) {
+        val data = newestWowForeverData(name, surname, region)
+        assertNotNull(data.pvp, "Expected pvp summary in data cache of $name")
+    }
+
     @And("the WOW_FOREVER media table stores the icons of {string} {string} {string}")
     fun wowForeverMediaStoresIcons(name: String, surname: String, region: String) {
         val data = newestWowForeverData(name, surname, region)

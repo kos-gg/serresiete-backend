@@ -114,7 +114,7 @@ class WowForeverEntitySynchronizer(
 
         val dataCache = cachedData
             ?.takeIf { profile.lastLogin.isEqual(it.lastLogin) }
-            ?.let { profile.toWowForeverData(entity.region, it.items, it.talents, it.stats, it.avatar) }
+            ?.let { profile.toWowForeverData(entity.region, it.items, it.talents, it.stats, it.avatar, it.pvp) }
             ?: fetchDetails(entity, profile, cachedData)
 
         DataCache(
@@ -212,16 +212,18 @@ class WowForeverEntitySynchronizer(
         val specializations = getSpecializations(entity)
         val statistics = getStats(entity)
         val avatar = getAvatar(entity)
+        val pvp = getPvp(entity)
 
         val foreverData = profile.toWowForeverData(
             entity.region,
             items = equipment.getOrNull()?.map { it.toWowItem(null) },
             talents = specializations.getOrNull(),
             stats = statistics.getOrNull(),
-            avatar = avatar.getOrNull()
+            avatar = avatar.getOrNull(),
+            pvp = pvp.getOrNull()
         ).orElse(cachedData)
 
-        val everyDetailFetched = listOf(equipment, specializations, statistics, avatar).all { it.isRight() }
+        val everyDetailFetched = listOf(equipment, specializations, statistics, avatar, pvp).all { it.isRight() }
         return if (everyDetailFetched) foreverData
         else foreverData.copy(lastLogin = cachedData?.lastLogin ?: foreverData.lastLogin)
     }
@@ -242,7 +244,8 @@ class WowForeverEntitySynchronizer(
         items: List<WowItem>?,
         talents: List<WowForeverSpecialization>?,
         stats: WowStats?,
-        avatar: String?
+        avatar: String?,
+        pvp: WowForeverPvp?
     ) = WowForeverData(
         id = id,
         name = name,
@@ -262,7 +265,8 @@ class WowForeverEntitySynchronizer(
         items = items,
         talents = talents,
         stats = stats,
-        avatar = avatar
+        avatar = avatar,
+        pvp = pvp
     )
 
     private suspend fun getEquipment(entity: WowForeverEntity): Either<ClientError, List<WowForeverEquippedItem>?> =
@@ -284,6 +288,11 @@ class WowForeverEntitySynchronizer(
         blizzardClient.getForeverAvatar(entity.region, entity.name, entity.surname)
             .missingWhenNotFound()
             .onLeft { logger.warn("Couldn't fetch avatar of wow forever entity ${entity.id}: $it") }
+
+    private suspend fun getPvp(entity: WowForeverEntity): Either<ClientError, WowForeverPvp?> =
+        blizzardClient.getForeverPvpSummary(entity.region, entity.name, entity.surname)
+            .missingWhenNotFound()
+            .onLeft { logger.warn("Couldn't fetch pvp summary of wow forever entity ${entity.id}: $it") }
 
     private fun <A> Either<ClientError, A>.missingWhenNotFound(): Either<ClientError, A?> =
         either { recover({ bind() }) { if (it is NotFound) null else raise(it) } }

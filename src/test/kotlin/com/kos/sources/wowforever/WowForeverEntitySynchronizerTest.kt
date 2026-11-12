@@ -8,6 +8,7 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowStats
 import com.kos.datacache.repository.DataCacheInMemoryRepository
@@ -21,6 +22,7 @@ import com.kos.sources.wowforever.WowForeverTestHelper.bootsIcon
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverAvatar
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverCharacter
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverData
+import com.kos.sources.wowforever.WowForeverTestHelper.foreverPvp
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverStats
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrike
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrikeIcon
@@ -56,6 +58,14 @@ class WowForeverEntitySynchronizerTest {
         givenSpecializations(Either.Right(listOf()), entity)
         givenStatistics(Either.Right(foreverStats), entity)
         givenAvatar(Either.Right(foreverAvatar), entity)
+        givenPvp(Either.Right(foreverPvp), entity)
+    }
+
+    private suspend fun givenPvp(
+        result: Either<ClientError, WowForeverPvp>,
+        entity: WowForeverEntity = basicWowForeverEntity
+    ) {
+        `when`(blizzardClient.getForeverPvpSummary(entity.region, entity.name, entity.surname)).thenReturn(result)
     }
 
     private suspend fun givenAvatar(
@@ -321,6 +331,34 @@ class WowForeverEntitySynchronizerTest {
     }
 
     @Test
+    fun `when the pvp summary could not be fetched the previous pvp summary is kept`() {
+        runBlocking {
+            val previousPvp = WowForeverPvp(honorableKills = 5, rank = 0)
+            givenPreviousData(previousData.copy(pvp = previousPvp))
+            givenProfile()
+            givenPvp(Either.Left(TimeoutError("timeout")))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(previousPvp, cachedData().pvp)
+            assertEquals(previousData.lastLogin, cachedData().lastLogin)
+        }
+    }
+
+    @Test
+    fun `a character cached before the pvp summary existed gets it on its next logout`() {
+        runBlocking {
+            givenPreviousData(previousData.copy(pvp = null))
+            givenProfile()
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(foreverPvp, cachedData().pvp)
+        }
+    }
+
+    @Test
     fun `a character that has not logged out since the last sync reuses its cached details`() {
         runBlocking {
             val cachedItems = listOf(boots.toWowItem(bootsIcon))
@@ -349,6 +387,11 @@ class WowForeverEntitySynchronizerTest {
                 basicWowForeverEntity.surname
             )
             verify(blizzardClient, never()).getForeverAvatar(
+                basicWowForeverEntity.region,
+                basicWowForeverEntity.name,
+                basicWowForeverEntity.surname
+            )
+            verify(blizzardClient, never()).getForeverPvpSummary(
                 basicWowForeverEntity.region,
                 basicWowForeverEntity.name,
                 basicWowForeverEntity.surname

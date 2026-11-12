@@ -59,6 +59,12 @@ interface BlizzardClient {
         surname: String
     ): Either<ClientError, String?>
 
+    suspend fun getForeverPvpSummary(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowForeverPvp>
+
     suspend fun getCharacterMedia(
         region: String,
         realm: String,

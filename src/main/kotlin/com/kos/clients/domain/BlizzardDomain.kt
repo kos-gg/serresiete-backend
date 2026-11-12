@@ -259,6 +259,14 @@ data class GetWowCharacterStatsResponse(
 data class AssetKeyValue(val key: String, val value: String)
 
 @Serializable
+data class GetWowForeverPvpSummaryResponse(
+    @SerialName("honorable_kills")
+    val honorableKills: Int,
+    @SerialName("pvp_rank")
+    val pvpRank: Int
+)
+
+@Serializable
 data class GetWowMediaResponse(
     val assets: List<AssetKeyValue>
 )

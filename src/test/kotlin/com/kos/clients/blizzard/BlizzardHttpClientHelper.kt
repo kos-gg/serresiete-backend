@@ -60,6 +60,12 @@ object BlizzardHttpClientHelper {
             .bufferedReader(Charsets.UTF_8)
             .use { it.readText() }
 
+    private val foreverPvpSummaryResponse: String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream("unit/wow/blizzard-forever-pvp-summary-response.json")!!
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+
     private const val NOT_FOUND = """{"code":404,"type":"BLZWEBAPI00000404","detail":"Not Found"}"""
 
     val client = HttpClient(MockEngine) {
@@ -95,6 +101,11 @@ object BlizzardHttpClientHelper {
                             respond(foreverStatisticsResponse, HttpStatusCode.OK)
                         else respond(NOT_FOUND, HttpStatusCode.NotFound)
 
+                    "/profile/wow/character/siempre-tarde/pvp-summary" ->
+                        if (request.headers["Battlenet-Namespace"] == "profile-forever-eu")
+                            respond(foreverPvpSummaryResponse, HttpStatusCode.OK)
+                        else respond(NOT_FOUND, HttpStatusCode.NotFound)
+
                     "/data/wow/media/spell/12282" ->
                         if (request.headers["Battlenet-Namespace"] == "static-forever-eu")
                             respond(json.encodeToString(getWowItemMediaResponse), HttpStatusCode.OK)
@@ -109,7 +120,8 @@ object BlizzardHttpClientHelper {
                     "/profile/wow/character/unknown-tarde/equipment",
                     "/profile/wow/character/unknown-tarde/specializations",
                     "/profile/wow/character/unknown-tarde/statistics",
-                    "/profile/wow/character/unknown-tarde/character-media" ->
+                    "/profile/wow/character/unknown-tarde/character-media",
+                    "/profile/wow/character/unknown-tarde/pvp-summary" ->
                         respond(NOT_FOUND, HttpStatusCode.NotFound)
 
                     "/profile/wow/character/realm/name" ->

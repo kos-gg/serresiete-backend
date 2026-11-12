@@ -1,6 +1,7 @@
 package com.kos.sources.wowforever
 
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
@@ -62,6 +63,8 @@ object WowForeverTestHelper {
         resistances = WowResistances(fire = 0, shadow = 5, nature = 0, arcane = 0, frost = 0)
     )
 
+    val foreverPvp = WowForeverPvp(honorableKills = 20, rank = 0)
+
     val foreverData = WowForeverData(
         id = 6880137,
         name = "Sanxei",
@@ -79,7 +82,8 @@ object WowForeverTestHelper {
         ruleset = "PvP",
         lastLogin = lastLogin,
         stats = foreverStats,
-        avatar = foreverAvatar
+        avatar = foreverAvatar,
+        pvp = foreverPvp
     )
 
     private fun equippedItem(id: Long, slot: String, name: String) = WowForeverEquippedItem(
