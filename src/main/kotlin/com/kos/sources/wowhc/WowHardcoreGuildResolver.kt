@@ -4,7 +4,7 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.orThrow
 import com.kos.entities.EntityResolver
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
@@ -25,8 +25,8 @@ class WowHardcoreGuildResolver(
         return characterResolver.resolve(members).copy(guild = payload(guildRoster, guildReq))
     }
 
-    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
-        GuildPayload(
+    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): WowRealmGuild =
+        WowRealmGuild(
             name = guild.name,
             realm = guild.realm,
             region = guild.region,

@@ -5,6 +5,7 @@ import com.kos.eventsourcing.events.Operation
 import com.kos.views.Game
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -97,12 +98,33 @@ data class EntitiesExistResponse(
 )
 
 @Serializable
-data class GuildPayload(
-    val name: String,
-    val realm: String,
-    val region: String,
+sealed interface WowGuild {
+    val name: String
+    val region: String
     val blizzardId: Long
-)
+}
+
+@Serializable
+@SerialName("wow")
+data class WowRealmGuild(
+    override val name: String,
+    val realm: String,
+    override val region: String,
+    override val blizzardId: Long
+) : WowGuild
+
+@Serializable
+@SerialName("wow_forever")
+data class WowForeverGuild(
+    override val name: String,
+    override val region: String,
+    override val blizzardId: Long
+) : WowGuild
+
+fun WowGuild.realmOrNull(): String? = when (this) {
+    is WowRealmGuild -> realm
+    is WowForeverGuild -> null
+}
 
 @Serializable
 data class GuildExistsRequest(
@@ -116,14 +138,14 @@ fun GuildExistsRequest.normalized(): GuildExistsRequest = copy(name = name.lower
 
 @Serializable
 data class GuildExistsResponse(
-    val guild: GuildPayload?
+    val guild: WowGuild?
 )
 
 data class ResolvedEntities(
     val entities: List<Pair<InsertEntityRequest, String?>>,
     val existing: List<Pair<Entity, String?>>,
     val unchecked: List<EntityRequest> = emptyList(),
-    val guild: GuildPayload? = null,
+    val guild: WowGuild? = null,
 )
 
 class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSerializer<WithAlias<T>> {

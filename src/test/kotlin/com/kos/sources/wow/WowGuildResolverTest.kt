@@ -11,7 +11,7 @@ import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
@@ -49,7 +49,7 @@ class WowGuildResolverTest {
             guildResolver.exists(guildRequest)
                 .onLeft { fail() }
                 .onRight { guild ->
-                    assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), guild)
+                    assertEquals(WowRealmGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), guild)
                 }
 
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -103,7 +103,7 @@ class WowGuildResolverTest {
                     )
                     assertEquals(listOf(), res.unchecked)
                     assertEquals(
-                        GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999),
+                        WowRealmGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999),
                         res.guild
                     )
                 }
@@ -170,7 +170,7 @@ class WowGuildResolverTest {
 
             resolver.resolve(listOf(mixedCaseRequest))
                 .let { res ->
-                    assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                    assertEquals(WowRealmGuild("method", "twisting-nether", "eu", 999), res.guild)
                 }
         }
     }

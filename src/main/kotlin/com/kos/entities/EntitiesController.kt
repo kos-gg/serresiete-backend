@@ -68,14 +68,18 @@ class EntitiesController(
         ensureNotNull(client) { NotAuthorized }
         ensure(activities.contains(Activities.checkEntitiesExist)) { NotEnoughPermissions(client) }
         ensure(isBlizzardRegion(region)) { InvalidRegion }
-        val guildRealm = when (game) {
-            Game.WOW -> ensureNotNull(realm) { BadRequest("Realm is required to check a wow guild") }
+        when (game) {
+            Game.WOW -> {
+                val guildRealm = ensureNotNull(realm) { BadRequest("Realm is required to check a wow guild") }
+                entitiesService.wowGuildExists(name, region, guildRealm).bind()
+            }
+
             Game.WOW_FOREVER -> {
                 ensure(realm == null) { BadRequest("Wow forever guilds have no realm") }
-                ""
+                entitiesService.wowForeverGuildExists(name, region).bind()
             }
+
             Game.WOW_HC, Game.LOL -> raise(BadRequest("Guild existence can't be checked for $game"))
         }
-        entitiesService.guildExists(name, region, guildRealm, game).bind()
     }
 }

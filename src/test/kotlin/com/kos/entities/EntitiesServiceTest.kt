@@ -560,10 +560,10 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             result.onLeft { fail() }.onRight { res ->
-                assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                assertEquals(WowRealmGuild("method", "twisting-nether", "eu", 999), res.guild)
             }
         }
     }
@@ -572,12 +572,12 @@ class EntitiesServiceTest {
     fun `guildExists returns a tracked guild without asking blizzard`() {
         runBlocking {
             val entitiesService = createService(emptyEntitiesState)
-            entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+            entitiesService.insertGuild(WowRealmGuild("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             result.onLeft { fail() }.onRight { res ->
-                assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                assertEquals(WowRealmGuild("method", "twisting-nether", "eu", 999), res.guild)
             }
             verifyNoInteractions(blizzardClient)
         }
@@ -591,7 +591,7 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             result.onLeft { fail() }.onRight { res ->
                 assertEquals(null, res.guild)
@@ -607,7 +607,7 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             assertEquals(Either.Left(ThirdPartyUnavailable), result)
         }
@@ -621,9 +621,9 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("tsalab", "eu", "", Game.WOW_FOREVER)
+            val result = entitiesService.wowForeverGuildExists("tsalab", "eu")
 
-            assertEquals(Either.Right(GuildExistsResponse(GuildPayload("tsalab", "", "eu", 104078))), result)
+            assertEquals(Either.Right(GuildExistsResponse(WowForeverGuild("tsalab", "eu", 104078))), result)
         }
     }
 
@@ -631,11 +631,11 @@ class EntitiesServiceTest {
     fun `guildExists returns a tracked wow forever guild without asking blizzard`() {
         runBlocking {
             val entitiesService = createService(emptyEntitiesState)
-            entitiesService.insertGuild(GuildPayload("tsalab", "", "eu", 104078), "view-1", Game.WOW_FOREVER)
+            entitiesService.insertGuild(WowForeverGuild("tsalab", "eu", 104078), "view-1", Game.WOW_FOREVER)
 
-            val result = entitiesService.guildExists("tsalab", "eu", "", Game.WOW_FOREVER)
+            val result = entitiesService.wowForeverGuildExists("tsalab", "eu")
 
-            assertEquals(Either.Right(GuildExistsResponse(GuildPayload("tsalab", "", "eu", 104078))), result)
+            assertEquals(Either.Right(GuildExistsResponse(WowForeverGuild("tsalab", "eu", 104078))), result)
             verifyNoInteractions(blizzardClient)
         }
     }
@@ -645,9 +645,9 @@ class EntitiesServiceTest {
         runBlocking {
             `when`(blizzardClient.getForeverGuildRoster("eu", "method")).thenReturn(Either.Left(NotFound))
             val entitiesService = createService(emptyEntitiesState)
-            entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+            entitiesService.insertGuild(WowRealmGuild("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
 
-            val result = entitiesService.guildExists("method", "eu", "", Game.WOW_FOREVER)
+            val result = entitiesService.wowForeverGuildExists("method", "eu")
 
             assertEquals(Either.Right(GuildExistsResponse(null)), result)
         }
@@ -659,8 +659,8 @@ class EntitiesServiceTest {
             `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab"))
                 .thenReturn(Either.Right(WowForeverGuildRoster(104078, listOf())))
             val entitiesService = createService(emptyEntitiesState)
-            entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
-            entitiesService.insertGuild(GuildPayload("tsalab", "", "eu", 104078), "view-2", Game.WOW_FOREVER)
+            entitiesService.insertGuild(WowRealmGuild("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+            entitiesService.insertGuild(WowForeverGuild("tsalab", "eu", 104078), "view-2", Game.WOW_FOREVER)
 
             assertEquals(listOf(), entitiesService.updateWowForeverGuilds())
             verify(blizzardClient).getForeverGuildRoster("eu", "tsalab")

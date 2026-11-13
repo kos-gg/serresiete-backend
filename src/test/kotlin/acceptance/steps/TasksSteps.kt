@@ -1,5 +1,7 @@
 package acceptance.steps
 
+import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowForeverGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
@@ -149,7 +151,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = emptyList()
                 )
             )
-            guildsRepo.insertGuild(12345, guildName, realm, region, viewId, Game.WOW_HC)
+            guildsRepo.insertGuild(WowRealmGuild(guildName, realm, region, 12345), viewId, Game.WOW_HC)
         }
     }
 
@@ -187,7 +189,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = listOf(ViewEntity(existingEntity.id, wowGuildViewId, null))
                 )
             )
-            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(WowRealmGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
         }
     }
 
@@ -222,8 +224,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     )
                 )
             )
-            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId, Game.WOW)
-            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId2, Game.WOW)
+            guildsRepo.insertGuild(WowRealmGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(WowRealmGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId2, Game.WOW)
         }
     }
 
@@ -251,7 +253,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = tracked.map { ViewEntity(it.id, wowForeverGuildViewId, null) }
                 )
             )
-            guildsRepo.insertGuild(104078, guildName, "", "eu", wowForeverGuildViewId, Game.WOW_FOREVER)
+            guildsRepo.insertGuild(WowForeverGuild(guildName, "eu", 104078), wowForeverGuildViewId, Game.WOW_FOREVER)
         }
     }
 

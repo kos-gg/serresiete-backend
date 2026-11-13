@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.entities.GuildUpdateFailed
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.domain.WowForeverGuildMember
@@ -30,7 +30,7 @@ class WowForeverGuildUpdaterTest {
 
     private val region = "eu"
     private val guildName = "tsalab"
-    private val guild = GuildPayload(guildName, "", region, 104078)
+    private val guild = WowForeverGuild(guildName, region, 104078)
 
     private suspend fun createGuildView(id: String): String {
         viewsRepository.create(id, "$guildName roster", "sanxei", listOf(), Game.WOW_FOREVER, false, null)

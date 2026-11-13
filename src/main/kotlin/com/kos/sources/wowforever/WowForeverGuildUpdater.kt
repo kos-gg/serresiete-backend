@@ -5,7 +5,7 @@ import com.kos.common.WithLogger
 import com.kos.entities.EntityUpdater
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.PartialFailure
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.repository.EntitiesRepository
@@ -16,9 +16,9 @@ class WowForeverGuildUpdater(
     private val guildResolver: WowForeverGuildResolver,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
-) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("WowForeverGuildUpdater") {
+) : EntityUpdater<Pair<WowForeverGuild, String>>, WithLogger("WowForeverGuildUpdater") {
 
-    override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<PartialFailure> =
+    override suspend fun update(entities: List<Pair<WowForeverGuild, String>>): List<PartialFailure> =
         entities.groupBy { it.first.blizzardId }
             .values
             .mapNotNull { rows ->
@@ -28,7 +28,7 @@ class WowForeverGuildUpdater(
                     ?.let { GuildUpdateFailed(guild, it) }
             }
 
-    private suspend fun updateGuild(guild: GuildPayload, viewIds: List<String>) {
+    private suspend fun updateGuild(guild: WowForeverGuild, viewIds: List<String>) {
         logger.info("Updating Wow Forever Guild ${guild.name} - ${guild.region} (${viewIds.size} view(s))")
         val (_, roster) = guildResolver.resolveRoster(guild.region, guild.name)
 
@@ -49,7 +49,7 @@ class WowForeverGuildUpdater(
             .filter { (member, entity) -> member.name != entity.name || member.surname != entity.surname }
             .forEach { (member, entity) -> entitiesRepository.update(entity.id, member, Game.WOW_FOREVER) }
 
-    private suspend fun syncViewMembership(guild: GuildPayload, viewIds: List<String>, inGuild: Set<Long>) {
+    private suspend fun syncViewMembership(guild: WowForeverGuild, viewIds: List<String>, inGuild: Set<Long>) {
         val currentlyAssociated = viewsRepository.get(viewIds.first())?.entitiesIds?.toSet().orEmpty()
         val noLongerInGuild = currentlyAssociated - inGuild
         val joinedGuild = inGuild - currentlyAssociated

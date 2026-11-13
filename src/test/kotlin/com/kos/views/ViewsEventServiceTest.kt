@@ -1,5 +1,6 @@
 package com.kos.views
 
+import com.kos.entities.domain.WowGuild
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
@@ -12,7 +13,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntity
@@ -100,7 +101,7 @@ class ViewsEventServiceTest {
                     ),
                     EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
                     wowGuildsState = listOf(
-                        Triple(GuildPayload("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
+                        Triple(WowRealmGuild("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
                     )
                 )
 
@@ -360,7 +361,7 @@ class ViewsEventServiceTest {
     private suspend fun createService(
         viewsState: ViewsState,
         entitiesState: EntitiesState,
-        wowGuildsState: List<Triple<GuildPayload, String, Game>> = listOf(),
+        wowGuildsState: List<Triple<WowGuild, String, Game>> = listOf(),
     ): ViewsEventService {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)

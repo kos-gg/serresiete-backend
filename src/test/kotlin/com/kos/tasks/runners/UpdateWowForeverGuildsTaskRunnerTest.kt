@@ -5,7 +5,7 @@ import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverGuildMember
 import com.kos.entities.domain.WowForeverGuildRoster
@@ -59,7 +59,7 @@ class UpdateWowForeverGuildsTaskRunnerTest {
     private suspend fun guildViewExists() {
         viewsRepository.create(viewId, "guild view", "sanxei", listOf(), Game.WOW_FOREVER, false, null)
         wowGuildsRepository.withState(
-            WowGuildsState(listOf(Triple(GuildPayload(guild, "", region, 104078), viewId, Game.WOW_FOREVER)))
+            WowGuildsState(listOf(Triple(WowForeverGuild(guild, region, 104078), viewId, Game.WOW_FOREVER)))
         )
     }
 

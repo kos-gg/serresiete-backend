@@ -1,7 +1,10 @@
 package com.kos.entities.repository.wowguilds
 
 import com.kos.common.getOrThrow
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowForeverGuild
+import com.kos.entities.domain.WowGuild
+import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.realmOrNull
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +16,7 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
     object WowGuilds : Table("wow_guilds") {
         val blizzardId = long("blizzard_id")
         val name = text("name")
-        val realm = text("realm")
+        val realm = text("realm").nullable()
         val region = text("region")
         val viewId = text("view_id").references(ViewsDatabaseRepository.Views.id, ReferenceOption.CASCADE)
         val game = text("game")
@@ -21,57 +24,58 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         override val primaryKey = PrimaryKey(blizzardId, game, viewId)
     }
 
-    private fun rowToGuildPayload(row: ResultRow): Pair<GuildPayload, String> {
-        return GuildPayload(
-            row[WowGuilds.name],
-            row[WowGuilds.realm],
-            row[WowGuilds.region],
-            row[WowGuilds.blizzardId]
-        ) to row[WowGuilds.viewId]
-    }
+    private fun rowToGuild(row: ResultRow): Pair<WowGuild, String> =
+        (rowToRealmGuild(row) ?: rowToForeverGuild(row)) to row[WowGuilds.viewId]
 
-    override suspend fun insertGuild(
-        blizzardId: Long,
-        name: String,
-        realm: String,
-        region: String,
-        viewId: String,
-        game: Game
-    ) {
+    private fun rowToRealmGuild(row: ResultRow): WowRealmGuild? =
+        row[WowGuilds.realm]?.let { realm ->
+            WowRealmGuild(row[WowGuilds.name], realm, row[WowGuilds.region], row[WowGuilds.blizzardId])
+        }
+
+    private fun rowToForeverGuild(row: ResultRow): WowForeverGuild =
+        WowForeverGuild(row[WowGuilds.name], row[WowGuilds.region], row[WowGuilds.blizzardId])
+
+    override suspend fun insertGuild(guild: WowGuild, viewId: String, game: Game) {
         newSuspendedTransaction(Dispatchers.IO, db) {
             WowGuilds.insertIgnore {
-                it[WowGuilds.blizzardId] = blizzardId
-                it[WowGuilds.name] = name.lowercase()
-                it[WowGuilds.realm] = realm.lowercase()
-                it[WowGuilds.region] = region.lowercase()
+                it[WowGuilds.blizzardId] = guild.blizzardId
+                it[WowGuilds.name] = guild.name.lowercase()
+                it[WowGuilds.realm] = guild.realmOrNull()?.lowercase()
+                it[WowGuilds.region] = guild.region.lowercase()
                 it[WowGuilds.viewId] = viewId
                 it[WowGuilds.game] = game.toString()
             }
         }
     }
 
-    override suspend fun getGuilds(game: Game): List<Pair<GuildPayload, String>> {
-        return newSuspendedTransaction(Dispatchers.IO, db) {
-            WowGuilds.selectAll().where { WowGuilds.game.eq(game.toString()) }.map { rowToGuildPayload(it) }
+    override suspend fun getRealmGuilds(game: Game): List<Pair<WowRealmGuild, String>> =
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            WowGuilds.selectAll().where { WowGuilds.game.eq(game.toString()) }
+                .mapNotNull { row -> rowToRealmGuild(row)?.let { it to row[WowGuilds.viewId] } }
         }
-    }
+
+    override suspend fun getForeverGuilds(): List<Pair<WowForeverGuild, String>> =
+        newSuspendedTransaction(Dispatchers.IO, db) {
+            WowGuilds.selectAll().where { WowGuilds.game.eq(Game.WOW_FOREVER.toString()) }
+                .map { row -> rowToForeverGuild(row) to row[WowGuilds.viewId] }
+        }
 
     override suspend fun findTrackedGuild(
         name: String,
-        realm: String,
+        realm: String?,
         region: String,
         game: Game
-    ): Pair<GuildPayload, String>? {
+    ): Pair<WowGuild, String>? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             WowGuilds.selectAll()
                 .where {
                     WowGuilds.game.eq(game.toString())
                         .and(WowGuilds.name.eq(name.lowercase()))
-                        .and(WowGuilds.realm.eq(realm.lowercase()))
+                        .and(WowGuilds.realm.eq(realm?.lowercase()))
                         .and(WowGuilds.region.eq(region.lowercase()))
                 }
                 .limit(1)
-                .map { rowToGuildPayload(it) }
+                .map { rowToGuild(it) }
                 .singleOrNull()
         }
     }
@@ -80,7 +84,7 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         return newSuspendedTransaction(Dispatchers.IO, db) {
             WowGuildsState(
                 WowGuilds.selectAll().map {
-                    val (guild, viewId) = rowToGuildPayload(it)
+                    val (guild, viewId) = rowToGuild(it)
                     Triple(guild, viewId, Game.fromString(it[WowGuilds.game]).getOrThrow())
                 }
             )
@@ -92,7 +96,7 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
             WowGuilds.batchInsert(initialState.guilds) {
                 this[WowGuilds.blizzardId] = it.first.blizzardId
                 this[WowGuilds.name] = it.first.name.lowercase()
-                this[WowGuilds.realm] = it.first.realm.lowercase()
+                this[WowGuilds.realm] = it.first.realmOrNull()?.lowercase()
                 this[WowGuilds.region] = it.first.region.lowercase()
                 this[WowGuilds.viewId] = it.second
                 this[WowGuilds.game] = it.third.toString()

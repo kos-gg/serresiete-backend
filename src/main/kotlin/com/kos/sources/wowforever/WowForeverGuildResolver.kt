@@ -31,7 +31,7 @@ class WowForeverGuildResolver(
         )
     }
 
-    suspend fun exists(guild: WowForeverEntityRequest): Either<ClientError, GuildPayload> =
+    suspend fun exists(guild: WowForeverEntityRequest): Either<ClientError, WowForeverGuild> =
         blizzardClient.getForeverGuildRoster(guild.region, guild.name).map { payload(it, guild) }
 
     suspend fun trackedAndNewMembers(
@@ -46,10 +46,9 @@ class WowForeverGuildResolver(
     private suspend fun trackedByBlizzardId(member: InsertEntityRequest): WowForeverEntity? =
         repo.get(member, Game.WOW_FOREVER) as WowForeverEntity?
 
-    private fun payload(guildRoster: WowForeverGuildRoster, guild: WowForeverEntityRequest): GuildPayload =
-        GuildPayload(
+    private fun payload(guildRoster: WowForeverGuildRoster, guild: WowForeverEntityRequest): WowForeverGuild =
+        WowForeverGuild(
             guild.name.lowercase(),
-            "",
             guild.region.lowercase(),
             guildRoster.guildId
         )

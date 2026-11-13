@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.domain.WowForeverGuildMember
@@ -93,7 +93,7 @@ class WowForeverGuildResolverTest {
 
             val resolved = resolverWith().resolve(listOf(guildRequest))
 
-            assertEquals(GuildPayload("tsalab", "", region, guildId), resolved.guild)
+            assertEquals(WowForeverGuild("tsalab", region, guildId), resolved.guild)
         }
     }
 
@@ -125,7 +125,7 @@ class WowForeverGuildResolverTest {
             rosterIs(WowForeverGuildMember(1, "Sanxei", "Zugzug"))
 
             assertEquals(
-                Either.Right(GuildPayload("tsalab", "", region, guildId)),
+                Either.Right(WowForeverGuild("tsalab", region, guildId)),
                 resolverWith().exists(guildRequest)
             )
         }

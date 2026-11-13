@@ -12,7 +12,7 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -50,7 +50,7 @@ class WowHardcoreGuildResolverTest {
             guildResolver.resolve(listOf(guildRequest))
                 .let { res ->
                     assertEquals(listOf(basicWowRequest.name), res.entities.map { it.first.name })
-                    assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
+                    assertEquals(WowRealmGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
                 }
         }
     }

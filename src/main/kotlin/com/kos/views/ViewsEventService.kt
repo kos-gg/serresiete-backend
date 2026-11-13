@@ -2,7 +2,7 @@ package com.kos.views
 
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntityRequest
@@ -65,7 +65,7 @@ class ViewsEventService(
         }
     }
 
-    private suspend fun findTrackedGuild(event: ViewToBeCreatedEvent): Pair<GuildPayload, String>? =
+    private suspend fun findTrackedGuild(event: ViewToBeCreatedEvent): Pair<WowGuild, String>? =
         event.entities.firstOrNull()
             ?.takeIf { (event.extraArguments as? WowExtraArguments)?.isGuild == true }
             ?.let { guild ->
@@ -74,7 +74,7 @@ class ViewsEventService(
                         .let { entitiesService.findTrackedGuild(it.name, it.realm, it.region, Game.WOW) }
 
                     Game.WOW_FOREVER -> (guild as WowForeverEntityRequest)
-                        .let { entitiesService.findTrackedGuild(it.name, "", it.region, Game.WOW_FOREVER) }
+                        .let { entitiesService.findTrackedGuild(it.name, null, it.region, Game.WOW_FOREVER) }
 
                     Game.WOW_HC, Game.LOL -> null
                 }

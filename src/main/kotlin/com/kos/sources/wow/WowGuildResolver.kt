@@ -46,7 +46,7 @@ class WowGuildResolver(
         )
     }
 
-    suspend fun exists(guild: WowEntityRequest): Either<ClientError, GuildPayload> =
+    suspend fun exists(guild: WowEntityRequest): Either<ClientError, WowRealmGuild> =
         blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name).map { payload(it, guild) }
 
     suspend fun resolveMembers(newRequests: List<EntityRequest>): List<Pair<InsertEntityRequest, String?>> {
@@ -79,8 +79,8 @@ class WowGuildResolver(
             }
         }
 
-    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
-        GuildPayload(
+    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): WowRealmGuild =
+        WowRealmGuild(
             guild.name.lowercase(),
             guild.realm.lowercase(),
             guild.region.lowercase(),

@@ -1,5 +1,7 @@
 package com.kos.entities.repository.wowguilds
 
+import com.kos.entities.domain.WowForeverGuild
+import com.kos.entities.domain.WowRealmGuild
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
@@ -51,10 +53,10 @@ class WowGuildsDatabaseRepositoryTest {
         runBlocking {
             val viewId = createView("sanxei", Game.WOW)
 
-            repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
-            repository.insertGuild(1L, "guild", "realm", "region", viewId, Game.WOW)
+            repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), viewId, Game.WOW)
+            repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), viewId, Game.WOW)
 
-            assertEquals(listOf(viewId), repository.getGuilds(Game.WOW).map { it.second })
+            assertEquals(listOf(viewId), repository.getRealmGuilds(Game.WOW).map { it.second })
         }
     }
 
@@ -64,13 +66,13 @@ class WowGuildsDatabaseRepositoryTest {
             val viewA = createView("sanxei", Game.WOW)
             val viewB = createView("sanxei", Game.WOW)
 
-            val first = repository.insertGuild(1L, "guild", "realm", "region", viewA, Game.WOW)
+            val first = repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), viewA, Game.WOW)
             assertEquals(Unit, first)
 
-            val second = repository.insertGuild(1L, "guild", "realm", "region", viewB, Game.WOW)
+            val second = repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), viewB, Game.WOW)
             assertEquals(Unit, second)
 
-            val trackedViewIds = repository.getGuilds(Game.WOW).map { it.second }.toSet()
+            val trackedViewIds = repository.getRealmGuilds(Game.WOW).map { it.second }.toSet()
             assertEquals(setOf(viewA, viewB), trackedViewIds)
         }
     }
@@ -80,12 +82,12 @@ class WowGuildsDatabaseRepositoryTest {
         runBlocking {
             val viewA = createView("sanxei", Game.WOW)
             val viewB = createView("sanxei", Game.WOW)
-            repository.insertGuild(1L, "guild", "realm", "region", viewA, Game.WOW)
-            repository.insertGuild(1L, "guild", "realm", "region", viewB, Game.WOW)
+            repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), viewA, Game.WOW)
+            repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), viewB, Game.WOW)
 
             viewsRepository.delete(viewA)
 
-            val trackedViewIds = repository.getGuilds(Game.WOW).map { it.second }.toSet()
+            val trackedViewIds = repository.getRealmGuilds(Game.WOW).map { it.second }.toSet()
             assertEquals(setOf(viewB), trackedViewIds)
         }
     }
@@ -101,7 +103,7 @@ class WowGuildsDatabaseRepositoryTest {
     fun `findTrackedGuild finds an already-tracked guild case-insensitively`() {
         runBlocking {
             val viewId = createView("sanxei", Game.WOW)
-            repository.insertGuild(1L, "Method", "Twisting-Nether", "EU", viewId, Game.WOW)
+            repository.insertGuild(WowRealmGuild("Method", "Twisting-Nether", "EU", 1L), viewId, Game.WOW)
 
             val found = repository.findTrackedGuild("method", "twisting-nether", "eu", Game.WOW)
 
@@ -115,8 +117,8 @@ class WowGuildsDatabaseRepositoryTest {
             val wowView = createView("sanxei", Game.WOW)
             val wowHcView = createView("sanxei", Game.WOW_HC)
 
-            val wowInsert = repository.insertGuild(1L, "guild", "realm", "region", wowView, Game.WOW)
-            val wowHcInsert = repository.insertGuild(1L, "guild", "realm", "region", wowHcView, Game.WOW_HC)
+            val wowInsert = repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), wowView, Game.WOW)
+            val wowHcInsert = repository.insertGuild(WowRealmGuild("guild", "realm", "region", 1L), wowHcView, Game.WOW_HC)
 
             assertEquals(Unit, wowInsert)
             assertEquals(Unit, wowHcInsert)
@@ -129,13 +131,41 @@ class WowGuildsDatabaseRepositoryTest {
             val wowView = createView("sanxei", Game.WOW)
             val wowHcView = createView("sanxei", Game.WOW_HC)
 
-            repository.insertGuild(1L, "wow-guild", "realm", "region", wowView, Game.WOW)
-            repository.insertGuild(2L, "hc-guild", "realm", "region", wowHcView, Game.WOW_HC)
+            repository.insertGuild(WowRealmGuild("wow-guild", "realm", "region", 1L), wowView, Game.WOW)
+            repository.insertGuild(WowRealmGuild("hc-guild", "realm", "region", 2L), wowHcView, Game.WOW_HC)
 
-            val wowGuilds = repository.getGuilds(Game.WOW)
+            val wowGuilds = repository.getRealmGuilds(Game.WOW)
 
             assertEquals(1, wowGuilds.size)
             assertEquals("wow-guild", wowGuilds.single().first.name)
+        }
+    }
+
+    @Test
+    fun `a wow forever guild is stored without realm and found as a wow forever guild`() {
+        runBlocking {
+            val viewId = createView("sanxei", Game.WOW_FOREVER)
+            repository.insertGuild(WowForeverGuild("TSALAB", "EU", 104078L), viewId, Game.WOW_FOREVER)
+
+            assertEquals(
+                WowForeverGuild("tsalab", "eu", 104078L) to viewId,
+                repository.findTrackedGuild("tsalab", null, "eu", Game.WOW_FOREVER)
+            )
+            assertEquals(listOf(WowForeverGuild("tsalab", "eu", 104078L) to viewId), repository.getForeverGuilds())
+        }
+    }
+
+    @Test
+    fun `realm guilds and wow forever guilds are listed separately`() {
+        runBlocking {
+            val retailView = createView("sanxei", Game.WOW)
+            val foreverView = createView("sanxei", Game.WOW_FOREVER)
+            repository.insertGuild(WowRealmGuild("method", "twisting-nether", "eu", 1L), retailView, Game.WOW)
+            repository.insertGuild(WowForeverGuild("tsalab", "eu", 2L), foreverView, Game.WOW_FOREVER)
+
+            assertEquals(listOf(WowRealmGuild("method", "twisting-nether", "eu", 1L) to retailView), repository.getRealmGuilds(Game.WOW))
+            assertEquals(listOf(WowForeverGuild("tsalab", "eu", 2L) to foreverView), repository.getForeverGuilds())
+            assertNull(repository.findTrackedGuild("tsalab", "twisting-nether", "eu", Game.WOW_FOREVER))
         }
     }
 }

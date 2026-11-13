@@ -1,5 +1,6 @@
 package com.kos.views
 
+import com.kos.entities.domain.WowGuild
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.EntitiesDoNotMatchGame
@@ -30,7 +31,6 @@ import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.EntityWithAlias
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
@@ -1049,7 +1049,7 @@ class ViewsServiceTest {
         entitiesState: EntitiesState,
         dataCacheState: List<DataCache>,
         credentialState: CredentialsRepositoryState,
-        wowGuildsState: List<Triple<GuildPayload, String, Game>> = listOf(),
+        wowGuildsState: List<Triple<WowGuild, String, Game>> = listOf(),
     ): Pair<EventStore, ViewsService> {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)

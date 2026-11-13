@@ -12,7 +12,8 @@ import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.entities.domain.GuildExistsResponse
-import com.kos.entities.domain.GuildPayload
+import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.views.Game
 import io.ktor.http.*
@@ -175,8 +176,8 @@ class EntitiesControllerTest {
     @Test
     fun `guildExists delegates to the service and returns its result`() {
         runBlocking {
-            val response = GuildExistsResponse(GuildPayload("method", "twisting-nether", "eu", 999))
-            `when`(entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW))
+            val response = GuildExistsResponse(WowRealmGuild("method", "twisting-nether", "eu", 999))
+            `when`(entitiesService.wowGuildExists("Method", "eu", "twisting-nether"))
                 .thenReturn(Either.Right(response))
 
             val result = controller.guildExists(
@@ -210,8 +211,8 @@ class EntitiesControllerTest {
     @Test
     fun `guildExists checks a wow forever guild without realm`() {
         runBlocking {
-            val response = GuildExistsResponse(GuildPayload("tsalab", "", "eu", 104078))
-            `when`(entitiesService.guildExists("tsalab", "eu", "", Game.WOW_FOREVER))
+            val response = GuildExistsResponse(WowForeverGuild("tsalab", "eu", 104078))
+            `when`(entitiesService.wowForeverGuildExists("tsalab", "eu"))
                 .thenReturn(Either.Right(response))
 
             val result = controller.guildExists(

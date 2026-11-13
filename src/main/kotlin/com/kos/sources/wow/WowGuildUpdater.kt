@@ -15,9 +15,9 @@ class WowGuildUpdater(
     private val guildResolver: WowGuildResolver,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
-) : EntityUpdater<Pair<GuildPayload, String>>, WithLogger("WowGuildUpdater") {
+) : EntityUpdater<Pair<WowRealmGuild, String>>, WithLogger("WowGuildUpdater") {
 
-    override suspend fun update(entities: List<Pair<GuildPayload, String>>): List<PartialFailure> =
+    override suspend fun update(entities: List<Pair<WowRealmGuild, String>>): List<PartialFailure> =
         entities.groupBy { it.first.blizzardId }
             .values
             .mapNotNull { rows ->
@@ -27,7 +27,7 @@ class WowGuildUpdater(
                     ?.let { GuildUpdateFailed(guild, it) }
             }
 
-    private suspend fun updateGuild(guild: GuildPayload, viewIds: List<String>) {
+    private suspend fun updateGuild(guild: WowRealmGuild, viewIds: List<String>) {
         logger.info("Updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region} (${viewIds.size} view(s))")
         val (_, roster) = guildResolver.resolveRoster(guild.region, guild.realm, guild.name)
 
@@ -59,7 +59,7 @@ class WowGuildUpdater(
         request.blizzardId?.let { entitiesRepository.get(request as InsertEntityRequest, Game.WOW) as? WowEntity }
 
     private suspend fun resolveAndInsertNewMembers(
-        guild: GuildPayload,
+        guild: WowRealmGuild,
         viewIds: List<String>,
         newMembers: List<WowEntityRequest>,
         entityIdsStillInGuild: Set<Long>
@@ -74,7 +74,7 @@ class WowGuildUpdater(
         logger.info("Finished updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region}")
     }
 
-    private suspend fun syncViewMembership(guild: GuildPayload, viewIds: List<String>, stillInGuild: Set<Long>) {
+    private suspend fun syncViewMembership(guild: WowRealmGuild, viewIds: List<String>, stillInGuild: Set<Long>) {
         val currentlyAssociated = viewsRepository.get(viewIds.first())?.entitiesIds?.toSet().orEmpty()
         val noLongerInGuild = currentlyAssociated - stillInGuild
         val joinedGuild = stillInGuild - currentlyAssociated

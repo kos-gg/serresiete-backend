@@ -52,4 +52,16 @@ class TypeDiscriminatorTest {
     fun `wow extra arguments are shared by wow and wow hardcore views`() {
         assertEquals("wow", typeOf(json.encodeToString<ViewExtraArguments>(WowExtraArguments(isGuild = true))))
     }
+
+    @Test
+    fun `guild exists responses tell realm guilds from wow forever guilds`() {
+        assertEquals(
+            """{"guild":{"type":"wow","name":"method","realm":"twisting-nether","region":"eu","blizzardId":1}}""",
+            json.encodeToString(GuildExistsResponse(WowRealmGuild("method", "twisting-nether", "eu", 1L)))
+        )
+        assertEquals(
+            """{"guild":{"type":"wow_forever","name":"tsalab","region":"eu","blizzardId":104078}}""",
+            json.encodeToString(GuildExistsResponse(WowForeverGuild("tsalab", "eu", 104078L)))
+        )
+    }
 }

@@ -1,5 +1,6 @@
 package acceptance.steps
 
+import com.kos.entities.domain.WowForeverGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
@@ -180,9 +181,9 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
         runBlocking {
             assertUntil(5, 1000) {
                 assertEquals(members, viewsRepo.get(scenarioVariables.viewId!!)!!.entitiesIds.size)
-                val (guild, viewId) = guildsRepo.findTrackedGuild(guildName.lowercase(), "", "eu", Game.WOW_FOREVER)!!
+                val (guild, viewId) = guildsRepo.findTrackedGuild(guildName.lowercase(), null, "eu", Game.WOW_FOREVER)!!
                 assertEquals(scenarioVariables.viewId, viewId)
-                assertEquals("", guild.realm)
+                assertTrue(guild is WowForeverGuild)
             }
         }
     }
