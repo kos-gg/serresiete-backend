@@ -95,6 +95,9 @@ enum class TaskType {
     UPDATE_WOW_GUILDS {
         override fun toString(): String = "updateWowGuilds"
     },
+    UPDATE_WOW_FOREVER_GUILDS {
+        override fun toString(): String = "updateWowForeverGuilds"
+    },
     EVENT_CLEANUP_TASK {
         override fun toString(): String = "eventCleanupTask"
     };
@@ -113,6 +116,7 @@ enum class TaskType {
             "updateMythicPlusSeason" -> Either.Right(UPDATE_MYTHIC_PLUS_SEASON)
             "cacheGameViewDataTask" -> Either.Right(CACHE_GAME_VIEW_DATA_TASK)
             "updateWowGuilds" -> Either.Right(UPDATE_WOW_GUILDS)
+            "updateWowForeverGuilds" -> Either.Right(UPDATE_WOW_FOREVER_GUILDS)
             "eventCleanupTask" -> Either.Right(EVENT_CLEANUP_TASK)
             else -> Either.Left(InvalidTaskType(value))
         }

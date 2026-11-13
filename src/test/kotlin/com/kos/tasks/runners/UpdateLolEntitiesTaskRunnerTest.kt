@@ -35,11 +35,14 @@ class UpdateLolEntitiesTaskRunnerTest {
             wowHardcoreResolver = mock(),
             wowHardcoreGuildResolver = mock(),
             lolResolver = LolEntityResolver(entitiesRepository, riotClient),
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         ),
         mock(),
         LolEntityUpdater(riotClient, entitiesRepository),
         WowHardcoreGuildUpdater(mock(), mock(), entitiesRepository, ViewsInMemoryRepository()),
+        mock(),
+        mock(),
         mock()
     )
     private val runner = UpdateLolEntitiesTaskRunner(entitiesService)

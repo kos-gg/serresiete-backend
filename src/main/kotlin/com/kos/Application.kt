@@ -60,6 +60,8 @@ import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDataba
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowforever.WowForeverEntityResolver
+import com.kos.sources.wowforever.WowForeverGuildResolver
+import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowforever.WowForeverEntitySynchronizer
 import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
@@ -149,13 +151,15 @@ fun Application.module() {
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
     val wowForeverResolver = WowForeverEntityResolver(entitiesRepository, blizzardClient)
+    val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
         wowHardcoreResolver = wowHardcoreResolver,
         wowHardcoreGuildResolver = wowHardcoreGuildResolver,
         lolResolver = lolResolver,
-        wowForeverResolver = wowForeverResolver
+        wowForeverResolver = wowForeverResolver,
+        wowForeverGuildResolver = wowForeverGuildResolver
     )
 
     val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
@@ -210,6 +214,7 @@ fun Application.module() {
     val wowHardcoreGuildUpdater =
         WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
     val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+    val wowForeverGuildUpdater = WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
 
     val entitiesService = EntitiesService(
         entitiesRepository,
@@ -218,7 +223,9 @@ fun Application.module() {
         wowGuildResolver,
         lolUpdater,
         wowHardcoreGuildUpdater,
-        wowGuildUpdater
+        wowGuildUpdater,
+        wowForeverGuildResolver,
+        wowForeverGuildUpdater
     )
     //TODO: This feels weird. Probably the responsibility of getOrSync should be on EntitiesService rather than DataCacheService
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
@@ -267,6 +274,7 @@ fun Application.module() {
             CacheClearTaskRunner(dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(entitiesService),
             UpdateWowGuildsTaskRunner(entitiesService),
+            UpdateWowForeverGuildsTaskRunner(entitiesService),
             UpdateMythicPlusSeasonTaskRunner(wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,

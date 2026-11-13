@@ -181,7 +181,8 @@ class ViewsSyncProcessorTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         )
 
         val entitiesService = EntitiesService(
@@ -191,7 +192,9 @@ class ViewsSyncProcessorTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            mock(),
+            mock()
         )
         return Pair(ViewsEventService(viewsRepository, entitiesService), viewsRepository)
     }

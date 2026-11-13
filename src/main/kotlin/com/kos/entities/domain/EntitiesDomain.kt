@@ -51,6 +51,10 @@ fun EntityRequest.hasValidRegion(): Boolean = when (this) {
     is LolEntityRequest -> true
 }
 
+fun EntityRequest.missesSurname(): Boolean = this is WowForeverEntityRequest && surname.isBlank()
+
+fun EntityRequest.hasSurname(): Boolean = this is WowForeverEntityRequest && surname.isNotBlank()
+
 fun EntityRequest.normalized(): EntityRequest = when (this) {
     is WowEntityRequest -> copy(name = name.lowercase())
     is WowForeverEntityRequest -> copy(name = name.lowercase(), surname = surname.lowercase())
@@ -104,7 +108,8 @@ data class GuildPayload(
 data class GuildExistsRequest(
     val name: String,
     val region: String,
-    val realm: String
+    val realm: String? = null,
+    val game: Game = Game.WOW
 )
 
 fun GuildExistsRequest.normalized(): GuildExistsRequest = copy(name = name.lowercase())

@@ -87,7 +87,8 @@ class EntitiesSyncProcessorTest {
                 wowHardcoreResolver = wowHardcoreResolver,
                 wowHardcoreGuildResolver = wowHardcoreGuildResolver,
                 lolResolver = lolResolver,
-                wowForeverResolver = mock()
+                wowForeverResolver = mock(),
+                wowForeverGuildResolver = mock()
             )
 
 
@@ -98,7 +99,9 @@ class EntitiesSyncProcessorTest {
                 wowGuildResolver,
                 lolUpdater,
                 wowHardcoreGuildUpdater,
-                wowGuildUpdater
+                wowGuildUpdater,
+                mock(),
+                mock()
             )
 
             val eventData =

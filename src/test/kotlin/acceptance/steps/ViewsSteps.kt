@@ -7,6 +7,7 @@ import acceptance.entityRequestJson
 import acceptance.existingEntityRow
 import acceptance.newEntityRow
 import acceptance.toGame
+import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest
@@ -21,6 +22,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -99,36 +101,54 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
         MockConfig.wowGuildRosterMembers = listOf("Kakarona" to 90, "Threndil" to 90)
     }
 
-    @When("they create a WOW guild view for {string}")
-    fun createWowGuildView(guildName: String) {
-        postCreateWowGuildView(guildName)
+    @When("they create a {word} guild view for {string}")
+    fun createGuildView(game: String, guildName: String) {
+        postCreateGuildView(game.toGame(), guildRequestJson(game.toGame(), guildName))
     }
 
-    @When("they create a second WOW guild view for {string}")
-    fun createSecondWowGuildView(guildName: String) {
+    @When("they create a second {word} guild view for {string}")
+    fun createSecondGuildView(game: String, guildName: String) {
         firstGuildViewId = scenarioVariables.viewId
-        postCreateWowGuildView(guildName)
+        postCreateGuildView(game.toGame(), guildRequestJson(game.toGame(), guildName))
     }
 
-    private fun postCreateWowGuildView(guildName: String) {
-        scenarioVariables.game = Game.WOW
+    @When("they create a WOW_FOREVER guild view for {string} with surname {string}")
+    fun createWowForeverGuildViewWithSurname(guildName: String, surname: String) {
+        postCreateGuildView(
+            Game.WOW_FOREVER,
+            buildJsonObject {
+                put("type", "wow_forever")
+                put("name", guildName)
+                put("surname", surname)
+                put("region", "eu")
+            }
+        )
+    }
+
+    private fun guildRequestJson(game: Game, guildName: String) = when (game) {
+        Game.WOW -> buildJsonObject {
+            put("type", "wow")
+            put("name", guildName)
+            put("region", "eu")
+            put("realm", "twisting-nether")
+        }
+
+        Game.WOW_FOREVER -> buildJsonObject {
+            put("type", "wow_forever")
+            put("name", guildName)
+            put("region", "eu")
+        }
+
+        Game.WOW_HC, Game.LOL -> error("$game guild views are not covered by acceptance tests")
+    }
+
+    private fun postCreateGuildView(game: Game, guildRequest: JsonObject) {
+        scenarioVariables.game = game
         val requestBody = buildJsonObject {
-            put("name", "$guildName roster")
+            put("name", "guild roster")
             put("published", false)
-            put(
-                "entities",
-                JsonArray(
-                    listOf(
-                        buildJsonObject {
-                            put("type", "wow")
-                            put("name", guildName)
-                            put("region", "eu")
-                            put("realm", "twisting-nether")
-                        }
-                    )
-                )
-            )
-            put("game", Game.WOW.name)
+            put("entities", JsonArray(listOf(guildRequest)))
+            put("game", game.name)
             put("featured", false)
             put(
                 "extraArguments",
@@ -153,8 +173,22 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
         }
     }
 
-    @Then("both WOW guild views have the same entities")
-    fun bothWowGuildViewsHaveSameEntities() {
+    @Then("the WOW_FOREVER guild view has {int} members and guild {string} is tracked without realm")
+    fun wowForeverGuildViewTracksRosterWithoutRealm(members: Int, guildName: String) {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val guildsRepo = WowGuildsDatabaseRepository(db)
+        runBlocking {
+            assertUntil(5, 1000) {
+                assertEquals(members, viewsRepo.get(scenarioVariables.viewId!!)!!.entitiesIds.size)
+                val (guild, viewId) = guildsRepo.findTrackedGuild(guildName.lowercase(), "", "eu", Game.WOW_FOREVER)!!
+                assertEquals(scenarioVariables.viewId, viewId)
+                assertEquals("", guild.realm)
+            }
+        }
+    }
+
+    @Then("both guild views have the same entities")
+    fun bothGuildViewsHaveSameEntities() {
         val viewsRepo = ViewsDatabaseRepository(db)
         val firstId = firstGuildViewId!!
         val secondId = scenarioVariables.viewId!!

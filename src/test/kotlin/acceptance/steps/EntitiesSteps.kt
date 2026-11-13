@@ -231,6 +231,22 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         }
     }
 
+    @When("they check existence of WOW_FOREVER guild {string} region {string}")
+    fun checkWowForeverGuildExists(name: String, region: String) {
+        val requestBody = buildJsonObject {
+            put("name", name)
+            put("region", region)
+            put("game", Game.WOW_FOREVER.name)
+        }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/entities/exists/guild") {
+                contentType(ContentType.Application.Json)
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(requestBody.toString())
+            }
+        }
+    }
+
     @And("the guild exists in the response")
     fun guildExistsInResponse() {
         val body = runBlocking { scenarioVariables.response.bodyAsText() }

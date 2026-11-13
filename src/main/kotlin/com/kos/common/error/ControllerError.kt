@@ -33,10 +33,12 @@ sealed interface ViewEntitiesError : CreateViewError, EditViewError
 data object TooMuchViews : CreateViewError
 data object ExtraArgumentsWrongType : CreateViewError
 data object GuildViewMoreThanOneEntity : CreateViewError
+data object GuildSurnameNotAllowed : CreateViewError
 data object TooMuchEntities : ViewEntitiesError
 data object UserWithoutRoles : ViewEntitiesError
 data object EntitiesDoNotMatchGame : ViewEntitiesError
 data object InvalidRegion : ViewEntitiesError
+data object MissingSurname : ViewEntitiesError
 
 fun ControllerError.toProblem(): Problem =
     when (this) {
@@ -53,11 +55,17 @@ fun ControllerError.toProblem(): Problem =
         is GuildViewMoreThanOneEntity ->
             Problem(HttpStatusCode.BadRequest, "GUILD_VIEW_MORE_THAN_ONE_ENTITY", "Guild views must have only 1 entity")
 
+        is GuildSurnameNotAllowed ->
+            Problem(HttpStatusCode.BadRequest, "GUILD_SURNAME_NOT_ALLOWED", "Guilds are identified by name only, surname is not allowed")
+
         is EntitiesDoNotMatchGame ->
             Problem(HttpStatusCode.BadRequest, "ENTITIES_DO_NOT_MATCH_GAME", "Entities don't match the view's game")
 
         is InvalidRegion ->
             Problem(HttpStatusCode.BadRequest, "INVALID_REGION", "Region must be one of eu, us, kr, tw")
+
+        is MissingSurname ->
+            Problem(HttpStatusCode.BadRequest, "MISSING_SURNAME", "WoW Forever characters must have a surname")
 
         is InvalidQueryParameter ->
             Problem(HttpStatusCode.BadRequest, "INVALID_QUERY_PARAMETER", "Invalid query parameter", message)

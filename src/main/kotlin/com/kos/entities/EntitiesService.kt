@@ -3,6 +3,7 @@ package com.kos.entities
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.recover
+import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.common.WithLogger
 import com.kos.common.error.ThirdPartyUnavailable
@@ -12,6 +13,8 @@ import com.kos.entities.repository.wowguilds.WowGuildsRepository
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wow.WowGuildUpdater
+import com.kos.sources.wowforever.WowForeverGuildResolver
+import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
 import com.kos.views.ViewExtraArguments
@@ -24,7 +27,8 @@ data class EntitiesService(
     private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
     private val wowGuildUpdater: WowGuildUpdater,
-
+    private val wowForeverGuildResolver: WowForeverGuildResolver,
+    private val wowForeverGuildUpdater: WowForeverGuildUpdater,
 ) : WithLogger("EntitiesService") {
 
     suspend fun exists(
@@ -47,23 +51,35 @@ data class EntitiesService(
     suspend fun guildExists(
         name: String,
         region: String,
-        realm: String
+        realm: String,
+        game: Game
     ): Either<ThirdPartyUnavailable, GuildExistsResponse> =
-        findTrackedGuild(name, realm, region, Game.WOW)
+        findTrackedGuild(name, realm, region, game)
             ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
             ?: either {
                 recover({
-                    GuildExistsResponse(
-                        wowGuildResolver.exists(WowEntityRequest(name, region, realm)).bind()
-                    )
+                    GuildExistsResponse(fetchGuild(name, region, realm, game).bind())
                 }) {
                     if (it is NotFound) GuildExistsResponse(null)
                     else {
-                        logger.warn("Couldn't check whether guild $name ($region/$realm) exists: $it")
+                        logger.warn("Couldn't check whether $game guild $name ($region/$realm) exists: $it")
                         raise(ThirdPartyUnavailable)
                     }
                 }
             }
+
+    private suspend fun fetchGuild(
+        name: String,
+        region: String,
+        realm: String,
+        game: Game
+    ): Either<ClientError, GuildPayload> =
+        when (game) {
+            Game.WOW -> wowGuildResolver.exists(WowEntityRequest(name, region, realm))
+
+            Game.WOW_FOREVER -> wowForeverGuildResolver.exists(WowForeverEntityRequest(name = name, region = region))
+            Game.WOW_HC, Game.LOL -> error("Guild existence can't be checked for $game")
+        }
 
     suspend fun resolveEntities(
         requestedEntities: List<EntityRequest>,
@@ -92,6 +108,11 @@ data class EntitiesService(
     suspend fun updateWowGuilds(): List<PartialFailure> {
         val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW)
         return wowGuildUpdater.update(guildsWithViewId)
+    }
+
+    suspend fun updateWowForeverGuilds(): List<PartialFailure> {
+        val guildsWithViewId = wowGuildsRepository.getGuilds(Game.WOW_FOREVER)
+        return wowForeverGuildUpdater.update(guildsWithViewId)
     }
 
     suspend fun get(id: Long, game: Game): Entity? = entitiesRepository.get(id, game)

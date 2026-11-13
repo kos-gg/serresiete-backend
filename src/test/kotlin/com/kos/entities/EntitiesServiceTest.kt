@@ -35,6 +35,8 @@ import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wowforever.WowForeverGuildResolver
+import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -558,7 +560,7 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
 
             result.onLeft { fail() }.onRight { res ->
                 assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
@@ -572,7 +574,7 @@ class EntitiesServiceTest {
             val entitiesService = createService(emptyEntitiesState)
             entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
 
             result.onLeft { fail() }.onRight { res ->
                 assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
@@ -589,7 +591,7 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
 
             result.onLeft { fail() }.onRight { res ->
                 assertEquals(null, res.guild)
@@ -605,9 +607,64 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.guildExists("Method", "eu", "twisting-nether", Game.WOW)
 
             assertEquals(Either.Left(ThirdPartyUnavailable), result)
+        }
+    }
+
+    @Test
+    fun `guildExists checks a wow forever guild in the forever roster`() {
+        runBlocking {
+            `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab"))
+                .thenReturn(Either.Right(WowForeverGuildRoster(104078, listOf())))
+
+            val entitiesService = createService(emptyEntitiesState)
+
+            val result = entitiesService.guildExists("tsalab", "eu", "", Game.WOW_FOREVER)
+
+            assertEquals(Either.Right(GuildExistsResponse(GuildPayload("tsalab", "", "eu", 104078))), result)
+        }
+    }
+
+    @Test
+    fun `guildExists returns a tracked wow forever guild without asking blizzard`() {
+        runBlocking {
+            val entitiesService = createService(emptyEntitiesState)
+            entitiesService.insertGuild(GuildPayload("tsalab", "", "eu", 104078), "view-1", Game.WOW_FOREVER)
+
+            val result = entitiesService.guildExists("tsalab", "eu", "", Game.WOW_FOREVER)
+
+            assertEquals(Either.Right(GuildExistsResponse(GuildPayload("tsalab", "", "eu", 104078))), result)
+            verifyNoInteractions(blizzardClient)
+        }
+    }
+
+    @Test
+    fun `guildExists doesn't confuse a tracked retail guild with a wow forever guild of the same name`() {
+        runBlocking {
+            `when`(blizzardClient.getForeverGuildRoster("eu", "method")).thenReturn(Either.Left(NotFound))
+            val entitiesService = createService(emptyEntitiesState)
+            entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+
+            val result = entitiesService.guildExists("method", "eu", "", Game.WOW_FOREVER)
+
+            assertEquals(Either.Right(GuildExistsResponse(null)), result)
+        }
+    }
+
+    @Test
+    fun `updateWowForeverGuilds only updates guilds tracked for wow forever`() {
+        runBlocking {
+            `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab"))
+                .thenReturn(Either.Right(WowForeverGuildRoster(104078, listOf())))
+            val entitiesService = createService(emptyEntitiesState)
+            entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+            entitiesService.insertGuild(GuildPayload("tsalab", "", "eu", 104078), "view-2", Game.WOW_FOREVER)
+
+            assertEquals(listOf(), entitiesService.updateWowForeverGuilds())
+            verify(blizzardClient).getForeverGuildRoster("eu", "tsalab")
+            verifyNoMoreInteractions(blizzardClient)
         }
     }
 
@@ -621,6 +678,7 @@ class EntitiesServiceTest {
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
+        val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
 
         val entitiesResolverProvider = EntityResolverProvider(
             wowResolver = wowResolver,
@@ -628,7 +686,8 @@ class EntitiesServiceTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = wowForeverGuildResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
@@ -643,7 +702,9 @@ class EntitiesServiceTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            wowForeverGuildResolver,
+            WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
         )
     }
 

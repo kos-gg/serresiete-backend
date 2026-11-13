@@ -3,6 +3,9 @@ package com.kos.views
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
 import com.kos.common.error.EntitiesDoNotMatchGame
+import com.kos.common.error.GuildSurnameNotAllowed
+import com.kos.common.error.GuildViewMoreThanOneEntity
+import com.kos.common.error.MissingSurname
 import com.kos.common.error.InvalidRegion
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.common.error.TooMuchEntities
@@ -436,6 +439,124 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `creating a wow forever guild view by name and region stores a create view event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(WowForeverEntityRequest(name = "tsalab", region = "eu")),
+                        Game.WOW_FOREVER,
+                        false,
+                        WowExtraArguments(isGuild = true)
+                    )
+                ).onLeft { fail(it.toString()) }
+
+                assertEquals(1, eventStore.getEvents(null).toList().size)
+            }
+        }
+
+        @Test
+        fun `creating a wow forever guild view with a surname does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(WowForeverEntityRequest("tsalab", "zugzug", "eu")),
+                        Game.WOW_FOREVER,
+                        false,
+                        WowExtraArguments(isGuild = true)
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(GuildSurnameNotAllowed, it)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `creating a wow forever guild view with more than one entity does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(
+                            WowForeverEntityRequest(name = "tsalab", region = "eu"),
+                            WowForeverEntityRequest(name = "other", region = "eu")
+                        ),
+                        Game.WOW_FOREVER,
+                        false,
+                        WowExtraArguments(isGuild = true)
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(GuildViewMoreThanOneEntity, it)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `creating a wow forever character view with a character without surname does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.create(
+                    owner,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(WowForeverEntityRequest(name = "sanxei", region = "eu")),
+                        Game.WOW_FOREVER,
+                        false
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(MissingSurname, it)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
         fun `creating a lol view with a wow entity does not store an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
@@ -766,6 +887,65 @@ class ViewsServiceTest {
         }
 
         @Test
+        fun `editing a wow forever view with a character without surname does not store an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.edit(
+                    owner, id,
+                    ViewRequest(
+                        name,
+                        published,
+                        listOf(WowForeverEntityRequest(name = "sanxei", region = "eu")),
+                        Game.WOW_FOREVER,
+                        false
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(MissingSurname, it)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
+        fun `patching a wow forever view with a character without surname fails without storing an event`() {
+            runBlocking {
+                val (eventStore, viewsService) = createService(
+                    ViewsState(listOf(), listOf()),
+                    emptyEntitiesState,
+                    listOf(),
+                    defaultCredentialsState
+                )
+
+                viewsService.patch(
+                    owner,
+                    id,
+                    ViewPatchRequest(
+                        null,
+                        null,
+                        listOf(WowForeverEntityRequest(name = "sanxei", region = "eu")),
+                        Game.WOW_FOREVER,
+                        false
+                    )
+                ).onRight {
+                    fail()
+                }.onLeft {
+                    assertEquals(MissingSurname, it)
+                }
+
+                assertNoEventsStored(eventStore)
+            }
+        }
+
+        @Test
         fun `patching a wow view with a lol entity fails without storing an event`() {
             runBlocking {
                 val (eventStore, viewsService) = createService(
@@ -898,7 +1078,8 @@ class ViewsServiceTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
@@ -912,7 +1093,9 @@ class ViewsServiceTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            mock(),
+            mock()
         )
 
         val dataCacheService =

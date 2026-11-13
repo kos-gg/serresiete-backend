@@ -107,7 +107,8 @@ class ViewsControllerTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
@@ -122,7 +123,9 @@ class ViewsControllerTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            mock(),
+            mock()
         )
 
 

@@ -58,6 +58,8 @@ import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepo
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowforever.WowForeverEntityResolver
 import com.kos.sources.wowforever.WowForeverEntitySynchronizer
+import com.kos.sources.wowforever.WowForeverGuildResolver
+import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
@@ -138,13 +140,15 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
     val wowForeverResolver = WowForeverEntityResolver(entitiesRepository, blizzardClient)
+    val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
         wowHardcoreResolver = wowHardcoreResolver,
         wowHardcoreGuildResolver = wowHardcoreGuildResolver,
         lolResolver = lolResolver,
-        wowForeverResolver = wowForeverResolver
+        wowForeverResolver = wowForeverResolver,
+        wowForeverGuildResolver = wowForeverGuildResolver
     )
 
     val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
@@ -175,6 +179,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowHardcoreGuildUpdater =
         WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
     val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+    val wowForeverGuildUpdater = WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
@@ -182,7 +187,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         wowGuildResolver,
         lolUpdater,
         wowHardcoreGuildUpdater,
-        wowGuildUpdater
+        wowGuildUpdater,
+        wowForeverGuildResolver,
+        wowForeverGuildUpdater
     )
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
@@ -216,6 +223,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheClearTaskRunner(dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(entitiesService),
             UpdateWowGuildsTaskRunner(entitiesService),
+            UpdateWowForeverGuildsTaskRunner(entitiesService),
             UpdateMythicPlusSeasonTaskRunner(wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,

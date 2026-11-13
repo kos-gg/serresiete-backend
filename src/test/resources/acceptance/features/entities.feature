@@ -48,6 +48,11 @@ Feature: Entities
     Then the response status is 200
     And the guild exists in the response
 
+  Scenario: Checking existence of a WOW_FOREVER guild without realm returns its payload
+    When they check existence of WOW_FOREVER guild "TSALAB" region "eu"
+    Then the response status is 200
+    And the guild exists in the response
+
   Scenario: Searching for an unknown WOW_FOREVER entity queues it for sync
     When they search for a WOW_FOREVER entity "Sanxei" with surname "Tarde" region "eu"
     Then the response status is 200

@@ -2,8 +2,10 @@ package com.kos.views
 
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
+import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.eventsourcing.events.*
 import com.kos.views.repository.ViewsRepository
 
@@ -41,15 +43,7 @@ class ViewsEventService(
     private suspend fun resolveViewEntities(
         event: ViewToBeCreatedEvent
     ): ResolvedEntities {
-        val guildReq = (event.extraArguments as? WowExtraArguments)
-            ?.takeIf { it.isGuild && event.game == Game.WOW }
-            ?.let { event.entities.first() as WowEntityRequest }
-
-        val trackedGuild = guildReq?.let { req ->
-            entitiesService.findTrackedGuild(req.name, req.realm, req.region, Game.WOW)
-        }
-
-        return when (trackedGuild) {
+        return when (val trackedGuild = findTrackedGuild(event)) {
             null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments)
             else -> {
                 val (guildPayload, sourceViewId) = trackedGuild
@@ -57,7 +51,7 @@ class ViewsEventService(
                     "tracked guild's source view $sourceViewId no longer exists"
                 }
                 val existing = sourceView.entitiesIds.mapNotNull { id ->
-                    entitiesService.get(id, Game.WOW)?.let { entity ->
+                    entitiesService.get(id, event.game)?.let { entity ->
                         entity to viewsRepository.getViewEntity(sourceViewId, id)?.alias
                     }
                 }
@@ -70,6 +64,21 @@ class ViewsEventService(
             }
         }
     }
+
+    private suspend fun findTrackedGuild(event: ViewToBeCreatedEvent): Pair<GuildPayload, String>? =
+        event.entities.firstOrNull()
+            ?.takeIf { (event.extraArguments as? WowExtraArguments)?.isGuild == true }
+            ?.let { guild ->
+                when (event.game) {
+                    Game.WOW -> (guild as WowEntityRequest)
+                        .let { entitiesService.findTrackedGuild(it.name, it.realm, it.region, Game.WOW) }
+
+                    Game.WOW_FOREVER -> (guild as WowForeverEntityRequest)
+                        .let { entitiesService.findTrackedGuild(it.name, "", it.region, Game.WOW_FOREVER) }
+
+                    Game.WOW_HC, Game.LOL -> null
+                }
+            }
 
     suspend fun editView(viewToBeEditedEvent: ViewToBeEditedEvent): ViewEditedEvent {
         val resolved =

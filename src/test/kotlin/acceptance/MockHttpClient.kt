@@ -97,6 +97,14 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
+                path.contains("/data/wow/guild/") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
+                    respond(
+                        readResource("acceptance/files/responses/wow-forever/blizzard-guild-roster-response.json"),
+                        HttpStatusCode.OK,
+                        json
+                    )
+
                 path.contains("/data/wow/guild/") -> {
                     val namespace = request.url.parameters["namespace"]
                     if (namespace == "profile-classic1x-eu") {

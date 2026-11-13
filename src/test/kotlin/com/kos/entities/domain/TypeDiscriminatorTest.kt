@@ -35,6 +35,14 @@ class TypeDiscriminatorTest {
     }
 
     @Test
+    fun `a wow forever request without surname is decoded with an empty surname`() {
+        assertEquals(
+            WowForeverEntityRequest(name = "tsalab", region = "eu"),
+            json.decodeFromString<EntityRequest>("""{"type":"wow_forever","name":"tsalab","region":"eu"}""")
+        )
+    }
+
+    @Test
     fun `entities are discriminated by game`() {
         assertEquals("wow", typeOf(json.encodeToString<Entity>(WowEntity(1, "kakarona", "eu", "zuljin", null))))
         assertEquals("lol", typeOf(json.encodeToString<Entity>(LolEntity(2, "sanxei", "EUW", "puuid", 1, 100))))

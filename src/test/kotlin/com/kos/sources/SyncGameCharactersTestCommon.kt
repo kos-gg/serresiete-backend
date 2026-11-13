@@ -70,7 +70,8 @@ abstract class SyncGameCharactersTestCommon {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         )
 
 
@@ -83,7 +84,9 @@ abstract class SyncGameCharactersTestCommon {
                 wowGuildResolver,
                 lolUpdater,
                 wowHardcoreGuildUpdater,
-                wowGuildUpdater
+                wowGuildUpdater,
+                mock(),
+                mock()
             )
 
         return Pair(entitiesService, dataCacheRepository)

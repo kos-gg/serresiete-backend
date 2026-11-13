@@ -53,8 +53,11 @@ class CacheGameViewDataTaskRunnerTest {
             wowHardcoreResolver = mock(),
             wowHardcoreGuildResolver = mock(),
             lolResolver = LolEntityResolver(entitiesRepo, riotClient),
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         ),
+        mock(),
+        mock(),
         mock(),
         mock(),
         mock(),

@@ -63,7 +63,8 @@ fun Route.entitiesRouting(
                     userWithActivities?.activities.orEmpty(),
                     request.name,
                     request.region,
-                    request.realm
+                    request.realm,
+                    request.game
                 ).fold({
                     call.respondWithHandledError(it)
                 }, {

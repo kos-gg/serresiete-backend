@@ -15,6 +15,10 @@ import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntity
+import com.kos.entities.domain.WowForeverEntityRequest
+import com.kos.entities.domain.WowForeverGuildMember
+import com.kos.entities.domain.WowForeverGuildRoster
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -24,6 +28,8 @@ import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowGuildUpdater
+import com.kos.sources.wowforever.WowForeverGuildResolver
+import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
@@ -39,6 +45,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.mockito.Mockito.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -106,6 +116,66 @@ class ViewsEventServiceTest {
                 )
 
                 verifyNoInteractions(blizzardClient)
+            }
+        }
+
+        @Test
+        fun `creating a wow forever guild view tracks every roster member, reusing tracked ones by blizzard id`() {
+            runBlocking {
+                val guildExtraArguments = WowExtraArguments(isGuild = true)
+                val tracked = WowForeverEntity(10, "oldname", "oldsurname", "eu", 1)
+                `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab")).thenReturn(
+                    Either.Right(
+                        WowForeverGuildRoster(
+                            104078,
+                            listOf(WowForeverGuildMember(1, "Sanxei", "Zugzug"), WowForeverGuildMember(2, "Eredeth", "Why"))
+                        )
+                    )
+                )
+
+                val viewsEventService = createService(
+                    ViewsState(listOf(), listOf()),
+                    EntitiesState(listOf(), listOf(), listOf(), listOf(tracked))
+                )
+
+                val created = viewsEventService.createView(
+                    ViewToBeCreatedEvent(
+                        id, "TSALAB roster", published,
+                        listOf(WowForeverEntityRequest(name = "tsalab", region = "eu")),
+                        Game.WOW_FOREVER, owner, false, guildExtraArguments
+                    )
+                )
+
+                assertEquals(2, created.entities.size)
+                assertTrue(tracked.id in created.entities)
+                verify(blizzardClient, never()).getForeverProfile(any(), any(), any())
+            }
+        }
+
+        @Test
+        fun `creating a second view for an already-tracked wow forever guild reuses its entities without calling blizzard again`() {
+            runBlocking {
+                val guildExtraArguments = WowExtraArguments(isGuild = true)
+                val guildRequest = WowForeverEntityRequest(name = "tsalab", region = "eu")
+                `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab")).thenReturn(
+                    Either.Right(WowForeverGuildRoster(104078, listOf(WowForeverGuildMember(1, "Sanxei", "Zugzug"))))
+                )
+
+                val viewsEventService = createService(ViewsState(listOf(), listOf()), emptyEntitiesState)
+
+                val first = viewsEventService.createView(
+                    ViewToBeCreatedEvent(
+                        "first", "TSALAB roster", published, listOf(guildRequest), Game.WOW_FOREVER, owner, false, guildExtraArguments
+                    )
+                )
+                val second = viewsEventService.createView(
+                    ViewToBeCreatedEvent(
+                        "second", "TSALAB roster copy", published, listOf(guildRequest), Game.WOW_FOREVER, owner, false, guildExtraArguments
+                    )
+                )
+
+                assertEquals(first.entities, second.entities)
+                verify(blizzardClient, times(1)).getForeverGuildRoster("eu", "tsalab")
             }
         }
     }
@@ -305,6 +375,7 @@ class ViewsEventServiceTest {
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
         val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
+        val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
@@ -312,7 +383,8 @@ class ViewsEventServiceTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = wowForeverGuildResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
@@ -326,7 +398,9 @@ class ViewsEventServiceTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            wowForeverGuildResolver,
+            WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
         )
 
         return ViewsEventService(viewsRepository, entitiesService)
