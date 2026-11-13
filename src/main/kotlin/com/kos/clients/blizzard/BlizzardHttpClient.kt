@@ -14,11 +14,7 @@ import com.kos.common.WithLogger
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowSpecialization
 import com.kos.datacache.domain.WowStats
-import com.kos.entities.domain.GuildRoster
-import com.kos.entities.domain.WowCharacter
-import com.kos.entities.domain.WowForeverCharacter
-import com.kos.entities.domain.WowForeverGuildRoster
-import com.kos.entities.domain.WowRealm
+import com.kos.entities.domain.*
 import com.kos.sources.wow.MythicKeystoneProfile
 import com.kos.sources.wowforever.WowForeverEquippedItem
 import com.kos.sources.wowhc.WowEquippedItemRef
@@ -50,7 +46,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, WowCharacter> {
         logger.debug("getClassicProfile for $region $realm $character")
         return fetchFromApi<GetWowCharacterResponse> {
-            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
         }.map { it.toWowCharacter() }
@@ -63,7 +64,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, WowCharacter> {
         logger.debug("getRetailProfile for $region $realm $character")
         return fetchFromApi<GetWowCharacterResponse> {
-            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, "profile-$region")
             }
         }.map { it.toWowCharacter() }
@@ -101,7 +107,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, List<WowForeverEquippedItem>> {
         logger.debug("getForeverEquipment for $region $name $surname")
         return fetchFromApi<GetWowForeverEquipmentResponse> {
-            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/equipment?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${foreverCharacterSlug(name, surname)}/equipment?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.toWowForeverEquippedItems() }
@@ -124,7 +135,10 @@ class BlizzardHttpClient(
         logger.debug("getForeverSpecializations for $region $name $surname")
         return fetchFromApi<GetWowForeverSpecializationsResponse> {
             client.get(
-                url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/specializations?locale=en_US")
+                url(
+                    region,
+                    "/profile/wow/character/${foreverCharacterSlug(name, surname)}/specializations?locale=en_US"
+                )
             ) {
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
@@ -147,7 +161,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, WowStats> {
         logger.debug("getForeverStatistics for $region $name $surname")
         return fetchFromApi<GetWowCharacterStatsResponse> {
-            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/statistics?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${foreverCharacterSlug(name, surname)}/statistics?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.toWowStats() }
@@ -160,7 +179,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, String?> {
         logger.debug("getForeverAvatar for $region $name $surname")
         return fetchFromApi<GetWowMediaResponse> {
-            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/character-media?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${foreverCharacterSlug(name, surname)}/character-media?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.asset("avatar-sd") }
@@ -174,7 +198,10 @@ class BlizzardHttpClient(
         logger.debug("getCharacterMedia for $region $realm $character")
         return fetchFromApi<GetWowMediaResponse> {
             client.get(
-                url(region, "/profile/wow/character/$realm/${encodedName(character)}/character-media?locale=en_US")
+                url(
+                    region,
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}/character-media?locale=en_US"
+                )
             ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
@@ -188,7 +215,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, List<WowEquippedItemRef>> {
         logger.debug("getCharacterEquipment for $region $realm $character")
         return fetchFromApi<GetWowEquipmentResponse> {
-            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}/equipment?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}/equipment?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
         }.map { it.toEquippedItemRefs() }
@@ -204,7 +236,7 @@ class BlizzardHttpClient(
             client.get(
                 url(
                     region,
-                    "/profile/wow/character/$realm/${encodedName(character)}/specializations?namespace=profile-classic1x-eu&locale=en_US"
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}/specializations?namespace=profile-classic1x-eu&locale=en_US"
                 )
             ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
@@ -219,7 +251,12 @@ class BlizzardHttpClient(
     ): Either<ClientError, WowStats> {
         logger.debug("getCharacterStats for $region $realm $character")
         return fetchFromApi<GetWowCharacterStatsResponse> {
-            client.get(url(region, "/profile/wow/character/$realm/${encodedName(character)}/statistics?locale=en_US")) {
+            client.get(
+                url(
+                    region,
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}/statistics?locale=en_US"
+                )
+            ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_NAMESPACE)
             }
         }.map { it.toWowStats() }
@@ -265,7 +302,7 @@ class BlizzardHttpClient(
             client.get(
                 url(
                     region,
-                    "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=profile-classic1x-eu&locale=en_US"
+                    "/data/wow/guild/${encodedName(realm)}/${slugify(guild)}/roster?namespace=profile-classic1x-eu&locale=en_US"
                 )
             ) {
                 header(BATTLENET_NAMESPACE, PROFILE_CLASSIC1X_EU_NAMESPACE)
@@ -282,7 +319,7 @@ class BlizzardHttpClient(
             client.get(
                 url(
                     region,
-                    "/data/wow/guild/$realm/${slugify(guild)}/roster?namespace=$namespace&locale=en_US"
+                    "/data/wow/guild/${encodedName(realm)}/${slugify(guild)}/roster?namespace=$namespace&locale=en_US"
                 )
             ) {
                 header(BATTLENET_NAMESPACE, namespace)
@@ -301,7 +338,7 @@ class BlizzardHttpClient(
             client.get(
                 url(
                     region,
-                    "/profile/wow/character/$realm/${encodedName(character)}/mythic-keystone-profile/season/$seasonId?namespace=$namespace&locale=en_US"
+                    "/profile/wow/character/${encodedName(realm)}/${encodedName(character)}/mythic-keystone-profile/season/$seasonId?namespace=$namespace&locale=en_US"
                 )
             ) {
                 header(BATTLENET_NAMESPACE, namespace)
@@ -319,5 +356,5 @@ class BlizzardHttpClient(
 
     private fun encodedName(name: String) = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
 
-    private fun slugify(name: String) = name.trim().replace(Regex("\\s+"), "-")
+    private fun slugify(name: String) = encodedName(name.trim().replace(Regex("\\s+"), "-"))
 }

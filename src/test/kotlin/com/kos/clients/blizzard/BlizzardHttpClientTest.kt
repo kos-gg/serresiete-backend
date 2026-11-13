@@ -33,6 +33,8 @@ import com.kos.sources.wowforever.WowForeverEquippedItem
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -300,6 +302,35 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverGuildRoster("eu", "unknown"))
+    }
+
+    private suspend fun requestedUrl(call: suspend BlizzardHttpClient.() -> Unit): Url {
+        givenAValidToken()
+        val engine = MockEngine { respond("", HttpStatusCode.NotFound) }
+        BlizzardHttpClient(HttpClient(engine) { blizzardHttpClientConfig(RetryConfig(0, 0), blizzardAuthClient) }).call()
+        return engine.requestHistory.single().url
+    }
+
+    @Test
+    fun `a guild name can't change the path or the query of the forever roster request`() = runBlocking {
+        val url = requestedUrl { getForeverGuildRoster("eu", "tsalab/../profile?namespace=evil#x") }
+
+        assertEquals("/data/wow/guild/tsalab%2f..%2fprofile%3fnamespace%3devil%23x/roster", url.encodedPath)
+        assertEquals(listOf("locale"), url.parameters.names().toList())
+    }
+
+    @Test
+    fun `a guild name with spaces is sent as a slug`() = runBlocking {
+        val url = requestedUrl { getForeverGuildRoster("eu", " los   del sur ") }
+
+        assertEquals("/data/wow/guild/los-del-sur/roster", url.encodedPath)
+    }
+
+    @Test
+    fun `a realm can't change the path of the retail guild roster request`() = runBlocking {
+        val url = requestedUrl { getRetailGuildRoster("eu", "../../profile", "method") }
+
+        assertEquals("/data/wow/guild/..%2f..%2fprofile/method/roster", url.encodedPath)
     }
 
     @Test
