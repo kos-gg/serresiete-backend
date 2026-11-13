@@ -187,6 +187,32 @@ class WowGuildUpdaterTest {
     }
 
     @Test
+    fun `update adds a member who joined the guild and was already tracked by another view`() {
+        runBlocking {
+            val guildViewId = createGuildView("guild-view")
+            val otherViewId = createGuildView("other-view")
+
+            val joinerId = alreadyTrackedWithBlizzardId("joiner", 777L, otherViewId)
+
+            `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
+                Either.Right(
+                    GetWowRosterResponse(
+                        listOf(WowMemberResponse(WowCharacterResponse("joiner", 90, 777L, WowRosterMemberRealmResponse(realm)))),
+                        WowGuildResponse(blizzardId)
+                    ).toGuildRoster()
+                )
+            )
+
+            val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to guildViewId))
+
+            assertEquals(emptyList(), errors)
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
+            assertEquals(setOf(joinerId), viewsRepository.get(guildViewId)!!.entitiesIds.toSet())
+            assertEquals(1, entitiesRepository.get(Game.WOW).size)
+        }
+    }
+
+    @Test
     fun `update processes multiple guilds independently, each only touching its own view`() {
         runBlocking {
             val viewIdA = createGuildView("guild-view-a")

@@ -68,38 +68,28 @@ class WowGuildUpdater(
 
         val inserted = entitiesRepository.insert(newMembers.map { it.first }, Game.WOW)
         logger.info("Inserted new entities $inserted to EntityRepository")
-        val insertedWithAlias = inserted.zip(newMembers) { entity, member -> entity.id to member.second }
 
-        syncViewMembership(
-            guild,
-            viewIds,
-            stillInGuild = entityIdsStillInGuild + insertedWithAlias.map { it.first },
-            insertedWithAlias = insertedWithAlias
-        )
+        syncViewMembership(guild, viewIds, stillInGuild = entityIdsStillInGuild + inserted.map { it.id })
 
         logger.info("Finished updating Wow Guild ${guild.name} - ${guild.realm} - ${guild.region}")
     }
 
-    private suspend fun syncViewMembership(
-        guild: GuildPayload,
-        viewIds: List<String>,
-        stillInGuild: Set<Long>,
-        insertedWithAlias: List<Pair<Long, String?>>
-    ) {
-        val currentlyAssociated = viewsRepository.get(viewIds.first())?.entitiesIds?.toSet()
-        val noLongerInGuild = currentlyAssociated?.minus(stillInGuild)
+    private suspend fun syncViewMembership(guild: GuildPayload, viewIds: List<String>, stillInGuild: Set<Long>) {
+        val currentlyAssociated = viewsRepository.get(viewIds.first())?.entitiesIds?.toSet().orEmpty()
+        val noLongerInGuild = currentlyAssociated - stillInGuild
+        val joinedGuild = stillInGuild - currentlyAssociated
 
-        if (!noLongerInGuild.isNullOrEmpty()) {
+        if (noLongerInGuild.isNotEmpty()) {
             viewIds.forEach { viewId ->
                 logger.info("Disassociating ${noLongerInGuild.size} entities from viewId $viewId and guild ${guild.name}")
                 viewsRepository.disassociateEntitiesFromView(noLongerInGuild, viewId)
             }
         }
 
-        if (insertedWithAlias.isNotEmpty()) {
+        if (joinedGuild.isNotEmpty()) {
             viewIds.forEach { viewId ->
-                logger.info("Associating [${insertedWithAlias.map { it.first }}] entities to viewId $viewId and guild ${guild.name}")
-                viewsRepository.associateEntitiesIdsToView(insertedWithAlias, viewId)
+                logger.info("Associating $joinedGuild entities to viewId $viewId and guild ${guild.name}")
+                viewsRepository.associateEntitiesIdsToView(joinedGuild.map { it to null }, viewId)
             }
         }
     }
