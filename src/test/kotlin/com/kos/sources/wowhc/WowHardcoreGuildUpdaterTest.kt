@@ -30,7 +30,7 @@ class WowHardcoreGuildUpdaterTest {
     private val viewsRepository = ViewsInMemoryRepository()
     private val resolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     private val updater = WowHardcoreGuildUpdater(
-        WowHardcoreGuildResolver(blizzardClient, resolver),
+        WowHardcoreGuildResolver(entitiesRepository, blizzardClient, resolver),
         resolver,
         entitiesRepository,
         viewsRepository

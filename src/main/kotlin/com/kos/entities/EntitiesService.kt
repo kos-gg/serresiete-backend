@@ -17,7 +17,6 @@ import com.kos.sources.wowforever.WowForeverGuildResolver
 import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
-import com.kos.views.ViewExtraArguments
 
 data class EntitiesService(
     private val entitiesRepository: EntitiesRepository,
@@ -79,12 +78,11 @@ data class EntitiesService(
                 }
             }
 
-    suspend fun resolveEntities(
-        requestedEntities: List<EntityRequest>,
-        game: Game,
-        extraArguments: ViewExtraArguments? = null
-    ): ResolvedEntities =
-        entitiesResolverProvider.resolverFor(game, extraArguments).resolve(requestedEntities)
+    suspend fun resolveEntities(requestedEntities: List<EntityRequest>, game: Game): ResolvedEntities =
+        entitiesResolverProvider.resolverFor(game).resolve(requestedEntities)
+
+    suspend fun resolveGuild(guild: EntityRequest, game: Game): ResolvedGuild<*> =
+        entitiesResolverProvider.guildResolverFor(game).resolve(guild)
 
     suspend fun updateEntities(
         game: Game

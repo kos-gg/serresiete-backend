@@ -46,17 +46,16 @@ class WowForeverGuildResolverTest {
         runBlocking {
             rosterIs(WowForeverGuildMember(1, "Sanxei", "Zugzug"), WowForeverGuildMember(2, "Smårips", "Balast"))
 
-            val resolved = resolverWith().resolve(listOf(guildRequest))
+            val resolved = resolverWith().resolve(guildRequest)
 
             assertEquals(
                 listOf(
                     WowForeverEntityRequest("sanxei", "zugzug", region, 1) to null,
                     WowForeverEntityRequest("smårips", "balast", region, 2) to null
                 ),
-                resolved.entities
+                resolved.newMembers
             )
             assertEquals(listOf(), resolved.existing)
-            assertEquals(listOf(), resolved.unchecked)
         }
     }
 
@@ -66,10 +65,10 @@ class WowForeverGuildResolverTest {
             val renamed = WowForeverEntity(10, "oldname", "oldsurname", region, 1)
             rosterIs(WowForeverGuildMember(1, "Sanxei", "Zugzug"), WowForeverGuildMember(2, "Eredeth", "Why"))
 
-            val resolved = resolverWith(renamed).resolve(listOf(guildRequest))
+            val resolved = resolverWith(renamed).resolve(guildRequest)
 
-            assertEquals(listOf(renamed to null), resolved.existing)
-            assertEquals(listOf(WowForeverEntityRequest("eredeth", "why", region, 2) to null), resolved.entities)
+            assertEquals(listOf(renamed), resolved.existing)
+            assertEquals(listOf(WowForeverEntityRequest("eredeth", "why", region, 2) to null), resolved.newMembers)
         }
     }
 
@@ -79,10 +78,10 @@ class WowForeverGuildResolverTest {
             val namesake = WowForeverEntity(10, "sanxei", "zugzug", region, 99)
             rosterIs(WowForeverGuildMember(1, "Sanxei", "Zugzug"))
 
-            val resolved = resolverWith(namesake).resolve(listOf(guildRequest))
+            val resolved = resolverWith(namesake).resolve(guildRequest)
 
             assertEquals(listOf(), resolved.existing)
-            assertEquals(listOf(WowForeverEntityRequest("sanxei", "zugzug", region, 1) to null), resolved.entities)
+            assertEquals(listOf(WowForeverEntityRequest("sanxei", "zugzug", region, 1) to null), resolved.newMembers)
         }
     }
 
@@ -91,7 +90,7 @@ class WowForeverGuildResolverTest {
         runBlocking {
             rosterIs()
 
-            val resolved = resolverWith().resolve(listOf(guildRequest))
+            val resolved = resolverWith().resolve(guildRequest)
 
             assertEquals(WowForeverGuild("tsalab", region, guildId), resolved.guild)
         }
@@ -102,7 +101,7 @@ class WowForeverGuildResolverTest {
         runBlocking {
             rosterIs(WowForeverGuildMember(1, "Sanxei", "Zugzug"))
 
-            resolverWith().resolve(listOf(guildRequest))
+            resolverWith().resolve(guildRequest)
 
             verify(blizzardClient, never()).getForeverProfile(any(), any(), any())
         }
@@ -115,7 +114,7 @@ class WowForeverGuildResolverTest {
 
             val resolver = resolverWith()
 
-            assertFailsWith<IllegalStateException> { resolver.resolve(listOf(guildRequest)) }
+            assertFailsWith<IllegalStateException> { resolver.resolve(guildRequest) }
         }
     }
 

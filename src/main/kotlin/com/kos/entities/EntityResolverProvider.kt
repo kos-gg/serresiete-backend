@@ -1,25 +1,27 @@
 package com.kos.entities
 
 import com.kos.views.Game
-import com.kos.views.ViewExtraArguments
-import com.kos.views.WowExtraArguments
 
 class EntityResolverProvider(
     private val wowResolver: EntityResolver,
-    private val wowGuildResolver: EntityResolver,
+    private val wowGuildResolver: GuildResolver<*, *>,
     private val wowHardcoreResolver: EntityResolver,
-    private val wowHardcoreGuildResolver: EntityResolver,
+    private val wowHardcoreGuildResolver: GuildResolver<*, *>,
     private val lolResolver: EntityResolver,
     private val wowForeverResolver: EntityResolver,
-    private val wowForeverGuildResolver: EntityResolver
+    private val wowForeverGuildResolver: GuildResolver<*, *>
 ) {
-    fun resolverFor(game: Game, extra: ViewExtraArguments?): EntityResolver {
-        val isGuild = (extra as? WowExtraArguments)?.isGuild == true
-        return when (game) {
-            Game.WOW -> if (isGuild) wowGuildResolver else wowResolver
-            Game.WOW_HC -> if (isGuild) wowHardcoreGuildResolver else wowHardcoreResolver
-            Game.LOL -> lolResolver
-            Game.WOW_FOREVER -> if (isGuild) wowForeverGuildResolver else wowForeverResolver
-        }
+    fun resolverFor(game: Game): EntityResolver = when (game) {
+        Game.WOW -> wowResolver
+        Game.WOW_HC -> wowHardcoreResolver
+        Game.LOL -> lolResolver
+        Game.WOW_FOREVER -> wowForeverResolver
+    }
+
+    fun guildResolverFor(game: Game): GuildResolver<*, *> = when (game) {
+        Game.WOW -> wowGuildResolver
+        Game.WOW_HC -> wowHardcoreGuildResolver
+        Game.WOW_FOREVER -> wowForeverGuildResolver
+        Game.LOL -> error("$game has no guilds")
     }
 }

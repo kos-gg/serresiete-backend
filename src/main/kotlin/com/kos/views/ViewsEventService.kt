@@ -2,6 +2,7 @@ package com.kos.views
 
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
+import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
@@ -15,7 +16,10 @@ class ViewsEventService(
 ) : WithLogger("ViewsEventService") {
 
     suspend fun createView(viewToBeCreatedEvent: ViewToBeCreatedEvent): ViewCreatedEvent {
-        val resolved = resolveViewEntities(viewToBeCreatedEvent)
+        val (resolved, guild) = when (val guildRequest = guildRequestOf(viewToBeCreatedEvent)) {
+            null -> entitiesService.resolveEntities(viewToBeCreatedEvent.entities, viewToBeCreatedEvent.game) to null
+            else -> resolveGuildMembers(guildRequest, viewToBeCreatedEvent.game)
+        }
 
         val inserted = entitiesService
             .insert(resolved.entities.map { it.first }, viewToBeCreatedEvent.game)
@@ -33,52 +37,49 @@ class ViewsEventService(
             viewToBeCreatedEvent.extraArguments
         )
 
-        resolved.guild?.let {
+        guild?.let {
             entitiesService.insertGuild(it, view.id, viewToBeCreatedEvent.game)
         }
 
         return ViewCreatedEvent.fromSimpleView(view)
     }
 
-    private suspend fun resolveViewEntities(
-        event: ViewToBeCreatedEvent
-    ): ResolvedEntities {
-        return when (val trackedGuild = findTrackedGuild(event)) {
-            null -> entitiesService.resolveEntities(event.entities, event.game, event.extraArguments)
-            else -> {
-                val (guildPayload, sourceViewId) = trackedGuild
-                val sourceView = checkNotNull(viewsRepository.get(sourceViewId)) {
-                    "tracked guild's source view $sourceViewId no longer exists"
-                }
-                val existing = sourceView.entitiesIds.mapNotNull { id ->
-                    entitiesService.get(id, event.game)?.let { entity ->
-                        entity to viewsRepository.getViewEntity(sourceViewId, id)?.alias
-                    }
-                }
-                ResolvedEntities(
-                    entities = emptyList(),
-                    existing = existing,
-                    unchecked = emptyList(),
-                    guild = guildPayload
-                )
-            }
-        }
-    }
-
-    private suspend fun findTrackedGuild(event: ViewToBeCreatedEvent): Pair<WowGuild, String>? =
+    private fun guildRequestOf(event: ViewToBeCreatedEvent): EntityRequest? =
         event.entities.firstOrNull()
             ?.takeIf { (event.extraArguments as? WowExtraArguments)?.isGuild == true }
-            ?.let { guild ->
-                when (event.game) {
-                    Game.WOW -> (guild as WowEntityRequest)
-                        .let { entitiesService.findTrackedGuild(it.name, it.realm, it.region, Game.WOW) }
 
-                    Game.WOW_FOREVER -> (guild as WowForeverEntityRequest)
-                        .let { entitiesService.findTrackedGuild(it.name, null, it.region, Game.WOW_FOREVER) }
-
-                    Game.WOW_HC, Game.LOL -> null
-                }
+    private suspend fun resolveGuildMembers(guildRequest: EntityRequest, game: Game): Pair<ResolvedEntities, WowGuild> =
+        findTrackedGuild(guildRequest, game)
+            ?.let { (guild, sourceViewId) -> membersOf(sourceViewId, game) to guild }
+            ?: entitiesService.resolveGuild(guildRequest, game).let { resolvedGuild ->
+                ResolvedEntities(
+                    entities = resolvedGuild.newMembers,
+                    existing = resolvedGuild.existing.map { it to null }
+                ) to resolvedGuild.guild
             }
+
+    private suspend fun membersOf(sourceViewId: String, game: Game): ResolvedEntities {
+        val sourceView = checkNotNull(viewsRepository.get(sourceViewId)) {
+            "tracked guild's source view $sourceViewId no longer exists"
+        }
+        val existing = sourceView.entitiesIds.mapNotNull { id ->
+            entitiesService.get(id, game)?.let { entity ->
+                entity to viewsRepository.getViewEntity(sourceViewId, id)?.alias
+            }
+        }
+        return ResolvedEntities(entities = emptyList(), existing = existing)
+    }
+
+    private suspend fun findTrackedGuild(guild: EntityRequest, game: Game): Pair<WowGuild, String>? =
+        when (game) {
+            Game.WOW -> (guild as WowEntityRequest)
+                .let { entitiesService.findTrackedGuild(it.name, it.realm, it.region, Game.WOW) }
+
+            Game.WOW_FOREVER -> (guild as WowForeverEntityRequest)
+                .let { entitiesService.findTrackedGuild(it.name, null, it.region, Game.WOW_FOREVER) }
+
+            Game.WOW_HC, Game.LOL -> null
+        }
 
     suspend fun editView(viewToBeEditedEvent: ViewToBeEditedEvent): ViewEditedEvent {
         val resolved =

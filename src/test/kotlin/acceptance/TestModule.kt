@@ -137,7 +137,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
     val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-    val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+    val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
     val wowForeverResolver = WowForeverEntityResolver(entitiesRepository, blizzardClient)
     val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)

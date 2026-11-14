@@ -2,28 +2,35 @@ package com.kos.sources.wowhc
 
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.orThrow
-import com.kos.entities.EntityResolver
+import com.kos.entities.GuildMembers
+import com.kos.entities.GuildResolver
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.GuildRoster
-import com.kos.entities.domain.ResolvedEntities
+import com.kos.entities.domain.InsertEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 
 class WowHardcoreGuildResolver(
+    override val entitiesRepository: EntitiesRepository,
     private val blizzardClient: BlizzardClient,
     private val characterResolver: WowHardcoreEntityResolver
-) : EntityResolver {
+) : GuildResolver<WowRealmGuild, WowEntityRequest> {
     companion object {
         private const val MIN_MEMBER_LEVEL = 10
     }
 
-    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
-        val guildReq = requested.first() as WowEntityRequest
-        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
+    override val game = Game.WOW_HC
 
-        return characterResolver.resolve(members).copy(guild = payload(guildRoster, guildReq))
+    override suspend fun fetchRoster(guild: EntityRequest): GuildMembers<WowRealmGuild, WowEntityRequest> {
+        val guildReq = guild as WowEntityRequest
+        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
+        return GuildMembers(payload(guildRoster, guildReq), members)
     }
+
+    override suspend fun admit(newMembers: List<WowEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
+        characterResolver.resolve(newMembers).entities
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): WowRealmGuild =
         WowRealmGuild(

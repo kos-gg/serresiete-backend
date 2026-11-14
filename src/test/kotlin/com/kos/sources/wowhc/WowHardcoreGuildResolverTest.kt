@@ -24,9 +24,11 @@ import kotlin.test.fail
 
 class WowHardcoreGuildResolverTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
+    private val entitiesRepository = EntitiesInMemoryRepository()
     private val guildResolver = WowHardcoreGuildResolver(
+        entitiesRepository,
         blizzardClient,
-        WowHardcoreEntityResolver(EntitiesInMemoryRepository(), blizzardClient)
+        WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     )
     private val guildRequest = WowEntityRequest("Sanxei Guild", basicWowRequest.region, basicWowRequest.realm)
 
@@ -47,9 +49,9 @@ class WowHardcoreGuildResolverTest {
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
             `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
-            guildResolver.resolve(listOf(guildRequest))
+            guildResolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(basicWowRequest.name), res.entities.map { it.first.name })
+                    assertEquals(listOf(basicWowRequest.name), res.newMembers.map { it.first.name })
                     assertEquals(WowRealmGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
                 }
         }
@@ -68,8 +70,8 @@ class WowHardcoreGuildResolverTest {
                     )
                 )
 
-            guildResolver.resolve(listOf(guildRequest))
-                .let { res -> assertEquals(listOf(), res.entities) }
+            guildResolver.resolve(guildRequest)
+                .let { res -> assertEquals(listOf(), res.newMembers) }
 
             verify(blizzardClient, never()).getClassicProfile(anyString(), anyString(), anyString())
         }
@@ -81,7 +83,7 @@ class WowHardcoreGuildResolverTest {
             `when`(blizzardClient.getHardcoreGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
                 .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
 
-            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(guildRequest) }
 
             assertEquals("Third party call failed: TimeoutError(message=Request timeout has expired)", error.message)
         }

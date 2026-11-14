@@ -64,7 +64,7 @@ class WowGuildUpdater(
         newMembers: List<WowEntityRequest>,
         entityIdsStillInGuild: Set<Long>
     ) {
-        val newMembers = guildResolver.resolveMembers(newMembers)
+        val newMembers = guildResolver.admit(newMembers)
 
         val inserted = entitiesRepository.insert(newMembers.map { it.first }, Game.WOW)
         logger.info("Inserted new entities $inserted to EntityRepository")

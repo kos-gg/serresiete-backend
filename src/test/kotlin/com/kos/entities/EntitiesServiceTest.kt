@@ -676,7 +676,7 @@ class EntitiesServiceTest {
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
         val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
         val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
 
@@ -711,6 +711,5 @@ class EntitiesServiceTest {
     private fun assertResolvedEntities(expected: ResolvedEntities, actual: ResolvedEntities) {
         assertEquals(expected.entities.size, actual.entities.size)
         assertEquals(expected.existing, actual.existing)
-        assertEquals(expected.guild, actual.guild)
     }
 }
