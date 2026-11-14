@@ -1,9 +1,9 @@
 package com.kos.views
 
+import com.kos.entities.guilds.Guild
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.Guild
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntityRequest

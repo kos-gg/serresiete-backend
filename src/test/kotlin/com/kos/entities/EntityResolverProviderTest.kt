@@ -1,5 +1,6 @@
 package com.kos.entities
 
+import com.kos.entities.guilds.GuildResolver
 import com.kos.views.Game
 import org.mockito.Mockito.mock
 import kotlin.test.Test

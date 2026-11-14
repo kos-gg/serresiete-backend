@@ -1,5 +1,7 @@
 package com.kos
 
+import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
+import com.kos.entities.guilds.GuildUpdater
 import com.kos.activities.ActivitiesController
 import com.kos.activities.ActivitiesService
 import com.kos.activities.repository.ActivitiesDatabaseRepository
@@ -27,7 +29,6 @@ import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesDatabaseRepository
-import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.entities.sync.EntitySynchronizerProvider
 import com.kos.entities.sync.SyncBudget
 import com.kos.entities.sync.SyncEntitySelector
@@ -55,7 +56,6 @@ import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wow.WowGuildResolver
-import com.kos.entities.GuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository

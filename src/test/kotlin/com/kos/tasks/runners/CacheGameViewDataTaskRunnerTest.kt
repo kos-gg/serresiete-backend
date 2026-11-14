@@ -1,5 +1,6 @@
 package com.kos.tasks.runners
 
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
 import com.kos.tasks.TaskFailed
 import com.kos.tasks.TaskCompleted
 import arrow.core.Either
@@ -15,7 +16,6 @@ import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.sync.EntitySynchronizerProvider
 import com.kos.eventsourcing.events.repository.EventStoreInMemory
 import com.kos.sources.lol.LolEntityResolver

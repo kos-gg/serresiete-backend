@@ -1,15 +1,15 @@
 package com.kos.sources.wowhc
 
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.GuildWithRoster
+import com.kos.entities.guilds.GuildResolver
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.orThrow
-import com.kos.entities.GuildWithRoster
-import com.kos.entities.GuildResolver
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.InsertEntityRequest
 import com.kos.entities.domain.WowEntityRequest
-import com.kos.entities.domain.WowGuild
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 

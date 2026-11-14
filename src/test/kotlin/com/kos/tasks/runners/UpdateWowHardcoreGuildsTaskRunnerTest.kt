@@ -1,5 +1,8 @@
 package com.kos.tasks.runners
 
+import com.kos.entities.guilds.repository.WowGuildsState
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.WowGuild
 import com.kos.tasks.TaskCompleted
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
@@ -10,10 +13,7 @@ import com.kos.clients.domain.*
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.WowGuild
 import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game

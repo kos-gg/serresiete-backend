@@ -1,5 +1,7 @@
 package com.kos.entities
 
+import com.kos.entities.guilds.GuildExistsResponse
+import com.kos.entities.guilds.Guild
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
@@ -17,7 +19,6 @@ import com.kos.datacache.DataCacheService
 import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.entities.domain.EntityDataResponse
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.GuildExistsResponse
 import com.kos.entities.domain.belongsTo
 import com.kos.entities.domain.hasValidRegion
 import com.kos.entities.domain.isBlizzardRegion

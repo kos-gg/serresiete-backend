@@ -1,5 +1,8 @@
 package com.kos.entities
 
+import com.kos.entities.guilds.GuildExistsResponse
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
 import arrow.core.Either
 import com.kos.activities.Activities
 import com.kos.common.error.BadRequest
@@ -11,9 +14,6 @@ import com.kos.common.error.NotEnoughPermissions
 import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.domain.EntitiesExistResponse
-import com.kos.entities.domain.GuildExistsResponse
-import com.kos.entities.domain.WowGuild
-import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.views.Game
 import io.ktor.http.*

@@ -1,11 +1,11 @@
 package com.kos.sources.wowforever
 
-import com.kos.entities.GuildUpdater
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.entities.GuildUpdateFailed
-import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.domain.WowForeverGuildMember

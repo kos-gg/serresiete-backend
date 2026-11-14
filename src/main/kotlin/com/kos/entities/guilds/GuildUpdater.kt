@@ -1,11 +1,11 @@
-package com.kos.entities
+package com.kos.entities.guilds
 
+import com.kos.entities.GuildUpdateFailed
+import com.kos.entities.PartialFailure
+import com.kos.entities.EntityUpdater
 import arrow.core.Either
 import com.kos.common.WithLogger
 import com.kos.entities.domain.InsertEntityRequest
-import com.kos.entities.domain.Guild
-import com.kos.entities.domain.realmOrNull
-import com.kos.entities.domain.toRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.repository.ViewsRepository
 

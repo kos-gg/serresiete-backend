@@ -1,8 +1,8 @@
 package com.kos.entities
 
+import com.kos.entities.guilds.realmOrNull
+import com.kos.entities.guilds.Guild
 import com.kos.clients.ClientError
-import com.kos.entities.domain.Guild
-import com.kos.entities.domain.realmOrNull
 
 sealed class PartialFailure {
     abstract fun error(): String

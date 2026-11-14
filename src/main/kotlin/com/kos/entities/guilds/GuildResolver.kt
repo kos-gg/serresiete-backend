@@ -1,8 +1,7 @@
-package com.kos.entities
+package com.kos.entities.guilds
 
 import com.kos.entities.domain.Entity
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.Guild
 import com.kos.entities.domain.InsertEntityRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.getCurrentAndNewMembers

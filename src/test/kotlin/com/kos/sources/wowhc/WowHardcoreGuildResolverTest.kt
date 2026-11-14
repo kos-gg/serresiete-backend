@@ -1,5 +1,7 @@
 package com.kos.sources.wowhc
 
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.Guild
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -12,7 +14,6 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
-import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import kotlinx.coroutines.runBlocking

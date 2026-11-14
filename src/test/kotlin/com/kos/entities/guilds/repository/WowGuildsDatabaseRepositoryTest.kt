@@ -1,7 +1,7 @@
-package com.kos.entities.repository.wowguilds
+package com.kos.entities.guilds.repository
 
-import com.kos.entities.domain.WowForeverGuild
-import com.kos.entities.domain.WowGuild
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres

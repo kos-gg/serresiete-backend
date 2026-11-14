@@ -1,5 +1,6 @@
 package com.kos.sources.wowhc
 
+import com.kos.entities.guilds.WowGuild
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -14,7 +15,6 @@ import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.WowGuild
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository

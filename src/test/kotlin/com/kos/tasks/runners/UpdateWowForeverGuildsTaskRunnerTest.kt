@@ -1,19 +1,19 @@
 package com.kos.tasks.runners
 
+import com.kos.entities.guilds.repository.WowGuildsState
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverGuildMember
 import com.kos.entities.domain.WowForeverGuildRoster
 import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wowforever.WowForeverGuildResolver
-import com.kos.entities.GuildUpdater
 import com.kos.tasks.TaskCompleted
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository

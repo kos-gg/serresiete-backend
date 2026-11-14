@@ -1,5 +1,7 @@
 package com.kos.eventsourcing.subscriptions.sync
 
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.GuildUpdater
 import org.mockito.Mockito.mock
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.riot.RiotClient
@@ -8,14 +10,12 @@ import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.Event
 import com.kos.eventsourcing.events.EventWithVersion
 import com.kos.eventsourcing.events.ViewDeletedEvent
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
-import com.kos.entities.GuildUpdater
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game

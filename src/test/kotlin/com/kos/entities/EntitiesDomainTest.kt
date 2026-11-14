@@ -1,10 +1,11 @@
 package com.kos.entities
 
+import com.kos.entities.guilds.normalized
+import com.kos.entities.guilds.GuildExistsRequest
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntityEnrichedRequest
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.EntitiesExistRequest
-import com.kos.entities.domain.GuildExistsRequest
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntityRequest

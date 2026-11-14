@@ -1,5 +1,12 @@
 package com.kos.entities
 
+import com.kos.entities.guilds.repository.WowGuildsRepository
+import com.kos.entities.guilds.GuildExistsResponse
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.Guild
+import com.kos.entities.guilds.GuildUpdater
+import com.kos.entities.guilds.ResolvedGuild
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.recover
@@ -9,7 +16,6 @@ import com.kos.common.WithLogger
 import com.kos.common.error.ThirdPartyUnavailable
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
-import com.kos.entities.repository.wowguilds.WowGuildsRepository
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowforever.WowForeverGuildResolver

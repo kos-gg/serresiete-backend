@@ -1,7 +1,8 @@
 package acceptance.steps
 
-import com.kos.entities.domain.WowGuild
-import com.kos.entities.domain.WowForeverGuild
+import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
@@ -15,7 +16,6 @@ import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.repository.EntitiesDatabaseRepository
-import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.tasks.Status
 import com.kos.tasks.Task

@@ -1,6 +1,7 @@
 package com.kos.sources.wow
 
-import com.kos.entities.GuildUpdater
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -12,7 +13,6 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository

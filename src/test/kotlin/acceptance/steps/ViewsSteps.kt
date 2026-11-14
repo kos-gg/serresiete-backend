@@ -1,6 +1,7 @@
 package acceptance.steps
 
-import com.kos.entities.domain.WowForeverGuild
+import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
+import com.kos.entities.guilds.WowForeverGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
@@ -8,7 +9,6 @@ import acceptance.entityRequestJson
 import acceptance.existingEntityRow
 import acceptance.newEntityRow
 import acceptance.toGame
-import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.views.Game
 import com.kos.views.ViewPatchRequest
 import com.kos.views.ViewRequest

@@ -1,5 +1,9 @@
 package com.kos.sources.wow
 
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.Guild
+import com.kos.entities.guilds.GuildWithRoster
+import com.kos.entities.guilds.GuildResolver
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
@@ -10,8 +14,6 @@ import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.common.split
-import com.kos.entities.GuildResolver
-import com.kos.entities.GuildWithRoster
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository

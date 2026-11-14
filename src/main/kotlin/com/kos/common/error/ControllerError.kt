@@ -1,5 +1,6 @@
 package com.kos.common.error
 
+import com.kos.entities.guilds.Guild
 import com.kos.common._fold
 import io.ktor.http.*
 import io.ktor.server.application.*

@@ -1,5 +1,7 @@
 package com.kos.sources.wow
 
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.Guild
 import arrow.core.Either
 import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
@@ -11,7 +13,6 @@ import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
