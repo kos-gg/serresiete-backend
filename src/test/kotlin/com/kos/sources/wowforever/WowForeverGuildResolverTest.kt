@@ -50,8 +50,8 @@ class WowForeverGuildResolverTest {
 
             assertEquals(
                 listOf(
-                    WowForeverEntityRequest("sanxei", "zugzug", region, 1) to null,
-                    WowForeverEntityRequest("smårips", "balast", region, 2) to null
+                    WowForeverEntityRequest("sanxei", "zugzug", region, 1),
+                    WowForeverEntityRequest("smårips", "balast", region, 2)
                 ),
                 resolved.newMembers
             )
@@ -68,7 +68,7 @@ class WowForeverGuildResolverTest {
             val resolved = resolverWith(renamed).resolve(guildRequest)
 
             assertEquals(listOf(renamed), resolved.existing.map { it.second })
-            assertEquals(listOf(WowForeverEntityRequest("eredeth", "why", region, 2) to null), resolved.newMembers)
+            assertEquals(listOf(WowForeverEntityRequest("eredeth", "why", region, 2)), resolved.newMembers)
         }
     }
 
@@ -81,7 +81,7 @@ class WowForeverGuildResolverTest {
             val resolved = resolverWith(namesake).resolve(guildRequest)
 
             assertEquals(listOf(), resolved.existing)
-            assertEquals(listOf(WowForeverEntityRequest("sanxei", "zugzug", region, 1) to null), resolved.newMembers)
+            assertEquals(listOf(WowForeverEntityRequest("sanxei", "zugzug", region, 1)), resolved.newMembers)
         }
     }
 

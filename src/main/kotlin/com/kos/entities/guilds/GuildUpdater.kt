@@ -1,10 +1,10 @@
 package com.kos.entities.guilds
 
-import com.kos.entities.GuildUpdateFailed
-import com.kos.entities.PartialFailure
-import com.kos.entities.EntityUpdater
 import arrow.core.Either
 import com.kos.common.WithLogger
+import com.kos.entities.EntityUpdater
+import com.kos.entities.GuildUpdateFailed
+import com.kos.entities.PartialFailure
 import com.kos.entities.domain.InsertEntityRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.repository.ViewsRepository
@@ -31,7 +31,7 @@ class GuildUpdater<G : Guild, M : InsertEntityRequest>(
 
         renameChangedMembers(resolved)
 
-        val inserted = entitiesRepository.insert(resolved.newMembers.map { it.first }, guildResolver.game)
+        val inserted = entitiesRepository.insert(resolved.newMembers, guildResolver.game)
         logger.info("Inserted new entities $inserted to EntityRepository")
 
         val inGuild = (resolved.existing.map { (_, entity) -> entity.id } + inserted.map { it.id }).toSet()

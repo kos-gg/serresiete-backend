@@ -1,7 +1,5 @@
 package com.kos.entities
 
-import com.kos.entities.guilds.GuildExistsResponse
-import com.kos.entities.guilds.Guild
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
@@ -23,6 +21,7 @@ import com.kos.entities.domain.belongsTo
 import com.kos.entities.domain.hasValidRegion
 import com.kos.entities.domain.isBlizzardRegion
 import com.kos.entities.domain.missesSurname
+import com.kos.entities.guilds.GuildExistsResponse
 import com.kos.views.Game
 
 class EntitiesController(

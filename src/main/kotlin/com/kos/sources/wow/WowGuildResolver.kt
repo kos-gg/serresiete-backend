@@ -1,9 +1,5 @@
 package com.kos.sources.wow
 
-import com.kos.entities.guilds.WowGuild
-import com.kos.entities.guilds.Guild
-import com.kos.entities.guilds.GuildWithRoster
-import com.kos.entities.guilds.GuildResolver
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
@@ -15,6 +11,9 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.common.split
 import com.kos.entities.domain.*
+import com.kos.entities.guilds.GuildResolver
+import com.kos.entities.guilds.GuildWithRoster
+import com.kos.entities.guilds.WowGuild
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
 import com.kos.views.Game
@@ -61,7 +60,7 @@ class WowGuildResolver(
         return GuildWithRoster(payload(roster.guildId, guildRequest), wowEntityRequests)
     }
 
-    override suspend fun resolveRoster(newMembers: List<WowEntityRequest>): List<Pair<InsertEntityRequest, String?>> {
+    override suspend fun resolveRoster(newMembers: List<WowEntityRequest>): List<InsertEntityRequest> {
         val seasonId = checkNotNull(wowSeasonRepository.getCurrentSeason()?.id) { "There is no current mythic+ season" }
 
         val (failed, scored) = newMembers.asFlow()
@@ -76,7 +75,7 @@ class WowGuildResolver(
                     "${belowScore.size} below minimum mythic+ score, ${failed.size} failed"
         )
 
-        return competitive.map { (req, _) -> req to req.alias }
+        return competitive.map { (req, _) -> req }
     }
 
     override fun hasGuildMemberChanged(member: WowEntityRequest, tracked: Entity): Boolean =

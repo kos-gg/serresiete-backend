@@ -1,7 +1,5 @@
 package com.kos.entities
 
-import com.kos.entities.guilds.normalized
-import com.kos.entities.guilds.GuildExistsRequest
 import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntitiesTestHelper.basicLolEntityEnrichedRequest
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
@@ -10,6 +8,8 @@ import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.entities.domain.normalized
+import com.kos.entities.guilds.GuildExistsRequest
+import com.kos.entities.guilds.normalized
 import com.kos.views.Game
 import kotlin.test.Test
 import kotlin.test.assertEquals

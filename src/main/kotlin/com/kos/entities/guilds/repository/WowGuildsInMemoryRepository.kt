@@ -1,10 +1,10 @@
 package com.kos.entities.guilds.repository
 
-import com.kos.entities.guilds.realmOrNull
+import com.kos.common.InMemoryRepository
+import com.kos.entities.guilds.Guild
 import com.kos.entities.guilds.WowForeverGuild
 import com.kos.entities.guilds.WowGuild
-import com.kos.entities.guilds.Guild
-import com.kos.common.InMemoryRepository
+import com.kos.entities.guilds.realmOrNull
 import com.kos.views.Game
 
 class WowGuildsInMemoryRepository() :

@@ -1,13 +1,13 @@
 package com.kos.entities
 
-import com.kos.entities.guilds.normalized
-import com.kos.entities.guilds.GuildExistsRequest
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
 import com.kos.entities.domain.*
+import com.kos.entities.guilds.GuildExistsRequest
+import com.kos.entities.guilds.normalized
 import com.kos.plugins.UserWithActivities
 import com.kos.views.Game
 import io.ktor.http.*

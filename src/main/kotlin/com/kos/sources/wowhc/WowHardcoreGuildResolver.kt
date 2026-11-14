@@ -30,8 +30,8 @@ class WowHardcoreGuildResolver(
         return GuildWithRoster(payload(guildRoster, guildReq), members)
     }
 
-    override suspend fun resolveRoster(newMembers: List<WowEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
-        characterResolver.resolve(newMembers).entities
+    override suspend fun resolveRoster(newMembers: List<WowEntityRequest>): List<InsertEntityRequest> =
+        characterResolver.resolve(newMembers).entities.map { (request, _) -> request }
 
     override fun hasGuildMemberChanged(member: WowEntityRequest, tracked: Entity): Boolean = false
 

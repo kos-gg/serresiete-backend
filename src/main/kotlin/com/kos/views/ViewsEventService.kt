@@ -1,12 +1,12 @@
 package com.kos.views
 
-import com.kos.entities.guilds.Guild
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntityRequest
+import com.kos.entities.guilds.Guild
 import com.kos.eventsourcing.events.*
 import com.kos.views.repository.ViewsRepository
 
@@ -53,7 +53,7 @@ class ViewsEventService(
             ?.let { (guild, sourceViewId) -> membersOf(sourceViewId, game) to guild }
             ?: entitiesService.resolveGuild(guildRequest, game).let { resolvedGuild ->
                 ResolvedEntities(
-                    entities = resolvedGuild.newMembers,
+                    entities = resolvedGuild.newMembers.map { it to null },
                     existing = resolvedGuild.existing.map { (_, entity) -> entity to null }
                 ) to resolvedGuild.guild
             }

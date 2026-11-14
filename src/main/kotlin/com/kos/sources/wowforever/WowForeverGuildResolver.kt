@@ -1,9 +1,5 @@
 package com.kos.sources.wowforever
 
-import com.kos.entities.guilds.WowForeverGuild
-import com.kos.entities.guilds.Guild
-import com.kos.entities.guilds.GuildWithRoster
-import com.kos.entities.guilds.GuildResolver
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.kos.clients.ClientError
@@ -11,6 +7,9 @@ import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.entities.domain.*
+import com.kos.entities.guilds.GuildResolver
+import com.kos.entities.guilds.GuildWithRoster
+import com.kos.entities.guilds.WowForeverGuild
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 
@@ -45,8 +44,8 @@ class WowForeverGuildResolver(
         return GuildWithRoster(payload(roster.guildId, guildRequest), wowForeverEntityRequests)
     }
 
-    override suspend fun resolveRoster(newMembers: List<WowForeverEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
-        newMembers.map { it to null }
+    override suspend fun resolveRoster(newMembers: List<WowForeverEntityRequest>): List<InsertEntityRequest> =
+        newMembers
 
     override fun hasGuildMemberChanged(member: WowForeverEntityRequest, tracked: Entity): Boolean =
         (tracked as WowForeverEntity).let { member.name != it.name || member.surname != it.surname }

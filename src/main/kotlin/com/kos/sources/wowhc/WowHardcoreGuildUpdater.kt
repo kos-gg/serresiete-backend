@@ -1,10 +1,10 @@
 package com.kos.sources.wowhc
 
-import com.kos.entities.guilds.WowGuild
 import arrow.core.Either
 import com.kos.entities.EntityUpdater
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.PartialFailure
+import com.kos.entities.guilds.WowGuild
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsRepository

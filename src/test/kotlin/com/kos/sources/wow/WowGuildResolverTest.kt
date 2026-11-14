@@ -1,7 +1,6 @@
 package com.kos.sources.wow
 
 import com.kos.entities.guilds.WowGuild
-import com.kos.entities.guilds.Guild
 import arrow.core.Either
 import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
@@ -99,7 +98,7 @@ class WowGuildResolverTest {
             resolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(
-                        listOf(WowEntityRequest(member.name, member.region, member.realm, 555) to null),
+                        listOf(WowEntityRequest(member.name, member.region, member.realm, 555)),
                         res.newMembers
                     )
                     assertEquals(
@@ -141,7 +140,7 @@ class WowGuildResolverTest {
             resolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(
-                        listOf(WowEntityRequest(member.name, member.region, member.realm, 105161061) to null),
+                        listOf(WowEntityRequest(member.name, member.region, member.realm, 105161061)),
                         res.newMembers
                     )
                 }
@@ -248,7 +247,7 @@ class WowGuildResolverTest {
             resolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(
-                        listOf(WowEntityRequest(member.name, member.region, member.realm, 777) to null),
+                        listOf(WowEntityRequest(member.name, member.region, member.realm, 777)),
                         res.newMembers
                     )
                 }

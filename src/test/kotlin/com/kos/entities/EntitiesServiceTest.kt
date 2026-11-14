@@ -1,10 +1,5 @@
 package com.kos.entities
 
-import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
-import com.kos.entities.guilds.GuildExistsResponse
-import com.kos.entities.guilds.WowForeverGuild
-import com.kos.entities.guilds.WowGuild
-import com.kos.entities.guilds.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
@@ -31,6 +26,11 @@ import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.gigaLolCharacterRequestList
 import com.kos.entities.EntitiesTestHelper.gigaLolEntityList
 import com.kos.entities.domain.*
+import com.kos.entities.guilds.GuildExistsResponse
+import com.kos.entities.guilds.GuildUpdater
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
 import com.kos.sources.lol.LolEntityResolver

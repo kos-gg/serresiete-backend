@@ -1,7 +1,6 @@
 package com.kos.sources.wowhc
 
 import com.kos.entities.guilds.WowGuild
-import com.kos.entities.guilds.Guild
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -51,7 +50,7 @@ class WowHardcoreGuildResolverTest {
 
             guildResolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(basicWowRequest.name), res.newMembers.map { it.first.name })
+                    assertEquals(listOf(basicWowRequest.name), res.newMembers.map { it.name })
                     assertEquals(WowGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
                 }
         }

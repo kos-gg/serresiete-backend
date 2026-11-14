@@ -11,7 +11,7 @@ data class GuildWithRoster<G : Guild, M : InsertEntityRequest>(val guild: G, val
 
 data class ResolvedGuild<G : Guild, M : InsertEntityRequest>(
     val guild: G,
-    val newMembers: List<Pair<InsertEntityRequest, String?>>,
+    val newMembers: List<InsertEntityRequest>,
     val existing: List<Pair<M, Entity>>
 )
 
@@ -21,7 +21,7 @@ interface GuildResolver<G : Guild, M : InsertEntityRequest> {
 
     suspend fun resolveGuild(guild: EntityRequest): GuildWithRoster<G, M>
 
-    suspend fun resolveRoster(newMembers: List<M>): List<Pair<InsertEntityRequest, String?>>
+    suspend fun resolveRoster(newMembers: List<M>): List<InsertEntityRequest>
 
     fun hasGuildMemberChanged(member: M, tracked: Entity): Boolean
 
