@@ -9,7 +9,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowRequestWithBlizzardId
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
-import com.kos.entities.EntitiesTestHelper.basicWowRequest2
+import com.kos.entities.EntitiesTestHelper.basicWowRequest2WithBlizzardId
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.InsertEntityRequest
 import com.kos.entities.domain.WowEntity
@@ -42,14 +42,14 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given an empty repository i can insert wow characters`() {
         runBlocking {
             val expected = listOf(basicWowEntity)
-            assertEquals(expected, repository.insert(listOf(basicWowRequest)))
+            assertEquals(expected, repository.insert(listOf(basicWowRequestWithBlizzardId)))
         }
     }
 
     @Test
     fun `given an empty repository inserting a wow character that already exists fails`() {
         runBlocking {
-            val character = WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm)
+            val character = WowEntityRequest(basicWowEntity.name, basicWowEntity.region, basicWowEntity.realm, basicWowEntity.blizzardId)
 
             assertThrows<Exception> { repository.insert(listOf(character, character)) }
         }
@@ -59,8 +59,16 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given a repository that includes a wow character, adding the same one fails`() {
         runBlocking {
             repository.withState(listOf(basicWowEntity, basicWowEntity2))
-            assertThrows<Exception> { repository.insert(listOf(basicWowRequest)) }
+            assertThrows<Exception> { repository.insert(listOf(basicWowRequestWithBlizzardId)) }
             assertEquals(listOf(basicWowEntity, basicWowEntity2), repository.state())
+        }
+    }
+
+    @Test
+    fun `inserting a wow character without blizzard id fails`() {
+        runBlocking {
+            assertThrows<Exception> { repository.insert(listOf(basicWowRequest)) }
+            assertEquals(listOf(), repository.state())
         }
     }
 
@@ -68,7 +76,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     fun `given a repository with wow characters, I can insert more`() {
         runBlocking {
             repository.withState(listOf(basicWowEntity))
-            val inserted = repository.insert(listOf(basicWowRequest2))
+            val inserted = repository.insert(listOf(basicWowRequest2WithBlizzardId))
             assertEquals(listOf<Long>(2), inserted.map { it.id })
         }
     }
@@ -154,7 +162,7 @@ abstract class WowEntityRepositoryTestCommon<T> where T : GameEntityRepository, 
     @Test
     fun `get characters to sync should filter WOW characters by staleness`() {
         runBlocking {
-            val wowEntities = (1..3).map { WowEntity(it.toLong(), it.toString(), it.toString(), it.toString(), null) }
+            val wowEntities = (1..3).map { WowEntity(it.toLong(), it.toString(), it.toString(), it.toString(), it.toLong()) }
             repository.withState(wowEntities)
 
             dataCacheRepository.withState(

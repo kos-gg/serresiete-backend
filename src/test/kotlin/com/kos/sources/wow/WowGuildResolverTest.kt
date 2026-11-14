@@ -284,7 +284,7 @@ class WowGuildResolverTest {
     @Test
     fun `a guild member already tracked is returned as existing without checking their rating`() {
         runBlocking {
-            val member = WowEntityRequest(basicWowEntity.name, guildRequest.region, guildRequest.realm)
+            val member = WowEntityRequest(basicWowEntity.name, guildRequest.region, guildRequest.realm, 444)
             val trackedEntity = member.toEntity(1)
 
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))

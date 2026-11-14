@@ -72,7 +72,7 @@ class UpdateWowGuildsTaskRunnerTest {
             .thenReturn(
                 Either.Right(
                     GetWowRosterResponse(
-                        listOf(WowMemberResponse(WowCharacterResponse(character, 90))),
+                        listOf(WowMemberResponse(WowCharacterResponse(character, 90, 1))),
                         WowGuildResponse(blizzardId)
                     ).toGuildRoster()
                 )

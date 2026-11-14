@@ -38,7 +38,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val dataCacheRepo = DataCacheDatabaseRepository(db)
 
         val entity = runBlocking {
-            entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
+            entitiesRepo.insert(listOf(storedWowEntityRequest(resolvedGame, name, realm, region)), resolvedGame)
         }.first()
 
         val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
@@ -55,7 +55,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val resolvedGame = game.toGame()
         val entitiesRepo = EntitiesDatabaseRepository(db)
         runBlocking {
-            entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
+            entitiesRepo.insert(listOf(storedWowEntityRequest(resolvedGame, name, realm, region)), resolvedGame)
         }
     }
 

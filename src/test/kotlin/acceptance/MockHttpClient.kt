@@ -114,8 +114,8 @@ val mockHttpClient = HttpClient(MockEngine) {
                             json
                         )
                     } else {
-                        val members = (MockConfig.wowGuildRosterMembers ?: emptyList()).map { (name, level) ->
-                            WowMemberResponse(WowCharacterResponse(name, level))
+                        val members = (MockConfig.wowGuildRosterMembers ?: emptyList()).map { (name, level, blizzardId) ->
+                            WowMemberResponse(WowCharacterResponse(name, level, blizzardId))
                         }
                         respond(
                             Json.encodeToString(GetWowRosterResponse(members, WowGuildResponse(12345))),

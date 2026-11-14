@@ -52,14 +52,7 @@ class WowGuildUpdaterTest {
         return id
     }
 
-    private suspend fun alreadyTracked(name: String, viewId: String): Long {
-        val request = WowEntityRequest(name, region, realm)
-        val entity = entitiesRepository.insert(listOf(request), Game.WOW).first()
-        viewsRepository.associateEntitiesIdsToView(listOf(entity.id to null), viewId)
-        return entity.id
-    }
-
-    private suspend fun alreadyTrackedWithBlizzardId(
+    private suspend fun alreadyTracked(
         name: String,
         memberBlizzardId: Long,
         viewId: String,
@@ -76,16 +69,16 @@ class WowGuildUpdaterTest {
         runBlocking {
             val viewId = createGuildView("guild-view")
 
-            val stayingId = alreadyTracked("staying", viewId)
-            val leavingId = alreadyTracked("leaving", viewId)
+            val stayingId = alreadyTracked("staying", 1L, viewId)
+            val leavingId = alreadyTracked("leaving", 2L, viewId)
             val joining = WowEntityRequest("joining", region, realm)
 
             `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
                 Either.Right(
                     GetWowRosterResponse(
                         listOf(
-                            WowMemberResponse(WowCharacterResponse("staying", 90)),
-                            WowMemberResponse(WowCharacterResponse(joining.name, 90))
+                            WowMemberResponse(WowCharacterResponse("staying", 90, 1)),
+                            WowMemberResponse(WowCharacterResponse(joining.name, 90, 3))
                         ),
                         WowGuildResponse(blizzardId)
                     ).toGuildRoster()
@@ -111,9 +104,9 @@ class WowGuildUpdaterTest {
             val viewIdA = createGuildView("guild-view-a")
             val viewIdB = createGuildView("guild-view-b")
 
-            val stayingId = alreadyTracked("staying", viewIdA)
+            val stayingId = alreadyTracked("staying", 1L, viewIdA)
             viewsRepository.associateEntitiesIdsToView(listOf(stayingId to null), viewIdB)
-            val leavingId = alreadyTracked("leaving", viewIdA)
+            val leavingId = alreadyTracked("leaving", 2L, viewIdA)
             viewsRepository.associateEntitiesIdsToView(listOf(leavingId to null), viewIdB)
             val joining = WowEntityRequest("joining", region, realm)
 
@@ -121,8 +114,8 @@ class WowGuildUpdaterTest {
                 Either.Right(
                     GetWowRosterResponse(
                         listOf(
-                            WowMemberResponse(WowCharacterResponse("staying", 90)),
-                            WowMemberResponse(WowCharacterResponse(joining.name, 90))
+                            WowMemberResponse(WowCharacterResponse("staying", 90, 1)),
+                            WowMemberResponse(WowCharacterResponse(joining.name, 90, 3))
                         ),
                         WowGuildResponse(blizzardId)
                     ).toGuildRoster()
@@ -157,7 +150,7 @@ class WowGuildUpdaterTest {
         runBlocking {
             val viewId = createGuildView("guild-view")
 
-            val trackedId = alreadyTrackedWithBlizzardId("oldname", 555L, viewId)
+            val trackedId = alreadyTracked("oldname", 555L, viewId)
 
             `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
                 Either.Right(
@@ -193,7 +186,7 @@ class WowGuildUpdaterTest {
             val guildViewId = createGuildView("guild-view")
             val otherViewId = createGuildView("other-view")
 
-            val joinerId = alreadyTrackedWithBlizzardId("joiner", 777L, otherViewId)
+            val joinerId = alreadyTracked("joiner", 777L, otherViewId)
 
             `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
                 Either.Right(
@@ -271,7 +264,7 @@ class WowGuildUpdaterTest {
             `when`(blizzardClient.getRetailGuildRoster(region, realm, "HealthyGuild")).thenReturn(
                 Either.Right(
                     GetWowRosterResponse(
-                        listOf(WowMemberResponse(WowCharacterResponse(healthyMember.name, 90))),
+                        listOf(WowMemberResponse(WowCharacterResponse(healthyMember.name, 90, 222))),
                         WowGuildResponse(2L)
                     ).toGuildRoster()
                 )
@@ -310,7 +303,7 @@ class WowGuildUpdaterTest {
                 `when`(blizzardClient.getRetailGuildRoster(region, realm, guild)).thenReturn(
                     Either.Right(
                         GetWowRosterResponse(
-                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90))),
+                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, index + 100L))),
                             WowGuildResponse(index + 1L)
                         ).toGuildRoster()
                     )

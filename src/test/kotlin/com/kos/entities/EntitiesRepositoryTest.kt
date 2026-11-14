@@ -9,6 +9,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.basicWowHardcoreEntity
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
+import com.kos.entities.EntitiesTestHelper.basicWowRequestWithBlizzardId
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesDatabaseRepository
@@ -51,7 +52,7 @@ abstract class EntitiesRepositoryTestCommon {
     fun `given an empty repository i can insert wow characters`() {
         runBlocking {
             val expected = listOf(basicWowEntity)
-            assertEquals(expected, repository.insert(listOf(basicWowRequest), Game.WOW))
+            assertEquals(expected, repository.insert(listOf(basicWowRequestWithBlizzardId), Game.WOW))
         }
     }
 

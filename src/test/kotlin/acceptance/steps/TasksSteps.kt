@@ -1,11 +1,9 @@
 package acceptance.steps
 
-import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
-import com.kos.entities.guilds.WowForeverGuild
-import com.kos.entities.guilds.WowGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
+import acceptance.WowRosterMember
 import arrow.core.getOrElse
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthDatabaseRepository
@@ -15,6 +13,9 @@ import com.kos.entities.domain.LolEntity
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntity
 import com.kos.entities.domain.WowForeverEntityRequest
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
 import com.kos.entities.repository.EntitiesDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.tasks.Status
@@ -33,12 +34,12 @@ import io.cucumber.java.en.When
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 
 class TasksSteps(private val scenarioVariables: ScenarioVariables) {
 
@@ -51,6 +52,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
     private val wowGuildRealm = "Twisting-Nether"
     private val wowGuildRegion = "eu"
     private val wowGuildExistingMemberName = "Sanxei"
+    private val wowGuildExistingMemberBlizzardId = 201L
     private val wowGuildNewMemberName = "Newmember"
     private val wowForeverGuildViewId = "forever-guild-view-id"
     private val wowForeverRenamedMemberBlizzardId = 590617L
@@ -170,8 +172,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         val existingEntity = runBlocking {
             entitiesRepo.insert(
                 listOf(
-                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm),
-                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
+                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm, wowGuildExistingMemberBlizzardId),
+                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm, 203)
                 ), Game.WOW
             )
         }.first()
@@ -199,8 +201,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         val existingEntity = runBlocking {
             entitiesRepo.insert(
                 listOf(
-                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm),
-                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
+                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm, wowGuildExistingMemberBlizzardId),
+                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm, 203)
                 ), Game.WOW
             )
         }.first()
@@ -277,8 +279,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
     @And("the current roster is retrieved from the Blizzard API")
     fun theCurrentRosterIsRetrievedFromBlizzard() {
         MockConfig.wowGuildRosterMembers = listOf(
-            wowGuildExistingMemberName to 90,
-            wowGuildNewMemberName to 90
+            WowRosterMember(wowGuildExistingMemberName, 90, wowGuildExistingMemberBlizzardId),
+            WowRosterMember(wowGuildNewMemberName, 90, 202)
         )
     }
 

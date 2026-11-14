@@ -4,6 +4,7 @@ import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
 import com.kos.entities.guilds.WowForeverGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
+import acceptance.WowRosterMember
 import acceptance.SharedInfrastructure
 import acceptance.entityRequestJson
 import acceptance.existingEntityRow
@@ -99,7 +100,7 @@ class ViewsSteps(private val scenarioVariables: ScenarioVariables) {
 
     @Given("a WOW guild roster is available from the Blizzard API")
     fun wowGuildRosterIsAvailable() {
-        MockConfig.wowGuildRosterMembers = listOf("Kakarona" to 90, "Threndil" to 90)
+        MockConfig.wowGuildRosterMembers = listOf(WowRosterMember("Kakarona", 90, 101), WowRosterMember("Threndil", 90, 102))
     }
 
     @When("they create a {word} guild view for {string}")

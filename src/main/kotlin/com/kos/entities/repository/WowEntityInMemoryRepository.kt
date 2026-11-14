@@ -17,6 +17,9 @@ class WowEntityInMemoryRepository(
     private val entities: MutableList<WowEntity> = mutableListOf()
 
     override suspend fun insert(entities: List<InsertEntityRequest>): List<Entity> {
+        check(entities.filterIsInstance<WowEntityRequest>().all { it.blizzardId != null }) {
+            "Error inserting entities $entities for WOW: missing blizzard id"
+        }
         val initial = this.entities.toList()
         val inserted = entities.fold(listOf<Entity>()) { acc, it ->
             when (it) {
@@ -102,6 +105,7 @@ class WowEntityInMemoryRepository(
     override suspend fun state(): List<WowEntity> = entities.toList()
 
     override suspend fun withState(initialState: List<WowEntity>): WowEntityInMemoryRepository {
+        check(initialState.all { it.blizzardId != null }) { "Error setting state $initialState for WOW: missing blizzard id" }
         entities.addAll(initialState.map { it.copy(name = it.name.lowercase()) })
         return this
     }

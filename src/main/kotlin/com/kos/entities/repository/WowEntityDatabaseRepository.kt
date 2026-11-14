@@ -16,7 +16,7 @@ class WowEntityDatabaseRepository(private val db: Database) :
         val name = text("name")
         val realm = text("realm")
         val region = text("region")
-        val blizzardId = long("blizzard_id").nullable()
+        val blizzardId = long("blizzard_id")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -43,7 +43,7 @@ class WowEntityDatabaseRepository(private val db: Database) :
                 this[WowEntities.name] = it.name
                 this[WowEntities.region] = it.region
                 this[WowEntities.realm] = it.realm
-                this[WowEntities.blizzardId] = it.blizzardId
+                this[WowEntities.blizzardId] = checkNotNull(it.blizzardId) { "problem inserting $it for WOW: missing blizzard id" }
             }.map { resultRowToEntity(it) }
         }
     }
@@ -55,7 +55,7 @@ class WowEntityDatabaseRepository(private val db: Database) :
                     it[name] = entity.name.lowercase()
                     it[region] = entity.region
                     it[realm] = entity.realm
-                    it[blizzardId] = entity.blizzardId
+                    entity.blizzardId?.let { blizzardIdValue -> it[blizzardId] = blizzardIdValue }
                 }
 
                 else -> throw IllegalArgumentException("problem updating $id: $entity for WOW")
@@ -112,7 +112,7 @@ class WowEntityDatabaseRepository(private val db: Database) :
                 this[WowEntities.name] = it.name.lowercase()
                 this[WowEntities.region] = it.region
                 this[WowEntities.realm] = it.realm
-                this[WowEntities.blizzardId] = it.blizzardId
+                this[WowEntities.blizzardId] = checkNotNull(it.blizzardId) { "problem inserting $it for WOW: missing blizzard id" }
             }
         }
         //This needs to be done to consume serial ids. Could be done in a different way but I don't dislike it.
