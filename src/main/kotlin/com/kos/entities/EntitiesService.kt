@@ -23,7 +23,7 @@ data class EntitiesService(
     private val wowGuildResolver: WowGuildResolver,
     private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
-    private val wowGuildUpdater: GuildUpdater<WowRealmGuild, WowEntityRequest>,
+    private val wowGuildUpdater: GuildUpdater<WowGuild, WowEntityRequest>,
     private val wowForeverGuildResolver: WowForeverGuildResolver,
     private val wowForeverGuildUpdater: GuildUpdater<WowForeverGuild, WowForeverEntityRequest>,
 ) : WithLogger("EntitiesService") {
@@ -60,7 +60,7 @@ data class EntitiesService(
         name: String,
         realm: String?,
         region: String,
-        fetchGuild: suspend () -> Either<ClientError, WowGuild>
+        fetchGuild: suspend () -> Either<ClientError, Guild>
     ): Either<ThirdPartyUnavailable, GuildExistsResponse> =
         findTrackedGuild(name, realm, region, game)
             ?.let { (guild, _) -> Either.Right(GuildExistsResponse(guild)) }
@@ -95,12 +95,12 @@ data class EntitiesService(
     }
 
     suspend fun updateWowHardcoreGuilds(): List<PartialFailure> {
-        val guildsWithViewId = wowGuildsRepository.getRealmGuilds(Game.WOW_HC)
+        val guildsWithViewId = wowGuildsRepository.getWowGuilds(Game.WOW_HC)
         return wowHardcoreGuildUpdater.update(guildsWithViewId)
     }
 
     suspend fun updateWowGuilds(): List<PartialFailure> {
-        val guildsWithViewId = wowGuildsRepository.getRealmGuilds(Game.WOW)
+        val guildsWithViewId = wowGuildsRepository.getWowGuilds(Game.WOW)
         return wowGuildUpdater.update(guildsWithViewId)
     }
 
@@ -113,10 +113,10 @@ data class EntitiesService(
     suspend fun get(game: Game): List<Entity> = entitiesRepository.get(game)
 
     suspend fun insert(entities: List<InsertEntityRequest>, game: Game) = entitiesRepository.insert(entities, game)
-    suspend fun insertGuild(guild: WowGuild, viewId: String, game: Game) =
+    suspend fun insertGuild(guild: Guild, viewId: String, game: Game) =
         wowGuildsRepository.insertGuild(guild, viewId, game)
 
-    suspend fun findTrackedGuild(name: String, realm: String?, region: String, game: Game): Pair<WowGuild, String>? =
+    suspend fun findTrackedGuild(name: String, realm: String?, region: String, game: Game): Pair<Guild, String>? =
         wowGuildsRepository.findTrackedGuild(name, realm, region, game)
 
     suspend fun getViewsFromEntity(id: Long, game: Game?): List<String> =

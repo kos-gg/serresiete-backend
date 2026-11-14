@@ -2,8 +2,8 @@ package com.kos.entities.repository.wowguilds
 
 import com.kos.common.getOrThrow
 import com.kos.entities.domain.WowForeverGuild
+import com.kos.entities.domain.Guild
 import com.kos.entities.domain.WowGuild
-import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.realmOrNull
 import com.kos.views.Game
 import com.kos.views.repository.ViewsDatabaseRepository
@@ -24,18 +24,18 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         override val primaryKey = PrimaryKey(blizzardId, game, viewId)
     }
 
-    private fun rowToGuild(row: ResultRow): Pair<WowGuild, String> =
-        (rowToRealmGuild(row) ?: rowToForeverGuild(row)) to row[WowGuilds.viewId]
+    private fun rowToGuild(row: ResultRow): Pair<Guild, String> =
+        (rowToWowGuild(row) ?: rowToForeverGuild(row)) to row[WowGuilds.viewId]
 
-    private fun rowToRealmGuild(row: ResultRow): WowRealmGuild? =
+    private fun rowToWowGuild(row: ResultRow): WowGuild? =
         row[WowGuilds.realm]?.let { realm ->
-            WowRealmGuild(row[WowGuilds.name], realm, row[WowGuilds.region], row[WowGuilds.blizzardId])
+            WowGuild(row[WowGuilds.name], realm, row[WowGuilds.region], row[WowGuilds.blizzardId])
         }
 
     private fun rowToForeverGuild(row: ResultRow): WowForeverGuild =
         WowForeverGuild(row[WowGuilds.name], row[WowGuilds.region], row[WowGuilds.blizzardId])
 
-    override suspend fun insertGuild(guild: WowGuild, viewId: String, game: Game) {
+    override suspend fun insertGuild(guild: Guild, viewId: String, game: Game) {
         newSuspendedTransaction(Dispatchers.IO, db) {
             WowGuilds.insertIgnore {
                 it[WowGuilds.blizzardId] = guild.blizzardId
@@ -48,10 +48,10 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         }
     }
 
-    override suspend fun getRealmGuilds(game: Game): List<Pair<WowRealmGuild, String>> =
+    override suspend fun getWowGuilds(game: Game): List<Pair<WowGuild, String>> =
         newSuspendedTransaction(Dispatchers.IO, db) {
             WowGuilds.selectAll().where { WowGuilds.game.eq(game.toString()) }
-                .mapNotNull { row -> rowToRealmGuild(row)?.let { it to row[WowGuilds.viewId] } }
+                .mapNotNull { row -> rowToWowGuild(row)?.let { it to row[WowGuilds.viewId] } }
         }
 
     override suspend fun getForeverGuilds(): List<Pair<WowForeverGuild, String>> =
@@ -65,7 +65,7 @@ class WowGuildsDatabaseRepository(private val db: Database) : WowGuildsRepositor
         realm: String?,
         region: String,
         game: Game
-    ): Pair<WowGuild, String>? {
+    ): Pair<Guild, String>? {
         return newSuspendedTransaction(Dispatchers.IO, db) {
             WowGuilds.selectAll()
                 .where {

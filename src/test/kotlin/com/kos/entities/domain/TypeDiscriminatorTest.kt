@@ -2,7 +2,6 @@ package com.kos.entities.domain
 
 import com.kos.views.ViewExtraArguments
 import com.kos.views.WowExtraArguments
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -54,10 +53,10 @@ class TypeDiscriminatorTest {
     }
 
     @Test
-    fun `guild exists responses tell realm guilds from wow forever guilds`() {
+    fun `guild exists responses tell wow guilds from wow forever guilds`() {
         assertEquals(
             """{"guild":{"type":"wow","name":"method","realm":"twisting-nether","region":"eu","blizzardId":1}}""",
-            json.encodeToString(GuildExistsResponse(WowRealmGuild("method", "twisting-nether", "eu", 1L)))
+            json.encodeToString(GuildExistsResponse(WowGuild("method", "twisting-nether", "eu", 1L)))
         )
         assertEquals(
             """{"guild":{"type":"wow_forever","name":"tsalab","region":"eu","blizzardId":104078}}""",

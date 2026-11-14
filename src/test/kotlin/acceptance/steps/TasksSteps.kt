@@ -1,6 +1,6 @@
 package acceptance.steps
 
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowForeverGuild
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
@@ -151,7 +151,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = emptyList()
                 )
             )
-            guildsRepo.insertGuild(WowRealmGuild(guildName, realm, region, 12345), viewId, Game.WOW_HC)
+            guildsRepo.insertGuild(WowGuild(guildName, realm, region, 12345), viewId, Game.WOW_HC)
         }
     }
 
@@ -189,7 +189,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = listOf(ViewEntity(existingEntity.id, wowGuildViewId, null))
                 )
             )
-            guildsRepo.insertGuild(WowRealmGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(WowGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
         }
     }
 
@@ -224,8 +224,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     )
                 )
             )
-            guildsRepo.insertGuild(WowRealmGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
-            guildsRepo.insertGuild(WowRealmGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId2, Game.WOW)
+            guildsRepo.insertGuild(WowGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(WowGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId2, Game.WOW)
         }
     }
 

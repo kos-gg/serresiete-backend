@@ -10,7 +10,7 @@ import com.kos.clients.domain.*
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsState
@@ -56,7 +56,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
         val character = "Surmana"
 
         wowGuildsRepository.withState(
-            WowGuildsState(listOf(Triple(WowRealmGuild(guild, realm, region, blizzardId), "1", Game.WOW_HC)))
+            WowGuildsState(listOf(Triple(WowGuild(guild, realm, region, blizzardId), "1", Game.WOW_HC)))
         )
         `when`(blizzardClient.getHardcoreGuildRoster(region, realm, guild))
             .thenReturn(

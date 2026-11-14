@@ -2,33 +2,33 @@ package com.kos.entities.repository.wowguilds
 
 import com.kos.common.InMemoryRepository
 import com.kos.entities.domain.WowForeverGuild
+import com.kos.entities.domain.Guild
 import com.kos.entities.domain.WowGuild
-import com.kos.entities.domain.WowRealmGuild
 import com.kos.entities.domain.realmOrNull
 import com.kos.views.Game
 
 class WowGuildsInMemoryRepository() :
     WowGuildsRepository,
     InMemoryRepository {
-    private val guilds: MutableList<Triple<WowGuild, String, Game>> = mutableListOf()
+    private val guilds: MutableList<Triple<Guild, String, Game>> = mutableListOf()
 
     override fun clear() {
         guilds.clear()
     }
 
-    override suspend fun insertGuild(guild: WowGuild, viewId: String, game: Game) {
+    override suspend fun insertGuild(guild: Guild, viewId: String, game: Game) {
         val alreadyTracked = guilds.any { it.first.blizzardId == guild.blizzardId && it.third == game && it.second == viewId }
         if (!alreadyTracked) guilds.add(Triple(guild.lowercased(), viewId, game))
     }
 
-    private fun WowGuild.lowercased(): WowGuild = when (this) {
-        is WowRealmGuild -> copy(name = name.lowercase(), realm = realm.lowercase(), region = region.lowercase())
+    private fun Guild.lowercased(): Guild = when (this) {
+        is WowGuild -> copy(name = name.lowercase(), realm = realm.lowercase(), region = region.lowercase())
         is WowForeverGuild -> copy(name = name.lowercase(), region = region.lowercase())
     }
 
-    override suspend fun getRealmGuilds(game: Game): List<Pair<WowRealmGuild, String>> =
+    override suspend fun getWowGuilds(game: Game): List<Pair<WowGuild, String>> =
         guilds.filter { it.third == game }
-            .mapNotNull { (guild, viewId, _) -> (guild as? WowRealmGuild)?.let { it to viewId } }
+            .mapNotNull { (guild, viewId, _) -> (guild as? WowGuild)?.let { it to viewId } }
 
     override suspend fun getForeverGuilds(): List<Pair<WowForeverGuild, String>> =
         guilds.filter { it.third == Game.WOW_FOREVER }
@@ -39,7 +39,7 @@ class WowGuildsInMemoryRepository() :
         realm: String?,
         region: String,
         game: Game
-    ): Pair<WowGuild, String>? {
+    ): Pair<Guild, String>? {
         return guilds.firstOrNull {
             it.third == game &&
                     it.first.name == name.lowercase() &&

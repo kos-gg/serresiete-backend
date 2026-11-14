@@ -12,7 +12,7 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -20,7 +20,6 @@ import org.mockito.Mockito.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
 class WowHardcoreGuildResolverTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
@@ -52,7 +51,7 @@ class WowHardcoreGuildResolverTest {
             guildResolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(listOf(basicWowRequest.name), res.newMembers.map { it.first.name })
-                    assertEquals(WowRealmGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
+                    assertEquals(WowGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
                 }
         }
     }

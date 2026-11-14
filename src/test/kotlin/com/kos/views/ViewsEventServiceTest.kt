@@ -1,6 +1,6 @@
 package com.kos.views
 
-import com.kos.entities.domain.WowGuild
+import com.kos.entities.domain.Guild
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
@@ -13,7 +13,7 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntity
@@ -40,7 +40,6 @@ import com.kos.views.ViewsTestHelper.owner
 import com.kos.views.ViewsTestHelper.published
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsState
-import io.mockk.InternalPlatformDsl.toStr
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
@@ -52,7 +51,6 @@ import org.mockito.kotlin.verify
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
@@ -100,7 +98,7 @@ class ViewsEventServiceTest {
                     ),
                     EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
                     wowGuildsState = listOf(
-                        Triple(WowRealmGuild("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
+                        Triple(WowGuild("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
                     )
                 )
 
@@ -360,7 +358,7 @@ class ViewsEventServiceTest {
     private suspend fun createService(
         viewsState: ViewsState,
         entitiesState: EntitiesState,
-        wowGuildsState: List<Triple<WowGuild, String, Game>> = listOf(),
+        wowGuildsState: List<Triple<Guild, String, Game>> = listOf(),
     ): ViewsEventService {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)

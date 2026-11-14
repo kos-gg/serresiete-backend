@@ -6,8 +6,8 @@ import com.kos.clients.ClientError
 import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
-import com.kos.entities.GuildMembers
 import com.kos.entities.GuildResolver
+import com.kos.entities.GuildWithRoster
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
@@ -19,42 +19,44 @@ class WowForeverGuildResolver(
 
     override val game = Game.WOW_FOREVER
 
-    override suspend fun fetchRoster(guild: EntityRequest): GuildMembers<WowForeverGuild, WowForeverEntityRequest> {
-        val guildReq = guild as WowForeverEntityRequest
-        logger.info("Resolving guild ${guildReq.name} (${guildReq.region})")
+    override suspend fun resolveGuild(guild: EntityRequest): GuildWithRoster<WowForeverGuild, WowForeverEntityRequest> {
+        val guildRequest = guild as WowForeverEntityRequest
+        logger.info("Resolving guild ${guildRequest.name} (${guildRequest.region})")
 
-        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.name)
-        return GuildMembers(payload(guildRoster, guildReq), members)
+        val roster =
+            blizzardClient
+                .getForeverGuildRoster(guildRequest.region, guildRequest.name)
+                .getOrElse {
+                    if (it is NotFound) error("Guild ${guildRequest.name} (${guildRequest.region}) not found")
+                    else error("Third party call failed: $it")
+                }
+
+        val wowForeverEntityRequests = roster.members.map {
+            WowForeverEntityRequest(
+                it.name.lowercase(),
+                it.surname.lowercase(),
+                guildRequest.region,
+                it.id
+            )
+        }
+
+        return GuildWithRoster(payload(roster.guildId, guildRequest), wowForeverEntityRequests)
     }
 
-    override suspend fun admit(newMembers: List<WowForeverEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
+    override suspend fun resolveRoster(newMembers: List<WowForeverEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
         newMembers.map { it to null }
 
-    override fun hasChanged(member: WowForeverEntityRequest, tracked: Entity): Boolean =
+    override fun hasGuildMemberChanged(member: WowForeverEntityRequest, tracked: Entity): Boolean =
         (tracked as WowForeverEntity).let { member.name != it.name || member.surname != it.surname }
 
     suspend fun exists(guild: WowForeverEntityRequest): Either<ClientError, WowForeverGuild> =
-        blizzardClient.getForeverGuildRoster(guild.region, guild.name).map { payload(it, guild) }
+        blizzardClient.getForeverGuildRoster(guild.region, guild.name)
+            .map { payload(it.guildId, guild) }
 
-    private fun payload(guildRoster: WowForeverGuildRoster, guild: WowForeverEntityRequest): WowForeverGuild =
+    private fun payload(guildId: Long, guild: WowForeverEntityRequest): WowForeverGuild =
         WowForeverGuild(
             guild.name.lowercase(),
             guild.region.lowercase(),
-            guildRoster.guildId
+            guildId
         )
-
-    suspend fun resolveRoster(
-        region: String,
-        name: String
-    ): Pair<WowForeverGuildRoster, List<WowForeverEntityRequest>> {
-        val roster = blizzardClient.getForeverGuildRoster(region, name).getOrElse {
-            if (it is NotFound) error("Guild $name ($region) not found") else error("Third party call failed: $it")
-        }
-
-        val members = roster.members.map {
-            WowForeverEntityRequest(it.name.lowercase(), it.surname.lowercase(), region, it.id)
-        }
-
-        return Pair(roster, members)
-    }
 }

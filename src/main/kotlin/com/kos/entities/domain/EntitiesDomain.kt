@@ -3,11 +3,7 @@ package com.kos.entities.domain
 import com.kos.datacache.domain.Data
 import com.kos.eventsourcing.events.Operation
 import com.kos.views.Game
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -98,7 +94,7 @@ data class EntitiesExistResponse(
 )
 
 @Serializable
-sealed interface WowGuild {
+sealed interface Guild {
     val name: String
     val region: String
     val blizzardId: Long
@@ -106,12 +102,12 @@ sealed interface WowGuild {
 
 @Serializable
 @SerialName("wow")
-data class WowRealmGuild(
+data class WowGuild(
     override val name: String,
     val realm: String,
     override val region: String,
     override val blizzardId: Long
-) : WowGuild
+) : Guild
 
 @Serializable
 @SerialName("wow_forever")
@@ -119,15 +115,15 @@ data class WowForeverGuild(
     override val name: String,
     override val region: String,
     override val blizzardId: Long
-) : WowGuild
+) : Guild
 
-fun WowGuild.realmOrNull(): String? = when (this) {
-    is WowRealmGuild -> realm
+fun Guild.realmOrNull(): String? = when (this) {
+    is WowGuild -> realm
     is WowForeverGuild -> null
 }
 
-fun WowGuild.toRequest(): EntityRequest = when (this) {
-    is WowRealmGuild -> WowEntityRequest(name, region, realm)
+fun Guild.toRequest(): EntityRequest = when (this) {
+    is WowGuild -> WowEntityRequest(name, region, realm)
     is WowForeverGuild -> WowForeverEntityRequest(name = name, region = region)
 }
 
@@ -143,7 +139,7 @@ fun GuildExistsRequest.normalized(): GuildExistsRequest = copy(name = name.lower
 
 @Serializable
 data class GuildExistsResponse(
-    val guild: WowGuild?
+    val guild: Guild?
 )
 
 data class ResolvedEntities(
@@ -195,7 +191,11 @@ object EntityResponseSerializer : KSerializer<EntityResponse> {
         val jsonObject = jsonDecoder.decodeJsonElement().jsonObject
 
         return when {
-            "surname" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(WowForeverEntityResponse.serializer(), jsonObject)
+            "surname" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(
+                WowForeverEntityResponse.serializer(),
+                jsonObject
+            )
+
             "region" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(WowEntityResponse.serializer(), jsonObject)
             "tag" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(LolEntityResponse.serializer(), jsonObject)
             else -> throw SerializationException("Cannot determine EntityResponse subtype from $jsonObject")

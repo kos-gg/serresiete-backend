@@ -12,7 +12,7 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
@@ -65,7 +65,7 @@ class UpdateWowGuildsTaskRunnerTest {
 
         viewsRepository.create(viewId, "guild view", "sanxei", listOf(), Game.WOW, false, null)
         wowGuildsRepository.withState(
-            WowGuildsState(listOf(Triple(WowRealmGuild(guild, realm, region, blizzardId), viewId, Game.WOW)))
+            WowGuildsState(listOf(Triple(WowGuild(guild, realm, region, blizzardId), viewId, Game.WOW)))
         )
 
         `when`(blizzardClient.getRetailGuildRoster(region, realm, guild))

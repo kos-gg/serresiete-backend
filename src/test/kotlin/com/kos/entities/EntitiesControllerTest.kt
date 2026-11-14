@@ -12,7 +12,7 @@ import com.kos.datacache.DataCacheService
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.domain.EntitiesExistResponse
 import com.kos.entities.domain.GuildExistsResponse
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowForeverGuild
 import com.kos.entities.domain.WowForeverEntityRequest
 import com.kos.views.Game
@@ -176,7 +176,7 @@ class EntitiesControllerTest {
     @Test
     fun `guildExists delegates to the service and returns its result`() {
         runBlocking {
-            val response = GuildExistsResponse(WowRealmGuild("method", "twisting-nether", "eu", 999))
+            val response = GuildExistsResponse(WowGuild("method", "twisting-nether", "eu", 999))
             `when`(entitiesService.wowGuildExists("Method", "eu", "twisting-nether"))
                 .thenReturn(Either.Right(response))
 

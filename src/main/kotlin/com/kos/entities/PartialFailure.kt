@@ -1,7 +1,7 @@
 package com.kos.entities
 
 import com.kos.clients.ClientError
-import com.kos.entities.domain.WowGuild
+import com.kos.entities.domain.Guild
 import com.kos.entities.domain.realmOrNull
 
 sealed class PartialFailure {
@@ -16,7 +16,7 @@ data class ThirdPartyCallFailed(
 }
 
 data class GuildUpdateFailed(
-    val guild: WowGuild,
+    val guild: Guild,
     val cause: Throwable
 ) : PartialFailure() {
     override fun error(): String =

@@ -10,8 +10,8 @@ import com.kos.clients.NotFound
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.common.WithLogger
 import com.kos.common.split
-import com.kos.entities.GuildMembers
 import com.kos.entities.GuildResolver
+import com.kos.entities.GuildWithRoster
 import com.kos.entities.domain.*
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonRepository
@@ -25,7 +25,7 @@ class WowGuildResolver(
     override val entitiesRepository: EntitiesRepository,
     private val blizzardClient: BlizzardClient,
     private val wowSeasonRepository: WowSeasonRepository
-) : GuildResolver<WowRealmGuild, WowEntityRequest>, WithLogger("WowGuildResolver") {
+) : GuildResolver<WowGuild, WowEntityRequest>, WithLogger("WowGuildResolver") {
     companion object {
         private const val MAX_CHARACTER_LEVEL = 90
         private const val SCORE_CUTOFF = 1000
@@ -33,18 +33,33 @@ class WowGuildResolver(
 
     override val game = Game.WOW
 
-    override suspend fun fetchRoster(guild: EntityRequest): GuildMembers<WowRealmGuild, WowEntityRequest> {
-        val guildReq = guild as WowEntityRequest
-        logger.info("Resolving guild ${guildReq.name} (${guildReq.region}/${guildReq.realm})")
+    override suspend fun resolveGuild(guild: EntityRequest): GuildWithRoster<WowGuild, WowEntityRequest> {
+        val guildRequest = guild as WowEntityRequest
+        logger.info("Resolving guild ${guildRequest.name} (${guildRequest.region}/${guildRequest.realm})")
 
-        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
-        return GuildMembers(payload(guildRoster, guildReq), members)
+        val roster =
+            blizzardClient
+                .getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name)
+                .getOrElse {
+                    if (it is NotFound) error("Guild ${guildRequest.name} (${guildRequest.region}/${guildRequest.realm}) not found")
+                    else error("Third party call failed: $it")
+                }
+
+        val wowEntityRequests = roster.members
+            .filter { it.level >= MAX_CHARACTER_LEVEL }
+            .map {
+                WowEntityRequest(
+                    it.name.lowercase(),
+                    guildRequest.region,
+                    it.realmSlug ?: guildRequest.realm,
+                    it.id
+                )
+            }
+
+        return GuildWithRoster(payload(roster.guildId, guildRequest), wowEntityRequests)
     }
 
-    suspend fun exists(guild: WowEntityRequest): Either<ClientError, WowRealmGuild> =
-        blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name).map { payload(it, guild) }
-
-    override suspend fun admit(newMembers: List<WowEntityRequest>): List<Pair<InsertEntityRequest, String?>> {
+    override suspend fun resolveRoster(newMembers: List<WowEntityRequest>): List<Pair<InsertEntityRequest, String?>> {
         val seasonId = checkNotNull(wowSeasonRepository.getCurrentSeason()?.id) { "There is no current mythic+ season" }
 
         val (failed, scored) = newMembers.asFlow()
@@ -62,8 +77,11 @@ class WowGuildResolver(
         return competitive.map { (req, _) -> req to req.alias }
     }
 
-    override fun hasChanged(member: WowEntityRequest, tracked: Entity): Boolean =
-        (tracked as WowEntity).let { !member.name.equals(it.name, ignoreCase = true) || member.realm != it.realm }
+    override fun hasGuildMemberChanged(member: WowEntityRequest, tracked: Entity): Boolean =
+        (tracked as WowEntity).let { member.name != it.name || member.realm != it.realm }
+
+    suspend fun exists(guild: WowEntityRequest): Either<ClientError, WowGuild> =
+        blizzardClient.getRetailGuildRoster(guild.region, guild.realm, guild.name).map { payload(it.guildId, guild) }
 
     private suspend fun scoreOf(
         req: WowEntityRequest,
@@ -77,36 +95,12 @@ class WowGuildResolver(
             }
         }
 
-    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): WowRealmGuild =
-        WowRealmGuild(
+    private fun payload(guildId: Long, guild: WowEntityRequest): WowGuild =
+        WowGuild(
             guild.name.lowercase(),
             guild.realm.lowercase(),
             guild.region.lowercase(),
-            guildRoster.guildId
+            guildId
         )
 
-    suspend fun resolveRoster(
-        region: String,
-        realm: String,
-        name: String
-    ): Pair<GuildRoster, List<WowEntityRequest>> {
-        val roster = blizzardClient.getRetailGuildRoster(region, realm, name).getOrElse {
-            if (it is NotFound) error("Guild $name ($region/$realm) not found") else error("Third party call failed: $it")
-        }
-
-        val members = roster.members
-            .asSequence()
-            .filter { it.level >= MAX_CHARACTER_LEVEL }
-            .map {
-                WowEntityRequest(
-                    it.name,
-                    region,
-                    it.realmSlug ?: realm,
-                    it.id
-                )
-            }
-            .toList()
-
-        return Pair(roster, members)
-    }
 }

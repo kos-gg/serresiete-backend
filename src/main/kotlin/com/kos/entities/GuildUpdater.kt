@@ -2,11 +2,14 @@ package com.kos.entities
 
 import arrow.core.Either
 import com.kos.common.WithLogger
-import com.kos.entities.domain.*
+import com.kos.entities.domain.InsertEntityRequest
+import com.kos.entities.domain.Guild
+import com.kos.entities.domain.realmOrNull
+import com.kos.entities.domain.toRequest
 import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.repository.ViewsRepository
 
-class GuildUpdater<G : WowGuild, M : InsertEntityRequest>(
+class GuildUpdater<G : Guild, M : InsertEntityRequest>(
     private val guildResolver: GuildResolver<G, M>,
     private val entitiesRepository: EntitiesRepository,
     private val viewsRepository: ViewsRepository
@@ -39,7 +42,7 @@ class GuildUpdater<G : WowGuild, M : InsertEntityRequest>(
 
     private suspend fun renameChangedMembers(resolved: ResolvedGuild<G, M>) =
         resolved.existing
-            .filter { (member, entity) -> guildResolver.hasChanged(member, entity) }
+            .filter { (member, entity) -> guildResolver.hasGuildMemberChanged(member, entity) }
             .forEach { (member, entity) -> entitiesRepository.update(entity.id, member, guildResolver.game) }
 
     private fun G.description(): String = "$name (${listOfNotNull(region, realmOrNull()).joinToString("/")})"

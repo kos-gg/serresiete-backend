@@ -3,7 +3,7 @@ package com.kos.views
 import com.kos.common.WithLogger
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.WowGuild
+import com.kos.entities.domain.Guild
 import com.kos.entities.domain.ResolvedEntities
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.domain.WowForeverEntityRequest
@@ -48,7 +48,7 @@ class ViewsEventService(
         event.entities.firstOrNull()
             ?.takeIf { (event.extraArguments as? WowExtraArguments)?.isGuild == true }
 
-    private suspend fun resolveGuildMembers(guildRequest: EntityRequest, game: Game): Pair<ResolvedEntities, WowGuild> =
+    private suspend fun resolveGuildMembers(guildRequest: EntityRequest, game: Game): Pair<ResolvedEntities, Guild> =
         findTrackedGuild(guildRequest, game)
             ?.let { (guild, sourceViewId) -> membersOf(sourceViewId, game) to guild }
             ?: entitiesService.resolveGuild(guildRequest, game).let { resolvedGuild ->
@@ -70,7 +70,7 @@ class ViewsEventService(
         return ResolvedEntities(entities = emptyList(), existing = existing)
     }
 
-    private suspend fun findTrackedGuild(guild: EntityRequest, game: Game): Pair<WowGuild, String>? =
+    private suspend fun findTrackedGuild(guild: EntityRequest, game: Game): Pair<Guild, String>? =
         when (game) {
             Game.WOW -> (guild as WowEntityRequest)
                 .let { entitiesService.findTrackedGuild(it.name, it.realm, it.region, Game.WOW) }

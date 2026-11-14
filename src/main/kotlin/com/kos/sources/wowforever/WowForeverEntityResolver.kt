@@ -26,7 +26,7 @@ class WowForeverEntityResolver(
 ) : EntityResolver, WithLogger("WowForeverEntityResolver") {
 
     override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
-        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW_FOREVER)
+        val (newRequests, existing) = repo.getCurrentAndNewEntities(requested, Game.WOW_FOREVER)
 
         val (unchecked, checked) = newRequests.asFlow()
             .parMapUnordered(10) { req -> resolveCharacter(req as WowForeverEntityRequest) }

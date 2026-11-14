@@ -12,7 +12,7 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.WowRealmGuild
+import com.kos.entities.domain.WowGuild
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
@@ -93,7 +93,7 @@ class WowGuildUpdaterTest {
             )
             `when`(blizzardClient.getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
-            val errors = updater.update(listOf(WowRealmGuild(guildName, realm, region, blizzardId) to viewId))
+            val errors = updater.update(listOf(WowGuild(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
 
@@ -132,8 +132,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    WowRealmGuild(guildName, realm, region, blizzardId) to viewIdA,
-                    WowRealmGuild(guildName, realm, region, blizzardId) to viewIdB
+                    WowGuild(guildName, realm, region, blizzardId) to viewIdA,
+                    WowGuild(guildName, realm, region, blizzardId) to viewIdB
                 )
             )
 
@@ -172,7 +172,7 @@ class WowGuildUpdaterTest {
                 )
             )
 
-            val errors = updater.update(listOf(WowRealmGuild(guildName, realm, region, blizzardId) to viewId))
+            val errors = updater.update(listOf(WowGuild(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -204,7 +204,7 @@ class WowGuildUpdaterTest {
                 )
             )
 
-            val errors = updater.update(listOf(WowRealmGuild(guildName, realm, region, blizzardId) to guildViewId))
+            val errors = updater.update(listOf(WowGuild(guildName, realm, region, blizzardId) to guildViewId))
 
             assertEquals(emptyList(), errors)
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -243,8 +243,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    WowRealmGuild("GuildA", realm, region, 1L) to viewIdA,
-                    WowRealmGuild("GuildB", realm, region, 2L) to viewIdB
+                    WowGuild("GuildA", realm, region, 1L) to viewIdA,
+                    WowGuild("GuildB", realm, region, 2L) to viewIdB
                 )
             )
 
@@ -280,8 +280,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    WowRealmGuild("BrokenGuild", realm, region, 1L) to brokenViewId,
-                    WowRealmGuild("HealthyGuild", realm, region, 2L) to healthyViewId
+                    WowGuild("BrokenGuild", realm, region, 1L) to brokenViewId,
+                    WowGuild("HealthyGuild", realm, region, 2L) to healthyViewId
                 )
             )
 
@@ -321,8 +321,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    WowRealmGuild("BrokenGuild", realm, region, 1L) to brokenViewId,
-                    WowRealmGuild("HealthyGuild", realm, region, 2L) to healthyViewId
+                    WowGuild("BrokenGuild", realm, region, 1L) to brokenViewId,
+                    WowGuild("HealthyGuild", realm, region, 2L) to healthyViewId
                 )
             )
 
