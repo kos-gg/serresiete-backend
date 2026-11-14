@@ -33,10 +33,8 @@ import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
 import com.kos.sources.wowforever.WowForeverGuildResolver
-import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -693,7 +691,7 @@ class EntitiesServiceTest {
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
             WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         return EntitiesService(
             entitiesRepository,
@@ -704,7 +702,7 @@ class EntitiesServiceTest {
             wowHardcoreGuildUpdater,
             wowGuildUpdater,
             wowForeverGuildResolver,
-            WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
+            GuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
         )
     }
 

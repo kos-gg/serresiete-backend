@@ -62,6 +62,9 @@ class WowGuildResolver(
         return competitive.map { (req, _) -> req to req.alias }
     }
 
+    override fun hasChanged(member: WowEntityRequest, tracked: Entity): Boolean =
+        (tracked as WowEntity).let { !member.name.equals(it.name, ignoreCase = true) || member.realm != it.realm }
+
     private suspend fun scoreOf(
         req: WowEntityRequest,
         seasonId: Int

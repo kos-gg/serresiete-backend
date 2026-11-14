@@ -4,6 +4,7 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.orThrow
 import com.kos.entities.GuildMembers
 import com.kos.entities.GuildResolver
+import com.kos.entities.domain.Entity
 import com.kos.entities.domain.EntityRequest
 import com.kos.entities.domain.GuildRoster
 import com.kos.entities.domain.InsertEntityRequest
@@ -31,6 +32,8 @@ class WowHardcoreGuildResolver(
 
     override suspend fun admit(newMembers: List<WowEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
         characterResolver.resolve(newMembers).entities
+
+    override fun hasChanged(member: WowEntityRequest, tracked: Entity): Boolean = false
 
     private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): WowRealmGuild =
         WowRealmGuild(

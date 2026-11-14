@@ -18,7 +18,7 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wow.WowGuildUpdater
+import com.kos.entities.GuildUpdater
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -48,7 +48,7 @@ class UpdateWowGuildsTaskRunnerTest {
         wowGuildResolver,
         mock(),
         mock(),
-        WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository),
+        GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository),
         mock(),
         mock()
     )

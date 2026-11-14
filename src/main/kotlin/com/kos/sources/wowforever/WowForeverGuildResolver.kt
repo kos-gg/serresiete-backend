@@ -30,20 +30,11 @@ class WowForeverGuildResolver(
     override suspend fun admit(newMembers: List<WowForeverEntityRequest>): List<Pair<InsertEntityRequest, String?>> =
         newMembers.map { it to null }
 
+    override fun hasChanged(member: WowForeverEntityRequest, tracked: Entity): Boolean =
+        (tracked as WowForeverEntity).let { member.name != it.name || member.surname != it.surname }
+
     suspend fun exists(guild: WowForeverEntityRequest): Either<ClientError, WowForeverGuild> =
         blizzardClient.getForeverGuildRoster(guild.region, guild.name).map { payload(it, guild) }
-
-    suspend fun trackedAndNewMembers(
-        members: List<WowForeverEntityRequest>
-    ): Pair<List<Pair<WowForeverEntityRequest, WowForeverEntity>>, List<WowForeverEntityRequest>> {
-        val lookups = members.map { member -> member to trackedByBlizzardId(member) }
-        val tracked = lookups.mapNotNull { (member, entity) -> entity?.let { member to it } }
-        val newMembers = lookups.filter { (_, entity) -> entity == null }.map { (member, _) -> member }
-        return tracked to newMembers
-    }
-
-    private suspend fun trackedByBlizzardId(member: InsertEntityRequest): WowForeverEntity? =
-        entitiesRepository.get(member, Game.WOW_FOREVER) as WowForeverEntity?
 
     private fun payload(guildRoster: WowForeverGuildRoster, guild: WowForeverEntityRequest): WowForeverGuild =
         WowForeverGuild(

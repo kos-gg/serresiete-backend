@@ -67,7 +67,7 @@ class WowForeverGuildResolverTest {
 
             val resolved = resolverWith(renamed).resolve(guildRequest)
 
-            assertEquals(listOf(renamed), resolved.existing)
+            assertEquals(listOf(renamed), resolved.existing.map { it.second })
             assertEquals(listOf(WowForeverEntityRequest("eredeth", "why", region, 2) to null), resolved.newMembers)
         }
     }

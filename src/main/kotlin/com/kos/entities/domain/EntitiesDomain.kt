@@ -126,6 +126,11 @@ fun WowGuild.realmOrNull(): String? = when (this) {
     is WowForeverGuild -> null
 }
 
+fun WowGuild.toRequest(): EntityRequest = when (this) {
+    is WowRealmGuild -> WowEntityRequest(name, region, realm)
+    is WowForeverGuild -> WowForeverEntityRequest(name = name, region = region)
+}
+
 @Serializable
 data class GuildExistsRequest(
     val name: String,

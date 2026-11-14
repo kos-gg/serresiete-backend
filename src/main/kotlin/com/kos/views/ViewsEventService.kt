@@ -54,7 +54,7 @@ class ViewsEventService(
             ?: entitiesService.resolveGuild(guildRequest, game).let { resolvedGuild ->
                 ResolvedEntities(
                     entities = resolvedGuild.newMembers,
-                    existing = resolvedGuild.existing.map { it to null }
+                    existing = resolvedGuild.existing.map { (_, entity) -> entity to null }
                 ) to resolvedGuild.guild
             }
 

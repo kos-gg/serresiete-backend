@@ -13,7 +13,7 @@ import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wowforever.WowForeverGuildResolver
-import com.kos.sources.wowforever.WowForeverGuildUpdater
+import com.kos.entities.GuildUpdater
 import com.kos.tasks.TaskCompleted
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
@@ -48,7 +48,7 @@ class UpdateWowForeverGuildsTaskRunnerTest {
         mock(),
         mock(),
         wowForeverGuildResolver,
-        WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
+        GuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
     )
     private val runner = UpdateWowForeverGuildsTaskRunner(entitiesService)
 

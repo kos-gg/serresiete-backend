@@ -9,10 +9,10 @@ import com.kos.views.Game
 
 data class GuildMembers<G : WowGuild, M : InsertEntityRequest>(val guild: G, val members: List<M>)
 
-data class ResolvedGuild<G : WowGuild>(
+data class ResolvedGuild<G : WowGuild, M : InsertEntityRequest>(
     val guild: G,
     val newMembers: List<Pair<InsertEntityRequest, String?>>,
-    val existing: List<Entity>
+    val existing: List<Pair<M, Entity>>
 )
 
 interface GuildResolver<G : WowGuild, M : InsertEntityRequest> {
@@ -23,14 +23,16 @@ interface GuildResolver<G : WowGuild, M : InsertEntityRequest> {
 
     suspend fun admit(newMembers: List<M>): List<Pair<InsertEntityRequest, String?>>
 
-    suspend fun resolve(guild: EntityRequest): ResolvedGuild<G> {
+    fun hasChanged(member: M, tracked: Entity): Boolean
+
+    suspend fun resolve(guild: EntityRequest): ResolvedGuild<G, M> {
         val (resolvedGuild, members) = fetchRoster(guild)
         val lookups = members.map { member -> member to entitiesRepository.get(member, game) }
 
         return ResolvedGuild(
             guild = resolvedGuild,
             newMembers = admit(lookups.filter { (_, tracked) -> tracked == null }.map { (member, _) -> member }),
-            existing = lookups.mapNotNull { (_, tracked) -> tracked }
+            existing = lookups.mapNotNull { (member, tracked) -> tracked?.let { member to it } }
         )
     }
 }

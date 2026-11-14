@@ -43,7 +43,7 @@ import com.kos.roles.repository.RolesActivitiesInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wow.WowGuildUpdater
+import com.kos.entities.GuildUpdater
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.ViewsTestHelper.basicSimpleGameViews
@@ -114,7 +114,7 @@ class ViewsControllerTest {
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
             WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepositoryWithState)
-        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepositoryWithState)
+        val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepositoryWithState)
 
         val entitiesService = EntitiesService(
             entitiesRepository,

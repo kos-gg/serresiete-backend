@@ -303,7 +303,7 @@ class WowGuildResolverTest {
 
             resolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(trackedEntity), res.existing)
+                    assertEquals(listOf(trackedEntity), res.existing.map { it.second })
                     assertEquals(listOf(), res.newMembers)
                 }
 
@@ -332,7 +332,7 @@ class WowGuildResolverTest {
 
             resolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(trackedEntity), res.existing)
+                    assertEquals(listOf(trackedEntity), res.existing.map { it.second })
                     assertEquals(listOf(), res.newMembers)
                 }
 

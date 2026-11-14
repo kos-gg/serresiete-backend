@@ -55,13 +55,12 @@ import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wow.WowGuildUpdater
+import com.kos.entities.GuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowforever.WowForeverEntityResolver
 import com.kos.sources.wowforever.WowForeverGuildResolver
-import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowforever.WowForeverEntitySynchronizer
 import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
@@ -213,8 +212,8 @@ fun Application.module() {
 
     val wowHardcoreGuildUpdater =
         WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
-    val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
-    val wowForeverGuildUpdater = WowForeverGuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
+    val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+    val wowForeverGuildUpdater = GuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
 
     val entitiesService = EntitiesService(
         entitiesRepository,

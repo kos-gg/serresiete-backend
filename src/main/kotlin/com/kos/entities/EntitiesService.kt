@@ -12,9 +12,7 @@ import com.kos.entities.repository.EntitiesRepository
 import com.kos.entities.repository.wowguilds.WowGuildsRepository
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wowforever.WowForeverGuildResolver
-import com.kos.sources.wowforever.WowForeverGuildUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
 
@@ -25,9 +23,9 @@ data class EntitiesService(
     private val wowGuildResolver: WowGuildResolver,
     private val lolUpdater: LolEntityUpdater,
     private val wowHardcoreGuildUpdater: WowHardcoreGuildUpdater,
-    private val wowGuildUpdater: WowGuildUpdater,
+    private val wowGuildUpdater: GuildUpdater<WowRealmGuild, WowEntityRequest>,
     private val wowForeverGuildResolver: WowForeverGuildResolver,
-    private val wowForeverGuildUpdater: WowForeverGuildUpdater,
+    private val wowForeverGuildUpdater: GuildUpdater<WowForeverGuild, WowForeverEntityRequest>,
 ) : WithLogger("EntitiesService") {
 
     suspend fun exists(
@@ -81,7 +79,7 @@ data class EntitiesService(
     suspend fun resolveEntities(requestedEntities: List<EntityRequest>, game: Game): ResolvedEntities =
         entitiesResolverProvider.resolverFor(game).resolve(requestedEntities)
 
-    suspend fun resolveGuild(guild: EntityRequest, game: Game): ResolvedGuild<*> =
+    suspend fun resolveGuild(guild: EntityRequest, game: Game): ResolvedGuild<*, *> =
         entitiesResolverProvider.guildResolverFor(game).resolve(guild)
 
     suspend fun updateEntities(

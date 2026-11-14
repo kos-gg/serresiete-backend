@@ -1,5 +1,6 @@
 package com.kos.sources.wow
 
+import com.kos.entities.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -39,7 +40,7 @@ class WowGuildUpdaterTest {
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
     private val guildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
-    private val updater = WowGuildUpdater(guildResolver, entitiesRepository, viewsRepository)
+    private val updater = GuildUpdater(guildResolver, entitiesRepository, viewsRepository)
 
     private val region = "eu"
     private val realm = "twisting-nether"
@@ -301,7 +302,7 @@ class WowGuildUpdaterTest {
                     if (id == brokenViewId) error("connection lost")
                     else viewsRepository.associateEntitiesIdsToView(entities, id)
             }
-            val updater = WowGuildUpdater(guildResolver, entitiesRepository, failingViewsRepository)
+            val updater = GuildUpdater(guildResolver, entitiesRepository, failingViewsRepository)
 
             val brokenMember = WowEntityRequest("brokenmember", region, realm)
             val healthyMember = WowEntityRequest("healthymember", region, realm)

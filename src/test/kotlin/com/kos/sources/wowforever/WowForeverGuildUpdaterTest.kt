@@ -1,5 +1,6 @@
 package com.kos.sources.wowforever
 
+import com.kos.entities.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -26,7 +27,7 @@ class WowForeverGuildUpdaterTest {
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
     private val guildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
-    private val updater = WowForeverGuildUpdater(guildResolver, entitiesRepository, viewsRepository)
+    private val updater = GuildUpdater(guildResolver, entitiesRepository, viewsRepository)
 
     private val region = "eu"
     private val guildName = "tsalab"
