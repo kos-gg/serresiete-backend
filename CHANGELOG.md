@@ -1,5 +1,39 @@
 # Changelog
 
+## [7.3.0] - 14-11-2026
+
+### Added
+
+- **WoW Forever guild views**: create a view with `"extraArguments": { "type": "wow", "isGuild": true }` and a single
+  entity `{ "type": "wow_forever", "name": "TSALAB", "region": "eu" }` (no surname, no realm). Every member of the
+  Blizzard roster is tracked, with no level filter and no size cap. A second view of an already tracked guild reuses
+  its members.
+- New daily task `updateWowForeverGuilds`: adds members who joined, removes members who left and renames members
+  matched by Blizzard id.
+- `POST /entities/exists/guild` accepts `game` (default `WOW`, so retail calls don't change). With `WOW_FOREVER` the
+  guild is checked by name and region only.
+- New errors: `400 GUILD_SURNAME_NOT_ALLOWED` (the guild of a guild view has a surname) and `400 MISSING_SURNAME` (a
+  Forever character without surname).
+
+### Changed
+
+- The `guild` in the `/entities/exists/guild` response carries a `type`: `"wow"` (with `realm`) or `"wow_forever"`
+  (without `realm`). It answers `400 BAD_REQUEST` for `WOW` without realm, `WOW_FOREVER` with realm, and `WOW_HC` /
+  `LOL`.
+- Retail guild members are matched by Blizzard id, at view creation and in the daily update: a member who renamed or
+  changed realm is reused and updated in place instead of duplicated.
+
+### Fixed
+
+- The retail guild update now adds a member who joined the guild while already tracked by another view.
+- Guild names and realms are URL-encoded in Blizzard requests.
+
+### Deploy notes
+
+- Migration `V1794100000` makes `wow_guilds.realm` nullable.
+- Migration `V1794200000` makes `wow_entities.blizzard_id` not null. It fails if any row has no blizzard id, so
+  `select count(*) from wow_entities where blizzard_id is null` must return 0 before deploying.
+
 ## [7.2.0] - 09-11-2026
 
 ### Added
