@@ -11,6 +11,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.S
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
+import com.kos.datacache.domain.WowForeverProfessions
 import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowSpecialization
@@ -202,6 +203,28 @@ class BlizzardHttpClient(
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.toWowForeverPvp() }
+    }
+
+    override suspend fun getForeverProfessions(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowForeverProfessions> {
+        logger.debug("getForeverProfessions for $region $name $surname")
+        return fetchFromApi<GetWowForeverProfessionsResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/professions?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowForeverProfessions() }
+    }
+
+    override suspend fun getForeverProfessionMedia(region: String, id: Long): Either<ClientError, String?> {
+        logger.debug("getForeverProfessionMedia for $id")
+        return fetchFromApi<GetWowMediaResponse> {
+            client.get(url(region, "/data/wow/media/profession/$id?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverStaticNamespace(region))
+            }
+        }.map { it.asset("icon") }
     }
 
     override suspend fun getCharacterMedia(

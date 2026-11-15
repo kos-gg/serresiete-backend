@@ -1,6 +1,7 @@
 package com.kos.sources.wowforever
 
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverProfessions
 import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
@@ -65,6 +66,8 @@ object WowForeverTestHelper {
 
     val foreverPvp = WowForeverPvp(honorableKills = 20, rank = 0)
 
+    val noProfessions = WowForeverProfessions(primaries = listOf(), secondaries = listOf())
+
     val foreverData = WowForeverData(
         id = 6880137,
         name = "Sanxei",
@@ -83,7 +86,8 @@ object WowForeverTestHelper {
         lastLogin = lastLogin,
         stats = foreverStats,
         avatar = foreverAvatar,
-        pvp = foreverPvp
+        pvp = foreverPvp,
+        professions = noProfessions
     )
 
     private fun equippedItem(id: Long, slot: String, name: String) = WowForeverEquippedItem(

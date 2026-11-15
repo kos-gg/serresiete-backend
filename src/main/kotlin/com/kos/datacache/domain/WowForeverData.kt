@@ -28,6 +28,21 @@ data class WowForeverPvp(
 )
 
 @Serializable
+data class WowForeverProfession(
+    val id: Long,
+    val name: String,
+    val skillPoints: Int,
+    val maxSkillPoints: Int,
+    val icon: String? = null
+)
+
+@Serializable
+data class WowForeverProfessions(
+    val primaries: List<WowForeverProfession>,
+    val secondaries: List<WowForeverProfession>
+)
+
+@Serializable
 @SerialName("wow_forever")
 data class WowForeverData(
     val id: Long,
@@ -50,13 +65,15 @@ data class WowForeverData(
     val talents: List<WowForeverSpecialization>? = null,
     val stats: WowStats? = null,
     val avatar: String? = null,
-    val pvp: WowForeverPvp? = null
+    val pvp: WowForeverPvp? = null,
+    val professions: WowForeverProfessions? = null
 ) : Data {
     fun orElse(cached: WowForeverData?): WowForeverData = copy(
         items = items ?: cached?.items,
         talents = talents ?: cached?.talents,
         stats = stats ?: cached?.stats,
         avatar = avatar ?: cached?.avatar,
-        pvp = pvp ?: cached?.pvp
+        pvp = pvp ?: cached?.pvp,
+        professions = professions ?: cached?.professions
     )
 }

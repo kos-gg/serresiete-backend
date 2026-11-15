@@ -64,6 +64,18 @@ fun GetWowForeverPvpSummaryResponse.toWowForeverPvp() = WowForeverPvp(
     rank = pvpRank
 )
 
+fun GetWowForeverProfessionsResponse.toWowForeverProfessions() = WowForeverProfessions(
+    primaries = primaries.toWowForeverProfessions(),
+    secondaries = secondaries.toWowForeverProfessions()
+)
+
+private fun List<WowForeverProfessionResponse>.toWowForeverProfessions() =
+    mapNotNull { response ->
+        response.tiers.firstOrNull()?.let { tier ->
+            WowForeverProfession(response.profession.id, response.profession.name, tier.skillPoints, tier.maxSkillPoints)
+        }
+    }
+
 fun GetWowMediaResponse.asset(key: String): String? = assets.find { it.key == key }?.value
 
 fun GetWowEquipmentResponse.toEquippedItemRefs() =

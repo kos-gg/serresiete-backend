@@ -112,11 +112,21 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
         assertNotNull(data.pvp, "Expected pvp summary in data cache of $name")
     }
 
+    @And("the WOW_FOREVER data cache for {string} {string} {string} has professions with icons")
+    fun wowForeverCacheHasProfessionsWithIcons(name: String, surname: String, region: String) {
+        val professions = newestWowForeverData(name, surname, region).professions
+        assertNotNull(professions, "Expected professions in data cache of $name")
+        assertEquals(listOf("Mining", "Blacksmithing"), professions.primaries.map { it.name })
+        assertEquals(listOf("Cooking", "Fishing", "First Aid"), professions.secondaries.map { it.name })
+        assertTrue((professions.primaries + professions.secondaries).all { it.icon != null }, "Expected every profession of $name to have an icon")
+    }
+
     @And("the WOW_FOREVER media table stores the icons of {string} {string} {string}")
     fun wowForeverMediaStoresIcons(name: String, surname: String, region: String) {
         val data = newestWowForeverData(name, surname, region)
         val items = data.items.orEmpty()
         val talents = data.talents.orEmpty().flatMap { it.talents }
+        val professions = data.professions?.let { it.primaries + it.secondaries }.orEmpty()
         runBlocking {
             assertEquals(
                 items.associate { it.id to it.icon },
@@ -125,6 +135,10 @@ class SyncSteps(private val scenarioVariables: acceptance.ScenarioVariables) {
             assertEquals(
                 talents.associate { it.spellId to it.icon },
                 mediaRepo.getIcons(WowForeverMediaKind.SPELL, talents.map { it.spellId }.toSet())
+            )
+            assertEquals(
+                professions.associate { it.id to it.icon },
+                mediaRepo.getIcons(WowForeverMediaKind.PROFESSION, professions.map { it.id }.toSet())
             )
         }
     }

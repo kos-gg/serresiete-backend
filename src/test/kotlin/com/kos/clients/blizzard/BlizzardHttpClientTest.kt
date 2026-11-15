@@ -12,6 +12,8 @@ import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.domain.ClassSpec
 import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.RunMember
+import com.kos.datacache.domain.WowForeverProfession
+import com.kos.datacache.domain.WowForeverProfessions
 import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
@@ -539,6 +541,45 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverPvpSummary("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverProfessions maps primary and secondary professions with their skill points`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(
+            Either.Right(
+                WowForeverProfessions(
+                    primaries = listOf(
+                        WowForeverProfession(186, "Mining", 202, 225),
+                        WowForeverProfession(164, "Blacksmithing", 129, 150)
+                    ),
+                    secondaries = listOf(
+                        WowForeverProfession(185, "Cooking", 4, 75),
+                        WowForeverProfession(356, "Fishing", 1, 75),
+                        WowForeverProfession(129, "First Aid", 142, 150)
+                    )
+                )
+            ),
+            blizzardClient.getForeverProfessions("eu", "Siempre", "Tarde")
+        )
+    }
+
+    @Test
+    fun `getForeverProfessions returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverProfessions("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverProfessionMedia fetches the icon from the forever static namespace`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(
+            Either.Right("https://render.worldofwarcraft.com/forever-eu/icons/56/136248.jpg"),
+            blizzardClient.getForeverProfessionMedia("eu", 186)
+        )
     }
 
     @Test

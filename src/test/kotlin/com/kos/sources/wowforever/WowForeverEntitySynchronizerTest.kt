@@ -8,6 +8,8 @@ import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.DataCache
 import com.kos.datacache.domain.Data
 import com.kos.datacache.domain.WowForeverData
+import com.kos.datacache.domain.WowForeverProfession
+import com.kos.datacache.domain.WowForeverProfessions
 import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowStats
@@ -26,10 +28,12 @@ import com.kos.sources.wowforever.WowForeverTestHelper.foreverPvp
 import com.kos.sources.wowforever.WowForeverTestHelper.foreverStats
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrike
 import com.kos.sources.wowforever.WowForeverTestHelper.heroicStrikeIcon
+import com.kos.sources.wowforever.WowForeverTestHelper.noProfessions
 import com.kos.sources.wowforever.WowForeverTestHelper.rend
 import com.kos.sources.wowforever.media.WowForeverMedia
 import com.kos.sources.wowforever.media.WowForeverMediaInMemoryRepository
 import com.kos.sources.wowforever.media.WowForeverMediaKind.ITEM
+import com.kos.sources.wowforever.media.WowForeverMediaKind.PROFESSION
 import com.kos.sources.wowforever.media.WowForeverMediaKind.SPELL
 import com.kos.views.Game
 import kotlinx.coroutines.runBlocking
@@ -50,6 +54,10 @@ class WowForeverEntitySynchronizerTest {
     private val storedBoots = WowForeverMedia(ITEM, boots.details.id, bootsIcon)
     private val otherEntity = basicWowForeverEntity.copy(id = 2, name = "otro", blizzardId = 2)
     private val previousData = foreverData.copy(lastLogin = foreverData.lastLogin.minusDays(1))
+    private val mining = WowForeverProfession(186, "Mining", 202, 225)
+    private val cooking = WowForeverProfession(185, "Cooking", 4, 75)
+    private val miningIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/136248.jpg"
+    private val cookingIcon = "https://render.worldofwarcraft.com/forever-eu/icons/56/cooking.jpg"
 
     private suspend fun givenProfile(entity: WowForeverEntity = basicWowForeverEntity) {
         `when`(blizzardClient.getForeverProfile(entity.region, entity.name, entity.surname))
@@ -59,6 +67,14 @@ class WowForeverEntitySynchronizerTest {
         givenStatistics(Either.Right(foreverStats), entity)
         givenAvatar(Either.Right(foreverAvatar), entity)
         givenPvp(Either.Right(foreverPvp), entity)
+        givenProfessions(Either.Right(noProfessions), entity)
+    }
+
+    private suspend fun givenProfessions(
+        result: Either<ClientError, WowForeverProfessions>,
+        entity: WowForeverEntity = basicWowForeverEntity
+    ) {
+        `when`(blizzardClient.getForeverProfessions(entity.region, entity.name, entity.surname)).thenReturn(result)
     }
 
     private suspend fun givenPvp(
@@ -359,6 +375,62 @@ class WowForeverEntitySynchronizerTest {
     }
 
     @Test
+    fun `caches the professions using stored icons and fetching and storing the missing ones`() {
+        runBlocking {
+            val storedMining = WowForeverMedia(PROFESSION, mining.id, miningIcon)
+            mediaRepository.withState(listOf(storedMining))
+            givenProfile()
+            givenProfessions(Either.Right(WowForeverProfessions(primaries = listOf(mining), secondaries = listOf(cooking))))
+            `when`(blizzardClient.getForeverProfessionMedia("eu", cooking.id)).thenReturn(Either.Right(cookingIcon))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(
+                WowForeverProfessions(
+                    primaries = listOf(mining.copy(icon = miningIcon)),
+                    secondaries = listOf(cooking.copy(icon = cookingIcon))
+                ),
+                cachedData().professions
+            )
+            verify(blizzardClient, never()).getForeverProfessionMedia("eu", mining.id)
+            assertEquals(
+                listOf(WowForeverMedia(PROFESSION, cooking.id, cookingIcon), storedMining),
+                mediaRepository.state()
+            )
+        }
+    }
+
+    @Test
+    fun `when the professions could not be fetched the previous professions are kept`() {
+        runBlocking {
+            val previousProfessions = WowForeverProfessions(primaries = listOf(mining.copy(icon = miningIcon)), secondaries = listOf())
+            mediaRepository.withState(listOf(WowForeverMedia(PROFESSION, mining.id, miningIcon)))
+            givenPreviousData(previousData.copy(professions = previousProfessions))
+            givenProfile()
+            givenProfessions(Either.Left(TimeoutError("timeout")))
+
+            val errors = synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(listOf(), errors)
+            assertEquals(previousProfessions, cachedData().professions)
+            assertEquals(previousData.lastLogin, cachedData().lastLogin)
+        }
+    }
+
+    @Test
+    fun `a character cached before the professions existed gets them on its next logout`() {
+        runBlocking {
+            givenPreviousData(previousData.copy(professions = null))
+            givenProfile()
+
+            synchronizer.synchronize(listOf(basicWowForeverEntity))
+
+            assertEquals(noProfessions, cachedData().professions)
+        }
+    }
+
+    @Test
     fun `a character that has not logged out since the last sync reuses its cached details`() {
         runBlocking {
             val cachedItems = listOf(boots.toWowItem(bootsIcon))
@@ -392,6 +464,11 @@ class WowForeverEntitySynchronizerTest {
                 basicWowForeverEntity.surname
             )
             verify(blizzardClient, never()).getForeverPvpSummary(
+                basicWowForeverEntity.region,
+                basicWowForeverEntity.name,
+                basicWowForeverEntity.surname
+            )
+            verify(blizzardClient, never()).getForeverProfessions(
                 basicWowForeverEntity.region,
                 basicWowForeverEntity.name,
                 basicWowForeverEntity.surname
