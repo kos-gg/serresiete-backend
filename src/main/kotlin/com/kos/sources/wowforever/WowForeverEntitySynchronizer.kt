@@ -114,15 +114,26 @@ class WowForeverEntitySynchronizer(
 
         val dataCache = cachedData
             ?.takeIf { profile.lastLogin.isEqual(it.lastLogin) }
-            ?.let { profile.toWowForeverData(entity.region, it.items, it.talents, it.stats, it.avatar, it.pvp) }
+            ?.let {
+                profile.toWowForeverData(
+                    entity.region,
+                    it.items,
+                    it.talents,
+                    it.stats,
+                    it.avatar,
+                    it.pvp,
+                    it.professions
+                )
+            }
             ?: fetchDetails(entity, profile, cachedData)
 
         DataCache(
             entity.id,
             json.encodeToString<Data>(
                 dataCache.copy(
-                    items = withItemIcons(entity.region, dataCache.items, iconCache),
-                    talents = withTalentIcons(entity.region, dataCache.talents, iconCache)
+                    items = withItemEquipment(entity.region, dataCache.items, iconCache),
+                    talents = withTalents(entity.region, dataCache.talents, iconCache),
+                    professions = withProfessions(entity.region, dataCache.professions, iconCache)
                 )
             ),
             OffsetDateTime.now(),
@@ -130,7 +141,7 @@ class WowForeverEntitySynchronizer(
         )
     }
 
-    private suspend fun withItemIcons(
+    private suspend fun withItemEquipment(
         region: String,
         items: List<WowItem>?,
         iconCache: DynamicCache<Either<ClientError, String?>>
@@ -145,7 +156,7 @@ class WowForeverEntitySynchronizer(
             it.map { item -> item.copy(icon = item.icon ?: icons[item.id]) }
         }
 
-    private suspend fun withTalentIcons(
+    private suspend fun withTalents(
         region: String,
         specializations: List<WowForeverSpecialization>?,
         iconCache: DynamicCache<Either<ClientError, String?>>
@@ -168,6 +179,32 @@ class WowForeverEntitySynchronizer(
                     }
                 )
             }
+        }
+
+    private suspend fun withProfessions(
+        region: String,
+        professions: WowForeverProfessions?,
+        iconCache: DynamicCache<Either<ClientError, String?>>
+    ): WowForeverProfessions? =
+        professions?.let {
+            val icons = resolveIcons(
+                WowForeverMediaKind.PROFESSION,
+                region,
+                (it.primaries + it.secondaries).map { profession -> profession.id }.toSet(),
+                iconCache
+            )
+            WowForeverProfessions(
+                primaries = it.primaries.map { profession ->
+                    profession.copy(
+                        icon = profession.icon ?: icons[profession.id]
+                    )
+                },
+                secondaries = it.secondaries.map { profession ->
+                    profession.copy(
+                        icon = profession.icon ?: icons[profession.id]
+                    )
+                }
+            )
         }
 
     private suspend fun resolveIcons(
@@ -201,6 +238,7 @@ class WowForeverEntitySynchronizer(
         when (kind) {
             WowForeverMediaKind.ITEM -> blizzardClient.getForeverItemMedia(region, id)
             WowForeverMediaKind.SPELL -> blizzardClient.getForeverSpellMedia(region, id)
+            WowForeverMediaKind.PROFESSION -> blizzardClient.getForeverProfessionMedia(region, id)
         }
 
     private suspend fun fetchDetails(
@@ -213,6 +251,7 @@ class WowForeverEntitySynchronizer(
         val statistics = getStats(entity)
         val avatar = getAvatar(entity)
         val pvp = getPvp(entity)
+        val professions = getProfessions(entity)
 
         val foreverData = profile.toWowForeverData(
             entity.region,
@@ -220,10 +259,12 @@ class WowForeverEntitySynchronizer(
             talents = specializations.getOrNull(),
             stats = statistics.getOrNull(),
             avatar = avatar.getOrNull(),
-            pvp = pvp.getOrNull()
+            pvp = pvp.getOrNull(),
+            professions = professions.getOrNull()
         ).orElse(cachedData)
 
-        val everyDetailFetched = listOf(equipment, specializations, statistics, avatar, pvp).all { it.isRight() }
+        val everyDetailFetched =
+            listOf(equipment, specializations, statistics, avatar, pvp, professions).all { it.isRight() }
         return if (everyDetailFetched) foreverData
         else foreverData.copy(lastLogin = cachedData?.lastLogin ?: foreverData.lastLogin)
     }
@@ -245,7 +286,8 @@ class WowForeverEntitySynchronizer(
         talents: List<WowForeverSpecialization>?,
         stats: WowStats?,
         avatar: String?,
-        pvp: WowForeverPvp?
+        pvp: WowForeverPvp?,
+        professions: WowForeverProfessions?
     ) = WowForeverData(
         id = id,
         name = name,
@@ -266,7 +308,8 @@ class WowForeverEntitySynchronizer(
         talents = talents,
         stats = stats,
         avatar = avatar,
-        pvp = pvp
+        pvp = pvp,
+        professions = professions
     )
 
     private suspend fun getEquipment(entity: WowForeverEntity): Either<ClientError, List<WowForeverEquippedItem>?> =
@@ -293,6 +336,11 @@ class WowForeverEntitySynchronizer(
         blizzardClient.getForeverPvpSummary(entity.region, entity.name, entity.surname)
             .missingWhenNotFound()
             .onLeft { logger.warn("Couldn't fetch pvp summary of wow forever entity ${entity.id}: $it") }
+
+    private suspend fun getProfessions(entity: WowForeverEntity): Either<ClientError, WowForeverProfessions?> =
+        blizzardClient.getForeverProfessions(entity.region, entity.name, entity.surname)
+            .missingWhenNotFound()
+            .onLeft { logger.warn("Couldn't fetch professions of wow forever entity ${entity.id}: $it") }
 
     private fun <A> Either<ClientError, A>.missingWhenNotFound(): Either<ClientError, A?> =
         either { recover({ bind() }) { if (it is NotFound) null else raise(it) } }

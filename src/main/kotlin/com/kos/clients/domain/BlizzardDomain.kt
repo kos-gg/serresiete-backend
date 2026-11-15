@@ -267,6 +267,29 @@ data class GetWowForeverPvpSummaryResponse(
 )
 
 @Serializable
+data class WowForeverProfessionRefResponse(val name: String, val id: Long)
+
+@Serializable
+data class WowForeverProfessionTierResponse(
+    @SerialName("skill_points")
+    val skillPoints: Int,
+    @SerialName("max_skill_points")
+    val maxSkillPoints: Int
+)
+
+@Serializable
+data class WowForeverProfessionResponse(
+    val profession: WowForeverProfessionRefResponse,
+    val tiers: List<WowForeverProfessionTierResponse>
+)
+
+@Serializable
+data class GetWowForeverProfessionsResponse(
+    val primaries: List<WowForeverProfessionResponse> = emptyList(),
+    val secondaries: List<WowForeverProfessionResponse> = emptyList()
+)
+
+@Serializable
 data class GetWowMediaResponse(
     val assets: List<AssetKeyValue>
 )

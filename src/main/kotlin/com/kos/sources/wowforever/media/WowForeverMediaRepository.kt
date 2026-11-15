@@ -2,7 +2,7 @@ package com.kos.sources.wowforever.media
 
 import com.kos.common.WithState
 
-enum class WowForeverMediaKind { ITEM, SPELL }
+enum class WowForeverMediaKind { ITEM, SPELL, PROFESSION }
 
 data class WowForeverMedia(
     val kind: WowForeverMediaKind,
