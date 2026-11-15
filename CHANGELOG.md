@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.4.0] - 15-11-2026
+
+### Added
+
+- **WoW Forever cached data has professions**: new field `professions` with `primaries` and `secondaries`, each a list
+  of `{ id, name, skillPoints, maxSkillPoints, icon }`, from Blizzard's `/profile/wow/character/{name}-{surname}/professions`.
+  Known recipes are not stored.
+- Professions follow the rules of the other details: fetched only when the character logged out since the last sync,
+  kept from the previous cached data if the call fails, and `null` for characters cached before this version until
+  their next logout.
+- Profession icons are stored in `wow_forever_media` under the new kind `PROFESSION` and only requested from Blizzard
+  (`/data/wow/media/profession/{id}`, namespace `static-forever-{region}`) the first time a profession is seen.
+
+### Deploy notes
+
+- No migration. Each Forever character that logged out makes one more Blizzard call per sync.
+
 ## [7.3.0] - 14-11-2026
 
 ### Added
