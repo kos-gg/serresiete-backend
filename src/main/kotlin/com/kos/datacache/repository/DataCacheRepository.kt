@@ -7,6 +7,7 @@ import com.kos.views.Game
 interface DataCacheRepository : WithState<List<DataCache>, DataCacheRepository> {
     suspend fun insert(data: List<DataCache>): Boolean
     suspend fun get(entityId: Long): List<DataCache>
+    suspend fun getLatest(entityId: Long, game: Game): DataCache?
     suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int
     suspend fun clearRecords(game: Game?): Int
 }

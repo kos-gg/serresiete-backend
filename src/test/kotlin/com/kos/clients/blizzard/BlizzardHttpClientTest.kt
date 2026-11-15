@@ -12,6 +12,7 @@ import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.domain.ClassSpec
 import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.RunMember
+import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
@@ -521,6 +522,23 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverAvatar("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverPvpSummary maps the honorable kills and the rank`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(
+            Either.Right(WowForeverPvp(honorableKills = 20, rank = 0)),
+            blizzardClient.getForeverPvpSummary("eu", "Siempre", "Tarde")
+        )
+    }
+
+    @Test
+    fun `getForeverPvpSummary returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverPvpSummary("eu", "unknown", "tarde"))
     }
 
     @Test

@@ -22,6 +22,12 @@ data class WowForeverSpecialization(
 )
 
 @Serializable
+data class WowForeverPvp(
+    val honorableKills: Int,
+    val rank: Int
+)
+
+@Serializable
 @SerialName("wow_forever")
 data class WowForeverData(
     val id: Long,
@@ -43,14 +49,14 @@ data class WowForeverData(
     val items: List<WowItem>? = null,
     val talents: List<WowForeverSpecialization>? = null,
     val stats: WowStats? = null,
-    val avatar: String? = null
+    val avatar: String? = null,
+    val pvp: WowForeverPvp? = null
 ) : Data {
-    fun isComplete(): Boolean = listOf(items, talents, stats, avatar).all { it != null }
-
     fun orElse(cached: WowForeverData?): WowForeverData = copy(
         items = items ?: cached?.items,
         talents = talents ?: cached?.talents,
         stats = stats ?: cached?.stats,
-        avatar = avatar ?: cached?.avatar
+        avatar = avatar ?: cached?.avatar,
+        pvp = pvp ?: cached?.pvp
     )
 }

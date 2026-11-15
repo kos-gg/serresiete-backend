@@ -59,6 +59,11 @@ fun GetWowForeverCharacterResponse.toWowForeverCharacter() = WowForeverCharacter
     lastLogin = OffsetDateTime.ofInstant(Instant.ofEpochMilli(lastLogin), ZoneId.systemDefault())
 )
 
+fun GetWowForeverPvpSummaryResponse.toWowForeverPvp() = WowForeverPvp(
+    honorableKills = honorableKills,
+    rank = pvpRank
+)
+
 fun GetWowMediaResponse.asset(key: String): String? = assets.find { it.key == key }?.value
 
 fun GetWowEquipmentResponse.toEquippedItemRefs() =

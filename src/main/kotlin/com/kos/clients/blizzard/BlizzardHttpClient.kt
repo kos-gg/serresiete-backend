@@ -11,6 +11,7 @@ import com.kos.clients.blizzard.BlizzardHttpClient.BlizzardHttpClientConstants.S
 import com.kos.clients.domain.*
 import com.kos.clients.fetchFromApi
 import com.kos.common.WithLogger
+import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowSpecialization
 import com.kos.datacache.domain.WowStats
@@ -188,6 +189,19 @@ class BlizzardHttpClient(
                 header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
             }
         }.map { it.asset("avatar-sd") }
+    }
+
+    override suspend fun getForeverPvpSummary(
+        region: String,
+        name: String,
+        surname: String
+    ): Either<ClientError, WowForeverPvp> {
+        logger.debug("getForeverPvpSummary for $region $name $surname")
+        return fetchFromApi<GetWowForeverPvpSummaryResponse> {
+            client.get(url(region, "/profile/wow/character/${foreverCharacterSlug(name, surname)}/pvp-summary?locale=en_US")) {
+                header(BATTLENET_NAMESPACE, foreverProfileNamespace(region))
+            }
+        }.map { it.toWowForeverPvp() }
     }
 
     override suspend fun getCharacterMedia(
