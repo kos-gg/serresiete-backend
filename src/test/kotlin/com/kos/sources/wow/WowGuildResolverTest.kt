@@ -1,5 +1,6 @@
 package com.kos.sources.wow
 
+import com.kos.entities.guilds.WowGuild
 import arrow.core.Either
 import com.kos.clients.NotFound
 import com.kos.clients.TimeoutError
@@ -11,7 +12,6 @@ import com.kos.clients.domain.WowGuildResponse
 import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
@@ -49,7 +49,7 @@ class WowGuildResolverTest {
             guildResolver.exists(guildRequest)
                 .onLeft { fail() }
                 .onRight { guild ->
-                    assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), guild)
+                    assertEquals(WowGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), guild)
                 }
 
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -95,15 +95,14 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(
-                        listOf(WowEntityRequest(member.name, member.region, member.realm, 555) to null),
-                        res.entities
+                        listOf(WowEntityRequest(member.name, member.region, member.realm, 555)),
+                        res.newMembers
                     )
-                    assertEquals(listOf(), res.unchecked)
                     assertEquals(
-                        GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999),
+                        WowGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999),
                         res.guild
                     )
                 }
@@ -138,11 +137,11 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(
-                        listOf(WowEntityRequest(member.name, member.region, member.realm, 105161061) to null),
-                        res.entities
+                        listOf(WowEntityRequest(member.name, member.region, member.realm, 105161061)),
+                        res.newMembers
                     )
                 }
         }
@@ -168,9 +167,9 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(mixedCaseRequest))
+            resolver.resolve(mixedCaseRequest)
                 .let { res ->
-                    assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                    assertEquals(WowGuild("method", "twisting-nether", "eu", 999), res.guild)
                 }
         }
     }
@@ -191,10 +190,9 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(), res.entities)
-                    assertEquals(listOf(), res.unchecked)
+                    assertEquals(listOf(), res.newMembers)
                 }
 
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -220,10 +218,9 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(), res.entities)
-                    assertEquals(listOf(), res.unchecked)
+                    assertEquals(listOf(), res.newMembers)
                 }
         }
     }
@@ -247,13 +244,12 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
                     assertEquals(
-                        listOf(WowEntityRequest(member.name, member.region, member.realm, 777) to null),
-                        res.entities
+                        listOf(WowEntityRequest(member.name, member.region, member.realm, 777)),
+                        res.newMembers
                     )
-                    assertEquals(listOf(), res.unchecked)
                 }
         }
     }
@@ -278,10 +274,9 @@ class WowGuildResolverTest {
             val repo = EntitiesInMemoryRepository().withState(EntitiesState(listOf(), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(), res.entities)
-                    assertEquals(listOf(), res.unchecked)
+                    assertEquals(listOf(), res.newMembers)
                 }
         }
     }
@@ -289,7 +284,7 @@ class WowGuildResolverTest {
     @Test
     fun `a guild member already tracked is returned as existing without checking their rating`() {
         runBlocking {
-            val member = WowEntityRequest(basicWowEntity.name, guildRequest.region, guildRequest.realm)
+            val member = WowEntityRequest(basicWowEntity.name, guildRequest.region, guildRequest.realm, 444)
             val trackedEntity = member.toEntity(1)
 
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
@@ -306,10 +301,39 @@ class WowGuildResolverTest {
                 EntitiesInMemoryRepository().withState(EntitiesState(listOf(trackedEntity), listOf(), listOf()))
             val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
 
-            resolver.resolve(listOf(guildRequest))
+            resolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(trackedEntity to null), res.existing)
-                    assertEquals(listOf(), res.entities)
+                    assertEquals(listOf(trackedEntity), res.existing.map { it.second })
+                    assertEquals(listOf(), res.newMembers)
+                }
+
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `a guild member renamed since it was tracked is found by blizzard id and returned as existing`() {
+        runBlocking {
+            val trackedEntity = WowEntityRequest("oldname", guildRequest.region, guildRequest.realm, 444).toEntity(1)
+
+            `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
+                .thenReturn(
+                    Either.Right(
+                        GetWowRosterResponse(
+                            listOf(WowMemberResponse(WowCharacterResponse("newname", 90, 444))),
+                            WowGuildResponse(999)
+                        ).toGuildRoster()
+                    )
+                )
+
+            val repo =
+                EntitiesInMemoryRepository().withState(EntitiesState(listOf(trackedEntity), listOf(), listOf()))
+            val resolver = WowGuildResolver(repo, blizzardClient, seasonRepository)
+
+            resolver.resolve(guildRequest)
+                .let { res ->
+                    assertEquals(listOf(trackedEntity), res.existing.map { it.second })
+                    assertEquals(listOf(), res.newMembers)
                 }
 
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -331,7 +355,7 @@ class WowGuildResolverTest {
 
             val resolver = WowGuildResolver(EntitiesInMemoryRepository(), blizzardClient, WowSeasonInMemoryRepository())
 
-            assertFailsWith<IllegalStateException> { resolver.resolve(listOf(guildRequest)) }
+            assertFailsWith<IllegalStateException> { resolver.resolve(guildRequest) }
 
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
         }
@@ -343,7 +367,7 @@ class WowGuildResolverTest {
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
                 .thenReturn(Either.Left(NotFound))
 
-            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(guildRequest) }
 
             assertEquals("Guild method (eu/twisting-nether) not found", error.message)
         }
@@ -355,7 +379,7 @@ class WowGuildResolverTest {
             `when`(blizzardClient.getRetailGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
                 .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
 
-            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(guildRequest) }
 
             assertEquals("Third party call failed: TimeoutError(message=Request timeout has expired)", error.message)
         }

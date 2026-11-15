@@ -14,6 +14,12 @@ fun String.toGame(): Game = Game.valueOf(uppercase())
 fun wowEntityRequest(name: String, realm: String, region: String): WowEntityRequest =
     WowEntityRequest(name, region, realm)
 
+fun storedWowEntityRequest(game: Game, name: String, realm: String, region: String): WowEntityRequest =
+    when (game) {
+        Game.WOW -> WowEntityRequest(name, region, realm, 1L)
+        else -> wowEntityRequest(name, realm, region)
+    }
+
 fun wowForeverEntityRequest(name: String, surname: String, region: String): WowForeverEntityRequest =
     WowForeverEntityRequest(name, surname, region)
 

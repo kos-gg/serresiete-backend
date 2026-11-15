@@ -1,5 +1,6 @@
 package com.kos.tasks.runners
 
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
 import com.kos.tasks.TaskFailed
 import com.kos.tasks.TaskCompleted
 import arrow.core.Either
@@ -11,7 +12,6 @@ import com.kos.entities.EntitiesTestHelper.basicLolEntity
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -35,11 +35,14 @@ class UpdateLolEntitiesTaskRunnerTest {
             wowHardcoreResolver = mock(),
             wowHardcoreGuildResolver = mock(),
             lolResolver = LolEntityResolver(entitiesRepository, riotClient),
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         ),
         mock(),
         LolEntityUpdater(riotClient, entitiesRepository),
         WowHardcoreGuildUpdater(mock(), mock(), entitiesRepository, ViewsInMemoryRepository()),
+        mock(),
+        mock(),
         mock()
     )
     private val runner = UpdateLolEntitiesTaskRunner(entitiesService)

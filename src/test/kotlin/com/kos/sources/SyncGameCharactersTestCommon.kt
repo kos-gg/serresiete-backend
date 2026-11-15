@@ -1,5 +1,7 @@
 package com.kos.sources
 
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.GuildUpdater
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.raiderio.RaiderIoClient
 import com.kos.clients.riot.RiotClient
@@ -12,14 +14,12 @@ import com.kos.entities.domain.LolEntity
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.eventsourcing.events.*
 import com.kos.eventsourcing.subscriptions.sync.GameSyncEventProcessor
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntitySynchronizer
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
@@ -56,13 +56,13 @@ abstract class SyncGameCharactersTestCommon {
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
         val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
             WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
@@ -70,7 +70,8 @@ abstract class SyncGameCharactersTestCommon {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = mock()
         )
 
 
@@ -83,7 +84,9 @@ abstract class SyncGameCharactersTestCommon {
                 wowGuildResolver,
                 lolUpdater,
                 wowHardcoreGuildUpdater,
-                wowGuildUpdater
+                wowGuildUpdater,
+                mock(),
+                mock()
             )
 
         return Pair(entitiesService, dataCacheRepository)

@@ -1,5 +1,7 @@
 package com.kos.sources.wow
 
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -11,7 +13,6 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.clients.domain.WowRosterMemberRealmResponse
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntity
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
@@ -39,7 +40,7 @@ class WowGuildUpdaterTest {
     private val entitiesRepository = EntitiesInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
     private val guildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
-    private val updater = WowGuildUpdater(guildResolver, entitiesRepository, viewsRepository)
+    private val updater = GuildUpdater(guildResolver, entitiesRepository, viewsRepository)
 
     private val region = "eu"
     private val realm = "twisting-nether"
@@ -51,14 +52,7 @@ class WowGuildUpdaterTest {
         return id
     }
 
-    private suspend fun alreadyTracked(name: String, viewId: String): Long {
-        val request = WowEntityRequest(name, region, realm)
-        val entity = entitiesRepository.insert(listOf(request), Game.WOW).first()
-        viewsRepository.associateEntitiesIdsToView(listOf(entity.id to null), viewId)
-        return entity.id
-    }
-
-    private suspend fun alreadyTrackedWithBlizzardId(
+    private suspend fun alreadyTracked(
         name: String,
         memberBlizzardId: Long,
         viewId: String,
@@ -75,16 +69,16 @@ class WowGuildUpdaterTest {
         runBlocking {
             val viewId = createGuildView("guild-view")
 
-            val stayingId = alreadyTracked("staying", viewId)
-            val leavingId = alreadyTracked("leaving", viewId)
+            val stayingId = alreadyTracked("staying", 1L, viewId)
+            val leavingId = alreadyTracked("leaving", 2L, viewId)
             val joining = WowEntityRequest("joining", region, realm)
 
             `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
                 Either.Right(
                     GetWowRosterResponse(
                         listOf(
-                            WowMemberResponse(WowCharacterResponse("staying", 90)),
-                            WowMemberResponse(WowCharacterResponse(joining.name, 90))
+                            WowMemberResponse(WowCharacterResponse("staying", 90, 1)),
+                            WowMemberResponse(WowCharacterResponse(joining.name, 90, 3))
                         ),
                         WowGuildResponse(blizzardId)
                     ).toGuildRoster()
@@ -92,7 +86,7 @@ class WowGuildUpdaterTest {
             )
             `when`(blizzardClient.getMythicKeystoneProfile(joining.region, joining.realm, joining.name, season.id)).thenReturn(Either.Right(MythicKeystoneProfile(1500.0, emptyList())))
 
-            val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
+            val errors = updater.update(listOf(WowGuild(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
 
@@ -110,9 +104,9 @@ class WowGuildUpdaterTest {
             val viewIdA = createGuildView("guild-view-a")
             val viewIdB = createGuildView("guild-view-b")
 
-            val stayingId = alreadyTracked("staying", viewIdA)
+            val stayingId = alreadyTracked("staying", 1L, viewIdA)
             viewsRepository.associateEntitiesIdsToView(listOf(stayingId to null), viewIdB)
-            val leavingId = alreadyTracked("leaving", viewIdA)
+            val leavingId = alreadyTracked("leaving", 2L, viewIdA)
             viewsRepository.associateEntitiesIdsToView(listOf(leavingId to null), viewIdB)
             val joining = WowEntityRequest("joining", region, realm)
 
@@ -120,8 +114,8 @@ class WowGuildUpdaterTest {
                 Either.Right(
                     GetWowRosterResponse(
                         listOf(
-                            WowMemberResponse(WowCharacterResponse("staying", 90)),
-                            WowMemberResponse(WowCharacterResponse(joining.name, 90))
+                            WowMemberResponse(WowCharacterResponse("staying", 90, 1)),
+                            WowMemberResponse(WowCharacterResponse(joining.name, 90, 3))
                         ),
                         WowGuildResponse(blizzardId)
                     ).toGuildRoster()
@@ -131,8 +125,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    GuildPayload(guildName, realm, region, blizzardId) to viewIdA,
-                    GuildPayload(guildName, realm, region, blizzardId) to viewIdB
+                    WowGuild(guildName, realm, region, blizzardId) to viewIdA,
+                    WowGuild(guildName, realm, region, blizzardId) to viewIdB
                 )
             )
 
@@ -156,7 +150,7 @@ class WowGuildUpdaterTest {
         runBlocking {
             val viewId = createGuildView("guild-view")
 
-            val trackedId = alreadyTrackedWithBlizzardId("oldname", 555L, viewId)
+            val trackedId = alreadyTracked("oldname", 555L, viewId)
 
             `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
                 Either.Right(
@@ -171,7 +165,7 @@ class WowGuildUpdaterTest {
                 )
             )
 
-            val errors = updater.update(listOf(GuildPayload(guildName, realm, region, blizzardId) to viewId))
+            val errors = updater.update(listOf(WowGuild(guildName, realm, region, blizzardId) to viewId))
 
             assertEquals(emptyList(), errors)
             verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
@@ -182,6 +176,32 @@ class WowGuildUpdaterTest {
             assertEquals(555L, updated.blizzardId)
 
             assertEquals(setOf(trackedId), viewsRepository.get(viewId)!!.entitiesIds.toSet())
+            assertEquals(1, entitiesRepository.get(Game.WOW).size)
+        }
+    }
+
+    @Test
+    fun `update adds a member who joined the guild and was already tracked by another view`() {
+        runBlocking {
+            val guildViewId = createGuildView("guild-view")
+            val otherViewId = createGuildView("other-view")
+
+            val joinerId = alreadyTracked("joiner", 777L, otherViewId)
+
+            `when`(blizzardClient.getRetailGuildRoster(region, realm, guildName)).thenReturn(
+                Either.Right(
+                    GetWowRosterResponse(
+                        listOf(WowMemberResponse(WowCharacterResponse("joiner", 90, 777L, WowRosterMemberRealmResponse(realm)))),
+                        WowGuildResponse(blizzardId)
+                    ).toGuildRoster()
+                )
+            )
+
+            val errors = updater.update(listOf(WowGuild(guildName, realm, region, blizzardId) to guildViewId))
+
+            assertEquals(emptyList(), errors)
+            verify(blizzardClient, never()).getMythicKeystoneProfile(any(), any(), any(), any())
+            assertEquals(setOf(joinerId), viewsRepository.get(guildViewId)!!.entitiesIds.toSet())
             assertEquals(1, entitiesRepository.get(Game.WOW).size)
         }
     }
@@ -216,8 +236,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    GuildPayload("GuildA", realm, region, 1L) to viewIdA,
-                    GuildPayload("GuildB", realm, region, 2L) to viewIdB
+                    WowGuild("GuildA", realm, region, 1L) to viewIdA,
+                    WowGuild("GuildB", realm, region, 2L) to viewIdB
                 )
             )
 
@@ -244,7 +264,7 @@ class WowGuildUpdaterTest {
             `when`(blizzardClient.getRetailGuildRoster(region, realm, "HealthyGuild")).thenReturn(
                 Either.Right(
                     GetWowRosterResponse(
-                        listOf(WowMemberResponse(WowCharacterResponse(healthyMember.name, 90))),
+                        listOf(WowMemberResponse(WowCharacterResponse(healthyMember.name, 90, 222))),
                         WowGuildResponse(2L)
                     ).toGuildRoster()
                 )
@@ -253,8 +273,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    GuildPayload("BrokenGuild", realm, region, 1L) to brokenViewId,
-                    GuildPayload("HealthyGuild", realm, region, 2L) to healthyViewId
+                    WowGuild("BrokenGuild", realm, region, 1L) to brokenViewId,
+                    WowGuild("HealthyGuild", realm, region, 2L) to healthyViewId
                 )
             )
 
@@ -275,7 +295,7 @@ class WowGuildUpdaterTest {
                     if (id == brokenViewId) error("connection lost")
                     else viewsRepository.associateEntitiesIdsToView(entities, id)
             }
-            val updater = WowGuildUpdater(guildResolver, entitiesRepository, failingViewsRepository)
+            val updater = GuildUpdater(guildResolver, entitiesRepository, failingViewsRepository)
 
             val brokenMember = WowEntityRequest("brokenmember", region, realm)
             val healthyMember = WowEntityRequest("healthymember", region, realm)
@@ -283,7 +303,7 @@ class WowGuildUpdaterTest {
                 `when`(blizzardClient.getRetailGuildRoster(region, realm, guild)).thenReturn(
                     Either.Right(
                         GetWowRosterResponse(
-                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90))),
+                            listOf(WowMemberResponse(WowCharacterResponse(member.name, 90, index + 100L))),
                             WowGuildResponse(index + 1L)
                         ).toGuildRoster()
                     )
@@ -294,8 +314,8 @@ class WowGuildUpdaterTest {
 
             val errors = updater.update(
                 listOf(
-                    GuildPayload("BrokenGuild", realm, region, 1L) to brokenViewId,
-                    GuildPayload("HealthyGuild", realm, region, 2L) to healthyViewId
+                    WowGuild("BrokenGuild", realm, region, 1L) to brokenViewId,
+                    WowGuild("HealthyGuild", realm, region, 2L) to healthyViewId
                 )
             )
 

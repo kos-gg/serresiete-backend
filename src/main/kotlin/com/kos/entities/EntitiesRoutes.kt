@@ -6,6 +6,8 @@ import arrow.core.raise.ensure
 import com.kos.common.error.BadRequest
 import com.kos.common.error.respondWithHandledError
 import com.kos.entities.domain.*
+import com.kos.entities.guilds.GuildExistsRequest
+import com.kos.entities.guilds.normalized
 import com.kos.plugins.UserWithActivities
 import com.kos.views.Game
 import io.ktor.http.*
@@ -63,7 +65,8 @@ fun Route.entitiesRouting(
                     userWithActivities?.activities.orEmpty(),
                     request.name,
                     request.region,
-                    request.realm
+                    request.realm,
+                    request.game
                 ).fold({
                     call.respondWithHandledError(it)
                 }, {

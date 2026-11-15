@@ -1,32 +1,42 @@
 package com.kos.sources.wowhc
 
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.GuildWithRoster
+import com.kos.entities.guilds.GuildResolver
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.clients.orThrow
-import com.kos.entities.EntityResolver
+import com.kos.entities.domain.Entity
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.GuildRoster
-import com.kos.entities.domain.ResolvedEntities
+import com.kos.entities.domain.InsertEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.repository.EntitiesRepository
 import com.kos.views.Game
 
 class WowHardcoreGuildResolver(
+    override val entitiesRepository: EntitiesRepository,
     private val blizzardClient: BlizzardClient,
     private val characterResolver: WowHardcoreEntityResolver
-) : EntityResolver {
+) : GuildResolver<WowGuild, WowEntityRequest> {
     companion object {
         private const val MIN_MEMBER_LEVEL = 10
     }
 
-    override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
-        val guildReq = requested.first() as WowEntityRequest
-        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
+    override val game = Game.WOW_HC
 
-        return characterResolver.resolve(members).copy(guild = payload(guildRoster, guildReq))
+    override suspend fun resolveGuild(guild: EntityRequest): GuildWithRoster<WowGuild, WowEntityRequest> {
+        val guildReq = guild as WowEntityRequest
+        val (guildRoster, members) = resolveRoster(guildReq.region, guildReq.realm, guildReq.name)
+        return GuildWithRoster(payload(guildRoster, guildReq), members)
     }
 
-    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): GuildPayload =
-        GuildPayload(
+    override suspend fun resolveRoster(newMembers: List<WowEntityRequest>): List<InsertEntityRequest> =
+        characterResolver.resolve(newMembers).entities.map { (request, _) -> request }
+
+    override fun hasGuildMemberChanged(member: WowEntityRequest, tracked: Entity): Boolean = false
+
+    private fun payload(guildRoster: GuildRoster, guild: WowEntityRequest): WowGuild =
+        WowGuild(
             name = guild.name,
             realm = guild.realm,
             region = guild.region,

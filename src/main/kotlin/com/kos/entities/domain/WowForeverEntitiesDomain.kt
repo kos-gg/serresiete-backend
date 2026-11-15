@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 @SerialName("wow_forever")
 data class WowForeverEntityRequest(
     override val name: String,
-    val surname: String,
+    val surname: String = "",
     val region: String,
     val blizzardId: Long? = null,
     override val alias: String? = null
@@ -60,4 +60,15 @@ data class WowForeverCharacter(
     val experience: Int,
     val ruleset: String,
     val lastLogin: OffsetDateTime
+)
+
+data class WowForeverGuildRoster(
+    val guildId: Long,
+    val members: List<WowForeverGuildMember>
+)
+
+data class WowForeverGuildMember(
+    val id: Long,
+    val name: String,
+    val surname: String
 )

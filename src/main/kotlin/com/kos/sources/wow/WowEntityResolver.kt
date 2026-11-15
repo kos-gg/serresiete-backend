@@ -28,7 +28,7 @@ class WowEntityResolver(
 ) : EntityResolver, WithLogger("WowEntityResolver") {
 
     override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
-        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW)
+        val (newRequests, existing) = repo.getCurrentAndNewEntities(requested, Game.WOW)
         val (entities, unchecked) = resolveCharacters(newRequests)
         return ResolvedEntities(
             entities = entities,

@@ -3,6 +3,7 @@ package acceptance.steps
 import acceptance.MockConfig
 import acceptance.ScenarioVariables
 import acceptance.SharedInfrastructure
+import acceptance.WowRosterMember
 import arrow.core.getOrElse
 import com.kos.auth.Authorization
 import com.kos.auth.repository.AuthDatabaseRepository
@@ -10,8 +11,12 @@ import com.kos.datacache.repository.DataCacheDatabaseRepository
 import com.kos.entities.domain.LolEnrichedEntityRequest
 import com.kos.entities.domain.LolEntity
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntity
+import com.kos.entities.domain.WowForeverEntityRequest
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
 import com.kos.entities.repository.EntitiesDatabaseRepository
-import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.tasks.Status
 import com.kos.tasks.Task
@@ -29,11 +34,12 @@ import io.cucumber.java.en.When
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 
 class TasksSteps(private val scenarioVariables: ScenarioVariables) {
 
@@ -46,7 +52,11 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
     private val wowGuildRealm = "Twisting-Nether"
     private val wowGuildRegion = "eu"
     private val wowGuildExistingMemberName = "Sanxei"
+    private val wowGuildExistingMemberBlizzardId = 201L
     private val wowGuildNewMemberName = "Newmember"
+    private val wowForeverGuildViewId = "forever-guild-view-id"
+    private val wowForeverRenamedMemberBlizzardId = 590617L
+    private val wowForeverDepartedMemberBlizzardId = 1L
 
     @And("an expired token exists for {string} in the database")
     fun expiredTokenExistsForUser(username: String) {
@@ -143,7 +153,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = emptyList()
                 )
             )
-            guildsRepo.insertGuild(12345, guildName, realm, region, viewId, Game.WOW_HC)
+            guildsRepo.insertGuild(WowGuild(guildName, realm, region, 12345), viewId, Game.WOW_HC)
         }
     }
 
@@ -162,8 +172,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         val existingEntity = runBlocking {
             entitiesRepo.insert(
                 listOf(
-                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm),
-                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
+                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm, wowGuildExistingMemberBlizzardId),
+                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm, 203)
                 ), Game.WOW
             )
         }.first()
@@ -181,7 +191,7 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     viewEntities = listOf(ViewEntity(existingEntity.id, wowGuildViewId, null))
                 )
             )
-            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(WowGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
         }
     }
 
@@ -191,8 +201,8 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
         val existingEntity = runBlocking {
             entitiesRepo.insert(
                 listOf(
-                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm),
-                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm)
+                    WowEntityRequest(wowGuildExistingMemberName, wowGuildRegion, wowGuildRealm, wowGuildExistingMemberBlizzardId),
+                    WowEntityRequest("Kakarona", wowGuildRegion, wowGuildRealm, 203)
                 ), Game.WOW
             )
         }.first()
@@ -216,16 +226,61 @@ class TasksSteps(private val scenarioVariables: ScenarioVariables) {
                     )
                 )
             )
-            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId, Game.WOW)
-            guildsRepo.insertGuild(12345, wowGuildName, wowGuildRealm, wowGuildRegion, wowGuildViewId2, Game.WOW)
+            guildsRepo.insertGuild(WowGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId, Game.WOW)
+            guildsRepo.insertGuild(WowGuild(wowGuildName, wowGuildRealm, wowGuildRegion, 12345), wowGuildViewId2, Game.WOW)
+        }
+    }
+
+    @And("a WOW_FOREVER guild view tracks {string} with a renamed member and a member who left the guild")
+    fun wowForeverGuildViewWithRenamedAndDepartedMembers(guildName: String) {
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val guildsRepo = WowGuildsDatabaseRepository(db)
+        runBlocking {
+            val tracked = entitiesRepo.insert(
+                listOf(
+                    WowForeverEntityRequest("oldname", "oldsurname", "eu", wowForeverRenamedMemberBlizzardId),
+                    WowForeverEntityRequest("sanxei", "fuera", "eu", wowForeverDepartedMemberBlizzardId)
+                ),
+                Game.WOW_FOREVER
+            )
+            viewsRepo.withState(
+                ViewsState(
+                    views = listOf(
+                        SimpleView(
+                            wowForeverGuildViewId, "Test View", "sanxei", false,
+                            tracked.map { it.id }, Game.WOW_FOREVER, false
+                        )
+                    ),
+                    viewEntities = tracked.map { ViewEntity(it.id, wowForeverGuildViewId, null) }
+                )
+            )
+            guildsRepo.insertGuild(WowForeverGuild(guildName, "eu", 104078), wowForeverGuildViewId, Game.WOW_FOREVER)
+        }
+    }
+
+    @Then("the WOW_FOREVER guild view has the {int} roster members, the renamed one renamed in place and not the one who left")
+    fun wowForeverGuildViewHasCurrentRoster(members: Int) {
+        val viewsRepo = ViewsDatabaseRepository(db)
+        val entitiesRepo = EntitiesDatabaseRepository(db)
+        runBlocking {
+            val viewMembers = viewsRepo.get(wowForeverGuildViewId)!!.entitiesIds.toSet()
+            val tracked = entitiesRepo.get(Game.WOW_FOREVER).map { it as WowForeverEntity }
+            val renamed = tracked.single { it.blizzardId == wowForeverRenamedMemberBlizzardId }
+            val departed = tracked.single { it.blizzardId == wowForeverDepartedMemberBlizzardId }
+
+            assertEquals(members, viewMembers.size)
+            assertEquals("embo" to "zug", renamed.name to renamed.surname)
+            assertTrue(renamed.id in viewMembers)
+            assertFalse(departed.id in viewMembers)
         }
     }
 
     @And("the current roster is retrieved from the Blizzard API")
     fun theCurrentRosterIsRetrievedFromBlizzard() {
         MockConfig.wowGuildRosterMembers = listOf(
-            wowGuildExistingMemberName to 90,
-            wowGuildNewMemberName to 90
+            WowRosterMember(wowGuildExistingMemberName, 90, wowGuildExistingMemberBlizzardId),
+            WowRosterMember(wowGuildNewMemberName, 90, 202)
         )
     }
 

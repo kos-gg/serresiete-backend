@@ -304,7 +304,7 @@ abstract class ViewsRepositoryTest {
                             it.toString(),
                             it.toString(),
                             it.toString(),
-                            null
+                            it.toLong()
                         )
                     },
                     wowHardcoreEntities = listOf(),
@@ -371,7 +371,7 @@ abstract class ViewsRepositoryTest {
                             it.toString(),
                             it.toString(),
                             it.toString(),
-                            null
+                            it.toLong()
                         )
                     },
                     wowHardcoreEntities = listOf(),

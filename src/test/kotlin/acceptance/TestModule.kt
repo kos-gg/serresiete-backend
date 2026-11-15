@@ -1,5 +1,7 @@
 package acceptance
 
+import com.kos.entities.guilds.repository.WowGuildsDatabaseRepository
+import com.kos.entities.guilds.GuildUpdater
 import com.kos.activities.ActivitiesController
 import com.kos.activities.ActivitiesService
 import com.kos.activities.repository.ActivitiesDatabaseRepository
@@ -25,7 +27,6 @@ import com.kos.entities.EntitiesController
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.repository.EntitiesDatabaseRepository
-import com.kos.entities.repository.wowguilds.WowGuildsDatabaseRepository
 import com.kos.entities.sync.EntitySynchronizerProvider
 import com.kos.entities.sync.SyncBudget
 import com.kos.entities.sync.SyncEntitySelector
@@ -51,13 +52,13 @@ import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowEntitySynchronizer
 import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowexpansion.repository.WowExpansionDatabaseRepository
 import com.kos.sources.wow.staticdata.wowseason.WowSeasonService
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowforever.WowForeverEntityResolver
 import com.kos.sources.wowforever.WowForeverEntitySynchronizer
+import com.kos.sources.wowforever.WowForeverGuildResolver
 import com.kos.sources.wowforever.media.WowForeverMediaDatabaseRepository
 import com.kos.sources.wowhc.WowHardcoreEntitySynchronizer
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
@@ -135,16 +136,18 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
     val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
     val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, seasonRepository)
     val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-    val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+    val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
     val lolResolver = LolEntityResolver(entitiesRepository, riotHttpClient)
     val wowForeverResolver = WowForeverEntityResolver(entitiesRepository, blizzardClient)
+    val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
     val entityResolverProvider = EntityResolverProvider(
         wowResolver = wowResolver,
         wowGuildResolver = wowGuildResolver,
         wowHardcoreResolver = wowHardcoreResolver,
         wowHardcoreGuildResolver = wowHardcoreGuildResolver,
         lolResolver = lolResolver,
-        wowForeverResolver = wowForeverResolver
+        wowForeverResolver = wowForeverResolver,
+        wowForeverGuildResolver = wowForeverGuildResolver
     )
 
     val lolUpdater = LolEntityUpdater(riotHttpClient, entitiesRepository)
@@ -174,7 +177,8 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
 
     val wowHardcoreGuildUpdater =
         WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
-    val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+    val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+    val wowForeverGuildUpdater = GuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
     val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsDatabaseRepository,
@@ -182,7 +186,9 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
         wowGuildResolver,
         lolUpdater,
         wowHardcoreGuildUpdater,
-        wowGuildUpdater
+        wowGuildUpdater,
+        wowForeverGuildResolver,
+        wowForeverGuildUpdater
     )
     val entitiesController = EntitiesController(dataCacheService, entitiesService)
 
@@ -216,6 +222,7 @@ fun Application.testModule(db: Database, jwtConfig: JWTConfig): TestSubscription
             CacheClearTaskRunner(dataCacheService),
             UpdateWowHardcoreGuildsTaskRunner(entitiesService),
             UpdateWowGuildsTaskRunner(entitiesService),
+            UpdateWowForeverGuildsTaskRunner(entitiesService),
             UpdateMythicPlusSeasonTaskRunner(wowSeasonService),
             CacheGameDataTaskRunner(
                 Game.LOL,

@@ -26,15 +26,19 @@ import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntitiesTestHelper.gigaLolCharacterRequestList
 import com.kos.entities.EntitiesTestHelper.gigaLolEntityList
 import com.kos.entities.domain.*
+import com.kos.entities.guilds.GuildExistsResponse
+import com.kos.entities.guilds.GuildUpdater
+import com.kos.entities.guilds.WowForeverGuild
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
 import com.kos.sources.wow.WowGuildResolver
-import com.kos.sources.wow.WowGuildUpdater
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
+import com.kos.sources.wowforever.WowForeverGuildResolver
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
@@ -558,10 +562,10 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             result.onLeft { fail() }.onRight { res ->
-                assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                assertEquals(WowGuild("method", "twisting-nether", "eu", 999), res.guild)
             }
         }
     }
@@ -570,12 +574,12 @@ class EntitiesServiceTest {
     fun `guildExists returns a tracked guild without asking blizzard`() {
         runBlocking {
             val entitiesService = createService(emptyEntitiesState)
-            entitiesService.insertGuild(GuildPayload("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+            entitiesService.insertGuild(WowGuild("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             result.onLeft { fail() }.onRight { res ->
-                assertEquals(GuildPayload("method", "twisting-nether", "eu", 999), res.guild)
+                assertEquals(WowGuild("method", "twisting-nether", "eu", 999), res.guild)
             }
             verifyNoInteractions(blizzardClient)
         }
@@ -589,7 +593,7 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             result.onLeft { fail() }.onRight { res ->
                 assertEquals(null, res.guild)
@@ -605,9 +609,64 @@ class EntitiesServiceTest {
 
             val entitiesService = createService(emptyEntitiesState)
 
-            val result = entitiesService.guildExists("Method", "eu", "twisting-nether")
+            val result = entitiesService.wowGuildExists("Method", "eu", "twisting-nether")
 
             assertEquals(Either.Left(ThirdPartyUnavailable), result)
+        }
+    }
+
+    @Test
+    fun `guildExists checks a wow forever guild in the forever roster`() {
+        runBlocking {
+            `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab"))
+                .thenReturn(Either.Right(WowForeverGuildRoster(104078, listOf())))
+
+            val entitiesService = createService(emptyEntitiesState)
+
+            val result = entitiesService.wowForeverGuildExists("tsalab", "eu")
+
+            assertEquals(Either.Right(GuildExistsResponse(WowForeverGuild("tsalab", "eu", 104078))), result)
+        }
+    }
+
+    @Test
+    fun `guildExists returns a tracked wow forever guild without asking blizzard`() {
+        runBlocking {
+            val entitiesService = createService(emptyEntitiesState)
+            entitiesService.insertGuild(WowForeverGuild("tsalab", "eu", 104078), "view-1", Game.WOW_FOREVER)
+
+            val result = entitiesService.wowForeverGuildExists("tsalab", "eu")
+
+            assertEquals(Either.Right(GuildExistsResponse(WowForeverGuild("tsalab", "eu", 104078))), result)
+            verifyNoInteractions(blizzardClient)
+        }
+    }
+
+    @Test
+    fun `guildExists doesn't confuse a tracked retail guild with a wow forever guild of the same name`() {
+        runBlocking {
+            `when`(blizzardClient.getForeverGuildRoster("eu", "method")).thenReturn(Either.Left(NotFound))
+            val entitiesService = createService(emptyEntitiesState)
+            entitiesService.insertGuild(WowGuild("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+
+            val result = entitiesService.wowForeverGuildExists("method", "eu")
+
+            assertEquals(Either.Right(GuildExistsResponse(null)), result)
+        }
+    }
+
+    @Test
+    fun `updateWowForeverGuilds only updates guilds tracked for wow forever`() {
+        runBlocking {
+            `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab"))
+                .thenReturn(Either.Right(WowForeverGuildRoster(104078, listOf())))
+            val entitiesService = createService(emptyEntitiesState)
+            entitiesService.insertGuild(WowGuild("method", "twisting-nether", "eu", 999), "view-1", Game.WOW)
+            entitiesService.insertGuild(WowForeverGuild("tsalab", "eu", 104078), "view-2", Game.WOW_FOREVER)
+
+            assertEquals(listOf(), entitiesService.updateWowForeverGuilds())
+            verify(blizzardClient).getForeverGuildRoster("eu", "tsalab")
+            verifyNoMoreInteractions(blizzardClient)
         }
     }
 
@@ -619,8 +678,9 @@ class EntitiesServiceTest {
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
         val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
+        val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
 
         val entitiesResolverProvider = EntityResolverProvider(
             wowResolver = wowResolver,
@@ -628,13 +688,14 @@ class EntitiesServiceTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = wowForeverGuildResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater =
             WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         return EntitiesService(
             entitiesRepository,
@@ -643,13 +704,14 @@ class EntitiesServiceTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            wowForeverGuildResolver,
+            GuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
         )
     }
 
     private fun assertResolvedEntities(expected: ResolvedEntities, actual: ResolvedEntities) {
         assertEquals(expected.entities.size, actual.entities.size)
         assertEquals(expected.existing, actual.existing)
-        assertEquals(expected.guild, actual.guild)
     }
 }

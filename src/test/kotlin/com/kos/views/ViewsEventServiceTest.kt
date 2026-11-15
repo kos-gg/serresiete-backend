@@ -1,5 +1,10 @@
 package com.kos.views
 
+import com.kos.entities.guilds.repository.WowGuildsState
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.Guild
+import com.kos.entities.guilds.GuildUpdater
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
 import com.kos.datacache.BlizzardMockHelper
@@ -12,18 +17,19 @@ import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.EntitiesTestHelper.basicWowEntity2
 import com.kos.entities.EntitiesTestHelper.emptyEntitiesState
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.LolEntityRequest
 import com.kos.entities.domain.WowEntityRequest
+import com.kos.entities.domain.WowForeverEntity
+import com.kos.entities.domain.WowForeverEntityRequest
+import com.kos.entities.domain.WowForeverGuildMember
+import com.kos.entities.domain.WowForeverGuildRoster
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.entities.repository.EntitiesState
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.eventsourcing.events.*
 import com.kos.sources.lol.LolEntityResolver
 import com.kos.sources.lol.LolEntityUpdater
 import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wow.WowGuildUpdater
+import com.kos.sources.wowforever.WowForeverGuildResolver
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.ViewsTestHelper.basicSimpleLolView
@@ -34,15 +40,17 @@ import com.kos.views.ViewsTestHelper.owner
 import com.kos.views.ViewsTestHelper.published
 import com.kos.views.repository.ViewsInMemoryRepository
 import com.kos.views.repository.ViewsState
-import io.mockk.InternalPlatformDsl.toStr
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.mockito.Mockito.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
 import com.kos.sources.wow.WowGuildResolver
 import com.kos.sources.wowhc.WowHardcoreGuildResolver
 import com.kos.sources.wow.staticdata.wowseason.repository.WowSeasonInMemoryRepository
@@ -90,7 +98,7 @@ class ViewsEventServiceTest {
                     ),
                     EntitiesState(listOf(basicWowEntity), listOf(), listOf()),
                     wowGuildsState = listOf(
-                        Triple(GuildPayload("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
+                        Triple(WowGuild("method", "twisting-nether", "eu", 999L), existingViewId, Game.WOW)
                     )
                 )
 
@@ -106,6 +114,66 @@ class ViewsEventServiceTest {
                 )
 
                 verifyNoInteractions(blizzardClient)
+            }
+        }
+
+        @Test
+        fun `creating a wow forever guild view tracks every roster member, reusing tracked ones by blizzard id`() {
+            runBlocking {
+                val guildExtraArguments = WowExtraArguments(isGuild = true)
+                val tracked = WowForeverEntity(10, "oldname", "oldsurname", "eu", 1)
+                `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab")).thenReturn(
+                    Either.Right(
+                        WowForeverGuildRoster(
+                            104078,
+                            listOf(WowForeverGuildMember(1, "Sanxei", "Zugzug"), WowForeverGuildMember(2, "Eredeth", "Why"))
+                        )
+                    )
+                )
+
+                val viewsEventService = createService(
+                    ViewsState(listOf(), listOf()),
+                    EntitiesState(listOf(), listOf(), listOf(), listOf(tracked))
+                )
+
+                val created = viewsEventService.createView(
+                    ViewToBeCreatedEvent(
+                        id, "TSALAB roster", published,
+                        listOf(WowForeverEntityRequest(name = "tsalab", region = "eu")),
+                        Game.WOW_FOREVER, owner, false, guildExtraArguments
+                    )
+                )
+
+                assertEquals(2, created.entities.size)
+                assertTrue(tracked.id in created.entities)
+                verify(blizzardClient, never()).getForeverProfile(any(), any(), any())
+            }
+        }
+
+        @Test
+        fun `creating a second view for an already-tracked wow forever guild reuses its entities without calling blizzard again`() {
+            runBlocking {
+                val guildExtraArguments = WowExtraArguments(isGuild = true)
+                val guildRequest = WowForeverEntityRequest(name = "tsalab", region = "eu")
+                `when`(blizzardClient.getForeverGuildRoster("eu", "tsalab")).thenReturn(
+                    Either.Right(WowForeverGuildRoster(104078, listOf(WowForeverGuildMember(1, "Sanxei", "Zugzug"))))
+                )
+
+                val viewsEventService = createService(ViewsState(listOf(), listOf()), emptyEntitiesState)
+
+                val first = viewsEventService.createView(
+                    ViewToBeCreatedEvent(
+                        "first", "TSALAB roster", published, listOf(guildRequest), Game.WOW_FOREVER, owner, false, guildExtraArguments
+                    )
+                )
+                val second = viewsEventService.createView(
+                    ViewToBeCreatedEvent(
+                        "second", "TSALAB roster copy", published, listOf(guildRequest), Game.WOW_FOREVER, owner, false, guildExtraArguments
+                    )
+                )
+
+                assertEquals(first.entities, second.entities)
+                verify(blizzardClient, times(1)).getForeverGuildRoster("eu", "tsalab")
             }
         }
     }
@@ -290,7 +358,7 @@ class ViewsEventServiceTest {
     private suspend fun createService(
         viewsState: ViewsState,
         entitiesState: EntitiesState,
-        wowGuildsState: List<Triple<GuildPayload, String, Game>> = listOf(),
+        wowGuildsState: List<Triple<Guild, String, Game>> = listOf(),
     ): ViewsEventService {
         val viewsRepository = ViewsInMemoryRepository()
             .withState(viewsState)
@@ -303,8 +371,9 @@ class ViewsEventServiceTest {
         val wowResolver = WowEntityResolver(entitiesRepository, blizzardClient)
         val wowGuildResolver = WowGuildResolver(entitiesRepository, blizzardClient, WowSeasonInMemoryRepository())
         val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+        val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
         val lolResolver = LolEntityResolver(entitiesRepository, riotClient)
+        val wowForeverGuildResolver = WowForeverGuildResolver(entitiesRepository, blizzardClient)
 
         val entitiesResolver = EntityResolverProvider(
             wowResolver = wowResolver,
@@ -312,12 +381,13 @@ class ViewsEventServiceTest {
             wowHardcoreResolver = wowHardcoreResolver,
             wowHardcoreGuildResolver = wowHardcoreGuildResolver,
             lolResolver = lolResolver,
-            wowForeverResolver = mock()
+            wowForeverResolver = mock(),
+            wowForeverGuildResolver = wowForeverGuildResolver
         )
 
         val lolUpdater = LolEntityUpdater(riotClient, entitiesRepository)
         val wowHardcoreGuildUpdater = WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository)
-        val wowGuildUpdater = WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+        val wowGuildUpdater = GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
 
         val entitiesService = EntitiesService(
             entitiesRepository,
@@ -326,7 +396,9 @@ class ViewsEventServiceTest {
             wowGuildResolver,
             lolUpdater,
             wowHardcoreGuildUpdater,
-            wowGuildUpdater
+            wowGuildUpdater,
+            wowForeverGuildResolver,
+            GuildUpdater(wowForeverGuildResolver, entitiesRepository, viewsRepository)
         )
 
         return ViewsEventService(viewsRepository, entitiesService)

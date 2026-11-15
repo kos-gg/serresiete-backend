@@ -26,7 +26,7 @@ class WowHardcoreEntityResolver(
 ) : EntityResolver, WithLogger("WowHardcoreResolver") {
 
     override suspend fun resolve(requested: List<EntityRequest>): ResolvedEntities {
-        val (existing, newRequests) = repo.getCurrentAndNewEntities(requested, Game.WOW_HC)
+        val (newRequests, existing) = repo.getCurrentAndNewEntities(requested, Game.WOW_HC)
 
         val (unchecked, checked) = newRequests.asFlow()
             .parMapUnordered(10) { req -> resolveCharacter(req as WowEntityRequest) }

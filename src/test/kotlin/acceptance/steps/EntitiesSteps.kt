@@ -38,7 +38,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val dataCacheRepo = DataCacheDatabaseRepository(db)
 
         val entity = runBlocking {
-            entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
+            entitiesRepo.insert(listOf(storedWowEntityRequest(resolvedGame, name, realm, region)), resolvedGame)
         }.first()
 
         val data = javaClass.getResourceAsStream("/acceptance/files/entity/$jsonFile.json")!!
@@ -55,7 +55,7 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
         val resolvedGame = game.toGame()
         val entitiesRepo = EntitiesDatabaseRepository(db)
         runBlocking {
-            entitiesRepo.insert(listOf(wowEntityRequest(name, realm, region)), resolvedGame)
+            entitiesRepo.insert(listOf(storedWowEntityRequest(resolvedGame, name, realm, region)), resolvedGame)
         }
     }
 
@@ -221,6 +221,22 @@ class EntitiesSteps(private val scenarioVariables: ScenarioVariables) {
             put("name", name)
             put("realm", realm)
             put("region", region)
+        }
+        scenarioVariables.response = runBlocking {
+            client.post("/api/entities/exists/guild") {
+                contentType(ContentType.Application.Json)
+                scenarioVariables.token?.let { bearerAuth(it) }
+                setBody(requestBody.toString())
+            }
+        }
+    }
+
+    @When("they check existence of WOW_FOREVER guild {string} region {string}")
+    fun checkWowForeverGuildExists(name: String, region: String) {
+        val requestBody = buildJsonObject {
+            put("name", name)
+            put("region", region)
+            put("game", Game.WOW_FOREVER.name)
         }
         scenarioVariables.response = runBlocking {
             client.post("/api/entities/exists/guild") {

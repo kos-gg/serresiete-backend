@@ -12,6 +12,7 @@ import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.datacache.domain.ClassSpec
 import com.kos.datacache.domain.RunDetails
 import com.kos.datacache.domain.RunMember
+import com.kos.datacache.domain.WowForeverPvp
 import com.kos.datacache.domain.WowForeverSpecialization
 import com.kos.datacache.domain.WowForeverTalent
 import com.kos.datacache.domain.WowPrice
@@ -23,6 +24,7 @@ import com.kos.datacache.domain.WowWeaponDisplayableStats
 import com.kos.entities.EntitiesTestHelper.basicWowEntity
 import com.kos.entities.domain.WowCharacter
 import com.kos.entities.domain.WowForeverCharacter
+import com.kos.entities.domain.WowForeverGuildMember
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -32,6 +34,8 @@ import com.kos.sources.wowforever.WowForeverEquippedItem
 import com.kos.sources.wowhc.WowEquippedItemRef
 import com.kos.sources.wowhc.WowItemDetails
 import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -273,6 +277,64 @@ class BlizzardHttpClientTest {
     }
 
     @Test
+    fun `getForeverGuildRoster fetches every member of the guild from the forever namespace`() = runBlocking {
+        givenAValidToken()
+
+        val result = blizzardClient.getForeverGuildRoster("eu", "TSALAB")
+
+        assertEquals(Either.Right(104078L), result.map { it.guildId })
+        assertEquals(Either.Right(32), result.map { it.members.size })
+        assertEquals(
+            Either.Right(true),
+            result.map {
+                it.members.containsAll(
+                    listOf(
+                        WowForeverGuildMember(10613158, "Sanxei", "Zugzug"),
+                        WowForeverGuildMember(11318652, "Eredeth", "Why"),
+                        WowForeverGuildMember(18285263, "Smårips", "Balast")
+                    )
+                )
+            }
+        )
+    }
+
+    @Test
+    fun `getForeverGuildRoster returns not found when blizzard doesn't find the guild`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverGuildRoster("eu", "unknown"))
+    }
+
+    private suspend fun requestedUrl(call: suspend BlizzardHttpClient.() -> Unit): Url {
+        givenAValidToken()
+        val engine = MockEngine { respond("", HttpStatusCode.NotFound) }
+        BlizzardHttpClient(HttpClient(engine) { blizzardHttpClientConfig(RetryConfig(0, 0), blizzardAuthClient) }).call()
+        return engine.requestHistory.single().url
+    }
+
+    @Test
+    fun `a guild name can't change the path or the query of the forever roster request`() = runBlocking {
+        val url = requestedUrl { getForeverGuildRoster("eu", "tsalab/../profile?namespace=evil#x") }
+
+        assertEquals("/data/wow/guild/tsalab%2f..%2fprofile%3fnamespace%3devil%23x/roster", url.encodedPath)
+        assertEquals(listOf("locale"), url.parameters.names().toList())
+    }
+
+    @Test
+    fun `a guild name with spaces is sent as a slug`() = runBlocking {
+        val url = requestedUrl { getForeverGuildRoster("eu", " los   del sur ") }
+
+        assertEquals("/data/wow/guild/los-del-sur/roster", url.encodedPath)
+    }
+
+    @Test
+    fun `a realm can't change the path of the retail guild roster request`() = runBlocking {
+        val url = requestedUrl { getRetailGuildRoster("eu", "../../profile", "method") }
+
+        assertEquals("/data/wow/guild/..%2f..%2fprofile/method/roster", url.encodedPath)
+    }
+
+    @Test
     fun `getForeverProfile returns not found when blizzard doesn't find the character`() = runBlocking {
         givenAValidToken()
 
@@ -460,6 +522,23 @@ class BlizzardHttpClientTest {
         givenAValidToken()
 
         assertEquals(Either.Left(NotFound), blizzardClient.getForeverAvatar("eu", "unknown", "tarde"))
+    }
+
+    @Test
+    fun `getForeverPvpSummary maps the honorable kills and the rank`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(
+            Either.Right(WowForeverPvp(honorableKills = 20, rank = 0)),
+            blizzardClient.getForeverPvpSummary("eu", "Siempre", "Tarde")
+        )
+    }
+
+    @Test
+    fun `getForeverPvpSummary returns not found when blizzard doesn't find the character`() = runBlocking {
+        givenAValidToken()
+
+        assertEquals(Either.Left(NotFound), blizzardClient.getForeverPvpSummary("eu", "unknown", "tarde"))
     }
 
     @Test

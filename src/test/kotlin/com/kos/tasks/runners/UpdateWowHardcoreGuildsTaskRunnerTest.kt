@@ -1,5 +1,8 @@
 package com.kos.tasks.runners
 
+import com.kos.entities.guilds.repository.WowGuildsState
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.WowGuild
 import com.kos.tasks.TaskCompleted
 import arrow.core.Either
 import com.kos.clients.blizzard.BlizzardClient
@@ -10,10 +13,7 @@ import com.kos.clients.domain.*
 import com.kos.datacache.BlizzardMockHelper.getWowCharacterResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wowhc.WowHardcoreEntityResolver
 import com.kos.sources.wowhc.WowHardcoreGuildUpdater
 import com.kos.views.Game
@@ -33,14 +33,16 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
     private val wowGuildsRepository = WowGuildsInMemoryRepository()
     private val viewsRepository = ViewsInMemoryRepository()
     private val wowHardcoreResolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
-    private val wowHardcoreGuildResolver = WowHardcoreGuildResolver(blizzardClient, wowHardcoreResolver)
+    private val wowHardcoreGuildResolver = WowHardcoreGuildResolver(entitiesRepository, blizzardClient, wowHardcoreResolver)
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
-        EntityResolverProvider(wowResolver = mock(), wowGuildResolver = mock(), wowHardcoreResolver = wowHardcoreResolver, wowHardcoreGuildResolver = wowHardcoreGuildResolver, lolResolver = mock(), wowForeverResolver = mock()),
+        EntityResolverProvider(wowResolver = mock(), wowGuildResolver = mock(), wowHardcoreResolver = wowHardcoreResolver, wowHardcoreGuildResolver = wowHardcoreGuildResolver, lolResolver = mock(), wowForeverResolver = mock(), wowForeverGuildResolver = mock()),
         mock(),
         mock(),
         WowHardcoreGuildUpdater(wowHardcoreGuildResolver, wowHardcoreResolver, entitiesRepository, viewsRepository),
+        mock(),
+        mock(),
         mock()
     )
     private val runner = UpdateWowHardcoreGuildsTaskRunner(entitiesService)
@@ -54,7 +56,7 @@ class UpdateWowHardcoreGuildsTaskRunnerTest {
         val character = "Surmana"
 
         wowGuildsRepository.withState(
-            WowGuildsState(listOf(Triple(GuildPayload(guild, realm, region, blizzardId), "1", Game.WOW_HC)))
+            WowGuildsState(listOf(Triple(WowGuild(guild, realm, region, blizzardId), "1", Game.WOW_HC)))
         )
         `when`(blizzardClient.getHardcoreGuildRoster(region, realm, guild))
             .thenReturn(

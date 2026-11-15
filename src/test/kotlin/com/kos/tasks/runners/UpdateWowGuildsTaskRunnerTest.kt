@@ -1,5 +1,9 @@
 package com.kos.tasks.runners
 
+import com.kos.entities.guilds.repository.WowGuildsState
+import com.kos.entities.guilds.repository.WowGuildsInMemoryRepository
+import com.kos.entities.guilds.WowGuild
+import com.kos.entities.guilds.GuildUpdater
 import com.kos.tasks.TaskCompleted
 import com.kos.sources.wow.MythicKeystoneProfile
 import arrow.core.Either
@@ -12,13 +16,9 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.entities.EntitiesService
 import com.kos.entities.EntityResolverProvider
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsInMemoryRepository
-import com.kos.entities.repository.wowguilds.WowGuildsState
 import com.kos.sources.wow.WowEntityResolver
-import com.kos.sources.wow.WowGuildUpdater
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -44,11 +44,13 @@ class UpdateWowGuildsTaskRunnerTest {
     private val entitiesService = EntitiesService(
         entitiesRepository,
         wowGuildsRepository,
-        EntityResolverProvider(wowResolver = wowResolver, wowGuildResolver = wowGuildResolver, wowHardcoreResolver = mock(), wowHardcoreGuildResolver = mock(), lolResolver = mock(), wowForeverResolver = mock()),
+        EntityResolverProvider(wowResolver = wowResolver, wowGuildResolver = wowGuildResolver, wowHardcoreResolver = mock(), wowHardcoreGuildResolver = mock(), lolResolver = mock(), wowForeverResolver = mock(), wowForeverGuildResolver = mock()),
         wowGuildResolver,
         mock(),
         mock(),
-        WowGuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository)
+        GuildUpdater(wowGuildResolver, entitiesRepository, viewsRepository),
+        mock(),
+        mock()
     )
     private val runner = UpdateWowGuildsTaskRunner(entitiesService)
 
@@ -63,14 +65,14 @@ class UpdateWowGuildsTaskRunnerTest {
 
         viewsRepository.create(viewId, "guild view", "sanxei", listOf(), Game.WOW, false, null)
         wowGuildsRepository.withState(
-            WowGuildsState(listOf(Triple(GuildPayload(guild, realm, region, blizzardId), viewId, Game.WOW)))
+            WowGuildsState(listOf(Triple(WowGuild(guild, realm, region, blizzardId), viewId, Game.WOW)))
         )
 
         `when`(blizzardClient.getRetailGuildRoster(region, realm, guild))
             .thenReturn(
                 Either.Right(
                     GetWowRosterResponse(
-                        listOf(WowMemberResponse(WowCharacterResponse(character, 90))),
+                        listOf(WowMemberResponse(WowCharacterResponse(character, 90, 1))),
                         WowGuildResponse(blizzardId)
                     ).toGuildRoster()
                 )

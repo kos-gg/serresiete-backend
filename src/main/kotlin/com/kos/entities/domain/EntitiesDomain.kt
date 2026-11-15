@@ -3,10 +3,7 @@ package com.kos.entities.domain
 import com.kos.datacache.domain.Data
 import com.kos.eventsourcing.events.Operation
 import com.kos.views.Game
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -51,6 +48,10 @@ fun EntityRequest.hasValidRegion(): Boolean = when (this) {
     is LolEntityRequest -> true
 }
 
+fun EntityRequest.missesSurname(): Boolean = this is WowForeverEntityRequest && surname.isBlank()
+
+fun EntityRequest.hasSurname(): Boolean = this is WowForeverEntityRequest && surname.isNotBlank()
+
 fun EntityRequest.normalized(): EntityRequest = when (this) {
     is WowEntityRequest -> copy(name = name.lowercase())
     is WowForeverEntityRequest -> copy(name = name.lowercase(), surname = surname.lowercase())
@@ -92,33 +93,10 @@ data class EntitiesExistResponse(
     val unchecked: List<EntityResponse>
 )
 
-@Serializable
-data class GuildPayload(
-    val name: String,
-    val realm: String,
-    val region: String,
-    val blizzardId: Long
-)
-
-@Serializable
-data class GuildExistsRequest(
-    val name: String,
-    val region: String,
-    val realm: String
-)
-
-fun GuildExistsRequest.normalized(): GuildExistsRequest = copy(name = name.lowercase())
-
-@Serializable
-data class GuildExistsResponse(
-    val guild: GuildPayload?
-)
-
 data class ResolvedEntities(
     val entities: List<Pair<InsertEntityRequest, String?>>,
     val existing: List<Pair<Entity, String?>>,
     val unchecked: List<EntityRequest> = emptyList(),
-    val guild: GuildPayload? = null,
 )
 
 class WithAliasSerializer<T>(private val valueSerializer: KSerializer<T>) : KSerializer<WithAlias<T>> {
@@ -164,7 +142,11 @@ object EntityResponseSerializer : KSerializer<EntityResponse> {
         val jsonObject = jsonDecoder.decodeJsonElement().jsonObject
 
         return when {
-            "surname" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(WowForeverEntityResponse.serializer(), jsonObject)
+            "surname" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(
+                WowForeverEntityResponse.serializer(),
+                jsonObject
+            )
+
             "region" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(WowEntityResponse.serializer(), jsonObject)
             "tag" in jsonObject -> jsonDecoder.json.decodeFromJsonElement(LolEntityResponse.serializer(), jsonObject)
             else -> throw SerializationException("Cannot determine EntityResponse subtype from $jsonObject")

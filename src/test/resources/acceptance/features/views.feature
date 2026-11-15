@@ -27,7 +27,23 @@ Feature: Views
     And the views subscription processes pending events
     And they create a second WOW guild view for "Method"
     And the views subscription processes pending events
-    Then both WOW guild views have the same entities
+    Then both guild views have the same entities
+
+  Scenario: User can create a WOW_FOREVER guild view from the guild roster
+    When they create a WOW_FOREVER guild view for "TSALAB"
+    And the views subscription processes pending events
+    Then the WOW_FOREVER guild view has 32 members and guild "TSALAB" is tracked without realm
+
+  Scenario: Creating a second view for an already-tracked WOW_FOREVER guild reuses its members
+    When they create a WOW_FOREVER guild view for "TSALAB"
+    And the views subscription processes pending events
+    And they create a second WOW_FOREVER guild view for "TSALAB"
+    And the views subscription processes pending events
+    Then both guild views have the same entities
+
+  Scenario: Creating a WOW_FOREVER guild view with a surname is rejected
+    When they create a WOW_FOREVER guild view for "TSALAB" with surname "zugzug"
+    Then the response status is 400
 
   Scenario: User can get their view by id
     When they create a "LOL" view

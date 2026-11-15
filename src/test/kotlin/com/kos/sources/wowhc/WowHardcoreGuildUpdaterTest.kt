@@ -1,5 +1,6 @@
 package com.kos.sources.wowhc
 
+import com.kos.entities.guilds.WowGuild
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -14,7 +15,6 @@ import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
 import com.kos.entities.GuildUpdateFailed
 import com.kos.entities.domain.EntityRequest
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import com.kos.views.Game
 import com.kos.views.repository.ViewsInMemoryRepository
@@ -30,7 +30,7 @@ class WowHardcoreGuildUpdaterTest {
     private val viewsRepository = ViewsInMemoryRepository()
     private val resolver = WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     private val updater = WowHardcoreGuildUpdater(
-        WowHardcoreGuildResolver(blizzardClient, resolver),
+        WowHardcoreGuildResolver(entitiesRepository, blizzardClient, resolver),
         resolver,
         entitiesRepository,
         viewsRepository
@@ -49,7 +49,7 @@ class WowHardcoreGuildUpdaterTest {
         runBlocking {
             val brokenViewId = createGuildView("broken-guild-view")
             val healthyViewId = createGuildView("healthy-guild-view")
-            val brokenGuild = GuildPayload("BrokenGuild", realm, region, 1L)
+            val brokenGuild = WowGuild("BrokenGuild", realm, region, 1L)
             val brokenGuildError = TimeoutError("Request timeout has expired")
 
             `when`(blizzardClient.getHardcoreGuildRoster(region, realm, "BrokenGuild"))
@@ -69,7 +69,7 @@ class WowHardcoreGuildUpdaterTest {
             val errors = updater.update(
                 listOf(
                     brokenGuild to brokenViewId,
-                    GuildPayload("HealthyGuild", realm, region, 2L) to healthyViewId
+                    WowGuild("HealthyGuild", realm, region, 2L) to healthyViewId
                 )
             )
 

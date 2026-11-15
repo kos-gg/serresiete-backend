@@ -11,7 +11,9 @@ import com.kos.datacache.DataCacheService
 import com.kos.datacache.domain.Data
 import com.kos.entities.EntitiesService
 import com.kos.entities.domain.EntityRequest
+import com.kos.entities.domain.hasSurname
 import com.kos.entities.domain.hasValidRegion
+import com.kos.entities.domain.missesSurname
 import com.kos.entities.domain.EntityWithAlias
 import com.kos.entities.domain.belongsTo
 import com.kos.eventsourcing.events.*
@@ -98,6 +100,7 @@ class ViewsService(
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
             ensureValidRegions(request.entities).bind()
+            ensureSurnames(request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -122,6 +125,7 @@ class ViewsService(
             ensureMaxNumberOfEntities(owner, request.entities).bind()
             ensureEntitiesMatchGame(request.entities, request.game).bind()
             ensureValidRegions(request.entities).bind()
+            ensureSurnames(request.entities).bind()
 
             val operationId = UUID.randomUUID().toString()
             val aggregateRoot = "/credentials/$owner"
@@ -208,18 +212,26 @@ class ViewsService(
         ensure(entities.orEmpty().all { it.hasValidRegion() }) { InvalidRegion }
     }
 
+    private fun ensureSurnames(entities: List<EntityRequest>?): Either<MissingSurname, Unit> = either {
+        ensure(entities.orEmpty().none { it.missesSurname() }) { MissingSurname }
+    }
+
     private fun ensureRequest(
         request: ViewRequest
     ): Either<CreateViewError, Unit> = either {
         request.extraArguments?.let { extra ->
             when (request.game) {
-                Game.WOW, Game.WOW_HC -> {
+                Game.WOW, Game.WOW_HC, Game.WOW_FOREVER -> {
                     ensure(extra is WowExtraArguments) { ExtraArgumentsWrongType }
                     if (extra.isGuild) ensure(request.entities.size == 1) { GuildViewMoreThanOneEntity }
                 }
 
-                Game.LOL, Game.WOW_FOREVER -> Unit
+                Game.LOL -> Unit
             }
         }
+
+        val isGuild = (request.extraArguments as? WowExtraArguments)?.isGuild == true
+        if (isGuild) ensure(request.entities.none { it.hasSurname() }) { GuildSurnameNotAllowed }
+        else ensureSurnames(request.entities).bind()
     }
 }

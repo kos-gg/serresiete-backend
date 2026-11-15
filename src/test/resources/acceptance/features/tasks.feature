@@ -74,6 +74,12 @@ Feature: Tasks
     Then both associated views are updated with the current roster
     And the task completes with status "SUCCESSFUL"
 
+  Scenario: UPDATE_WOW_FOREVER_GUILDS task syncs the view with the current guild roster
+    And a WOW_FOREVER guild view tracks "TSALAB" with a renamed member and a member who left the guild
+    When they run the "updateWowForeverGuilds" task
+    Then the task completes with status "SUCCESSFUL"
+    And the WOW_FOREVER guild view has the 32 roster members, the renamed one renamed in place and not the one who left
+
   Scenario: UPDATE_MYTHIC_PLUS_SEASON task updates mythic plus dungeons from current expansion
     And a current WOW season exists in the database
     When they run the "updateMythicPlusSeason" task

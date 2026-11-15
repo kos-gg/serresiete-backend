@@ -259,6 +259,14 @@ data class GetWowCharacterStatsResponse(
 data class AssetKeyValue(val key: String, val value: String)
 
 @Serializable
+data class GetWowForeverPvpSummaryResponse(
+    @SerialName("honorable_kills")
+    val honorableKills: Int,
+    @SerialName("pvp_rank")
+    val pvpRank: Int
+)
+
+@Serializable
 data class GetWowMediaResponse(
     val assets: List<AssetKeyValue>
 )
@@ -483,6 +491,24 @@ data class WowGuildResponse(
 @Serializable
 data class GetWowRosterResponse(
     val members: List<WowMemberResponse>,
+    val guild: WowGuildResponse
+)
+
+@Serializable
+data class WowForeverRosterCharacterResponse(
+    val id: Long,
+    val name: String,
+    val surname: String
+)
+
+@Serializable
+data class WowForeverMemberResponse(
+    val character: WowForeverRosterCharacterResponse
+)
+
+@Serializable
+data class GetWowForeverRosterResponse(
+    val members: List<WowForeverMemberResponse>,
     val guild: WowGuildResponse
 )
 

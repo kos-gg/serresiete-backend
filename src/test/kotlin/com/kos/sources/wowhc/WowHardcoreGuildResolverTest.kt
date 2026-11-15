@@ -1,5 +1,6 @@
 package com.kos.sources.wowhc
 
+import com.kos.entities.guilds.WowGuild
 import arrow.core.Either
 import com.kos.clients.TimeoutError
 import com.kos.clients.blizzard.BlizzardClient
@@ -12,7 +13,6 @@ import com.kos.clients.domain.WowMemberResponse
 import com.kos.datacache.BlizzardMockHelper
 import com.kos.datacache.BlizzardMockHelper.hardcoreRealm
 import com.kos.entities.EntitiesTestHelper.basicWowRequest
-import com.kos.entities.domain.GuildPayload
 import com.kos.entities.domain.WowEntityRequest
 import com.kos.entities.repository.EntitiesInMemoryRepository
 import kotlinx.coroutines.runBlocking
@@ -20,13 +20,14 @@ import org.mockito.Mockito.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
 class WowHardcoreGuildResolverTest {
     private val blizzardClient = mock(BlizzardClient::class.java)
+    private val entitiesRepository = EntitiesInMemoryRepository()
     private val guildResolver = WowHardcoreGuildResolver(
+        entitiesRepository,
         blizzardClient,
-        WowHardcoreEntityResolver(EntitiesInMemoryRepository(), blizzardClient)
+        WowHardcoreEntityResolver(entitiesRepository, blizzardClient)
     )
     private val guildRequest = WowEntityRequest("Sanxei Guild", basicWowRequest.region, basicWowRequest.realm)
 
@@ -47,10 +48,10 @@ class WowHardcoreGuildResolverTest {
             ).thenReturn(BlizzardMockHelper.getCharacterProfile(basicWowRequest))
             `when`(blizzardClient.getRealm(basicWowRequest.region, 5220)).thenReturn(Either.Right(hardcoreRealm.toWowRealm()))
 
-            guildResolver.resolve(listOf(guildRequest))
+            guildResolver.resolve(guildRequest)
                 .let { res ->
-                    assertEquals(listOf(basicWowRequest.name), res.entities.map { it.first.name })
-                    assertEquals(GuildPayload(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
+                    assertEquals(listOf(basicWowRequest.name), res.newMembers.map { it.name })
+                    assertEquals(WowGuild(guildRequest.name, guildRequest.realm, guildRequest.region, 999), res.guild)
                 }
         }
     }
@@ -68,8 +69,8 @@ class WowHardcoreGuildResolverTest {
                     )
                 )
 
-            guildResolver.resolve(listOf(guildRequest))
-                .let { res -> assertEquals(listOf(), res.entities) }
+            guildResolver.resolve(guildRequest)
+                .let { res -> assertEquals(listOf(), res.newMembers) }
 
             verify(blizzardClient, never()).getClassicProfile(anyString(), anyString(), anyString())
         }
@@ -81,7 +82,7 @@ class WowHardcoreGuildResolverTest {
             `when`(blizzardClient.getHardcoreGuildRoster(guildRequest.region, guildRequest.realm, guildRequest.name))
                 .thenReturn(Either.Left(TimeoutError("Request timeout has expired")))
 
-            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(listOf(guildRequest)) }
+            val error = assertFailsWith<IllegalStateException> { guildResolver.resolve(guildRequest) }
 
             assertEquals("Third party call failed: TimeoutError(message=Request timeout has expired)", error.message)
         }

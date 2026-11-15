@@ -58,6 +58,14 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
+                path.endsWith("/pvp-summary") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
+                    respond(
+                        readResource("acceptance/files/responses/wow-forever/blizzard-pvp-summary-response.json"),
+                        HttpStatusCode.OK,
+                        json
+                    )
+
                 path.endsWith("/statistics") &&
                         request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
                     respond(
@@ -97,6 +105,14 @@ val mockHttpClient = HttpClient(MockEngine) {
                         json
                     )
 
+                path.contains("/data/wow/guild/") &&
+                        request.headers["Battlenet-Namespace"]?.startsWith("profile-forever-") == true ->
+                    respond(
+                        readResource("acceptance/files/responses/wow-forever/blizzard-guild-roster-response.json"),
+                        HttpStatusCode.OK,
+                        json
+                    )
+
                 path.contains("/data/wow/guild/") -> {
                     val namespace = request.url.parameters["namespace"]
                     if (namespace == "profile-classic1x-eu") {
@@ -106,8 +122,8 @@ val mockHttpClient = HttpClient(MockEngine) {
                             json
                         )
                     } else {
-                        val members = (MockConfig.wowGuildRosterMembers ?: emptyList()).map { (name, level) ->
-                            WowMemberResponse(WowCharacterResponse(name, level))
+                        val members = (MockConfig.wowGuildRosterMembers ?: emptyList()).map { (name, level, blizzardId) ->
+                            WowMemberResponse(WowCharacterResponse(name, level, blizzardId))
                         }
                         respond(
                             Json.encodeToString(GetWowRosterResponse(members, WowGuildResponse(12345))),

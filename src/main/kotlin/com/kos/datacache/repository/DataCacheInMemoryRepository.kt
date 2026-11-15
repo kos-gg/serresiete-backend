@@ -11,6 +11,10 @@ class DataCacheInMemoryRepository : DataCacheRepository, InMemoryRepository {
     override suspend fun insert(data: List<DataCache>): Boolean = cachedData.addAll(data)
 
     override suspend fun get(entityId: Long): List<DataCache> = cachedData.filter { it.entityId == entityId }
+
+    override suspend fun getLatest(entityId: Long, game: Game): DataCache? =
+        cachedData.filter { it.entityId == entityId && it.game == game }.maxByOrNull { it.inserted }
+
     override suspend fun deleteExpiredRecord(ttl: Long, game: Game?, keepLastRecord: Boolean): Int {
         fun Game?.matches(other: Game): Boolean = this == null || this == other
 

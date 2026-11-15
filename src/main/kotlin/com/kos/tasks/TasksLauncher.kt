@@ -48,6 +48,8 @@ data class TasksLauncher(
         val updateLolEntitiesInitDelay: Long = getTaskInitialDelay(now, TaskType.UPDATE_LOL_ENTITIES_TASK, oneWeekDelay)
         val updateWowGuildsInitDelay: Long = getTaskInitialDelay(now, TaskType.UPDATE_WOW_HARDCORE_GUILDS, oneDayDelay)
         val updateWowRetailGuildsInitDelay: Long = getTaskInitialDelay(now, TaskType.UPDATE_WOW_GUILDS, oneDayDelay)
+        val updateWowForeverGuildsInitDelay: Long =
+            getTaskInitialDelay(now, TaskType.UPDATE_WOW_FOREVER_GUILDS, oneDayDelay)
         val eventCleanupInitDelay: Long = getTaskInitialDelay(now, TaskType.EVENT_CLEANUP_TASK, threeDaysDelay)
 
         logger.info("Setting $cacheWowDataTaskInitDelay minutes of delay before launching ${TaskType.CACHE_WOW_DATA_TASK}")
@@ -59,6 +61,7 @@ data class TasksLauncher(
         logger.info("Setting $updateLolEntitiesInitDelay minutes of delay before launching ${TaskType.UPDATE_LOL_ENTITIES_TASK}")
         logger.info("Setting $updateWowGuildsInitDelay minutes of delay before launching ${TaskType.UPDATE_WOW_HARDCORE_GUILDS}")
         logger.info("Setting $updateWowRetailGuildsInitDelay minutes of delay before launching ${TaskType.UPDATE_WOW_GUILDS}")
+        logger.info("Setting $updateWowForeverGuildsInitDelay minutes of delay before launching ${TaskType.UPDATE_WOW_FOREVER_GUILDS}")
         logger.info("Setting $eventCleanupInitDelay minutes of delay before launching ${TaskType.EVENT_CLEANUP_TASK}")
 
         executorService.scheduleAtFixedRate(
@@ -128,6 +131,11 @@ data class TasksLauncher(
         executorService.scheduleAtFixedRate(
             ScheduledTaskRunnable(tasksService, TaskType.UPDATE_WOW_GUILDS, coroutineScope),
             updateWowRetailGuildsInitDelay, oneDayDelay.toLong(), TimeUnit.MINUTES
+        )
+
+        executorService.scheduleAtFixedRate(
+            ScheduledTaskRunnable(tasksService, TaskType.UPDATE_WOW_FOREVER_GUILDS, coroutineScope),
+            updateWowForeverGuildsInitDelay, oneDayDelay.toLong(), TimeUnit.MINUTES
         )
 
         executorService.scheduleAtFixedRate(
