@@ -14,6 +14,8 @@
   guild is checked by name and region only.
 - New errors: `400 GUILD_SURNAME_NOT_ALLOWED` (the guild of a guild view has a surname) and `400 MISSING_SURNAME` (a
   Forever character without surname).
+- WoW Forever data carries `pvp: { "honorableKills": 12, "rank": 3 }` from Blizzard's pvp summary. It may be missing
+  until the character's next logout.
 
 ### Changed
 
@@ -22,6 +24,8 @@
   `LOL`.
 - Retail guild members are matched by Blizzard id, at view creation and in the daily update: a member who renamed or
   changed realm is reused and updated in place instead of duplicated.
+- WoW Forever sync only fetches a character's details (equipment, talents, statistics, avatar, pvp) when its
+  `lastLogin` changed since the last sync; otherwise it reuses the cached ones.
 
 ### Fixed
 
